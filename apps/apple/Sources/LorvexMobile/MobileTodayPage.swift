@@ -65,6 +65,10 @@ struct MobileTodayPage: View {
   private static let groundInsets = EdgeInsets(
     top: LorvexDesign.Spacing.xs, leading: 0, bottom: LorvexDesign.Spacing.xs, trailing: 0)
 
+  /// The vertical padding that takes the briefing toggle's one line of text to
+  /// a tap target of about 44pt.
+  private static let briefingToggleTapPadding: CGFloat = 13
+
   var body: some View {
     List {
       if portion != .tasks {
@@ -151,7 +155,8 @@ struct MobileTodayPage: View {
   /// The assistant's briefing in the system face, marked by the sparkles
   /// glyph rather than italics. One that takes more than four lines at the
   /// page's width and text size opens on four, with a toggle for the rest; a
-  /// shorter one shows in full and has no toggle.
+  /// shorter one shows in full and has no toggle. The card is a container
+  /// without an identifier of its own, which would replace the toggle's.
   private func briefingView(_ text: String) -> some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "sparkles")
@@ -162,13 +167,23 @@ struct MobileTodayPage: View {
           .font(LorvexDesign.Typography.briefing)
           .foregroundStyle(.primary)
           .lorvexLineClamp(4, isClamped: !showsFullBriefing, hidesText: $briefingHidesText)
+          .accessibilityIdentifier("today.briefing")
         if briefingHidesText {
-          Button(
-            showsFullBriefing ? MobileTodayCalmCopy.briefingLess : MobileTodayCalmCopy.briefingMore
-          ) {
+          Button {
             lorvexAnimated(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
+          } label: {
+            // The words are one line tall. The label's padding lifts the tap
+            // target to about 44pt, and the negative padding outside the
+            // button gives the card that height back.
+            Text(
+              showsFullBriefing
+                ? MobileTodayCalmCopy.briefingLess : MobileTodayCalmCopy.briefingMore
+            )
+            .padding(.vertical, Self.briefingToggleTapPadding)
+            .contentShape(Rectangle())
           }
           .buttonStyle(.borderless)
+          .padding(.vertical, -Self.briefingToggleTapPadding)
           .font(LorvexDesign.Typography.secondaryText)
           .accessibilityIdentifier("today.briefing.toggle")
         }
@@ -182,7 +197,6 @@ struct MobileTodayPage: View {
     )
     .accessibilityElement(children: .contain)
     .accessibilityLabel(MobileTodayCalmCopy.briefingLabel)
-    .accessibilityIdentifier("today.briefing")
   }
 
   // MARK: The day at a glance

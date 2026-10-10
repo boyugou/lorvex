@@ -147,6 +147,10 @@ The import path is defensive against hostile or malformed archives:
   and calendar cutovers) is SHA-pinned and decoded through both JSON and ZIP
   paths. `script/verify_backup_v1_contract.py` additionally checksum-locks every
   v1 DTO source and adapter; future formats add types rather than mutating v1.
+  The one amendment v1 takes in place is an additive member: optional in its
+  DTO and omitted from the encoded output while it is empty (a habit's `skips`
+  is one), so every archive and golden digest that predates it stays
+  byte-identical and a reader that does not know the member ignores it.
 - **Manifest as an enforced compatibility contract.** `manifest.json` must be
   present, declare the supported version-1 schema, and exactly describe the
   archive's closed member set and per-member record counts. Missing, extra,

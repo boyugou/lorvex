@@ -300,7 +300,13 @@ stale is mistaken for current behavior.
    `verify_user_docs.py`. They finish in seconds. When a localized string's
    interpolations change, also run `verify_localization_arguments.py`, which
    checks each call's arguments against its catalog text through a separate
-   incremental macOS build.
+   incremental macOS build. Before each release build, run
+   `script/verify_static_gates.sh`: it executes every static gate (the Python
+   gates, their unit tests, the schema embed check) in under a minute and
+   builds, tests, and launches nothing, so it is safe on a Mac that holds real
+   Lorvex data. It runs the region of `verify_all.sh` between the
+   `# --- static tier: begin ---` and `# --- static tier: end ---` markers, so
+   a new static gate added there is picked up by both scripts.
 2. Run `swift build -j 4` — all targets must build cleanly.
 3. Run `swift test -j 4` from `apps/apple` once per batch; while iterating on
    one area use `swift test --skip-build -j 4 --filter <SuiteName>`. Run the
@@ -331,6 +337,9 @@ script/ios_sim_build.sh && script/ios_sim_screenshots.sh /tmp/shots light today 
 swift build -j 4 --product LorvexApple && script/ui_tour_macos.sh light /tmp/shots
 script/watch_sim_build.sh && script/watch_sim_screenshots.sh /tmp/shots today habits
 script/widget_gallery_macos.sh /tmp/widgets
+
+# Every static gate, no build or launch (before each release build)
+script/verify_static_gates.sh
 
 # Full gate before a release
 ./script/verify_all.sh

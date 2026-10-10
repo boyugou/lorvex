@@ -5,8 +5,10 @@ import SwiftUI
 /// window each day's load is measured against (the Plan week strips, Today's
 /// overbooked headline), and that the schedule proposal keeps suggested task
 /// times inside. Native time pickers; a change persists once the pickers come
-/// to rest, and an inverted window is rejected by the store with a visible
-/// error.
+/// to rest. Each picker offers only times that keep the end after the start, so
+/// the window cannot be turned upside down by hand; should the store still
+/// reject a window, it reports the error and the pickers go back to the last
+/// window it accepted.
 struct MobileStoreSettingsWorkingHoursSection: View {
   @Bindable var store: MobileStore
 
@@ -29,7 +31,8 @@ struct MobileStoreSettingsWorkingHoursSection: View {
         String(
           localized: "settings.working_hours.start", defaultValue: "Start", table: "Localizable",
           bundle: MobileL10n.bundle),
-        selection: $start, displayedComponents: .hourAndMinute
+        selection: $start, in: ...end.addingTimeInterval(-Self.minimumWindow),
+        displayedComponents: .hourAndMinute
       )
       .accessibilityIdentifier("settings.workingHours.start")
 
@@ -37,7 +40,8 @@ struct MobileStoreSettingsWorkingHoursSection: View {
         String(
           localized: "settings.working_hours.end", defaultValue: "End", table: "Localizable",
           bundle: MobileL10n.bundle),
-        selection: $end, displayedComponents: .hourAndMinute
+        selection: $end, in: start.addingTimeInterval(Self.minimumWindow)...,
+        displayedComponents: .hourAndMinute
       )
       .accessibilityIdentifier("settings.workingHours.end")
     } header: {
@@ -101,6 +105,10 @@ struct MobileStoreSettingsWorkingHoursSection: View {
 
   /// How long the pickers stay unchanged before the window is saved.
   private static let restDelay: Duration = .milliseconds(600)
+
+  /// The shortest window the pickers allow: one minute, the finest step they
+  /// have, so a start and an end can never meet.
+  private static let minimumWindow: TimeInterval = 60
 
   private static func date(fromHHMM value: String) -> Date? {
     guard let minutes = WorkingHoursPreference.minutesOfDay(value) else { return nil }

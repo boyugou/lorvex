@@ -53,31 +53,39 @@ extension SettingsView {
         bundle: LorvexL10n.bundle
       ))
     }
-    .fileImporter(
-      isPresented: $isChoosingImportFile,
-      allowedContentTypes: [.json, .zip],
-      allowsMultipleSelection: false
-    ) { result in
-      switch result {
-      case .success(let urls):
-        guard let url = urls.first else { return }
-        Task { await loadImportPlan(from: url) }
-      case .failure(let error):
-        importErrorMessage = error.localizedDescription
+  }
+
+  /// The file picker and the contents sheet behind ``dataImportSection``,
+  /// attached to the view they are given. ``SettingsView`` applies them to its
+  /// root, with every other presentation in Settings: a presentation attached
+  /// to the grouped Form's Section does not reliably present.
+  func dataImportPresentations(_ content: some View) -> some View {
+    content
+      .fileImporter(
+        isPresented: $isChoosingImportFile,
+        allowedContentTypes: [.json, .zip],
+        allowsMultipleSelection: false
+      ) { result in
+        switch result {
+        case .success(let urls):
+          guard let url = urls.first else { return }
+          Task { await loadImportPlan(from: url) }
+        case .failure(let error):
+          importErrorMessage = error.localizedDescription
+        }
       }
-    }
-    .sheet(isPresented: importPreviewBinding) {
-      if let importPlan {
-        ImportPreviewSheet(
-          plan: importPlan,
-          isApplying: dataImportInteractionBlocked,
-          errorMessage: importErrorMessage,
-          onCancel: { dismissImportPreview() },
-          onConfirm: { beginConfirmedImport() }
-        )
-        .interactiveDismissDisabled(dataImportInteractionBlocked)
+      .sheet(isPresented: importPreviewBinding) {
+        if let importPlan {
+          ImportPreviewSheet(
+            plan: importPlan,
+            isApplying: dataImportInteractionBlocked,
+            errorMessage: importErrorMessage,
+            onCancel: { dismissImportPreview() },
+            onConfirm: { beginConfirmedImport() }
+          )
+          .interactiveDismissDisabled(dataImportInteractionBlocked)
+        }
       }
-    }
   }
 
   private static var importTitle: String {

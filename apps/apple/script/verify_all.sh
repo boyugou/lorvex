@@ -55,6 +55,11 @@ swift test
 # The Swift core package is the parity oracle for the app backend; its tests
 # must pass on every full gate.
 ( cd core && swift test )
+# --- static tier: begin ---
+# Everything down to the end marker is a static gate: it starts no Swift build or test,
+# launches no app, and never reads or writes Lorvex data. script/verify_static_gates.sh
+# runs exactly this region on its own in under a minute, which is how to check the gates
+# before cutting a TestFlight build. Keep builds, launches, and packaging out of it.
 python3 -m py_compile \
   script/generate_acknowledgments.py \
   script/generate_apple_platform_manifest.py \
@@ -104,7 +109,7 @@ python3 -m unittest discover -s script -p 'test_*.py'
 # Versioned wire-field inventory: a payload field/entity change must bump
 # LorvexVersion.payloadSchemaVersion and append the next immutable contract.
 ./script/verify_sync_payload_contract.py
-# First-public backup wire freeze: the v5 DTO sources, native graph v2, and the
+# First-public backup wire freeze: the v1 DTO sources, native graph v1, and the
 # production-shaped golden fixture are immutable even while the app's internal
 # models continue to evolve behind explicit per-version adapters.
 ./script/verify_backup_v1_contract.py
@@ -134,9 +139,6 @@ python3 -m unittest discover -s script -p 'test_*.py'
 ./script/verify_mcp_tool_catalog.py
 ./script/verify_mcp_tool_manifest.py
 ./script/verify_localization_catalog.py
-# Each localized string's interpolated arguments against its catalog text, read
-# from the compiler's own extraction (a separate, incremental macOS build).
-./script/verify_localization_arguments.py
 ./script/verify_acknowledgments.py
 ./script/verify_privacy_manifests.py
 ./script/verify_system_entrypoints.py
@@ -144,6 +146,10 @@ python3 ./script/verify_core_service_coverage.py
 ./script/verify_hotspots.py
 ./script/verify_sqlite_portability.py
 ./script/verify_user_docs.py
+# --- static tier: end ---
+# Each localized string's interpolated arguments against its catalog text, read
+# from the compiler's own extraction (a separate, incremental macOS build).
+./script/verify_localization_arguments.py
 ./script/verify_xcodegen_project.sh
 ./script/generate_apple_platform_manifest.py
 ./script/verify_apple_platform_manifest.py "$ROOT_DIR/dist/lorvex-apple-platform-manifest.json"

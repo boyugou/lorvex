@@ -75,12 +75,16 @@ struct SettingsView: View {
     )
   }
 
+  var body: some View {
+    dataImportPresentations(settingsRoot)
+  }
+
   // The sidebar removes its toolbar toggle (it is the only way between
   // categories), and the toolbar's one row shows the page's title
   // (``SettingsWindowToolbarStyle``). The detail's invisible spacer keeps the
   // window's toolbar alive: with no toolbar item at all the window drops its
   // unified toolbar and the sidebar no longer reaches the window top.
-  var body: some View {
+  private var settingsRoot: some View {
     NavigationSplitView {
       SettingsSidebar(selectedCategory: selectedCategoryBinding)
     } detail: {

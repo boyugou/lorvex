@@ -33,6 +33,32 @@ struct MobileStoreLocalDataResetSection: View {
         if resetInProgress { ProgressView() }
       }
       .accessibilityIdentifier("mobileSettings.resetDevice")
+      // Attached to the button itself: on the enclosing Section the sheet did not
+      // open on the row's first tap.
+      .sheet(isPresented: $showResetConfirmation) {
+        MobileDestructiveConfirmationSheet(
+          title: String(
+            localized: "settings.reset_device.confirm.title",
+            defaultValue: "Erase this device’s data?", table: "Localizable",
+            bundle: MobileL10n.bundle),
+          message: String(
+            localized: "settings.reset_device.confirm.message",
+            defaultValue:
+              "This permanently erases all Lorvex data and settings on this device. It doesn’t touch iCloud: if sync was on, your data stays in iCloud and can download again when sync is re-enabled. To remove the iCloud copy too, use Delete iCloud Data first.",
+            table: "Localizable", bundle: MobileL10n.bundle),
+          confirmTitle: String(
+            localized: "settings.reset_device.confirm.action", defaultValue: "Erase This Device",
+            table: "Localizable", bundle: MobileL10n.bundle),
+          accessibilityIdentifierPrefix: "mobileSettings.resetDevice.confirm"
+        ) {
+          resetInProgress = true
+          resetErrorMessage = nil
+          Task {
+            resetErrorMessage = await store.performLocalDataReset()
+            resetInProgress = false
+          }
+        }
+      }
 
       if let resetErrorMessage {
         Text(resetErrorMessage)
@@ -54,30 +80,6 @@ struct MobileStoreLocalDataResetSection: View {
           table: "Localizable", bundle: MobileL10n.bundle)
       )
       .accessibilityIdentifier("mobileSettings.resetDevice.footer")
-    }
-    .sheet(isPresented: $showResetConfirmation) {
-      MobileDestructiveConfirmationSheet(
-        title: String(
-          localized: "settings.reset_device.confirm.title",
-          defaultValue: "Erase this device’s data?", table: "Localizable",
-          bundle: MobileL10n.bundle),
-        message: String(
-          localized: "settings.reset_device.confirm.message",
-          defaultValue:
-            "This permanently erases all Lorvex data and settings on this device. It doesn’t touch iCloud: if sync was on, your data stays in iCloud and can download again when sync is re-enabled. To remove the iCloud copy too, use Delete iCloud Data first.",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        confirmTitle: String(
-          localized: "settings.reset_device.confirm.action", defaultValue: "Erase This Device",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        accessibilityIdentifierPrefix: "mobileSettings.resetDevice.confirm"
-      ) {
-        resetInProgress = true
-        resetErrorMessage = nil
-        Task {
-          resetErrorMessage = await store.performLocalDataReset()
-          resetInProgress = false
-        }
-      }
     }
   }
 }

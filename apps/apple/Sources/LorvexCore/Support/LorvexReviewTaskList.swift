@@ -131,6 +131,7 @@ public struct LorvexReviewTaskList: View {
           .accessibilityIdentifier("\(identifier).more")
       }
     }
+    .accessibilityElement(children: .contain)
     .accessibilityIdentifier(identifier)
   }
 
@@ -266,8 +267,12 @@ public struct LorvexReviewTaskList: View {
     lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.subtract(fresh) }
   }
 
+  /// The circle keeps the glyph's size in the layout. Its label's padding is
+  /// the tap target's reach past the glyph, and the negative padding outside
+  /// the button gives the layout that room back.
   private func circle(_ task: ReviewTaskSummary, completion: Completion) -> some View {
     let isCompleting = completingTaskIDs.contains(task.id)
+    let outset = LorvexReviewRowMetrics.circleOutset
     return Button {
       Task { await complete(task, with: completion) }
     } label: {
@@ -276,9 +281,11 @@ public struct LorvexReviewTaskList: View {
         .foregroundStyle(
           isCompleting ? AnyShapeStyle(LorvexDesign.Palette.done) : AnyShapeStyle(.secondary))
         .contentTransition(.symbolEffect(.replace))
-        .contentShape(.interaction, Circle().inset(by: -6))
+        .padding(outset)
+        .contentShape(.interaction, Circle())
     }
     .buttonStyle(.plain)
+    .padding(-outset)
     .disabled(isCompleting)
     .help(completion.label)
     .accessibilityHidden(true)
@@ -309,7 +316,7 @@ public struct LorvexReviewTaskList: View {
           titleLine(task, fact: showsFact ? detail(task) : nil)
         }
       }
-      .padding(.vertical, LorvexDesign.Spacing.xxs)
+      .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xxs))
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)

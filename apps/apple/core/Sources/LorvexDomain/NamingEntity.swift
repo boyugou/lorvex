@@ -242,16 +242,12 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
   /// envelope's `entity_type` is accepted against (a type outside it is treated
   /// as local-only and skipped on apply).
   ///
-  /// This is the single source of truth. `ai_changelog` participates with a
-  /// BOUNDED outbound contract rather than the usual bidirectional upsert/delete
-  /// lane: the append-only audit stream is emitted once by the ordinary write
-  /// path and converges by id-dedup (`INSERT OR IGNORE`, no LWW). Ordinary
-  /// full-resync excludes it; a candidate generation separately stages every
-  /// still-retained row before its predecessor retires. Retention GC queues an
-  /// exact-zone CloudKit physical delete and inbound apply enforces the local
-  /// frontier, so a lagging peer cannot resurrect retired history. Parent-owned
-  /// collection tables are NOT independently synced; they are embedded in their
-  /// parent entity payloads.
+  /// This is the single source of truth. `ai_changelog` is listed so the wire
+  /// inventory and payload manifests stay complete, but the audit trail is
+  /// device-local: outbound enqueue refuses it, inbound apply skips every
+  /// envelope of that type, and each device prunes its own rows by retention.
+  /// Parent-owned collection tables are NOT independently synced; they are
+  /// embedded in their parent entity payloads.
   public static let allSyncableTypes: [String] = [
     // Aggregate roots
     EntityName.task,

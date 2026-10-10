@@ -107,12 +107,24 @@ private struct MobileTimeZonePicker: View {
       }
       .onChange(of: choices.isEmpty) { _, _ in proxy.scrollTo(selected, anchor: .center) }
     }
-    .searchable(text: $query, prompt: MobileSettingsTimeZoneRow.Copy.search)
+    #if os(iOS)
+      // Always shown: the list opens scrolled to the chosen zone, and a field in the
+      // default hiding drawer would start out of sight above it.
+      .searchable(
+        text: $query, placement: .navigationBarDrawer(displayMode: .always),
+        prompt: MobileSettingsTimeZoneRow.Copy.search)
+    #else
+      .searchable(text: $query, prompt: MobileSettingsTimeZoneRow.Copy.search)
+    #endif
     .navigationTitle(MobileSettingsTimeZoneRow.Copy.title)
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
     #endif
-    .task { if choices.isEmpty { choices = LorvexTimeZoneChoice.all() } }
+    .task {
+      guard choices.isEmpty else { return }
+      let kept: Set<String> = [selected]
+      choices = await Task.detached { LorvexTimeZoneChoice.all(keeping: kept) }.value
+    }
   }
 
   private func row(_ choice: LorvexTimeZoneChoice) -> some View {

@@ -83,6 +83,49 @@ struct LorvexTimeZoneChoiceTests {
     #expect(all.map(\.secondsFromGMT) == all.map(\.secondsFromGMT).sorted())
   }
 
+  @Test func aZoneNamedByManyIdentifiersIsListedOnce() {
+    let all = LorvexTimeZoneChoice.all(now: winter, locale: Locale(identifier: "en_US"))
+    var rowsByName: [String: String] = [:]
+    for choice in all {
+      let name = "\(choice.city)|\(choice.secondsFromGMT)|\(choice.genericName)"
+      #expect(rowsByName[name] == nil, "\(choice.identifier) repeats \(rowsByName[name] ?? "")")
+      rowsByName[name] = choice.identifier
+    }
+    let ids = Set(all.map(\.identifier))
+    #expect(ids.contains("America/Toronto"))
+    #expect(ids.contains("Europe/Kyiv"))
+    #expect(ids.contains("Asia/Shanghai"))
+    #expect(ids.contains("UTC"))
+    #expect(ids.isDisjoint(with: ["America/Montreal", "Europe/Kiev", "Asia/Chongqing", "Etc/UTC"]))
+  }
+
+  @Test func theListHoldsTheSameZonesInEveryLanguage() {
+    let english = LorvexTimeZoneChoice.all(now: winter, locale: Locale(identifier: "en_US"))
+    for language in ["zh-Hans", "ja", "ar", "de"] {
+      let other = LorvexTimeZoneChoice.all(now: winter, locale: Locale(identifier: language))
+      #expect(Set(other.map(\.identifier)) == Set(english.map(\.identifier)), "\(language)")
+    }
+  }
+
+  @Test func theChosenZoneKeepsItsOwnRowEvenWhenItIsAnAlias() {
+    let all = LorvexTimeZoneChoice.all(
+      now: winter, locale: Locale(identifier: "en_US"), keeping: ["America/Montreal"])
+    let ids = all.map(\.identifier)
+    #expect(ids.contains("America/Montreal"))
+    #expect(!ids.contains("America/Toronto"))
+    #expect(all.first { $0.identifier == "America/Montreal" }?.city == "Toronto")
+  }
+
+  @Test func searchStillFindsAZoneByTheCityOfAnUnlistedAlias() throws {
+    let all = LorvexTimeZoneChoice.all(now: winter, locale: Locale(identifier: "en_US"))
+    let toronto = try #require(all.first { $0.identifier == "America/Toronto" })
+    #expect(toronto.matches("montreal"))
+    #expect(toronto.matches("Thunder Bay"))
+    let kyiv = try #require(all.first { $0.identifier == "Europe/Kyiv" })
+    #expect(kyiv.matches("Kiev"))
+    #expect(!kyiv.matches("Montreal"))
+  }
+
   @MainActor
   @Test func settingTheTimeZoneMovesTheTodaySnapshotToIt() async throws {
     let suiteName = "settingTheTimeZone.\(UUID().uuidString)"

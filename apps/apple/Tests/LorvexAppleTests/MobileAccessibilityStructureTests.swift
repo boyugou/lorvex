@@ -388,4 +388,98 @@ struct MobileAccessibilityStructureTests {
       #expect(!page.contains(".root\")"), "\(file) carries a root identifier")
     }
   }
+
+  @Test("the review rows are thumb-sized on iOS and the completion circle pads its tap target")
+  func reviewRowsAreThumbSized() throws {
+    let support = "Sources/LorvexCore/Support/"
+    let metrics = try Self.source(support + "LorvexReviewRowMetrics.swift")
+    // One row of text lifts to 40 pt (10 pt above and below a 20 pt line), a 44 pt pitch with the
+    // 4 pt between rows; a pointer keeps the small padding the caller passes.
+    let ios = try #require(metrics.range(of: "#if os(iOS)"))
+    let rowPadding = try #require(metrics.range(of: "max(pointerPadding, 10)"))
+    let circleOutset = try #require(metrics.range(of: "return 12"))
+    #expect(ios.lowerBound < rowPadding.lowerBound)
+    #expect(rowPadding.lowerBound < circleOutset.lowerBound)
+    // The 17 pt glyph and a 12 pt outset on each side make a target about 41 pt across.
+    #expect(17 + 2 * 12 >= 40)
+
+    let taskList = try Self.source(support + "LorvexReviewTaskList.swift")
+    let circle = "private func circle("
+    #expect(Self.follows(".padding(outset)", circle, in: taskList, within: 1000))
+    #expect(Self.follows(".padding(-outset)", ".padding(outset)", in: taskList, within: 300))
+    let open = "private func openButton("
+    #expect(
+      Self.follows(
+        ".padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xxs))", open,
+        in: taskList, within: 800))
+
+    let rowPaddings = [
+      "LorvexReviewAheadRow.swift": "LorvexDesign.Spacing.xxs",
+      "LorvexReviewWeekAhead.swift": "LorvexDesign.Spacing.xxs",
+      "LorvexWeekReviewPage.swift": "LorvexDesign.Spacing.xs",
+    ]
+    for (file, spacing) in rowPaddings {
+      let page = try Self.source(support + file)
+      #expect(
+        page.contains(".padding(.vertical, LorvexReviewRowMetrics.rowPadding(\(spacing)))"),
+        "\(file) pads its rows by the review row metric")
+    }
+    // The moved-forward list only reads, so it keeps the compact spacing.
+    let moved = try Self.source(support + "LorvexReviewMovedList.swift")
+    #expect(!moved.contains("LorvexReviewRowMetrics"))
+  }
+
+  @Test("a review list is a container, so its rows and its section action keep their own identifiers")
+  func reviewListsKeepTheirRowIdentifiers() throws {
+    // An identifier on a stack that is not a container replaces the identifiers of the elements
+    // inside it: every row of the list then read as the list itself.
+    for file in [
+      "LorvexReviewTaskList.swift", "LorvexReviewMovedList.swift", "LorvexReviewTomorrow.swift",
+      "LorvexReviewWeekAhead.swift", "LorvexReviewHabitList.swift",
+    ] {
+      let list = try Self.source("Sources/LorvexCore/Support/\(file)")
+      #expect(
+        Self.follows(
+          ".accessibilityIdentifier(identifier)", ".accessibilityElement(children: .contain)",
+          in: list, within: 60),
+        "\(file) is a container that carries the list's identifier")
+    }
+  }
+
+  @Test("the day review's more-fields line and the Today briefing toggle pad their tap targets")
+  func reviewMoreLineAndBriefingTogglePadTheirTapTargets() throws {
+    let day = try Self.source("Sources/LorvexMobile/MobileStoreReviewDayPage.swift")
+    #expect(day.contains("moreTapPadding: CGFloat = 13"))
+    #expect(
+      Self.follows(
+        ".padding(.vertical, -Self.moreTapPadding)", ".padding(.vertical, Self.moreTapPadding)",
+        in: day, within: 300))
+
+    let today = try Self.source("Sources/LorvexMobile/MobileTodayPage.swift")
+    #expect(today.contains("briefingToggleTapPadding: CGFloat = 13"))
+    #expect(
+      Self.follows(
+        ".padding(.vertical, -Self.briefingToggleTapPadding)",
+        ".padding(.vertical, Self.briefingToggleTapPadding)", in: today, within: 300))
+    // The briefing card is a container, and an identifier on it would replace the toggle's: the
+    // text carries "today.briefing" and the card carries none.
+    let start = try #require(today.range(of: "private func briefingView("))
+    let end = try #require(today.range(of: "// MARK: The day at a glance"))
+    let briefing = String(today[start.upperBound..<end.lowerBound])
+    let text = try #require(briefing.range(of: ".accessibilityIdentifier(\"today.briefing\")"))
+    let toggle = try #require(briefing.range(of: ".accessibilityIdentifier(\"today.briefing.toggle\")"))
+    #expect(text.lowerBound < toggle.lowerBound)
+    #expect(!briefing[toggle.upperBound...].contains(".accessibilityIdentifier("))
+  }
+
+  @Test("the habit detail's Complete and Edit buttons are the large control size")
+  func habitDetailPrimaryButtonsAreLarge() throws {
+    let panel = try Self.source("Sources/LorvexMobile/MobileHabitDetailPanel.swift")
+    // A bordered button at the regular size is 34 pt tall; the large size is a thumb-sized target.
+    #expect(Self.follows(".controlSize(.large)", "private var completeAction", in: panel, within: 1100))
+    #expect(Self.follows(".controlSize(.large)", "private var editAction", in: panel, within: 500))
+    // Archive and Delete are the page's rare actions and keep the regular size.
+    #expect(!Self.follows(".controlSize(.large)", "private var archiveAction", in: panel, within: 400))
+    #expect(!Self.follows(".controlSize(.large)", "private var deleteAction", in: panel, within: 400))
+  }
 }

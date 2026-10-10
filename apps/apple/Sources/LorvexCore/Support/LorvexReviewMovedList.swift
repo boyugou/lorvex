@@ -56,6 +56,7 @@ public struct LorvexReviewMovedList: View {
           .accessibilityIdentifier("\(identifier).more")
       }
     }
+    .accessibilityElement(children: .contain)
     .accessibilityIdentifier(identifier)
   }
 }

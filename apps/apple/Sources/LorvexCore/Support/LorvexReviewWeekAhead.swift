@@ -140,7 +140,7 @@ public struct LorvexReviewWeekAhead: View {
       .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
       .foregroundStyle(.secondary)
       // Level with the first item's title, which sits a row's padding down.
-      .padding(.vertical, LorvexDesign.Spacing.xxs)
+      .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xxs))
   }
 
   private func eventRow(_ event: CalendarTimelineEvent, dayKey: String) -> some View {

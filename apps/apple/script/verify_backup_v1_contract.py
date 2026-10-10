@@ -20,7 +20,12 @@ Like the schema checksum and sync-payload gates, this contract follows the
   remain the authority for the encoder digests; the lock is the drift tripwire.
 * Post-launch (``launched: true``): real archives exist. ``--seed`` refuses to
   run, every v1 hash is immutable, and a wire change must introduce a new
-  versioned DTO/decoder (v2) instead of editing v1.
+  versioned DTO/decoder (v2) instead of editing v1. The one amendment v1 takes
+  in place is an additive member: optional in its DTO and omitted from the
+  encoded output whenever it is empty, so every archive and golden digest that
+  predates it stays byte-identical, and a reader that does not know the member
+  ignores it. Such a commit regenerates the lock with ``--seed --additive`` and
+  says in its message which member it adds.
 """
 
 from __future__ import annotations
@@ -133,7 +138,8 @@ def violations() -> list[str]:
         if actual != expected:
             remedy = (
                 "Released wire: keep the v1 type intact and introduce a new "
-                "versioned DTO/decoder."
+                "versioned DTO/decoder; an additive member that the encoder "
+                "omits while it is empty is re-sealed with --seed --additive."
                 if is_launched()
                 else "Pre-launch: if this edit is intentional, update the golden "
                 "digests in BackupV1GoldenFixture.swift from the Swift test "
@@ -426,8 +432,13 @@ def violations() -> list[str]:
     return failures
 
 
-def seed() -> int:
-    """Regenerate the lock from the working tree (pre-launch only).
+def seed(*, additive: bool = False) -> int:
+    """Regenerate the lock from the working tree.
+
+    Pre-launch this adopts any intentional wire edit. After launch it refuses
+    unless ``additive`` is set, which records the one in-place amendment v1
+    takes (an additive member omitted from the output while empty; see the
+    module docstring).
 
     File hashes are recomputed directly. The three golden digests are adopted
     from the constants pinned in ``BackupV1GoldenFixture.swift`` — the Swift
@@ -435,11 +446,13 @@ def seed() -> int:
     and print the actual digests on mismatch, so the fixture is the single
     hand-edited seed source and the lock never needs manual hash editing.
     """
-    if is_launched():
+    if is_launched() and not additive:
         print(
             "backup v1 contract --seed refused: migration_policy.json is launched. "
             "The released v1 wire is immutable; introduce a new versioned "
-            "DTO/decoder instead.",
+            "DTO/decoder instead. An additive member that the encoder omits "
+            "while it is empty is the one amendment v1 takes in place: re-run "
+            "with --seed --additive.",
             file=sys.stderr,
         )
         return 1
@@ -500,8 +513,12 @@ def verify() -> int:
 
 
 def main() -> int:
-    if "--seed" in sys.argv[1:]:
-        return seed()
+    arguments = sys.argv[1:]
+    if "--additive" in arguments and "--seed" not in arguments:
+        print("backup v1 contract: --additive only applies to --seed", file=sys.stderr)
+        return 2
+    if "--seed" in arguments:
+        return seed(additive="--additive" in arguments)
     return verify()
 
 

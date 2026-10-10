@@ -24,6 +24,14 @@ stale entries, so an exception can never linger past the code it describes.
 Local-only kinds (``device_state``, ``import_session``) stay out of scope
 automatically because they are not in ``allSyncableTypes``.
 
+A kind that stays in ``allSyncableTypes`` (so the payload manifests and the
+accepted inbound kind set are unchanged) but never leaves the device is listed
+in ``DEVICE_LOCAL_KINDS``. It has no applier and no outbound lane, so the gate
+asserts the opposite of coverage for it: ``Apply.swift`` skips its inbound
+envelopes, ``OutboxEnqueuePayload.swift`` refuses to enqueue it, and neither a
+registered applier nor an enqueue call exists. A device-local kind that gains
+either one fails the gate until its entry is removed.
+
 The gate also cross-checks the per-field encryption split of the one record
 type the runtime writes, ``LorvexEntity``, against the CloudKit schema
 template.
@@ -57,14 +65,6 @@ EXCEPTABLE_PROPERTIES = {"outbound_upsert", "outbound_delete"}
 # or if the waived lane gains coverage (stale entry), so this table cannot
 # silently drift from the Swift code it describes.
 DIRECTIONALITY_EXCEPTIONS: dict[str, dict[str, str]] = {
-    "ai_changelog": {
-        "outbound_delete": (
-            "device-local assistant change log: the CloudKit transport confirms "
-            "ai_changelog outbox rows without uploading them and ignores inbound "
-            "copies, so no ai_changelog delete envelope exists; retention prunes "
-            "each device's own rows locally."
-        ),
-    },
     "daily_review": {
         "outbound_delete": (
             "no local delete operation exists: daily reviews are add/amend-only "
@@ -86,6 +86,18 @@ DIRECTIONALITY_EXCEPTIONS: dict[str, dict[str, str]] = {
             "is never deleted or represented by a sync_tombstones death envelope"
         ),
     },
+}
+
+# Device-local kinds: wire kind -> the contract that keeps it on the device.
+# The gate verifies the contract in the Swift code (see the module docstring)
+# instead of requiring an applier or an outbound lane, and fails when the kind
+# gains either one, so this table cannot drift from the code it describes.
+DEVICE_LOCAL_KINDS: dict[str, str] = {
+    "ai_changelog": (
+        "device-local assistant change log: each device keeps the record of the "
+        "assistant writes it executed, and retention prunes each device's own "
+        "rows locally; Core refuses to enqueue it and skips it inbound."
+    ),
 }
 
 
@@ -279,19 +291,46 @@ def dedicated_entity_redirect_coverage(
     return inbound, outbound_upsert
 
 
+def device_local_inbound_skipped(sync_sources: dict[str, str], case: str) -> bool:
+    """Whether ``Apply.swift`` returns ``.skipped`` for every inbound envelope of
+    ``case`` before any apply step runs."""
+    return bool(
+        re.search(
+            rf"if\s+envelope\.entityType\s*==\s*\.{re.escape(case)}\s*\{{"
+            r"[^{}]*?return\s+\.skipped\(",
+            sync_sources.get("Apply.swift", ""),
+        )
+    )
+
+
+def device_local_outbound_refused(sync_sources: dict[str, str], case: str) -> bool:
+    """Whether ``OutboxEnqueuePayload.swift`` throws ``unsupportedOperation`` for
+    ``case`` before it builds an envelope, so the kind never reaches the outbox."""
+    return bool(
+        re.search(
+            rf"entityKind\s*==\s*\.{re.escape(case)}\b[^{{}}]*\{{\s*"
+            r"throw\s+EnqueueError\.unsupportedOperation",
+            sync_sources.get("OutboxEnqueuePayload.swift", ""),
+        )
+    )
+
+
 def cloudkit_entity_coverage_failures(
     naming_source: str,
     apply_dispatch_source: str,
     sync_sources: dict[str, str],
     service_sources: dict[str, str],
     exceptions: dict[str, dict[str, str]] = DIRECTIONALITY_EXCEPTIONS,
+    device_local: dict[str, str] = DEVICE_LOCAL_KINDS,
 ) -> list[str]:
     """Assert full sync readiness for every kind in ``allSyncableTypes``.
 
     Per kind: a registered inbound applier, an outbound upsert enqueue, and an
     outbound delete enqueue — the latter two waivable only through a documented
-    entry in ``exceptions``. Also validates the exception table itself (unknown
-    kinds, unknown properties, stale entries all fail).
+    entry in ``exceptions``. A kind in ``device_local`` instead must be skipped
+    inbound, refused outbound, and have neither an applier nor an enqueue call.
+    Also validates both tables (unknown kinds, unknown properties, stale entries
+    all fail).
     """
     kinds, failures = syncable_kinds(naming_source)
     if not kinds:
@@ -310,6 +349,14 @@ def cloudkit_entity_coverage_failures(
                     f"directionality exception for {wire!r} has unknown property "
                     f"{prop!r} (exceptable: {sorted(EXCEPTABLE_PROPERTIES)})"
                 )
+        if wire in device_local:
+            failures.append(
+                f"directionality exception names device-local kind {wire!r}, which "
+                "has no outbound lane to waive"
+            )
+    for wire in device_local:
+        if wire not in known_wires:
+            failures.append(f"device-local entry names unknown syncable kind {wire!r}")
 
     registered = registered_applier_types(apply_dispatch_source)
     if registered is None:
@@ -327,6 +374,27 @@ def cloudkit_entity_coverage_failures(
     redirect_inbound, redirect_upsert = dedicated_entity_redirect_coverage(sync_sources)
 
     for case, wire in kinds:
+        if wire in device_local:
+            if wire in applied_wires:
+                failures.append(
+                    f"device-local kind {wire!r} has a registered inbound applier — "
+                    "remove its DEVICE_LOCAL_KINDS entry or the applier"
+                )
+            if case in upsert_cases or case in delete_cases:
+                failures.append(
+                    f"device-local kind {wire!r} is enqueued by the write surface — "
+                    "remove its DEVICE_LOCAL_KINDS entry or the enqueue call"
+                )
+            if not device_local_inbound_skipped(sync_sources, case):
+                failures.append(
+                    f"device-local kind {wire!r} is not skipped inbound in Apply.swift"
+                )
+            if not device_local_outbound_refused(sync_sources, case):
+                failures.append(
+                    f"device-local kind {wire!r} is not refused outbound in "
+                    "OutboxEnqueuePayload.swift"
+                )
+            continue
         kind_exceptions = exceptions.get(wire, {})
         inbound_present = redirect_inbound if wire == "entity_redirect" else wire in applied_wires
         upsert_present = redirect_upsert if wire == "entity_redirect" else case in upsert_cases
@@ -490,7 +558,7 @@ def main() -> int:
     kind_count = len(syncable_kinds(SYNC_NAMING.read_text(encoding="utf-8"))[0])
     print(
         "CloudKit sync readiness verification passed "
-        f"({kind_count} syncable kinds covered)"
+        f"({kind_count} syncable kinds covered, {len(DEVICE_LOCAL_KINDS)} device-local)"
     )
     return 0
 

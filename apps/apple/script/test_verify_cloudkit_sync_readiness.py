@@ -94,7 +94,7 @@ extension EntityApplierRegistry {
   public static func defaultEntityAppliers() -> [any EntityApplier] {
     [
       TaskApplier(), ListApplier(), CalendarSeriesCutoverApplier(), TaskTagApplier(),
-      DailyReviewApplier(), ChangelogApplier(),
+      DailyReviewApplier(),
     ]
   }
 }
@@ -126,15 +126,23 @@ public struct DailyReviewApplier: EntityApplier {
   public var handledEntityTypes: [String] { [EntityName.dailyReview] }
 }
 """,
-    "ApplyChangelog.swift": """
-public struct ChangelogApplier: EntityApplier {
-  public var handledEntityTypes: [String] { [EntityName.aiChangelog] }
-}
-""",
     "Apply.swift": """
+if envelope.entityType == .aiChangelog {
+  return .skipped(
+    reason: "ai_changelog is device-local; audit envelopes are not applied",
+    winnerVersion: nil)
+}
 if envelope.entityType == .entityRedirect {
   return try EntityRedirect.applyInbound(
     db, registry: registry, envelope: envelope, applyTs: applyTs)
+}
+""",
+    "OutboxEnqueuePayload.swift": """
+if entityKind == .aiChangelog
+  || (entityKind == .calendarSeriesCutover && operation == .delete)
+{
+  throw EnqueueError.unsupportedOperation(
+    entityType: entityType, operation: operation.asString)
 }
 """,
     "EntityRedirect.swift": """
@@ -193,13 +201,8 @@ try enqueueDelete(db, hlc: hlc, deviceId: deviceId, kind: .taskTag, entityId: ed
 }
 
 # The fixture's intentional directionality gaps, mirroring the production
-# shape: the audit stream is inbound-only; the day-keyed review kind has no
-# local delete operation to emit.
+# shape: the day-keyed review kind has no local delete operation to emit.
 FIXTURE_EXCEPTIONS = {
-    "ai_changelog": {
-        "outbound_upsert": "inbound-only audit stream",
-        "outbound_delete": "append-only audit stream",
-    },
     "daily_review": {"outbound_delete": "add/amend-only; no local delete op"},
     "calendar_series_cutover": {
         "outbound_delete": "absorbing remove-wins boundary is upsert-only"
@@ -208,6 +211,10 @@ FIXTURE_EXCEPTIONS = {
         "outbound_delete": "permanent absorbing alias is upsert-only"
     },
 }
+
+# The fixture's device-local kind, mirroring the production shape: the audit
+# trail stays in the wire inventory but is skipped inbound and never enqueued.
+FIXTURE_DEVICE_LOCAL = {"ai_changelog": "device-local audit trail"}
 
 # Every kind the live authority is known to carry today. A subset assertion:
 # new kinds may be added freely (the gate auto-covers them); a REMOVAL from
@@ -241,9 +248,15 @@ def coverage_failures(
     sync_sources: dict[str, str] = SYNC_APPLIER_SOURCES,
     service_sources: dict[str, str] = SERVICE_SOURCES,
     exceptions: dict[str, dict[str, str]] = FIXTURE_EXCEPTIONS,
+    device_local: dict[str, str] = FIXTURE_DEVICE_LOCAL,
 ) -> list[str]:
     return cloudkit_entity_coverage_failures(
-        naming, dispatch, sync_sources, service_sources, exceptions=exceptions
+        naming,
+        dispatch,
+        sync_sources,
+        service_sources,
+        exceptions=exceptions,
+        device_local=device_local,
     )
 
 
@@ -335,7 +348,7 @@ class VerifyCloudKitSyncReadinessTests(unittest.TestCase):
         # The applier struct still exists in LorvexSync, but is no longer
         # registered in defaultEntityAppliers() — dispatch would throw
         # unknownEntityType, so the gate must fail.
-        dispatch = APPLY_DISPATCH_SOURCE.replace("DailyReviewApplier(), ", "")
+        dispatch = APPLY_DISPATCH_SOURCE.replace("DailyReviewApplier(),", "")
 
         failures = coverage_failures(dispatch=dispatch)
 
@@ -370,7 +383,9 @@ class VerifyCloudKitSyncReadinessTests(unittest.TestCase):
 
     def test_redirect_requires_dedicated_inbound_dispatch(self) -> None:
         sync_sources = dict(SYNC_APPLIER_SOURCES)
-        sync_sources["Apply.swift"] = ""
+        sync_sources["Apply.swift"] = sync_sources["Apply.swift"].replace(
+            "if envelope.entityType == .entityRedirect {", "if envelope.entityType == .task {"
+        )
 
         failures = coverage_failures(sync_sources=sync_sources)
 
@@ -423,7 +438,6 @@ class VerifyCloudKitSyncReadinessTests(unittest.TestCase):
         # Dropping the documented allow-entry re-arms the checks it gated:
         # exceptions are explicit, never implied by omission.
         exceptions = {
-            "ai_changelog": FIXTURE_EXCEPTIONS["ai_changelog"],
             "calendar_series_cutover": FIXTURE_EXCEPTIONS["calendar_series_cutover"],
             "entity_redirect": FIXTURE_EXCEPTIONS["entity_redirect"],
         }
@@ -468,6 +482,96 @@ try self.enqueueDelete(db, hlc: hlc, deviceId: deviceId, kind: .dailyReview, ent
         failures = coverage_failures(exceptions=exceptions)
 
         self.assertTrue(any("unknown property 'inbound_apply'" in f for f in failures), failures)
+
+    # --- Device-local kinds ----------------------------------------------------
+
+    def test_device_local_kind_must_be_skipped_inbound(self) -> None:
+        sync_sources = dict(SYNC_APPLIER_SOURCES)
+        sync_sources["Apply.swift"] = sync_sources["Apply.swift"].replace(
+            "if envelope.entityType == .aiChangelog {", "if envelope.entityType == .task {"
+        )
+
+        failures = coverage_failures(sync_sources=sync_sources)
+
+        self.assertEqual(
+            failures,
+            ["device-local kind 'ai_changelog' is not skipped inbound in Apply.swift"],
+        )
+
+    def test_device_local_kind_must_be_refused_outbound(self) -> None:
+        sync_sources = dict(SYNC_APPLIER_SOURCES)
+        sync_sources["OutboxEnqueuePayload.swift"] = ""
+
+        failures = coverage_failures(sync_sources=sync_sources)
+
+        self.assertEqual(
+            failures,
+            [
+                "device-local kind 'ai_changelog' is not refused outbound in "
+                "OutboxEnqueuePayload.swift"
+            ],
+        )
+
+    def test_device_local_kind_with_a_registered_applier_fails(self) -> None:
+        dispatch = APPLY_DISPATCH_SOURCE.replace(
+            "DailyReviewApplier(),", "DailyReviewApplier(), ChangelogApplier(),"
+        )
+        sync_sources = dict(SYNC_APPLIER_SOURCES)
+        sync_sources["ApplyChangelog.swift"] = """
+public struct ChangelogApplier: EntityApplier {
+  public var handledEntityTypes: [String] { [EntityName.aiChangelog] }
+}
+"""
+
+        failures = coverage_failures(dispatch=dispatch, sync_sources=sync_sources)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn("device-local kind 'ai_changelog' has a registered inbound applier", failures[0])
+
+    def test_device_local_kind_with_an_enqueue_call_fails(self) -> None:
+        services = dict(SERVICE_SOURCES)
+        services["SwiftLorvexCoreService+Review.swift"] += (
+            "try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .aiChangelog, "
+            "entityId: id)\n"
+        )
+
+        failures = coverage_failures(service_sources=services)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn("device-local kind 'ai_changelog' is enqueued by the write surface", failures[0])
+
+    def test_device_local_kind_without_an_entry_needs_ordinary_coverage(self) -> None:
+        # Dropping the entry re-arms the ordinary lanes: the audit stream has no
+        # applier and no outbound lane, so the gate reports all of them.
+        failures = coverage_failures(device_local={})
+
+        self.assertEqual(
+            failures,
+            [
+                "CloudKit entity coverage missing inbound applier for ai_changelog",
+                "CloudKit entity coverage missing outbound enqueue for ai_changelog",
+                "CloudKit entity coverage missing delete enqueue for ai_changelog",
+            ],
+        )
+
+    def test_device_local_entry_for_unknown_kind_fails(self) -> None:
+        device_local = dict(FIXTURE_DEVICE_LOCAL)
+        device_local["widget_state"] = "does not exist"
+
+        failures = coverage_failures(device_local=device_local)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn("device-local entry names unknown syncable kind", failures[0])
+        self.assertIn("widget_state", failures[0])
+
+    def test_directionality_exception_for_device_local_kind_fails(self) -> None:
+        exceptions = dict(FIXTURE_EXCEPTIONS)
+        exceptions["ai_changelog"] = {"outbound_delete": "append-only audit stream"}
+
+        failures = coverage_failures(exceptions=exceptions)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn("names device-local kind 'ai_changelog'", failures[0])
 
     # --- Field encryption contract ---------------------------------------------
 

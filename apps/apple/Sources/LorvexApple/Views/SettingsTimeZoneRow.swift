@@ -124,8 +124,9 @@ struct SettingsTimeZonePicker: View {
     }
     .frame(width: 340, height: 400)
     .task {
-      choices = LorvexTimeZoneChoice.all()
       isSearchFocused = true
+      let kept: Set<String> = [selected]
+      choices = await Task.detached { LorvexTimeZoneChoice.all(keeping: kept) }.value
     }
     .accessibilityIdentifier("settings.timeZone.picker")
   }

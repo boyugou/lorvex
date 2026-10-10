@@ -137,7 +137,8 @@ struct MobileHabitDetailPanel: View {
   }
 
   /// Complete (or Reset) and Edit side by side, stacked when a large text size
-  /// leaves no room for both on one line, over the quiet Skip Today line.
+  /// leaves no room for both on one line, over the quiet Skip Today line. Both
+  /// buttons are the large control size, whose height is a thumb-sized target.
   private var primaryActions: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
       ViewThatFits(in: .horizontal) {
@@ -174,6 +175,7 @@ struct MobileHabitDetailPanel: View {
         : String(localized: "habits.detail.complete", defaultValue: "Complete Today", table: "Localizable", bundle: MobileL10n.bundle),
         systemImage: habit.isCompleteToday ? "arrow.counterclockwise" : "checkmark")
     }
+    .controlSize(.large)
     .disabled(isMutating)
     .accessibilityIdentifier("mobileHabits.detail.complete")
     if habit.isCompleteToday {
@@ -216,6 +218,7 @@ struct MobileHabitDetailPanel: View {
       Label(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "pencil")
     }
     .buttonStyle(.bordered)
+    .controlSize(.large)
     .disabled(isMutating)
     .accessibilityIdentifier("mobileHabits.detail.edit")
   }

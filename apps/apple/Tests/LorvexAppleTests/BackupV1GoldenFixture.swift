@@ -5,6 +5,11 @@ import Foundation
 /// planned day and time, the day's briefing, calendar cutovers, and the native
 /// task-graph member. The compatibility test pins
 /// the exact UTF-8 SHA-256; edits require an explicit contract decision.
+///
+/// The task's payload shadow carries schema version 100: far above any version
+/// the app writes and one below the validator's ceiling of 101, so it stays a
+/// shadow from a newer peer however many times the app raises its own payload
+/// schema version, and raising it never edits this fixture or its digests.
 enum BackupV1GoldenFixture {
   static let singleFileJSON = #"""
     {
@@ -31,7 +36,7 @@ enum BackupV1GoldenFixture {
         "checklistItems":[{"id":"44444444-4444-4444-8444-444444444444","taskID":"33333333-3333-4333-8333-333333333333","position":0,"text":"Decode","version":"1700000000000_0000_1111111111111111","createdAt":"2026-07-17T12:00:00.000Z","updatedAt":"2026-07-17T12:00:00.000Z"}],
         "reminders":[{"id":"55555555-5555-4555-8555-555555555555","taskID":"33333333-3333-4333-8333-333333333333","reminderAt":"2026-07-18T16:30:00.000Z","version":"1700000000000_0000_1111111111111111","createdAt":"2026-07-17T12:00:00.000Z","originalLocalTime":"09:30","originalTimeZone":"America/Los_Angeles"}],
         "tombstones":[{"entityType":"task_reminder","entityID":"66666666-6666-4666-8666-666666666666","version":"1700000000000_0000_1111111111111111","deletedAt":"2026-07-17T12:00:00.000Z"}],
-        "payloadShadows":[{"entityType":"task","entityID":"33333333-3333-4333-8333-333333333333","baseVersion":"1700000000000_0000_1111111111111111","payloadSchemaVersion":3,"rawPayloadJSON":"{\"future\":true}","sourceDeviceID":"future-peer","updatedAt":"2026-07-17T12:00:00.000Z"}]
+        "payloadShadows":[{"entityType":"task","entityID":"33333333-3333-4333-8333-333333333333","baseVersion":"1700000000000_0000_1111111111111111","payloadSchemaVersion":100,"rawPayloadJSON":"{\"future\":true}","sourceDeviceID":"future-peer","updatedAt":"2026-07-17T12:00:00.000Z"}]
       },
       "habits":[{"id":"77777777-7777-4777-8777-777777777777","name":"Hydrate","cue":"After waking","icon":"drop","color":"#22C55E","frequencyType":"daily","weekdays":[],"targetCount":8,"milestoneTarget":100,"archived":false,"position":2,"completions":[{"completedDate":"2026-07-17","value":3,"note":"morning","createdAt":"2026-07-17T12:00:00.000Z","updatedAt":"2026-07-17T12:00:00.000Z"}],"reminderPolicies":[{"id":"88888888-8888-4888-8888-888888888888","reminderTime":"09:30","enabled":true,"createdAt":"2026-07-17T12:00:00.000Z","updatedAt":"2026-07-17T12:00:00.000Z"}]}],
       "calendarSeriesCutovers":[{"id":"f62362b6-3f97-8822-a3f7-7de65f5e6607","lineageRootId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","cutoverDate":"2026-08-01","state":"deleted"}],
@@ -44,9 +49,9 @@ enum BackupV1GoldenFixture {
     }
     """#
 
-  static let expectedSHA256 = "3c0abbcd4fc08e4fcf9d6dbf34ea23e8138401d1d804250d75046826b31f89de"
+  static let expectedSHA256 = "de983f6ff80822d448106d150a9698168d719244183890036d8b0086a4b722cc"
   static let expectedProductionJSONSHA256 =
-    "708299655c1249f5e99854c8260a922871b5d764ba9f96aa0aaf2f82e2ff37d5"
+    "1132670832457930a41cce58c03006382d099b7be197a8f2c607e55c2cf66829"
   static let expectedProductionZipSHA256 =
-    "31786302b78fb6f58382948bbae8f6ffbf4cc50d693ccb19edb467d021e6bac1"
+    "35a964c4df1f84929d65ff33958ec4f72b2b15be7254617c7c44e621a9ceb019"
 }

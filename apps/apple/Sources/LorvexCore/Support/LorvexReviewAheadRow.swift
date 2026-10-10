@@ -45,7 +45,7 @@ struct LorvexReviewAheadRow: View {
         timeText(stacked: false)
       }
     }
-    .padding(.vertical, LorvexDesign.Spacing.xxs)
+    .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xxs))
   }
 
   private var titleText: some View {

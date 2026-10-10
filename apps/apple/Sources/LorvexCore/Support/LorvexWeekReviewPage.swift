@@ -290,7 +290,7 @@ public struct LorvexWeekReviewPage: View {
         }
       }
     }
-    .padding(.vertical, LorvexDesign.Spacing.xs)
+    .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xs))
     .contentShape(Rectangle())
   }
 

@@ -23,6 +23,10 @@ struct MobileStoreReviewDayPage: View {
 
   private typealias Copy = MobileReviewCalmCopy
 
+  /// The vertical padding that takes the "more fields" line of text to a tap
+  /// target of about 44pt.
+  private static let moreTapPadding: CGFloat = 13
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
@@ -184,14 +188,20 @@ struct MobileStoreReviewDayPage: View {
         Button {
           lorvexAnimated(.snappy) { showsMoreFields = true }
         } label: {
+          // The words are one line tall. The label's padding lifts the tap
+          // target to about 44pt, and the negative padding outside the button
+          // gives the page that height back.
           HStack(spacing: LorvexDesign.Spacing.xxs) {
             Text(Copy.moreFields)
             Image(systemName: "chevron.down").imageScale(.small)
           }
           .font(LorvexDesign.Typography.secondaryText)
           .foregroundStyle(.secondary)
+          .padding(.vertical, Self.moreTapPadding)
+          .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .padding(.vertical, -Self.moreTapPadding)
         .accessibilityIdentifier("review.daily.more")
       }
     }

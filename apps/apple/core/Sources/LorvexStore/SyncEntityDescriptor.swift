@@ -257,9 +257,9 @@ extension SyncEntityDescriptor {
   ]
 
   // BLOCKER — `task` and `ai_changelog` are deliberately NOT registered here; they
-  // stay on the hand-written path (their owned keys / inbound column lists live in
-  // the `switch` arms of ``PayloadShadow/ownedKeysForEntity(_:)`` and their
-  // dedicated appliers). They MUST NOT be migrated under the current
+  // stay on the hand-written path (their owned keys live in the `switch` arms of
+  // ``PayloadShadow/ownedKeysForEntity(_:)``, and `task` has a dedicated
+  // applier). They MUST NOT be migrated under the current
   // field-role model, which cannot express either entity's complete contract:
   //
   //   * `task` needs a richer field model, on two
@@ -281,9 +281,10 @@ extension SyncEntityDescriptor {
   //         and inbound"; `.derivedLocalColumn` is not appropriate because a
   //         generated column is not bound inbound. A faithful task descriptor
   //         would need a separate `.generated` role.
-  //   * `ai_changelog` is an append-only audit stream with an id-dedup
-  //     `INSERT OR IGNORE` contract (covered by `ChangelogSyncOutboundTests`), not
-  //     the bidirectional upsert lane the descriptor's seams describe.
+  //   * `ai_changelog` is a device-local audit trail: it is never enqueued
+  //     outbound and never applied inbound, so there is no outbound builder or
+  //     inbound applier for a descriptor to drive. Its wire-key inventory stays
+  //     in the hand-written `switch` arms.
   //
   // This is a risk/reward decision, not a hard impossibility: migrating the
   // crown-jewel `task` entity immediately before schema freeze — for a modest gain,

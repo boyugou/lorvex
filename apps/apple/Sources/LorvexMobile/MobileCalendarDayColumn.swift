@@ -25,7 +25,9 @@ struct MobileCalendarDayColumn: View {
   /// uses it to open a day in Day mode.
   var onOpenDay: ((Date) -> Void)? = nil
   let onTapEvent: (CalendarTimelineEvent) -> Void
-  let onDeleteEvent: (CalendarTimelineEvent) async -> Bool
+  /// Deletes the events the column draws, asking first: each block and pill
+  /// carries the question (``MobileCalendarEventDeletion``).
+  let deletion: MobileCalendarEventDeletion
   let onTapTask: (LorvexTask) -> Void
   let onDropTask: (LorvexTaskRef, Date) -> Void
   let onTapEmpty: (Date, Int) -> Void
@@ -130,7 +132,7 @@ struct MobileCalendarDayColumn: View {
           isCompact: hasNarrowColumns(gutter: gutter),
           eventColor: eventColor,
           onTapEvent: onTapEvent,
-          onDeleteEvent: onDeleteEvent,
+          deletion: deletion,
           onTapTask: onTapTask,
           onToggleTask: onToggleTask,
           onDropTask: onDropTask

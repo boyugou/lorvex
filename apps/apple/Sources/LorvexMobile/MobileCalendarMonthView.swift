@@ -38,7 +38,6 @@ struct MobileCalendarMonthView: View {
   @State private var chooseCount = 0
   @State private var isShowingCreateEvent = false
   @State private var editingEvent: CalendarTimelineEvent?
-  @State private var eventAwaitingDeleteScope: CalendarTimelineEvent?
   /// The calendar's width, so the mode picker names Day mode's segment by the
   /// days Day mode would show here ("Day", "3 Days").
   @State private var calendarWidth: CGFloat = 0
@@ -143,11 +142,6 @@ struct MobileCalendarMonthView: View {
         )
       )
     }
-    .mobileCalendarDeleteScopeDialog(
-      event: $eventAwaitingDeleteScope,
-      delete: { await store.deleteScopedCalendarEvent($0, scope: $1) }
-    )
-    .accessibilityIdentifier("mobileCalendarMonth.root")
     .overlay {
       // The search narrows events only, so "No Results" shows only when no
       // event matches and no task is in the window either.
@@ -255,8 +249,7 @@ struct MobileCalendarMonthView: View {
       calendar: calendar,
       pinnedDayKey: selectedKey,
       placement: placement,
-      editEvent: { editingEvent = $0 },
-      requestScopedDelete: { eventAwaitingDeleteScope = $0 })
+      editEvent: { editingEvent = $0 })
   }
 
   /// Whether the agenda stands beside the grid rather than under it: in a

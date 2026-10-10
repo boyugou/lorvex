@@ -121,10 +121,11 @@ struct MobileHabitDetailPanel: View {
     }
   }
 
-  /// "Daily · 12 completions": the habit's cadence and its lifetime count, the
+  /// "Mon, Wed · 12 completions": how the habit repeats
+  /// (``MobileHabitDisplayText/repeatSummary(_:)``) and its lifetime count, the
   /// two facts about it that are not progress.
   private var factsLine: String {
-    let cadence = MobileHabitDisplayText.frequencyName(habit.frequencyType)
+    let cadence = MobileHabitDisplayText.repeatSummary(habit)
     let count = habit.totalCompletions
     let completions =
       count == 0

@@ -9,8 +9,8 @@ import SwiftUI
 /// empty placeholder. SwiftUI re-evaluates a page whose inputs changed, and a
 /// column carries closures it cannot compare, so the page compares its data
 /// ``Inputs`` instead and builds the column only when its body runs. A page
-/// whose days, events, and tasks are unchanged is skipped when the pager
-/// re-evaluates for another page's sake.
+/// whose days, events, tasks, and open deletion question are unchanged is
+/// skipped when the pager re-evaluates for another page's sake.
 struct MobileCalendarDayPage: View, Equatable {
   /// Everything but the closures that decides what the column draws. Two
   /// pages with equal inputs draw the same column.
@@ -32,6 +32,11 @@ struct MobileCalendarDayPage: View, Equatable {
     /// The pager's width, which the column's all-day strip reads to go compact
     /// over narrow day columns; 0 until the pager has measured it.
     let pageWidth: CGFloat
+    /// The deletion question open on this page
+    /// (``MobileCalendarEventDeletion/Request/id``), or nil. Its dialog
+    /// belongs to the event's pill or block, which reads the question only
+    /// when the column is built again.
+    let openDeletion: String?
     let calendar: Calendar
   }
 

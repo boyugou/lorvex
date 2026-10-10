@@ -14,6 +14,13 @@ struct MobileTagTokenField: View {
   @Binding var entry: String
 
   @FocusState private var fieldFocused: Bool
+  /// How far a chip's remove control reaches past its glyph on each side,
+  /// which makes the target about 33 pt across: as tall as the chip, and wide
+  /// enough for a thumb. The control pads its label by this much, gives it a
+  /// rectangular content shape, and takes the padding back with a negative
+  /// padding outside the button, so the chip is laid out around the glyph's
+  /// own size.
+  private static let removeTapOutset: CGFloat = 10
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -77,8 +84,11 @@ struct MobileTagTokenField: View {
       } label: {
         Image(systemName: "xmark.circle.fill")
           .font(LorvexDesign.Typography.tertiaryText)
+          .padding(Self.removeTapOutset)
+          .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
+      .padding(-Self.removeTapOutset)
       .foregroundStyle(.secondary)
       .accessibilityLabel(
         String(

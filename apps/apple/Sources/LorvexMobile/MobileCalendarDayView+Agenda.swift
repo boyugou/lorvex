@@ -16,8 +16,7 @@ extension MobileCalendarDayView {
       store: store,
       days: agendaDays(dayCount: dayCount, from: start),
       calendar: calendar,
-      editEvent: { editingEvent = $0 },
-      requestScopedDelete: { eventAwaitingDeleteScope = $0 })
+      editEvent: { editingEvent = $0 })
   }
 
   private func dates(dayCount: Int, from start: Date) -> [Date] {

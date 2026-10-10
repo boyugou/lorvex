@@ -9,8 +9,10 @@ import SwiftUI
 /// rows it has cleared; a task keeps full strength until it is done, since an
 /// unfinished one still needs doing. A task row completes, swipes, and
 /// long-presses as every task row does, and drags onto a calendar day to
-/// plan it there. A free today, or a free pinned day, reads "Nothing
-/// planned"; so does an agenda with no day to list.
+/// plan it there. An event row opens its editor on a tap; its context menu
+/// edits or deletes it, and the delete asks first at the row
+/// (``MobileCalendarEventDeletion``). A free today, or a free pinned day, reads
+/// "Nothing planned"; so does an agenda with no day to list.
 struct MobileCalendarAgendaPanel: View {
   /// Where the agenda stands: `.beside` the grid, a sidebar list on its own
   /// grouped background, as beside an iPad's grid; or `.under` it, a plain
@@ -35,7 +37,10 @@ struct MobileCalendarAgendaPanel: View {
   /// Whether an event edit or delete is in flight.
   let isMutating: Bool
   let editEvent: (CalendarTimelineEvent) -> Void
+  /// Deletes an event that does not repeat, once its row's confirmation is
+  /// accepted.
   let deleteEvent: (CalendarTimelineEvent) async -> Bool
+  /// Deletes the occurrences of a repeating event that the row's choice names.
   let deleteScopedEvent: (CalendarTimelineEvent, CalendarEventEditScope) async -> Bool
   let openTask: (LorvexTask) -> Void
   /// The completion, start/pause, and defer actions of a task's row.
@@ -45,7 +50,9 @@ struct MobileCalendarAgendaPanel: View {
   /// Whether the task waits on an unfinished task, so its row reads Blocked
   /// and offers no Start.
   let taskIsBlocked: (LorvexTask.ID) -> Bool
-  @State private var eventAwaitingDeleteScope: CalendarTimelineEvent?
+  /// The deletion a row is asking about, shared by every row so one question
+  /// shows at a time.
+  @State private var eventPendingDeletion: MobileCalendarEventDeletion.Request?
 
   var body: some View {
     styledList
@@ -55,9 +62,11 @@ struct MobileCalendarAgendaPanel: View {
           bundle: MobileL10n.bundle)
       )
       .accessibilityIdentifier("mobileCalendar.agendaPanel")
-      .mobileCalendarDeleteScopeDialog(
-        event: $eventAwaitingDeleteScope,
-        delete: deleteScopedEvent)
+  }
+
+  private var deletion: MobileCalendarEventDeletion {
+    MobileCalendarEventDeletion(
+      pending: $eventPendingDeletion, deleteEvent: deleteEvent, deleteScoped: deleteScopedEvent)
   }
 
   @ViewBuilder
@@ -125,7 +134,7 @@ struct MobileCalendarAgendaPanel: View {
         .disabled(isMutating)
 
         Button(role: .destructive) {
-          requestDelete(event)
+          deletion.request(event, on: dayKey)
         } label: {
           Label(
             String(
@@ -135,14 +144,7 @@ struct MobileCalendarAgendaPanel: View {
         .disabled(isMutating)
       }
     }
-  }
-
-  private func requestDelete(_ event: CalendarTimelineEvent) {
-    if event.supportsScopedMutation {
-      eventAwaitingDeleteScope = event
-    } else {
-      Task { _ = await deleteEvent(event) }
-    }
+    .mobileCalendarEventDeletion(of: event, on: dayKey, deletion)
   }
 
   private var listedDays: [MobileCalendarAgendaDay] {

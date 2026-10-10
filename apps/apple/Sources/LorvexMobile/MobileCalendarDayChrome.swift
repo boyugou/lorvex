@@ -92,7 +92,8 @@ struct MobileCalendarAllDayStrip: View {
   var isCompact = false
   let eventColor: (CalendarTimelineEvent) -> Color
   let onTapEvent: (CalendarTimelineEvent) -> Void
-  let onDeleteEvent: (CalendarTimelineEvent) async -> Bool
+  /// Deletes an all-day event from its pill's context menu, asking first.
+  let deletion: MobileCalendarEventDeletion
   let onTapTask: (LorvexTask) -> Void
   let onToggleTask: (LorvexTask) -> Void
   let onDropTask: (LorvexTaskRef, Date) -> Void
@@ -189,7 +190,7 @@ struct MobileCalendarAllDayStrip: View {
                   }
 
                   Button(role: .destructive) {
-                    Task { _ = await onDeleteEvent(event) }
+                    deletion.request(event, on: day.dayKey)
                   } label: {
                     Label(
                       String(
@@ -198,6 +199,7 @@ struct MobileCalendarAllDayStrip: View {
                   }
                 }
               }
+              .mobileCalendarEventDeletion(of: event, on: day.dayKey, deletion)
               .accessibilityElement(children: .ignore)
               .accessibilityAddTraits(event.editable ? .isButton : [])
               .accessibilityLabel(

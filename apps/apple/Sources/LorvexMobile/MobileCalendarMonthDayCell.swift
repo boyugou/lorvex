@@ -15,14 +15,21 @@ import SwiftUI
 /// on the day a longer event ends), a task's on the dashed task surface,
 /// struck through once done, and "+N" for the entries that do not fit.
 ///
-/// Tapping the cell chooses the day. Its context menu creates an event on
-/// the day, and a task dropped on it is planned on it; a task chip drags to
-/// another day. VoiceOver reads the cell as one button: the date, then how
-/// many events and tasks the day has.
+/// Tapping the cell chooses the day, and tapping a chip opens its entry. The
+/// cell resolves the tap itself (``chipIndex(atY:dayNumberSize:chipHeight:count:)``)
+/// instead of giving each chip a button: a button around a chip this small
+/// takes the touches that land near it, which left no way to choose a day that
+/// holds chips. Its context menu creates an event on the day, and a task
+/// dropped on it is planned on it; a task chip drags to another day.
+/// VoiceOver reads the cell as one button: the date, then how many events and
+/// tasks the day has.
 struct MobileCalendarMonthDayCell: View, Equatable {
   /// The vertical room a titled cell keeps around its stack: an inset at the
   /// top and a margin at the bottom.
   nonisolated static let titledInsets: CGFloat = 6
+  /// The inset above a titled cell's day number: half of ``titledInsets``, the
+  /// other half being the margin under the stack.
+  nonisolated static let titledTopInset: CGFloat = titledInsets / 2
   /// The space between a titled cell's chips.
   nonisolated static let chipSpacing: CGFloat = 2
   private static let maxMarks = 3
@@ -61,7 +68,7 @@ struct MobileCalendarMonthDayCell: View, Equatable {
         if isDropTarget { LorvexDesign.Palette.accent.opacity(0.12) }
       }
       .contentShape(Rectangle())
-      .onTapGesture(perform: choose)
+      .onTapGesture(coordinateSpace: .local) { tap(at: $0) }
       .dropDestination(for: LorvexTaskRef.self) { refs, _ in
         guard !refs.isEmpty else { return false }
         dropTasks(refs)
@@ -150,6 +157,40 @@ struct MobileCalendarMonthDayCell: View, Equatable {
     }
   }
 
+  // MARK: Taps
+
+  /// The index of the chip that a tap `y` points below the top of a titled
+  /// cell lands on, among `count` chips; nil when it lands on the day number,
+  /// in the space between chips, on the "+N" row, or under the stack. A chip
+  /// is `chipHeight` tall and the first starts under the day number, as the
+  /// cell lays them out.
+  nonisolated static func chipIndex(
+    atY y: CGFloat, dayNumberSize: CGFloat, chipHeight: CGFloat, count: Int
+  ) -> Int? {
+    let below = y - (titledTopInset + dayNumberSize + chipSpacing)
+    let pitch = chipHeight + chipSpacing
+    guard below.isFinite, below >= 0, pitch > 0 else { return nil }
+    let slot = (below / pitch).rounded(.down)
+    guard slot < CGFloat(count), below - slot * pitch < chipHeight else { return nil }
+    return Int(slot)
+  }
+
+  /// Opens the entry of the chip under the tap; a tap anywhere else, or on a
+  /// chip that opens nothing, chooses the day.
+  private func tap(at point: CGPoint) {
+    guard case .titled(let maxChips) = style else { return choose() }
+    let chips = CalendarMonthGridModel.chips(for: day, maxVisible: maxChips).visible
+    guard
+      let index = Self.chipIndex(
+        atY: point.y, dayNumberSize: dayNumberSize, chipHeight: chipHeight, count: chips.count)
+    else { return choose() }
+    switch chips[index] {
+    case .event(let event) where event.editable: openEvent(event)
+    case .task(let task), .timedTask(let task, _): openTask(task)
+    case .event: choose()
+    }
+  }
+
   // MARK: Chips
 
   private func titledContent(maxChips: Int) -> some View {
@@ -175,21 +216,14 @@ struct MobileCalendarMonthDayCell: View, Equatable {
       .opacity(day.isCurrentMonth ? 1 : 0.55)
     }
     .padding(.horizontal, 3)
-    .padding(.top, Self.titledInsets / 2)
+    .padding(.top, Self.titledTopInset)
   }
 
   @ViewBuilder
   private func chip(for entry: CalendarMonthGridEntry) -> some View {
     switch entry {
     case .event(let event):
-      // An event the user cannot edit opens nothing, so its chip is no
-      // button and a tap on it chooses the day like the rest of the cell.
-      if event.editable {
-        Button { openEvent(event) } label: { eventChip(event) }
-          .buttonStyle(.plain)
-      } else {
-        eventChip(event)
-      }
+      eventChip(event)
     case .task(let task):
       taskChip(task, time: nil)
     case .timedTask(let task, let time):
@@ -214,20 +248,15 @@ struct MobileCalendarMonthDayCell: View, Equatable {
 
   private func taskChip(_ task: LorvexTask, time: String?) -> some View {
     let isDone = task.status == .completed
-    return Button {
-      openTask(task)
-    } label: {
-      LorvexCalendarStripLabel(title: task.title, time: time)
-        .font(LorvexDesign.CalendarMetrics.compactBlockText)
-        .strikethrough(isDone)
-        .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-        .padding(.horizontal, 4)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(height: chipHeight)
-        .lorvexCalendarTaskSurface(isDone: isDone, cornerRadius: LorvexDesign.Radius.s)
-    }
-    .buttonStyle(.plain)
-    .draggable(LorvexTaskRef(id: task.id, title: task.title))
+    return LorvexCalendarStripLabel(title: task.title, time: time)
+      .font(LorvexDesign.CalendarMetrics.compactBlockText)
+      .strikethrough(isDone)
+      .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+      .padding(.horizontal, 4)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .frame(height: chipHeight)
+      .lorvexCalendarTaskSurface(isDone: isDone, cornerRadius: LorvexDesign.Radius.s)
+      .draggable(LorvexTaskRef(id: task.id, title: task.title))
   }
 
   private func eventColor(_ event: CalendarTimelineEvent) -> Color {

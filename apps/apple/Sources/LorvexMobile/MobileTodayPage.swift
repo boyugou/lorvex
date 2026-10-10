@@ -342,6 +342,9 @@ struct MobileTodayPage: View {
           Text(MobileTodayCalmCopy.habitsLabel)
           Image(systemName: "chevron.forward")
             .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
+          // The row's whole width answers a tap, as the Done header's does,
+          // not only the words and the chevron.
+          Spacer(minLength: 0)
         }
         .font(LorvexDesign.Typography.pageLabel)
         .textCase(nil)

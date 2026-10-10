@@ -307,4 +307,85 @@ struct MobileAccessibilityStructureTests {
     #expect(Self.follows(".padding(-tapOutset)", ".padding(tapOutset)", in: schedule, within: 200))
     #expect(schedule.contains("MobileTodayScheduleMenu(store: store, tapOutset: 12)"))
   }
+
+  @Test("the dependency field lists each dependency as its own list row and pads the remove control")
+  func dependencyFieldRowsAndRemoveControl() throws {
+    let field = try Self.source("Sources/LorvexMobile/MobileDependencyField.swift")
+    // A stack around the rows made the whole field one list row, about 26 pt tall per dependency;
+    // as direct children of the section each takes the list's own row height and separator.
+    #expect(!field.contains("VStack"))
+    // The remove glyph is 17 pt across; a 13 pt outset on each side makes its target about 44 pt.
+    #expect(field.contains("removeTapOutset: CGFloat = 13"))
+    #expect(
+      Self.follows(
+        ".padding(-Self.removeTapOutset)", ".padding(Self.removeTapOutset)", in: field, within: 200))
+  }
+
+  @Test("a tag chip's remove control pads its tap target without moving the layout")
+  func tagChipRemovePadsItsTapTarget() throws {
+    let field = try Self.source("Sources/LorvexMobile/MobileTagTokenField.swift")
+    // The glyph is about 13 pt across; a 10 pt outset on each side makes the target about 33 pt.
+    #expect(field.contains("removeTapOutset: CGFloat = 10"))
+    #expect(
+      Self.follows(
+        ".padding(-Self.removeTapOutset)", ".padding(Self.removeTapOutset)", in: field, within: 200))
+  }
+
+  @Test("a habit reminder row reads its time and whether it is off, with the menu as its own button")
+  func habitReminderRowKeepsItsMenuOutsideTheCombinedElement() throws {
+    let list = try Self.source("Sources/LorvexMobile/MobileHabitReminderList.swift")
+    let start = try #require(list.range(of: "private func reminderRow("))
+    let end = try #require(list.range(of: "private static var offLabel"))
+    let row = String(list[start.upperBound..<end.lowerBound])
+    // Combining the whole row folded the menu into the time's element, so VoiceOver read the time
+    // twice and the menu not at all; the bell and the time are combined before the menu is drawn.
+    let combine = try #require(row.range(of: ".accessibilityElement(children: .combine)"))
+    let menu = try #require(row.range(of: "rowMenu(policy)"))
+    #expect(combine.lowerBound < menu.lowerBound)
+    // The bell and the strikethrough show a switched-off reminder only to the eye.
+    #expect(row.contains(".accessibilityValue(policy.enabled ? \"\" : Self.offLabel)"))
+    #expect(row.contains(".accessibilityHidden(true)"))
+  }
+
+  @Test("the reminder time sheet is titled and sized as the other editor sheets are")
+  func habitReminderTimeSheetMatchesTheEditorSheets() throws {
+    let list = try Self.source("Sources/LorvexMobile/MobileHabitReminderList.swift")
+    // An inline title that steps down for a long translation, not a large title in a short sheet.
+    #expect(list.contains(".mobileSheetTitle("))
+    #expect(!list.contains(".navigationTitle("))
+    // One row does not need the half-height sheet's room.
+    #expect(list.contains(".mobileCompactEditorSheetPresentation(cardHeight: Self.timeSheetHeight)"))
+  }
+
+  @Test("the Habits header on Today answers a tap across its whole width")
+  func todayHabitsHeaderTakesATapAcrossItsWidth() throws {
+    let page = try Self.source("Sources/LorvexMobile/MobileTodayPage.swift")
+    let start = try #require(page.range(of: "store.routePath.append(.workspace(.habits))"))
+    let end = try #require(page.range(of: "\"today.habits.all\""))
+    let header = page[start.upperBound..<end.lowerBound]
+    // The label is a plain button's, which answers only where it draws: the words and the
+    // chevron. A trailing spacer carries the content shape across the row, as the Done header's does.
+    #expect(header.contains("Spacer(minLength: 0)"))
+    #expect(header.contains(".contentShape(Rectangle())"))
+  }
+
+  @Test("the calendar header's title and Today button keep their own identifiers")
+  func calendarHeaderIdentifiersStayReachable() throws {
+    let chrome = try Self.source("Sources/LorvexMobile/MobileCalendarModeChrome.swift")
+    let start = try #require(chrome.range(of: "struct MobileCalendarHeaderRow"))
+    let row = String(chrome[start.upperBound...])
+    // An identifier on a container replaces the identifiers of the elements inside it. The title
+    // carries its own, ahead of the spacer, and the stack around the row carries none.
+    let title = try #require(row.range(of: ".accessibilityIdentifier(\"mobileCalendar.header\")"))
+    let spacer = try #require(row.range(of: "Spacer(minLength: 0)"))
+    let today = try #require(row.range(of: ".accessibilityIdentifier(\"mobileCalendar.today\")"))
+    #expect(title.lowerBound < spacer.lowerBound)
+    #expect(spacer.lowerBound < today.lowerBound)
+    #expect(!row[today.upperBound...].contains(".accessibilityIdentifier("))
+    // Neither calendar page names a root that would replace the header's identifiers.
+    for file in ["MobileCalendarDayView.swift", "MobileCalendarMonthView.swift"] {
+      let page = try Self.source("Sources/LorvexMobile/\(file)")
+      #expect(!page.contains(".root\")"), "\(file) carries a root identifier")
+    }
+  }
 }

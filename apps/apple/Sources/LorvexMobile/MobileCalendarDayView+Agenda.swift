@@ -25,13 +25,10 @@ extension MobileCalendarDayView {
     }
   }
 
-  /// The agenda days of the `dayCount` days from `start`. Their events are
-  /// the grid's own search-filtered ones, so an active search never leaves
-  /// the agenda showing the titles, locations, or notes of events the grid
-  /// beside it has filtered out.
+  /// The agenda days of the `dayCount` days from `start`.
   func agendaDays(dayCount: Int, from start: Date) -> [MobileCalendarAgendaDay] {
     MobileCalendarAgendaDay.days(
-      for: dates(dayCount: dayCount, from: start), events: filteredEvents,
+      for: dates(dayCount: dayCount, from: start), events: loadedEvents,
       tasks: store.calendarScheduledTasks, keyFor: { Self.keyFormatter.string(from: $0) })
   }
 }

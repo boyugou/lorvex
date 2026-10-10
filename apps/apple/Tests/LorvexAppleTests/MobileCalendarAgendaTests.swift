@@ -68,26 +68,71 @@ func mobileCalendarOpensInTheModeLastSwitchedTo() async throws {
   #expect(MobileStore(core: core, defaults: defaults).calendarPresentationMode == .grid)
 }
 
+@Test("A calendar search lists upcoming days first, then past days, newest first")
+func calendarSearchListsUpcomingDaysThenPastDays() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+  let events = [
+    makeAgendaEvent(id: "old", title: "Old", startDate: "2026-05-10", startTime: "09:00"),
+    makeAgendaEvent(id: "last-week", title: "Last week", startDate: "2026-05-20", startTime: "09:00"),
+    makeAgendaEvent(id: "later", title: "Later", startDate: "2026-06-02", startTime: "09:00"),
+    makeAgendaEvent(id: "today", title: "Today", startDate: "2026-05-25", startTime: "09:00"),
+    makeAgendaEvent(id: "today-late", title: "Today late", startDate: "2026-05-25", startTime: "15:00"),
+  ]
+
+  let days = MobileCalendarAgendaDay.searchResults(events, todayKey: "2026-05-25", calendar: calendar)
+
+  #expect(days.map(\.key) == ["2026-05-25", "2026-06-02", "2026-05-20", "2026-05-10"])
+  #expect(days.map { $0.events.map(\.id) } == [["today", "today-late"], ["later"], ["last-week"], ["old"]])
+  #expect(days.allSatisfy { $0.tasks.isEmpty })
+  #expect(days[0].date == calendar.date(from: DateComponents(year: 2026, month: 5, day: 25)))
+}
+
+@Test("A calendar search orders a day's events like the agenda: all-day, then by time, then title")
+func calendarSearchOrdersEachDayLikeTheAgenda() throws {
+  let events = [
+    makeAgendaEvent(id: "nine-b", title: "B sync", startDate: "2026-05-26", startTime: "09:00"),
+    makeAgendaEvent(id: "eight", title: "Breakfast", startDate: "2026-05-26", startTime: "08:00"),
+    makeAgendaEvent(id: "allday", title: "Holiday", startDate: "2026-05-26"),
+    makeAgendaEvent(id: "nine-a", title: "A sync", startDate: "2026-05-26", startTime: "09:00"),
+  ]
+
+  let days = MobileCalendarAgendaDay.searchResults(
+    events, todayKey: "2026-05-25", calendar: Calendar(identifier: .gregorian))
+
+  #expect(days.count == 1)
+  #expect(days[0].events.map(\.id) == ["allday", "eight", "nine-a", "nine-b"])
+}
+
+@Test("A calendar search with nothing found lists no days")
+func calendarSearchWithNoEventsListsNoDays() {
+  #expect(
+    MobileCalendarAgendaDay.searchResults(
+      [], todayKey: "2026-05-25", calendar: Calendar(identifier: .gregorian)
+    ).isEmpty)
+}
+
 @MainActor
-@Test("The agenda beside the grid uses the same search-filtered events as the grid")
-func mobileCalendarAgendaUsesSearchProjection() async throws {
-  let store = MobileStore(
-    core: try await makeSeededInMemoryCore(),
-    todayString: { "2026-05-25" })
-  store.calendarTimeline = CalendarTimelineSnapshot(
-    from: "2026-05-25", to: "2026-05-31",
-    events: [
-      makeAgendaEvent(
-        id: "matching", title: "Project Cedar", startDate: "2026-05-25", startTime: "09:00"),
-      makeAgendaEvent(
-        id: "hidden", title: "Dentist", startDate: "2026-05-25", startTime: "10:00"),
-    ],
-    truncated: false, nextOffset: nil)
+@Test("The calendar search reads every date, not only the loaded window")
+func calendarSearchFindsEventsOutsideTheLoadedWindow() async throws {
+  let core = try await makeSeededInMemoryCore()
+  _ = try await core.createCalendarEvent(
+    title: "Zeppelin inspection", startDate: "2027-03-02", endDate: nil, startTime: "10:00",
+    endTime: "11:00", allDay: false, location: "Hangar 4", notes: nil)
+  _ = try await core.createCalendarEvent(
+    title: "Zeppelin retrospective", startDate: "2026-01-12", endDate: nil, startTime: nil,
+    endTime: nil, allDay: true, location: nil, notes: nil)
+  let store = MobileStore(core: core, todayString: { "2026-05-25" })
+  #expect(store.calendarTimeline == nil)
+  let calendar = Calendar(identifier: .gregorian)
 
-  let view = MobileCalendarDayView(store: store, searchQuery: "cedar")
-  let visibleEventIDs = view.agendaDays(dayCount: 7, from: view.visibleDate).flatMap(\.events).map(\.id)
+  let days = await store.searchCalendarAgenda(matching: "  zeppelin ", calendar: calendar)
 
-  #expect(visibleEventIDs == ["matching"])
+  #expect(days.map(\.key) == ["2027-03-02", "2026-01-12"])
+  #expect(days.flatMap(\.events).map(\.title) == ["Zeppelin inspection", "Zeppelin retrospective"])
+  #expect(await store.searchCalendarAgenda(matching: "hangar", calendar: calendar).count == 1)
+  #expect(await store.searchCalendarAgenda(matching: "   ", calendar: calendar).isEmpty)
+  #expect(await store.searchCalendarAgenda(matching: "quokka", calendar: calendar).isEmpty)
 }
 
 @MainActor

@@ -6,7 +6,9 @@ import SwiftUI
 /// width-adaptive 1/2/3 days in Day mode and seven days in Week mode, or the
 /// month grid over the chosen day's agenda (`MobileCalendarMonthView`). The
 /// segmented mode picker lives in each mode's toolbar, and every mode reads
-/// the same `store.calendarTimeline` fetch path.
+/// the same `store.calendarTimeline` fetch path. While the search field holds
+/// text, the events it finds on any date list over the grid
+/// (`MobileCalendarSearchResults`).
 @MainActor
 public struct MobileStoreCalendarView: View {
   @Bindable var store: MobileStore
@@ -16,19 +18,36 @@ public struct MobileStoreCalendarView: View {
     self.store = store
   }
 
+  private var isSearching: Bool {
+    !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
   public var body: some View {
     Group {
       switch store.calendarPresentationMode {
       case .week:
-        MobileCalendarDayView(store: store, weekMode: true, searchQuery: searchQuery)
+        MobileCalendarDayView(store: store, weekMode: true)
       case .grid:
-        MobileCalendarDayView(store: store, searchQuery: searchQuery)
+        MobileCalendarDayView(store: store)
       case .month:
-        MobileCalendarMonthView(store: store, searchQuery: searchQuery)
+        MobileCalendarMonthView(store: store)
       }
     }
-    // Event search narrows the visible grid to events matching title,
-    // location, or notes — the mobile counterpart to the macOS calendar filter.
+    // The grid stays in the hierarchy under the results, so the day it shows
+    // and its scroll position are still there when the search closes; it is
+    // hidden from VoiceOver while the results cover it.
+    .accessibilityHidden(isSearching)
+    .overlay {
+      if isSearching {
+        MobileCalendarSearchResults(store: store, query: searchQuery, calendar: .current)
+      }
+    }
+    // An iPad keeps the mode picker in the bar beside the open search field;
+    // choosing a mode leaves the search for that mode instead of changing a grid
+    // the results cover.
+    .onChange(of: store.calendarPresentationMode) { searchQuery = "" }
+    // Event search finds events by title, location, or notes on any date — the
+    // mobile counterpart to the macOS calendar filter.
     .searchable(
       text: $searchQuery,
       prompt: String(

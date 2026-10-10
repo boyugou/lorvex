@@ -233,3 +233,55 @@ func anEventThatEndsAtMidnightIsAOneDayEvent() {
   #expect(moved.endDate == nil)
   #expect(moved.endDate(updating: toMidnight.endDate) == "2026-10-02")
 }
+
+@Test
+func anEventThatEndsAtMidnightIsAOneDayAllDayEvent() {
+  // 22:00 to midnight occupies only its own day, so All Day covers that day alone.
+  var evening = CalendarEventTiming(
+    start: at(2026, 10, 2, 22), end: at(2026, 10, 3, 0), allDay: false, calendar: timingCalendar)
+  evening.allDay = true
+  #expect(evening.startDate == "2026-10-02")
+  #expect(evening.endDate == nil)
+  #expect(evening.daySpan == 0)
+  #expect(evening.isValid)
+
+  // Turning All Day off brings the block back, ending at the same midnight.
+  evening.allDay = false
+  #expect(evening.start == at(2026, 10, 2, 22))
+  #expect(evening.end == at(2026, 10, 3, 0))
+  #expect(evening.isValid)
+}
+
+@Test
+func allDayKeepsTheEndDayOfEventsThatDoNotEndAtMidnight() {
+  var overnight = CalendarEventTiming(
+    start: at(2026, 10, 2, 22), end: at(2026, 10, 3, 1), allDay: false, calendar: timingCalendar)
+  overnight.allDay = true
+  #expect(overnight.endDate == "2026-10-03")
+
+  var afternoon = CalendarEventTiming(
+    start: at(2026, 10, 2, 9), end: at(2026, 10, 2, 17), allDay: false, calendar: timingCalendar)
+  afternoon.allDay = true
+  #expect(afternoon.endDate == nil)
+  afternoon.allDay = false
+  #expect(afternoon.end == at(2026, 10, 2, 17))
+}
+
+@Test
+func aLongerEventEndingAtMidnightEndsItsAllDaySpanTheDayBefore() {
+  var conference = CalendarEventTiming(
+    start: at(2026, 10, 5, 9), end: at(2026, 10, 7, 0), allDay: false, calendar: timingCalendar)
+  conference.allDay = true
+  #expect(conference.startDate == "2026-10-05")
+  #expect(conference.endDate == "2026-10-06")
+}
+
+@Test
+func anAllDayEventWhoseEndSharesItsStartInstantStaysAsItWasWhenAllDayTurnsOff() {
+  var draft = CalendarEventTiming(
+    start: at(2026, 10, 2, 9), end: at(2026, 10, 2, 9), allDay: true, calendar: timingCalendar)
+  draft.allDay = false
+  #expect(draft.end == at(2026, 10, 2, 9))
+  #expect(!draft.isValid)
+}
+

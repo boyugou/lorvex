@@ -25,7 +25,7 @@ struct MobileCalendarDayPage: View, Equatable {
     let circlesTodayInHeaders: Bool
     /// Whether a day's header opens that day.
     let opensDays: Bool
-    /// The window's events, narrowed by the calendar search.
+    /// The window's events.
     let events: [CalendarTimelineEvent]
     /// The window's scheduled tasks.
     let tasks: [LorvexTask]

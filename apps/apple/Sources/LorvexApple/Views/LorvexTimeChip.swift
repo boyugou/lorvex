@@ -8,6 +8,11 @@ import SwiftUI
 /// a crude stepper field. The bound `Date`'s day component is ignored; only the
 /// hour and minute are read and written. Hours follow the chosen clock
 /// (``LorvexClockFormat``, by default the locale's 12-/24-hour convention) (a 12-hour locale gets an AM/PM segment using the locale symbols).
+///
+/// A chip given an ``allowedRange`` offers only the times inside it: an hour
+/// with no allowed minute and a minute outside the range are dimmed and
+/// inert, and any other change that would leave the range (the AM/PM switch)
+/// lands on the nearest allowed time. Without a range every time is offered.
 struct LorvexTimeChip: View {
   @Environment(\.timeZone) private var timeZone
 
@@ -16,6 +21,10 @@ struct LorvexTimeChip: View {
   /// What the time is ("Start"), when the chip sits beside another chip and
   /// VoiceOver needs the name before the time; nil reads the time alone.
   var accessibilityName: String?
+  /// The times that may be chosen, compared by hour and minute on the day of
+  /// ``date``; a bound on an earlier or later day clips to that day's edge.
+  /// nil allows every time.
+  var allowedRange: ClosedRange<Date>?
   let onSet: (Date) -> Void
 
   @State private var isPresented = false
@@ -48,22 +57,28 @@ struct LorvexTimeChip: View {
     .accessibilityAddTraits(.isButton)
     .accessibilityIdentifier(accessibilityIdentifier)
     .popover(isPresented: $isPresented, arrowEdge: .bottom) {
-      LorvexTimeChipPopover(date: date, onSet: onSet)
+      LorvexTimeChipPopover(date: date, allowedRange: allowedRange, onSet: onSet)
         .environment(\.timeZone, timeZone)
     }
   }
 }
 
-private struct LorvexTimeChipPopover: View {
+struct LorvexTimeChipPopover: View {
   @Environment(\.timeZone) private var timeZone
 
   let date: Date
+  var allowedRange: ClosedRange<Date>?
   let onSet: (Date) -> Void
 
   private static let cellSize: CGFloat = 34
 
   private var calendar: Calendar {
     LorvexDateFormatters.gregorianCalendar(timeZone: timeZone)
+  }
+
+  /// The allowed minutes of the day, or nil when every time is allowed.
+  private var allowedMinutes: ClosedRange<Int>? {
+    Self.allowedMinutes(for: allowedRange, on: date, calendar: calendar)
   }
 
   private var currentHour: Int { calendar.component(.hour, from: date) }
@@ -118,7 +133,8 @@ private struct LorvexTimeChipPopover: View {
         cell(
           label: uses24Hour
             ? value.formatted(.number.precision(.integerLength(2))) : value.formatted(),
-          selected: isHourSelected(value)
+          selected: isHourSelected(value),
+          isEnabled: hasAllowedMinute(inHour: hour24(forDisplay: value))
         ) {
           commit(hour: hour24(forDisplay: value), minute: currentMinute)
         }
@@ -153,12 +169,46 @@ private struct LorvexTimeChipPopover: View {
       ForEach(Array(stride(from: 0, to: 60, by: 5)), id: \.self) { value in
         cell(
           label: ":" + value.formatted(.number.precision(.integerLength(2))),
-          selected: value == currentMinute
+          selected: value == currentMinute,
+          isEnabled: isAllowed(hour: currentHour, minute: value)
         ) {
           commit(hour: currentHour, minute: value)
         }
       }
     }
+  }
+
+  // MARK: Allowed range
+
+  /// The minutes of the day (0...1439) that `range` allows on the day of
+  /// `date`, or nil when there is no range or it leaves no time of that day.
+  static func allowedMinutes(
+    for range: ClosedRange<Date>?, on date: Date, calendar: Calendar
+  ) -> ClosedRange<Int>? {
+    guard let range else { return nil }
+    func minuteOfDay(_ bound: Date) -> Int {
+      let parts = calendar.dateComponents([.hour, .minute], from: bound)
+      let minutes = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+      if calendar.isDate(bound, inSameDayAs: date) { return minutes }
+      return bound < date ? -1 : 1440 + minutes
+    }
+    let lower = max(0, minuteOfDay(range.lowerBound))
+    let upper = min(1439, minuteOfDay(range.upperBound))
+    return lower <= upper ? lower...upper : nil
+  }
+
+  /// The allowed minute of the day nearest to `candidate`.
+  static func clamped(_ candidate: Int, to allowed: ClosedRange<Int>?) -> Int {
+    guard let allowed else { return candidate }
+    return min(max(candidate, allowed.lowerBound), allowed.upperBound)
+  }
+
+  private func isAllowed(hour: Int, minute: Int) -> Bool {
+    allowedMinutes?.contains(hour * 60 + minute) ?? true
+  }
+
+  private func hasAllowedMinute(inHour hour: Int) -> Bool {
+    allowedMinutes?.overlaps(hour * 60...(hour * 60 + 59)) ?? true
   }
 
   // MARK: Shared cell + grid (accent disc when selected, like LorvexMiniMonth)
@@ -171,7 +221,9 @@ private struct LorvexTimeChipPopover: View {
     )
   }
 
-  private func cell(label: String, selected: Bool, action: @escaping () -> Void) -> some View {
+  private func cell(
+    label: String, selected: Bool, isEnabled: Bool, action: @escaping () -> Void
+  ) -> some View {
     Button(action: action) {
       Text(label)
         .font(LorvexDesign.Typography.secondaryText.weight(selected ? .semibold : .regular))
@@ -186,12 +238,15 @@ private struct LorvexTimeChipPopover: View {
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .disabled(!isEnabled)
     .accessibilityLabel(label)
     .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
   }
 
   private func commit(hour: Int, minute: Int) {
-    let updated = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: date) ?? date
+    let target = Self.clamped(hour * 60 + minute, to: allowedMinutes)
+    let updated =
+      calendar.date(bySettingHour: target / 60, minute: target % 60, second: 0, of: date) ?? date
     onSet(updated)
   }
 

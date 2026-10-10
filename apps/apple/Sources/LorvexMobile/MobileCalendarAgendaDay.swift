@@ -142,17 +142,21 @@ struct MobileCalendarAgendaDay: Identifiable, Equatable {
   ) -> [CalendarTimelineEvent] {
     events
       .filter { $0.occurs(on: key) }
-      .sorted { lhs, rhs in
-        switch (lhs.startTime, rhs.startTime) {
-        case (let left?, let right?) where left != right:
-          left < right
-        case (nil, _?):
-          true
-        case (_?, nil):
-          false
-        default:
-          lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
-        }
-      }
+      .sorted(by: isListedBefore)
+  }
+
+  /// Whether `lhs` is listed ahead of `rhs` within one day: events without a
+  /// start time first, then by start time, then by title.
+  static func isListedBefore(_ lhs: CalendarTimelineEvent, _ rhs: CalendarTimelineEvent) -> Bool {
+    switch (lhs.startTime, rhs.startTime) {
+    case (let left?, let right?) where left != right:
+      left < right
+    case (nil, _?):
+      true
+    case (_?, nil):
+      false
+    default:
+      lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+    }
   }
 }

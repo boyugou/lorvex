@@ -6,7 +6,7 @@ import SwiftUI
 /// months out. The month view builds one value per body pass and shares it with
 /// all of its pages, so a page costs only its own offset until its body runs.
 struct MobileCalendarMonthPageSource: Equatable {
-  /// The loaded window's events, narrowed by the calendar search.
+  /// The loaded window's events.
   let events: [CalendarTimelineEvent]
   /// The loaded window's scheduled tasks.
   let tasks: [LorvexTask]

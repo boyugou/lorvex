@@ -6,7 +6,11 @@ import Foundation
 /// end may fall on a later day: an overnight event such as 22:00 to 01:00, or
 /// one that spans several days. An all-day event covers every day from the day
 /// of `start` through the day of `end`, both included. It keeps its clock times
-/// only so that turning All Day off brings back the block it had.
+/// only so that turning All Day off brings back the block it had. A timed event
+/// that ends exactly at midnight occupies only the days before it, so turning
+/// All Day on ends the all-day span on the day before that midnight. Turning
+/// All Day off again puts a one-night event's end back on its midnight; a
+/// longer event keeps the end day the span gave it.
 ///
 /// Days and clock times are read in `calendar`: a Gregorian calendar in the
 /// device's time zone unless a caller passes another time zone, which is how
@@ -16,7 +20,16 @@ import Foundation
 public struct CalendarEventTiming: Equatable, Sendable {
   public var start: Date
   public var end: Date
-  public var allDay: Bool
+  public var allDay: Bool {
+    didSet {
+      guard allDay != oldValue else { return }
+      if allDay {
+        endAllDaySpanBeforeMidnightEnd()
+      } else {
+        restoreEndAfterStart()
+      }
+    }
+  }
   public let calendar: Calendar
 
   /// A timing read in `calendar`. A calendar other than the Gregorian one
@@ -232,6 +245,28 @@ public struct CalendarEventTiming: Equatable, Sendable {
       let last = day(fromKey: endDate, in: utc)
     else { return 0 }
     return max(0, utc.dateComponents([.day], from: first, to: last).day ?? 0)
+  }
+
+  // MARK: All-day switch
+
+  /// A timed event that ends exactly at midnight, on a later day than it
+  /// starts, ends the all-day span on the day before that midnight; the end
+  /// keeps its clock time (00:00) so turning All Day off can restore it.
+  private mutating func endAllDaySpanBeforeMidnightEnd() {
+    let (startDay, _) = Self.dayAndMinute(start, in: calendar)
+    let (endDay, endMinute) = Self.dayAndMinute(end, in: calendar)
+    guard endMinute == 0, days(from: startDay, to: endDay) >= 1 else { return }
+    end = Self.instant(on: endDay, minute: -24 * 60, in: calendar)
+  }
+
+  /// Turning All Day off with an end before the start (the end clock time was
+  /// kept at 00:00 while the span ended the day before) puts the end at the
+  /// first moment after the start that shows its clock time, as
+  /// ``setEndTime(_:)`` does. An end at the start's own instant is left for the
+  /// form's end-after-start warning.
+  private mutating func restoreEndAfterStart() {
+    guard end < start else { return }
+    setEndTime(end)
   }
 
   // MARK: Helpers

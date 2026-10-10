@@ -47,7 +47,7 @@ live.
 | Tab | Root view | Route path | What it shows |
 |---|---|---|---|
 | Today | `MobileStoreTodayView` | `routePath` | The day: header + briefing, a schedule strip that opens the schedule sheet, the task list, Habits, and Done (below) |
-| Calendar | `MobileStoreCalendarView` | `calendarRoutePath` | One time grid (`MobileCalendarDayView`) showing a day (Day) or seven days (Week), segmented in that view's toolbar, under a month row with a fixed-slot Today button; event search. The case is `MobileTab.calendar` |
+| Calendar | `MobileStoreCalendarView` | `calendarRoutePath` | One time grid (`MobileCalendarDayView`) showing a day (Day) or seven days (Week), segmented in that view's toolbar, under a month row with a fixed-slot Today button; event search, which lists the events it finds on any date by day over the grid (`MobileCalendarSearchResults`). The case is `MobileTab.calendar` |
 | Tasks | `MobileStoreTasksHomeView` | `tasksRoutePath` | Search, 2×2 smart-collection grid, Lists, Completed / Cancelled, then Habits and Memory rows (below) |
 | Review | `MobileStoreReviewView` | `reviewRoutePath` | Day / Week picker; daily review form plus day evidence, or the weekly review plus this week's digest |
 

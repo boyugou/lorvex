@@ -19,13 +19,10 @@ import SwiftUI
 /// context menu creates on that day, and a task dragged onto a day from the
 /// agenda, or from another day, is planned on it. A switch to Day or Week
 /// mode opens on the chosen day. The grid reads the store's calendar
-/// window, loaded for the visible month and both months a swipe reveals,
-/// and the search field narrows its events as it does in the other modes.
+/// window, loaded for the visible month and both months a swipe reveals.
 @MainActor
 struct MobileCalendarMonthView: View {
   @Bindable var store: MobileStore
-  /// The calendar search text, owned by the enclosing `MobileStoreCalendarView`.
-  var searchQuery: String = ""
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   /// Compact on a phone on its side.
   @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -53,9 +50,8 @@ struct MobileCalendarMonthView: View {
   /// (``MobileStore/calendarPendingDay(in:)``), chosen in its month, or on
   /// today. The view starts there rather than paging there once it appears,
   /// so the first window it loads is that month's.
-  init(store: MobileStore, searchQuery: String = "") {
+  init(store: MobileStore) {
     self.store = store
-    self.searchQuery = searchQuery
     let day = store.calendarPendingDay(in: .current) ?? store.calendarToday(in: .current)
     _selectedDay = State(initialValue: day)
     _monthOffset = State(initialValue: offset(showing: day))
@@ -73,12 +69,8 @@ struct MobileCalendarMonthView: View {
 
   private var selectedKey: String { Self.keyFormatter.string(from: selectedDay) }
 
-  private var isSearching: Bool {
-    !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-  }
-
   var body: some View {
-    let events = store.calendarEvents(matching: searchQuery)
+    let events = store.calendarTimeline?.events ?? []
     GeometryReader { geo in
       let isRegularWidth = horizontalSizeClass == .regular
       if Self.usesSideAgenda(
@@ -141,14 +133,6 @@ struct MobileCalendarMonthView: View {
           set: { if !$0 { editingEvent = nil } }
         )
       )
-    }
-    .overlay {
-      // The search narrows events only, so "No Results" shows only when no
-      // event matches and no task is in the window either.
-      if isSearching, events.isEmpty, store.calendarScheduledTasks.isEmpty {
-        ContentUnavailableView.search(text: searchQuery)
-          .allowsHitTesting(false)
-      }
     }
   }
 

@@ -27,7 +27,7 @@ struct MobileEmptyStateTests {
     #expect(state.actionTitle == nil)
   }
 
-  @Test("no List row renders ContentUnavailableView.search; only the calendar overlays do")
+  @Test("no view renders ContentUnavailableView.search; the no-results state is MobileEmptyState.search")
   func searchNoMatchRowsAreBounded() throws {
     let files = try FileManager.default.contentsOfDirectory(atPath: mobileSourcesRoot.path)
       .filter { $0.hasSuffix(".swift") }
@@ -37,9 +37,8 @@ struct MobileEmptyStateTests {
         offenders.append(file)
       }
     }
-    // The time grid and the month grid float their no-results state over the
-    // grid, not in a List row.
-    #expect(offenders.sorted() == ["MobileCalendarDayView.swift", "MobileCalendarMonthView.swift"])
+    #expect(offenders.isEmpty, "\(offenders)")
+    #expect(try mobileSource("MobileCalendarSearchResults.swift").contains("MobileEmptyState.search(text:"))
   }
 
   @Test("catalog empty states point at the toolbar ＋ instead of repeating it")

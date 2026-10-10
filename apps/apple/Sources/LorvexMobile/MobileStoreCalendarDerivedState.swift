@@ -19,18 +19,4 @@ extension MobileStore {
       PlannedDayBridge.displayDate(forLogicalDay: $0, timeZone: calendar.timeZone)
     }
   }
-
-  /// The loaded calendar events matching the calendar search `query` in
-  /// title, location, or notes, with the shared term-AND semantics, as the
-  /// macOS calendar filter narrows the same event array. Tasks are not
-  /// searched: the field is an event search. An empty or blank query returns
-  /// every loaded event.
-  func calendarEvents(matching query: String) -> [CalendarTimelineEvent] {
-    let events = calendarTimeline?.events ?? []
-    let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !query.isEmpty else { return events }
-    return events.filter { event in
-      LorvexCatalogSearch.matches(query, fields: [event.title, event.location, event.notes])
-    }
-  }
 }

@@ -29,9 +29,6 @@ public struct MobileCalendarDayView: View {
 
   /// When true, the grid shows the seven days of a week and pages by week.
   var weekMode: Bool = false
-  /// The calendar search text, owned by the enclosing `MobileStoreCalendarView`.
-  /// Narrows the visible events to those matching title / location / notes.
-  var searchQuery: String = ""
   @State var dayOffset = 0
   /// In week mode, the day of the visible week a switch to Day mode opens, in
   /// days from the week's first day. It starts on today, or on the day Day
@@ -62,10 +59,9 @@ public struct MobileCalendarDayView: View {
   /// (``MobileStore/calendarPendingDay(in:)``), or on today. The view starts
   /// on that day rather than moving there once it appears, so the week strip
   /// takes its first position on the right week.
-  public init(store: MobileStore, weekMode: Bool = false, searchQuery: String = "") {
+  public init(store: MobileStore, weekMode: Bool = false) {
     self.store = store
     self.weekMode = weekMode
-    self.searchQuery = searchQuery
     let day = store.calendarPendingDay(in: calendar) ?? today
     _dayOffset = State(initialValue: offset(showing: day))
     _weekDayIndex = State(initialValue: Self.dayIndexInWeek(of: day, calendar: calendar))
@@ -73,15 +69,9 @@ public struct MobileCalendarDayView: View {
 
   var today: Date { store.calendarToday(in: calendar) }
 
-  /// The loaded events narrowed by the calendar search field
-  /// (``MobileStore/calendarEvents(matching:)``).
-  var filteredEvents: [CalendarTimelineEvent] {
-    store.calendarEvents(matching: searchQuery)
-  }
-
-  /// True while the search field holds a non-empty query.
-  var isSearching: Bool {
-    !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  /// The events of the loaded window.
+  var loadedEvents: [CalendarTimelineEvent] {
+    store.calendarTimeline?.events ?? []
   }
 
   /// First day of the current week, honoring the locale's first weekday.
@@ -199,16 +189,6 @@ public struct MobileCalendarDayView: View {
           set: { if !$0 { editingEvent = nil } }
         )
       )
-    }
-    .overlay {
-      // No event matches the query AND no scheduled task is present: only then
-      // is the grid genuinely empty. The search filters events only, so
-      // scheduled tasks stay visible; showing "No Results" over them would
-      // float a contradictory empty state atop real content.
-      if isSearching, filteredEvents.isEmpty, store.calendarScheduledTasks.isEmpty {
-        ContentUnavailableView.search(text: searchQuery)
-          .allowsHitTesting(false)
-      }
     }
   }
 
@@ -387,7 +367,7 @@ public struct MobileCalendarDayView: View {
   /// (`CalendarGridModel.buildDays`) — only the thin now-line overlay
   /// rebuilds.
   private func pager(dayCount: Int) -> some View {
-    let events = filteredEvents
+    let events = loadedEvents
     let tasks = store.calendarScheduledTasks
     return TabView(selection: $dayOffset) {
       ForEach(pageRange, id: \.self) { offset in

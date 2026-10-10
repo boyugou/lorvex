@@ -7,9 +7,10 @@ import SwiftUI
 /// app's Suggest Times and the assistant's propose_daily_schedule alike) keeps
 /// suggested task times inside. One row holds the window as two time chips,
 /// start – end, in a group of its own so its explanation is the footer
-/// directly under it. Changes persist immediately; the store rejects an
-/// invalid window (end at or before start) with a visible error, and the
-/// chips go back to the saved window.
+/// directly under it. Each chip offers only the times that keep the window
+/// valid (a start before the end, an end after the start). Changes persist
+/// immediately; the store still rejects an invalid window with a visible
+/// error, and the chips go back to the saved window.
 struct SettingsWorkingHoursRow: View {
   @Bindable var store: AppStore
 
@@ -28,7 +29,9 @@ struct SettingsWorkingHoursRow: View {
           LorvexTimeChip(
             date: start,
             accessibilityIdentifier: "settings.workingHours.start",
-            accessibilityName: String(localized: "settings.working_hours.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle)
+            accessibilityName: String(localized: "settings.working_hours.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle),
+            allowedRange: Self.window(
+              from: Calendar.current.startOfDay(for: start), to: end.addingTimeInterval(-Self.minimumWindow))
           ) {
             start = $0
             persist()
@@ -39,7 +42,10 @@ struct SettingsWorkingHoursRow: View {
           LorvexTimeChip(
             date: end,
             accessibilityIdentifier: "settings.workingHours.end",
-            accessibilityName: String(localized: "settings.working_hours.end", defaultValue: "End", table: "Localizable", bundle: LorvexL10n.bundle)
+            accessibilityName: String(localized: "settings.working_hours.end", defaultValue: "End", table: "Localizable", bundle: LorvexL10n.bundle),
+            allowedRange: Self.window(
+              from: start.addingTimeInterval(Self.minimumWindow),
+              to: Calendar.current.date(bySettingHour: 23, minute: 59, second: 0, of: end) ?? end)
           ) {
             end = $0
             persist()
@@ -87,6 +93,16 @@ struct SettingsWorkingHoursRow: View {
         end = savedEnd
       }
     }
+  }
+
+  /// The shortest window the chips allow: the store needs the end after the
+  /// start, and a minute is the finest step a time has.
+  private static let minimumWindow: TimeInterval = 60
+
+  /// The closed range from `lower` to `upper`, or nil when `upper` is before
+  /// `lower` and no time is allowed.
+  private static func window(from lower: Date, to upper: Date) -> ClosedRange<Date>? {
+    lower <= upper ? lower...upper : nil
   }
 
   private static func date(fromHHMM value: String) -> Date? {

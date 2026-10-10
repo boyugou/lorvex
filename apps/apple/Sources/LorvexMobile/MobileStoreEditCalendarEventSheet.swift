@@ -69,19 +69,7 @@ struct MobileStoreEditCalendarEventSheet: View {
         // in the list view), so the only delete affordance for a grid-selected
         // event is here. Confirm-gated because deletion is irreversible.
         if event.editable {
-          Section {
-            Button(role: .destructive) {
-              requestDelete()
-            } label: {
-              Label(
-                String(
-                  localized: "common.delete", defaultValue: "Delete", table: "Localizable",
-                  bundle: MobileL10n.bundle), systemImage: "trash")
-            }
-            .mobileDestructiveRowStyle()
-            .disabled(store.isMutatingCalendarEvent)
-            .accessibilityIdentifier("mobileEditCalendarEvent.delete")
-          }
+          Section { deleteButton }
         }
       }
       .mobileSheetTitle(
@@ -101,81 +89,89 @@ struct MobileStoreEditCalendarEventSheet: View {
           .accessibilityIdentifier("mobileEditCalendarEvent.cancel")
         }
 
-        ToolbarItem(placement: .confirmationAction) {
-          Button {
-            attemptSave()
-          } label: {
-            if store.isMutatingCalendarEvent {
-              ProgressView().tint(.white)
-            } else {
-              Text(
-                String(
-                  localized: "common.save", defaultValue: "Save", table: "Localizable",
-                  bundle: MobileL10n.bundle))
-            }
-          }
-          .mobileProminentToolbarButtonStyle()
-          .disabled(!store.canUpdateCalendarDraft)
-          .accessibilityIdentifier("mobileEditCalendarEvent.confirm")
-        }
-      }
-      .confirmationDialog(
-        String(
-          format: String(
-            localized: "calendar.delete_event.confirm.title",
-            defaultValue: "Delete event \u{201C}%@\u{201D}?", table: "Localizable",
-            bundle: MobileL10n.bundle),
-          event.title),
-        isPresented: $isConfirmingDelete,
-        titleVisibility: .visible
-      ) {
-        Button(
-          String(
-            localized: "common.delete", defaultValue: "Delete", table: "Localizable",
-            bundle: MobileL10n.bundle), role: .destructive
-        ) {
-          Task {
-            let deleted = await store.deleteCalendarEvent(event)
-            if deleted { isPresented = false }
-          }
-        }
-        Button(
-          String(
-            localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",
-            bundle: MobileL10n.bundle), role: .cancel
-        ) {}
-      }
-      .confirmationDialog(
-        String(
-          localized: "calendar.edit_event.scope.title",
-          defaultValue: "Save changes to this repeating event?", table: "Localizable",
-          bundle: MobileL10n.bundle),
-        isPresented: $isShowingSaveScope,
-        titleVisibility: .visible
-      ) {
-        scopeButtons(isDelete: false)
-      } message: {
-        Text(saveScopeMessage)
-      }
-      .confirmationDialog(
-        String(
-          localized: "calendar.delete_event.scope.title",
-          defaultValue: "Delete this repeating event?", table: "Localizable",
-          bundle: MobileL10n.bundle),
-        isPresented: $isShowingDeleteScope,
-        titleVisibility: .visible
-      ) {
-        scopeButtons(isDelete: true)
-      } message: {
-        Text(
-          String(
-            localized: "calendar.delete_event.scope.message",
-            defaultValue: "Choose which occurrences to delete.", table: "Localizable",
-            bundle: MobileL10n.bundle))
+        ToolbarItem(placement: .confirmationAction) { saveButton }
       }
     }
     // The event form is a dense form, so it opens at full height.
     .mobileFullEditorSheetPresentation()
+  }
+
+  // Each confirmation dialog is attached to the button that raises it: on the
+  // iPhone a confirmation dialog is a popover that points at the view carrying
+  // the modifier, so attaching it to the form would put it away from the control.
+
+  private var deleteButton: some View {
+    Button(role: .destructive) {
+      requestDelete()
+    } label: {
+      Label(
+        String(
+          localized: "common.delete", defaultValue: "Delete", table: "Localizable",
+          bundle: MobileL10n.bundle), systemImage: "trash")
+    }
+    .mobileDestructiveRowStyle()
+    .disabled(store.isMutatingCalendarEvent)
+    .accessibilityIdentifier("mobileEditCalendarEvent.delete")
+    .mobileDeleteConfirmation(
+      isPresented: $isConfirmingDelete,
+      title: String(
+        format: String(
+          localized: "calendar.delete_event.confirm.title",
+          defaultValue: "Delete event \u{201C}%@\u{201D}?", table: "Localizable",
+          bundle: MobileL10n.bundle),
+        event.title)
+    ) {
+      Task {
+        let deleted = await store.deleteCalendarEvent(event)
+        if deleted { isPresented = false }
+      }
+    }
+    .confirmationDialog(
+      String(
+        localized: "calendar.delete_event.scope.title",
+        defaultValue: "Delete this repeating event?", table: "Localizable",
+        bundle: MobileL10n.bundle),
+      isPresented: $isShowingDeleteScope,
+      titleVisibility: .visible
+    ) {
+      scopeButtons(isDelete: true)
+    } message: {
+      Text(
+        String(
+          localized: "calendar.delete_event.scope.message",
+          defaultValue: "Choose which occurrences to delete.", table: "Localizable",
+          bundle: MobileL10n.bundle))
+    }
+  }
+
+  private var saveButton: some View {
+    Button {
+      attemptSave()
+    } label: {
+      if store.isMutatingCalendarEvent {
+        ProgressView().tint(.white)
+      } else {
+        Text(
+          String(
+            localized: "common.save", defaultValue: "Save", table: "Localizable",
+            bundle: MobileL10n.bundle))
+      }
+    }
+    .mobileProminentToolbarButtonStyle()
+    .disabled(!store.canUpdateCalendarDraft)
+    .accessibilityIdentifier("mobileEditCalendarEvent.confirm")
+    .confirmationDialog(
+      String(
+        localized: "calendar.edit_event.scope.title",
+        defaultValue: "Save changes to this repeating event?", table: "Localizable",
+        bundle: MobileL10n.bundle),
+      isPresented: $isShowingSaveScope,
+      titleVisibility: .visible
+    ) {
+      scopeButtons(isDelete: false)
+    } message: {
+      Text(saveScopeMessage)
+    }
   }
 
   // A recurring event routes save/delete through the occurrence-vs-following-vs-

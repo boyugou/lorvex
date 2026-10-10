@@ -42,28 +42,6 @@ struct MobileListScopeChrome: ViewModifier {
           isPresented: Binding(get: { editingList != nil }, set: { if !$0 { editingList = nil } })
         )
       }
-      .confirmationDialog(
-        String(
-          localized: "list_detail.delete_confirm.title", defaultValue: "Delete this list?",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        isPresented: Binding(
-          get: { listAwaitingDelete != nil }, set: { if !$0 { listAwaitingDelete = nil } }),
-        titleVisibility: .visible,
-        presenting: listAwaitingDelete
-      ) { list in
-        Button(
-          String(
-            localized: "list_detail.delete_list", defaultValue: "Delete List", table: "Localizable",
-            bundle: MobileL10n.bundle), role: .destructive
-        ) {
-          Task { _ = await store.deleteList(list) }
-        }
-        Button(
-          String(
-            localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",
-            bundle: MobileL10n.bundle), role: .cancel
-        ) {}
-      }
   }
 
   private func actionsMenu(_ list: LorvexList) -> some View {
@@ -110,5 +88,18 @@ struct MobileListScopeChrome: ViewModifier {
     }
     .lorvexToolbarHoverEffect()
     .accessibilityIdentifier("mobileTasks.list.actions")
+    // The confirmation hangs off the menu that raised it, so on the iPhone it
+    // points at the ellipsis button rather than opening away from it.
+    .mobileDeleteConfirmation(
+      of: list, pending: $listAwaitingDelete,
+      title: String(
+        localized: "list_detail.delete_confirm.title", defaultValue: "Delete this list?",
+        table: "Localizable", bundle: MobileL10n.bundle),
+      confirmTitle: String(
+        localized: "list_detail.delete_list", defaultValue: "Delete List", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    ) { list in
+      Task { _ = await store.deleteList(list) }
+    }
   }
 }

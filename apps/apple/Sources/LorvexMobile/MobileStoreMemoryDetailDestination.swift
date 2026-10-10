@@ -14,8 +14,6 @@ struct MobileStoreMemoryDetailDestination: View {
   let edit: (MemoryEntry) -> Void
 
   @Environment(\.dismiss) private var dismiss
-  @State private var entryPendingDeletion: MemoryEntry?
-  @State private var unusedBatchConfirmation = false
 
   var body: some View {
     Group {
@@ -28,7 +26,7 @@ struct MobileStoreMemoryDetailDestination: View {
           entry: entry,
           isSaving: store.isSavingMemory,
           edit: { edit(entry) },
-          delete: { entryPendingDeletion = entry }
+          delete: { deleteEntry(entry) }
         )
       } else {
         ContentUnavailableView(
@@ -55,12 +53,6 @@ struct MobileStoreMemoryDetailDestination: View {
         dismiss()
       }
     }
-    .mobileMemoryDeleteDialogs(
-      entryPendingDeletion: $entryPendingDeletion,
-      isConfirmingBatchDelete: $unusedBatchConfirmation,
-      deleteEntry: deleteEntry,
-      deleteBatch: {}
-    )
   }
 
   private var currentEntry: MemoryEntry? {

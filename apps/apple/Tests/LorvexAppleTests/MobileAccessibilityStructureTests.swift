@@ -103,6 +103,32 @@ struct MobileAccessibilityStructureTests {
     #expect(label.hasPrefix(MobileTodayCalmCopy.reopen))
   }
 
+  @Test("a selectable task row reads as its list row does, with no loose fragments")
+  func selectableRowReadsAsItsTask() throws {
+    let task = LorvexTask(
+      id: "task-2", title: "Review the planning doc", notes: "Prepare the agenda for Friday",
+      priority: .p1, status: .open, dueDate: nil, plannedDate: nil, plannedTime: nil,
+      estimatedMinutes: 45, tags: ["work"])
+    let zone = try #require(TimeZone(secondsFromGMT: 0))
+    let time = "9:45 – 10:30 AM"
+    let match = try #require(task.mobileSearchMatch(for: "agenda"))
+
+    let label = MobileTaskWorkspaceSelectableRow.spokenLabel(
+      for: task, timeLabel: time, isBlocked: true, searchMatch: match, timeZone: zone)
+
+    #expect(
+      label
+        == taskAccessibilityLabel(
+          task, timeLabel: time, details: [match.text, MobileTaskDisplayText.blocked], timeZone: zone))
+    #expect(label.hasPrefix("Review the planning doc: "))
+    // What the row's text alone would leave out or speak badly: the priority, the estimate,
+    // the metadata's separators.
+    #expect(label.contains(task.priority.localizedPhrase))
+    #expect(label.contains(LorvexDurationFormat.minutes(45, style: .spoken)))
+    #expect(label.contains(MobileTaskDisplayText.blocked))
+    #expect(!label.contains("·"))
+  }
+
   // MARK: Structure of the calendar
 
   @Test("an event block is one element, a button only when it can be opened")
@@ -196,6 +222,14 @@ struct MobileAccessibilityStructureTests {
     #expect(Self.follows(".accessibilityHidden(true)", "Image(systemName: \"checkmark.circle.fill\")", in: moved, within: 300))
     let habit = try Self.source("Sources/LorvexMobile/MobileHabitDetailPanel.swift")
     #expect(Self.follows(".accessibilityHidden(true)", "Image(systemName: \"sparkles\")", in: habit, within: 200))
+  }
+
+  @Test("a selectable task row's checkbox is not read, and each select button carries the label")
+  func selectableRowStructure() throws {
+    let row = try Self.source("Sources/LorvexMobile/MobileTaskWorkspaceSelectableRow.swift")
+    #expect(Self.follows(".accessibilityHidden(true)", "Image(systemName: isBatchSelected", in: row, within: 300))
+    #expect(row.components(separatedBy: ".accessibilityLabel(spokenLabel)").count - 1 == 2)
+    #expect(row.contains(".accessibilityHint(selectionHint)"))
   }
 
   @Test("detail pages mark their titles and their section titles as headings")

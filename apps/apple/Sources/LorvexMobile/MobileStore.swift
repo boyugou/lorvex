@@ -173,11 +173,6 @@ public final class MobileStore {
   /// other primary tabs so a deep link / Handoff route to Review can push a
   /// detail onto its own stack in place.
   public var reviewRoutePath: [MobileRoute] = []
-  /// Set when the user asks to cancel a recurring task, driving the
-  /// occurrence-vs-series confirmation dialog. `nil` when no choice is pending.
-  /// A bare `cancelTask` on a recurring task spawns the next occurrence, so the
-  /// user must choose whether to end just this one or the whole series.
-  public var pendingRecurringCancelTaskID: LorvexTask.ID?
   public var errorMessage: String?
 
   /// The message of the refresh failure already shown in the root alert. A

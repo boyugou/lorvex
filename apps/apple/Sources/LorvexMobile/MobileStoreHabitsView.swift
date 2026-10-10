@@ -14,7 +14,8 @@ public struct MobileStoreHabitsView: View {
   @State private var searchQuery = ""
   @State var isBatchSelecting = false
   @State private var batchSelectedHabitIDs = Set<LorvexHabit.ID>()
-  @State private var isConfirmingBatchDelete = false
+  /// The habit whose row, in the catalog or the archived section, is asking to
+  /// confirm its deletion.
   @State var confirmingDeleteHabit: LorvexHabit?
 
   public init(store: MobileStore) {
@@ -108,43 +109,11 @@ public struct MobileStoreHabitsView: View {
           isMutating: store.isMutatingHabit || store.isDeletingHabit,
           complete: { Task { await performBatchComplete() } },
           reset: { Task { await performBatchReset() } },
-          delete: { isConfirmingBatchDelete = true },
+          delete: { Task { await performBatchDelete() } },
           clear: { batchSelectedHabitIDs.removeAll() }
         )
         .transition(.move(edge: .bottom).combined(with: .opacity))
       }
-    }
-    .confirmationDialog(
-      String(localized: "habits.batch.delete_confirm.title", defaultValue: "Delete selected habits?", table: "Localizable", bundle: MobileL10n.bundle),
-      isPresented: $isConfirmingBatchDelete,
-      titleVisibility: .visible
-    ) {
-      Button(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), role: .destructive) {
-        Task { await performBatchDelete() }
-      }
-      Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: MobileL10n.bundle), role: .cancel) {}
-    } message: {
-      Text(String(localized: "habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: MobileL10n.bundle))
-    }
-    .confirmationDialog(
-      confirmingHabitDeleteTitle,
-      isPresented: Binding(
-        get: { confirmingDeleteHabit != nil },
-        set: { if !$0 { confirmingDeleteHabit = nil } }
-      ),
-      titleVisibility: .visible
-    ) {
-      if let habit = confirmingDeleteHabit {
-        Button(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), role: .destructive) {
-          Task {
-            await store.deleteHabit(habit)
-            confirmingDeleteHabit = nil
-          }
-        }
-      }
-      Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: MobileL10n.bundle), role: .cancel) {}
-    } message: {
-      Text(String(localized: "habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: MobileL10n.bundle))
     }
     #if DEBUG
       .onAppear {
@@ -230,8 +199,9 @@ public struct MobileStoreHabitsView: View {
               }
               .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 habitCompletionAction(habit)
-                habitDeleteAction(habit)
+                habitDeleteSwipeAction(habit)
                 habitArchiveAction(habit)
+                  .mobileNeutralSwipeStyle()
               }
               .contextMenu {
                 habitCompletionAction(habit)
@@ -239,6 +209,14 @@ public struct MobileStoreHabitsView: View {
                 habitEditAction(habit)
                 habitArchiveAction(habit)
                 habitDeleteAction(habit)
+              }
+              .mobileDeleteConfirmation(
+                of: habit,
+                pending: $confirmingDeleteHabit,
+                title: MobileHabitDeleteCopy.title(for: habit),
+                message: MobileHabitDeleteCopy.message
+              ) { habit in
+                Task { await store.deleteHabit(habit) }
               }
               .tag(habit.id)
           }
@@ -326,7 +304,8 @@ public struct MobileStoreHabitsView: View {
       habits: LorvexCatalogSearch.habits(store.archivedHabits, query: searchQuery),
       isMutating: store.isMutatingHabit || store.isDeletingHabit,
       restore: { habit in Task { await store.setHabitArchived(habit, archived: false) } },
-      requestDelete: { confirmingDeleteHabit = $0 })
+      pendingDelete: $confirmingDeleteHabit,
+      delete: { habit in Task { await store.deleteHabit(habit) } })
   }
 
   private var placeholder: some View {
@@ -350,15 +329,6 @@ public struct MobileStoreHabitsView: View {
 
   private var activeHabits: [LorvexHabit] {
     LorvexCatalogSearch.habits(allActiveHabits, query: searchQuery)
-  }
-
-  private var confirmingHabitDeleteTitle: String {
-    guard let habit = confirmingDeleteHabit else {
-      return String(localized: "habits.row.delete_confirm.title", defaultValue: "Delete habit “%@”?", table: "Localizable", bundle: MobileL10n.bundle)
-    }
-    return String(
-      format: String(localized: "habits.row.delete_confirm.title", defaultValue: "Delete habit “%@”?", table: "Localizable", bundle: MobileL10n.bundle),
-      habit.name)
   }
 
   private var allActiveHabitIDs: [LorvexHabit.ID] {

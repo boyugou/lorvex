@@ -183,26 +183,12 @@ extension MobileStore {
     }
   }
 
-  /// Single entry point for an interactive cancel. A recurring task routes to
-  /// the occurrence-vs-series confirmation (``pendingRecurringCancelTaskID``);
-  /// a non-recurring task cancels immediately. This mirrors the macOS
-  /// `AppStore.requestCancel(_:)` so both surfaces offer the same choice
-  /// instead of silently cancelling one occurrence and spawning the next.
-  public func requestCancelTask(_ task: LorvexTask) async {
-    if task.recurrence != nil {
-      pendingRecurringCancelTaskID = task.id
-    } else {
-      await cancelTask(task.id)
-    }
-  }
-
   /// Apply a recurring-task cancel for the chosen scope.
   /// `.thisOccurrence` cancels the current task and lets the series spawn its
   /// successor; `.all` removes the recurrence rule first so no successor is
-  /// spawned, then cancels. Clears ``pendingRecurringCancelTaskID``.
+  /// spawned, then cancels.
   @discardableResult
   public func cancelRecurringTask(id: LorvexTask.ID, scope: RecurringTaskCancelScope) async -> Bool {
-    pendingRecurringCancelTaskID = nil
     let result = await mutateTaskReturningToday(id: id) {
       var snapshot: TodaySnapshot?
       for operation in scope.coreOperations {

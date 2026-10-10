@@ -11,14 +11,16 @@ import SwiftUI
 /// status transition itself (Complete / Reopen / Move to Open) is the
 /// detail's prominent action (in the toolbar of a screen, in the header row of
 /// a split's pane), so the tiles carry the rest: start or pause, defer (a menu
-/// of days), someday, and cancel in the destructive tint. A parked (someday)
-/// task's toolbar action is Move to Open, so it gets a Complete tile to finish
-/// in one tap. Only actions the task's status allows are shown, and a task
-/// that allows none (completed or cancelled) shows no tiles. At the
-/// accessibility text sizes the tiles wrap two to a row. The tiles' names
-/// share one size, fitted to the row by ``MobileTaskActionLabelFit``, and when
-/// any name wraps onto a second line every tile keeps room for one, so the
-/// symbols stay on one line across the row.
+/// of days), someday, and cancel in the destructive tint. Cancel on a repeating
+/// task first asks, in a dialog that points at the tile, whether to end this
+/// occurrence or the whole series. A parked (someday) task's toolbar action is
+/// Move to Open, so it gets a Complete tile to finish in one tap. Only actions
+/// the task's status allows are shown, and a task that allows none (completed
+/// or cancelled) shows no tiles. At the accessibility text sizes the tiles wrap
+/// two to a row. The tiles' names share one size, fitted to the row by
+/// ``MobileTaskActionLabelFit``, and when any name wraps onto a second line
+/// every tile keeps room for one, so the symbols stay on one line across the
+/// row.
 ///
 /// While a task the task waits on is unfinished (`isHeldUp`), Start stays in
 /// its place but is unavailable, and the section's footer says why: the core
@@ -29,9 +31,15 @@ struct MobileTaskActionSection: View {
   var isHeldUp = false
   let actions: MobileTaskRowActions
   let markSomeday: () async -> Void
+  /// Cancels the task when it is not repeating. A repeating task asks first
+  /// (``cancelAsksForScope(_:)``) and cancels through ``cancelRecurring``.
   let cancel: () async -> Void
+  /// Cancels a repeating task for the scope the person chose.
+  let cancelRecurring: (RecurringTaskCancelScope) async -> Void
 
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+  /// Whether the occurrence-or-series question shows from the Cancel tile.
+  @State private var isChoosingCancelScope = false
   /// The row's width, measured, which the tiles' names are fitted to.
   @State private var rowWidth: CGFloat = 0
   /// The tiles' name size at the default text size (the footnote style's),
@@ -50,6 +58,13 @@ struct MobileTaskActionSection: View {
     case .someday: [.complete, .deferTask, .cancel]
     case .completed, .cancelled: []
     }
+  }
+
+  /// Whether cancelling `task` first asks which occurrences to cancel. A bare
+  /// cancel of a repeating task spawns its next occurrence, so the person
+  /// chooses between this occurrence and the whole series.
+  nonisolated static func cancelAsksForScope(_ task: LorvexTask) -> Bool {
+    task.recurrence != nil
   }
 
   var body: some View {
@@ -149,7 +164,16 @@ struct MobileTaskActionSection: View {
       button(
         tile, "xmark", id: "task.detail.cancel", label: label,
         tint: LorvexDesign.Palette.destructive
-      ) { await cancel() }
+      ) {
+        if Self.cancelAsksForScope(task) {
+          isChoosingCancelScope = true
+        } else {
+          await cancel()
+        }
+      }
+      .mobileRecurringCancelDialog(isPresented: $isChoosingCancelScope) { scope in
+        Task { await cancelRecurring(scope) }
+      }
     }
   }
 

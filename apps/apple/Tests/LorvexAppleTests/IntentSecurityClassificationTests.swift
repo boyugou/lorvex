@@ -82,6 +82,9 @@ func destructiveAndMutatingIntentsRequireAuthentication() {
     CreateLorvexListIntent.self,
     CreateLorvexHabitIntent.self,
     CompleteLorvexTaskIntent.self,
+    // Sets a habit's day aside, or takes that back; nothing is lost either way.
+    SkipLorvexHabitIntent.self,
+    UnskipLorvexHabitIntent.self,
     StartLorvexTaskIntent.self,
     PauseLorvexTaskIntent.self,
     DeferLorvexTaskIntent.self,

@@ -8,11 +8,22 @@ import Testing
 
 private func task(
   _ title: String, priority: LorvexTask.Priority = .p2, status: LorvexTask.Status = .open,
-  estimatedMinutes: Int? = nil, tags: [String] = [], recurrence: TaskRecurrenceRule? = nil
+  dueDate: Date? = nil, estimatedMinutes: Int? = nil, tags: [String] = [],
+  recurrence: TaskRecurrenceRule? = nil
 ) -> LorvexTask {
   LorvexTask(
-    id: "a11y-\(title)", title: title, notes: "", priority: priority, status: status, dueDate: nil,
+    id: "a11y-\(title)", title: title, notes: "", priority: priority, status: status, dueDate: dueDate,
     estimatedMinutes: estimatedMinutes, tags: tags, recurrence: recurrence)
+}
+
+/// A stored due date for the local calendar day `offset` days from today: due
+/// dates are calendar days materialized at UTC midnight.
+private func dueDay(_ offset: Int) -> Date {
+  let local = Calendar.current
+  let day = local.dateComponents(
+    [.year, .month, .day], from: local.date(byAdding: .day, value: offset, to: Date())!)
+  let key = String(format: "%04d-%02d-%02d", day.year!, day.month!, day.day!)
+  return LorvexDateFormatters.ymdUTC.date(from: key)!
 }
 
 /// The title leads, then a priority other than normal, named as the interface
@@ -78,6 +89,16 @@ func taskAccessibilityLabelSpeaksTheRowsTimeAndDetails() {
     label
       == "Review the Q3 planning doc: High priority, 9:45 – 10:30 AM, Until 3:00 PM, Blocked, 45 minutes, #work"
   )
+}
+
+/// The due day is spoken in whole words, never in the abbreviation a row's
+/// chip draws ("in 4d"), which VoiceOver would spell out letter by letter.
+@Test
+func taskAccessibilityLabelSpeaksTheDueDayInWholeWords() {
+  #expect(taskAccessibilityLabel(task("Plan the trip", dueDate: dueDay(0))) == "Plan the trip: due today")
+  #expect(taskAccessibilityLabel(task("Plan the trip", dueDate: dueDay(1))) == "Plan the trip: due tomorrow")
+  #expect(taskAccessibilityLabel(task("Plan the trip", dueDate: dueDay(4))) == "Plan the trip: due in 4 days")
+  #expect(taskAccessibilityLabel(task("Plan the trip", dueDate: dueDay(-3))) == "Plan the trip: overdue 3 days ago")
 }
 
 /// A repeating task says so, as its row shows a repeat glyph.

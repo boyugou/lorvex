@@ -70,6 +70,12 @@ RULES = [
     ('absent_except', ('dir', 'Sources', True), '.animation(', ['Sources/LorvexCore/Support/LorvexReduceMotion.swift']),
     ('absent_except', ('dir', 'Sources', True), '.symbolEffect(.bounce', ['Sources/LorvexCore/Support/LorvexReduceMotion.swift']),
     ('file_missing', 'Sources/LorvexApple/Support/LorvexReduceMotion.swift'),
+    # --- sheetBindingsNeverForceUnwrapAnOptionalSource ---
+    # SwiftUI's failable Binding(_:) force-unwraps its optional source on every read, and a
+    # sheet that is closing still reads its bindings once more, so clearing the source to close
+    # the sheet traps. Sheets unwrap through Binding(unwrapping:) (MobileOptionalBinding.swift),
+    # which answers late reads and ignores late writes.
+    ('absent', ('dir', 'Sources', True), 'Binding($'),
     # --- mobileWorkspaceLoadingStatesDoNotReuseEmptyStates ---
     ('contains', ('file', 'Sources/LorvexMobile/MobileStoreTasksHomeView.swift'), 'MobileSkeletonRows'),
     ('contains', ('file', 'Sources/LorvexMobile/MobileStoreHabitsView.swift'), 'MobileSkeletonRows'),

@@ -162,6 +162,7 @@ public struct MobileStoreTasksHomeView: View {
                 } label: {
                   Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
                 }
+                .mobileDestructiveSwipeStyle()
                 .disabled(list.totalCount != 0 || store.isDeletingList)
               }
             }

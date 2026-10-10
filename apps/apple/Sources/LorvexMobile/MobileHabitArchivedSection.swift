@@ -4,14 +4,18 @@ import SwiftUI
 /// The Habits screen's archived habits, under a header that folds them away
 /// (folded by default, remembered across launches). The header counts the
 /// habits only while it hides them. Each row restores its habit with one tap;
-/// deleting one for good sits behind a swipe or the context menu and the
-/// caller's confirmation. Draws nothing while no habit is archived.
+/// deleting one for good sits behind a swipe or the context menu and a
+/// confirmation that points at the row. Draws nothing while no habit is
+/// archived.
 struct MobileHabitArchivedSection: View {
   let habits: [LorvexHabit]
   let isMutating: Bool
   let restore: (LorvexHabit) -> Void
-  /// Asks to delete a habit; the caller confirms before anything is removed.
-  let requestDelete: (LorvexHabit) -> Void
+  /// The habit whose deletion the confirmation is asking about, shared with
+  /// the active habits so one request shows at a time.
+  @Binding var pendingDelete: LorvexHabit?
+  /// Deletes a habit once the confirmation is accepted.
+  let delete: (LorvexHabit) -> Void
   @AppStorage("habits.archived.collapsed") private var isCollapsed = true
 
   var body: some View {
@@ -62,7 +66,10 @@ struct MobileHabitArchivedSection: View {
     .padding(.vertical, LorvexDesign.Spacing.xxs)
     .accessibilityElement(children: .contain)
     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+      // No `destructive` role: it would collapse the row and take the
+      // confirmation, which is attached to the row, with it.
       deleteButton(habit)
+        .mobileDestructiveSwipeStyle()
     }
     .contextMenu {
       Button {
@@ -71,14 +78,21 @@ struct MobileHabitArchivedSection: View {
         Label(MobileHabitArchiveCopy.restore, systemImage: "arrow.uturn.backward")
       }
       .disabled(isMutating)
-      deleteButton(habit)
+      deleteButton(habit, role: .destructive)
     }
+    .mobileDeleteConfirmation(
+      of: habit,
+      pending: $pendingDelete,
+      title: MobileHabitDeleteCopy.title(for: habit),
+      message: MobileHabitDeleteCopy.message,
+      delete: delete
+    )
     .accessibilityIdentifier("mobileHabits.archived.row.\(habit.id)")
   }
 
-  private func deleteButton(_ habit: LorvexHabit) -> some View {
-    Button(role: .destructive) {
-      requestDelete(habit)
+  private func deleteButton(_ habit: LorvexHabit, role: ButtonRole? = nil) -> some View {
+    Button(role: role) {
+      pendingDelete = habit
     } label: {
       Label(
         String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle),

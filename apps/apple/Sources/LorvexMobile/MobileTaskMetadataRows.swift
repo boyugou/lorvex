@@ -42,6 +42,7 @@ struct MobileChecklistItemRow: View {
               localized: "common.delete", defaultValue: "Delete", table: "Localizable",
               bundle: MobileL10n.bundle), systemImage: "trash")
         }
+        .mobileDestructiveSwipeStyle()
       }
     }
   }
@@ -112,6 +113,7 @@ struct MobileReminderRow: View {
               localized: "common.delete", defaultValue: "Delete", table: "Localizable",
               bundle: MobileL10n.bundle), systemImage: "trash")
         }
+        .mobileDestructiveSwipeStyle()
       }
     }
   }

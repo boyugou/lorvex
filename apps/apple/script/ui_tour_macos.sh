@@ -59,8 +59,9 @@
 # Capture window with a capture line typed) and quick-capture-done (the same
 # window once the line is written, naming the list it landed in), list-window (a detached
 # list window, on the list tasks-list scopes to), palette-jump and
-# palette-search and palette-notes (the command palette on a list's name, on a
-# word that names no destination, and on a word only the notes hold),
+# palette-search, palette-notes and palette-habits (the command palette on a
+# list's name, on a word that names no destination, on a word only the notes
+# hold, and on a word that tasks, a habit and events share),
 # palette-capture (the palette on a capture line with details, where the
 # New Task row names the task and its details),
 # task-editor-doOn, task-editor-due,

@@ -186,7 +186,8 @@ extension CalendarWeekGridView {
   }
 
   /// An event's pill: its title, followed by its start on the day a timed
-  /// event of a day or more starts and by its end on the day it ends.
+  /// event of a day or more starts and by its end on the day it ends. Its
+  /// right-click menu is the one the timed blocks carry.
   private func allDayEventPill(_ event: CalendarTimelineEvent, on day: CalendarGridDay) -> some View {
     allDayPill(title: event.title, time: event.pillTimeLabel(on: day.dayKey), color: eventColor(event))
       .onTapGesture { selectEvent(event) }
@@ -196,6 +197,10 @@ extension CalendarWeekGridView {
       .accessibilityAddTraits(.isButton)
       .accessibilityLabel(calendarPillAccessibilityLabel(event))
       .accessibilityAction { selectEvent(event) }
+      .contextMenu {
+        CalendarEventContextMenu(
+          event: event, select: selectEvent, edit: editEvent, requestDelete: requestDeleteEvent)
+      }
   }
 
   /// A task in the all-day strip speaks the timed blocks' task vocabulary,

@@ -2,14 +2,16 @@ import LorvexCore
 import SwiftUI
 
 /// What a list's own screen adds to the scoped Tasks workspace: the list's
-/// description under its title, and a List Actions menu with Edit List and
-/// Delete List. A list has this one screen however it opens — from the Tasks
-/// home, a deep link, Handoff, or right after it is created.
+/// description under its title, and a List Actions menu with Edit List,
+/// Archive List, and Delete List. A list has this one screen however it opens —
+/// from the Tasks home, a deep link, Handoff, or right after it is created.
 ///
-/// Delete List appears for every list but the Inbox, which the core never
-/// deletes. The core also refuses a list that still holds tasks, so for one the
-/// item stays disabled and says why, and an empty list asks once before it
-/// goes; the screen then closes because deleting a list pops its routes. While
+/// Archive List and Delete List appear for every list but the Inbox, which the
+/// core never deletes or archives. Archiving keeps the list's tasks and closes
+/// the screen. The core refuses to delete a list that still holds tasks, so for
+/// one Delete List stays disabled and says why, and an empty list asks once
+/// before it goes; the screen then closes because deleting a list pops its
+/// routes. While
 /// the workspace is batch selecting, the menu steps aside so the toolbar holds
 /// only the selection's Done. A scope that is not a list (`listID == nil`)
 /// passes through unchanged.
@@ -58,6 +60,14 @@ struct MobileListScopeChrome: ViewModifier {
       .accessibilityIdentifier("mobileTasks.list.edit")
 
       if !list.isInbox {
+        Button {
+          Task { _ = await store.setListArchived(list, archived: true) }
+        } label: {
+          Label(MobileListArchiveCopy.archiveList, systemImage: "archivebox")
+        }
+        .disabled(store.isArchivingList)
+        .accessibilityIdentifier("mobileTasks.list.archive")
+
         Button(role: .destructive) {
           listAwaitingDelete = list
         } label: {

@@ -49,6 +49,16 @@ public final class MobileStore {
   public internal(set) var isCreatingList = false
   public internal(set) var isUpdatingList = false
   public internal(set) var isDeletingList = false
+  /// True while a list is being archived or restored.
+  public internal(set) var isArchivingList = false
+  /// Archived lists for the Lists screen's restore section, loaded when that
+  /// screen appears and refreshed after an archive, restore, or delete.
+  public internal(set) var archivedLists: [LorvexList] = []
+  /// True once ``loadArchivedLists()`` has read the archived lists. From then
+  /// on the full refresh and the lists reload of an inbound sync re-read them
+  /// too, so a change made elsewhere reaches the restore section. Until then the
+  /// list stays unread: the Lists screen reads it when it appears.
+  @ObservationIgnored var archivedListsAreLoaded = false
   public internal(set) var habits: HabitCatalogSnapshot?
   public internal(set) var selectedHabitID: LorvexHabit.ID?
   public internal(set) var habitDetailsByID: [LorvexHabit.ID: HabitDetail] = [:]

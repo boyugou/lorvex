@@ -88,6 +88,7 @@ extension MobileStore {
       // Close the list's screen as soon as the delete commits, before the
       // catalog reload, so a failed reload cannot strand it.
       removeRoutes(toList: list.id)
+      archivedLists.removeAll { $0.id == list.id }
       lists = try await core.loadLists()
       errorMessage = nil
       return true
@@ -95,6 +96,51 @@ extension MobileStore {
       await presentUserFacingError(error)
       return false
     }
+  }
+
+  /// Archives `list`, or restores an archived one. An archived list keeps every
+  /// task and its history but leaves the active Lists screen and the list
+  /// pickers; restoring brings it back. Archiving closes the list's own screen,
+  /// wherever it is open, once the write commits. Returns whether the write
+  /// committed.
+  @discardableResult
+  public func setListArchived(_ list: LorvexList, archived: Bool) async -> Bool {
+    guard !isArchivingList else { return false }
+    isArchivingList = true
+    defer { isArchivingList = false }
+    do {
+      if archived {
+        _ = try await core.archiveList(id: list.id)
+        removeRoutes(toList: list.id)
+      } else {
+        _ = try await core.unarchiveList(id: list.id)
+      }
+      lists = try await core.loadLists()
+      await loadArchivedLists()
+      errorMessage = nil
+      return true
+    } catch {
+      await presentUserFacingError(error)
+      return false
+    }
+  }
+
+  /// Loads the archived lists for the Lists screen's restore section. A failed
+  /// read keeps the last list rather than raising an error: the section is
+  /// secondary to the active lists above it.
+  public func loadArchivedLists() async {
+    guard let loaded = try? await core.loadArchivedLists() else { return }
+    archivedLists = loaded.lists
+    archivedListsAreLoaded = true
+  }
+
+  /// Re-reads the archived lists once the Lists screen has loaded them, so an
+  /// archive, restore, rename, or deletion made elsewhere (the assistant, the
+  /// Mac) shows in the restore section while the screen is open. Before the
+  /// first load the list stays unread.
+  func reloadArchivedListsIfLoaded() async {
+    guard archivedListsAreLoaded else { return }
+    await loadArchivedLists()
   }
 
   /// Pops every screen of list `id` from every tab's stack, so a deleted

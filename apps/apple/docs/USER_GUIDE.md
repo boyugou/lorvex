@@ -3174,6 +3174,16 @@ or the card to open the whole list. The macOS workspace can create, edit, and de
 through the same core list catalog used by MCP and mobile. Drag task rows onto a
 list card to move them; lists with assigned tasks must be emptied before deletion.
 
+**Archive** a list you have finished with to take it out of the active lists
+while keeping every task and its history. On the Mac, right-click the list in
+the sidebar or its card in the Lists catalog and choose **Archive List**; an
+**Archived** section keeps it, and **Unarchive List** brings it back. On iPhone
+and iPad, swipe the list's row on the Tasks tab and tap **Archive**, or open the
+list and choose **Archive List** from its **List Actions** menu. The
+**Archived** section after the lists holds the archived ones, each with a
+**Restore** button. The Inbox cannot be archived, and an archived list that
+still holds tasks cannot be deleted until it is restored and emptied.
+
 ### The Circle on a Task Row
 
 The circle at the start of a task row checks the task off when you click or tap
@@ -3414,6 +3424,13 @@ open its details and move the calendar to that day, or right-click it for
 edit it, or touch and hold it for **Edit** and **Delete**. Clear the search to
 return to the calendar as you left it. Changing the view or the period with the
 toolbar also ends the search.
+
+On the Mac, the Command Palette (⌘K) also lists the events a word finds, up to
+five, under **Events**, after the matching tasks. Each row shows the event's day
+and time; press Return on one, or click it, to open the Calendar on that day with
+the event's details beside the grid. The palette likewise lists up to three
+habits whose name or cue holds the word, under **Habits**; choosing one opens it
+in the Habits workspace.
 
 ### Creating and Editing Events
 
@@ -3806,7 +3823,7 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 |---|---|
 | ⌘N | New task (focuses the quick-add field) |
 | ⌥⌘N | Quick Capture: the small capture window over the current app |
-| ⌘K | Command Palette: find a task, go somewhere, or capture |
+| ⌘K | Command Palette: find a task, a habit, or an event, go somewhere, or capture |
 | ⌘F | Find: focus the search field in All Tasks, Memory, or Calendar; from any other workspace, open All Tasks and focus its search field |
 | ⌘1 | Today |
 | ⌘2 | Calendar |

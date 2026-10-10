@@ -39,6 +39,7 @@ extension MobileStore {
         break
       case .lists:
         if let loaded = try? await core.loadLists() { lists = loaded }
+        await reloadArchivedListsIfLoaded()
       case .calendar:
         // Preserve the window the day view is showing rather than snapping back
         // to a today-anchored one: an inbound sync while the user browses a far

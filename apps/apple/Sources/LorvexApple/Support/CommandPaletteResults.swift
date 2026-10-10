@@ -22,6 +22,15 @@ enum CommandPaletteResult: Identifiable, Equatable {
   /// Open a list in the Tasks workspace, as its sidebar row does. `icon` and
   /// `colorHex` are the list's own, so the row wears the sidebar's icon.
   case openList(id: LorvexList.ID, name: String, icon: String?, colorHex: String?)
+  /// Open a habit in the Habits workspace with its detail in the inspector.
+  /// `icon` and `colorHex` are the habit's own, so the row wears its symbol and
+  /// color; `cue` is the habit's "when" line, the dimmed line under the name,
+  /// `nil` when it has none.
+  case openHabit(id: LorvexHabit.ID, name: String, icon: String?, colorHex: String?, cue: String?)
+  /// Open a calendar event on the day it starts in the Calendar workspace, with
+  /// its detail in the inspector. `subtitle` is the dimmed line under the title
+  /// (``CommandPaletteResults/eventSubtitle(_:todayKey:)``): the day and the time.
+  case openEvent(event: CalendarTimelineEvent, subtitle: String)
   /// Capture a new task from the current query text. `line` is the typed text
   /// the capture reads; `preview` is what the capture will create from it (the
   /// title left once its details are read out, and the details as words), empty
@@ -35,6 +44,8 @@ enum CommandPaletteResult: Identifiable, Equatable {
     case .navigate(let selection): "navigate.\(selection.rawValue)"
     case .openTask(let id, _, _, _, _): "task.\(id)"
     case .openList(let id, _, _, _): "list.\(id)"
+    case .openHabit(let id, _, _, _, _): "habit.\(id)"
+    case .openEvent(let event, _): "event.\(event.id)"
     case .createTask: "create"
     case .action(let command): "action.\(command.id)"
     }
@@ -56,6 +67,10 @@ enum CommandPaletteResult: Identifiable, Equatable {
       return title
     case .openList(_, let name, _, _):
       return name
+    case .openHabit(_, let name, _, _, _):
+      return name
+    case .openEvent(let event, _):
+      return event.title
     case .createTask(let line, let preview):
       return String(
         format: String(
@@ -76,6 +91,8 @@ enum CommandPaletteResult: Identifiable, Equatable {
     case .navigate(let selection): selection.systemImage
     case .openTask(_, _, _, let isDone, _): isDone ? "checkmark.circle" : "circle"
     case .openList: "folder"
+    case .openHabit: "repeat.circle"
+    case .openEvent: "calendar"
     case .createTask: "plus.circle"
     case .action(let command): command.systemImage
     }
@@ -108,6 +125,10 @@ struct CommandPaletteGroup: Identifiable, Equatable {
       String(localized: "command_palette.group.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle)
     case "Tasks":
       String(localized: "command_palette.group.tasks", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
+    case "Habits":
+      String(localized: SidebarSelection.habits.macOSLocalizedTitle)
+    case "Events":
+      String(localized: "command_palette.group.events", defaultValue: "Events", table: "Localizable", bundle: LorvexL10n.bundle)
     case "Actions":
       String(localized: "command_palette.group.actions", defaultValue: "Actions", table: "Localizable", bundle: LorvexL10n.bundle)
     default:
@@ -124,23 +145,35 @@ enum CommandPaletteResults {
   /// Maximum number of task matches surfaced, keeping the palette scannable.
   static let taskResultLimit = 8
 
-  /// Builds grouped results for `rawQuery` against `tasks` and `lists`.
-  /// `lists` may include archived lists: they name the tasks they hold, but
-  /// only active lists are offered as places to open. `now` dates the task
-  /// rows' relative due labels.
+  /// Maximum number of habit matches surfaced.
+  static let habitResultLimit = 3
+
+  /// Maximum number of event matches surfaced. The Calendar's own search lists
+  /// the rest.
+  static let eventResultLimit = 5
+
+  /// Builds grouped results for `rawQuery` against `tasks`, `lists`, `habits`,
+  /// and `events`. `lists` may include archived lists: they name the tasks they
+  /// hold, but only active lists are offered as places to open. `habits` are
+  /// the active habits; a habit matches by name or cue. `events` are
+  /// the calendar events the query found; the palette lists up to
+  /// ``eventResultLimit`` of them, those from `todayKey` on first, earliest
+  /// first, then earlier ones, most recent first, as the Calendar's search
+  /// does. `now` dates the task rows' relative due labels.
   ///
   /// - Empty query: shows every navigation destination plus the global actions,
   ///   so the palette doubles as a launcher with nothing typed.
   /// - Non-empty query: navigation destinations and lists whose name contains
   ///   the query, up to ``taskResultLimit`` tasks matching via
-  ///   `LorvexTask.matchesSearch`, matching global actions, and a "New Task"
-  ///   group that captures the query as a task.
+  ///   `LorvexTask.matchesSearch`, up to ``habitResultLimit`` habits, up to
+  ///   ``eventResultLimit`` calendar events, matching global actions, and a
+  ///   "New Task" group that captures the query as a task.
   ///
   /// The first row is what Return does, so it follows the query's intent. A
   /// query that begins a destination's or a list's name, or one of its words,
   /// is a jump, and those groups lead; any other query leads with capture.
-  /// Task matches never lead, so capturing a title an existing task shares
-  /// still creates the new task. A task's due day is counted from the day
+  /// Task, habit, and event matches never lead, so capturing a title an
+  /// existing task or habit shares still creates the new task. A task's due day is counted from the day
   /// `now` falls on in `timeZone`, the product time zone. `capturePreview`
   /// reads the query as a capture line, so the "New Task" row names the task
   /// the line will create and the details it carries.
@@ -148,6 +181,9 @@ enum CommandPaletteResults {
     query rawQuery: String,
     tasks: [LorvexTask],
     lists: [LorvexList] = [],
+    habits: [LorvexHabit] = [],
+    events: [CalendarTimelineEvent] = [],
+    todayKey: String = LorvexDateFormatters.ymdUTC.string(from: Date()),
     now: Date = Date(),
     timeZone: TimeZone = .current,
     destinations: [SidebarSelection] = SidebarSelection.mainNavigationItems,
@@ -202,6 +238,33 @@ enum CommandPaletteResults {
         }
       if !taskResults.isEmpty {
         groups.append(CommandPaletteGroup(title: "Tasks", results: Array(taskResults)))
+      }
+
+      let habitResults =
+        habits
+        .filter {
+          $0.name.containsSearchTerm(query) || ($0.cue?.containsSearchTerm(query) ?? false)
+        }
+        .prefix(habitResultLimit)
+        .map {
+          CommandPaletteResult.openHabit(
+            id: $0.id, name: $0.name, icon: $0.icon, colorHex: $0.color,
+            cue: $0.cue.flatMap { $0.isEmpty ? nil : $0 })
+        }
+      if !habitResults.isEmpty {
+        groups.append(CommandPaletteGroup(title: "Habits", results: Array(habitResults)))
+      }
+
+      let eventResults =
+        CalendarSearchDay.days(for: events, todayKey: todayKey)
+        .flatMap(\.events)
+        .prefix(eventResultLimit)
+        .map {
+          CommandPaletteResult.openEvent(
+            event: $0, subtitle: eventSubtitle($0, todayKey: todayKey))
+        }
+      if !eventResults.isEmpty {
+        groups.append(CommandPaletteGroup(title: "Events", results: Array(eventResults)))
       }
     }
 
@@ -271,6 +334,24 @@ enum CommandPaletteResults {
       }
     }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
+  }
+
+  /// The dimmed line under an event row: the day it starts ("Today", else
+  /// "Mon, Sep 21") and its time ("9:00 – 9:30 AM", or "All day"). The day comes
+  /// first because a repeating event is one row on its first day and an
+  /// event title alone does not say which of two similar events this is.
+  /// `todayKey` is the logical today as `yyyy-MM-dd`.
+  static func eventSubtitle(_ event: CalendarTimelineEvent, todayKey: String) -> String {
+    let day =
+      event.startDate == todayKey
+      ? String(
+        localized: "calendar.nav.today", defaultValue: "Today", table: "Localizable",
+        bundle: LorvexL10n.bundle)
+      : ReviewCalmCopy.dayLabel(event.startDate)
+    let time =
+      event.listTimeLabel(on: event.startDate, range: TodayCalmCopy.timeRange)
+      ?? TodayCalmCopy.allDay
+    return "\(day) · \(time)"
   }
 
   /// The case-insensitive ranges in `text` where `rawQuery` matches, in order and

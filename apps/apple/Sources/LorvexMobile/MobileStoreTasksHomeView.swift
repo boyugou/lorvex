@@ -81,6 +81,7 @@ public struct MobileStoreTasksHomeView: View {
         await store.refresh()
       }
       await reloadSmartCounts()
+      await store.loadArchivedLists()
     }
     .task(id: "\(searchQuery)|\(store.taskWorkspaceRevision)") {
       guard hasQuery else {
@@ -108,6 +109,26 @@ public struct MobileStoreTasksHomeView: View {
       )
     }
     .accessibilityIdentifier("mobileTasksHome.root")
+  }
+
+  // MARK: - List row actions
+
+  private func archiveListButton(_ list: LorvexList) -> some View {
+    Button {
+      Task { await store.setListArchived(list, archived: true) }
+    } label: {
+      Label(MobileListArchiveCopy.archive, systemImage: "archivebox")
+    }
+    .disabled(store.isArchivingList)
+  }
+
+  private func deleteListButton(_ list: LorvexList, role: ButtonRole? = nil) -> some View {
+    Button(role: role) {
+      Task { await store.deleteList(list) }
+    } label: {
+      Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
+    }
+    .disabled(store.isDeletingList)
   }
 
   // MARK: - Overview
@@ -152,18 +173,32 @@ public struct MobileStoreTasksHomeView: View {
               }
               .tint(.accentColor)
             }
-            // The core never deletes the Inbox, and refuses a list that still
-            // holds tasks, so the Inbox has no delete and a non-empty list's
-            // stays disabled.
+            // The core never deletes or archives the Inbox, and refuses to
+            // delete a list that still holds tasks, so the Inbox has neither
+            // action and only an empty list offers Delete; any other list can
+            // be archived, which keeps its tasks.
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
               if !list.isInbox {
-                Button(role: .destructive) {
-                  Task { await store.deleteList(list) }
-                } label: {
-                  Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
+                if list.totalCount == 0 {
+                  deleteListButton(list)
+                    .mobileDestructiveSwipeStyle()
                 }
-                .mobileDestructiveSwipeStyle()
-                .disabled(list.totalCount != 0 || store.isDeletingList)
+                archiveListButton(list)
+                  .mobileNeutralSwipeStyle()
+              }
+            }
+            .contextMenu {
+              Button {
+                store.prepareListDraft(for: list)
+                editingList = list
+              } label: {
+                Label(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "pencil")
+              }
+              if !list.isInbox {
+                archiveListButton(list)
+                if list.totalCount == 0 {
+                  deleteListButton(list, role: .destructive)
+                }
               }
             }
             .accessibilityIdentifier("mobileTasks.list.\(list.id)")
@@ -188,6 +223,12 @@ public struct MobileStoreTasksHomeView: View {
           .textCase(nil)
           .listRowInsets(.horizontal, 0)
       }
+
+      MobileListArchivedSection(
+        lists: store.archivedLists,
+        isMutating: store.isArchivingList || store.isDeletingList,
+        restore: { list in Task { await store.setListArchived(list, archived: false) } },
+        delete: { list in Task { await store.deleteList(list) } })
 
       // The finished and cancelled tasks are history across every list, not
       // lists of their own, so they sit in a card apart from the lists.

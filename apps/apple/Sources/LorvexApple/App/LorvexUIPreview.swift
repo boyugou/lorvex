@@ -261,16 +261,17 @@
           await emitStop("list-window")
           listWindow.orderOut(nil)
         }
-        // The command palette on four typed queries: the start of a list's
+        // The command palette on five typed queries: the start of a list's
         // name, where the jump leads, a word that begins no destination or
         // list, where capture leads over the matching tasks, a word only the
-        // notes hold, where the task rows quote them, and a capture line with
-        // details, where the capture row names the task and its details.
+        // notes hold, where the task rows quote them, a word that tasks, a
+        // habit, and events share, and a capture line with details, where the
+        // capture row names the task and its details.
         let jumpQuery = Self.tourList(in: store)
           .map { String($0.displayName.prefix(4)) } ?? "Hab"
         for (stop, query) in [
           ("palette-jump", jumpQuery), ("palette-search", "offsite"), ("palette-notes", "team"),
-          ("palette-capture", Self.tourCaptureLine(in: store)),
+          ("palette-habits", "review"), ("palette-capture", Self.tourCaptureLine(in: store)),
         ] {
           let palette = makeCommandPaletteWindow(store: store, query: query, beside: window)
           palette.orderFrontRegardless()

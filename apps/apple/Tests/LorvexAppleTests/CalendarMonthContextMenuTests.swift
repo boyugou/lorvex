@@ -64,3 +64,12 @@ func theWeekGridEventBlocksShareTheEventMenuWithTheMonthGrid() throws {
   #expect(menu.contains("if event.editable {"))
   #expect(menu.contains("\"calendar.event.open_details\""))
 }
+
+@Test
+func theWeekGridAllDayPillsShareTheEventMenu() throws {
+  let chrome = try source("Sources/LorvexApple/Views/CalendarWeekGridChrome.swift")
+  let pill = try #require(chrome.range(of: "private func allDayEventPill("))
+  let body = chrome[pill.upperBound...].prefix(1_100)
+  #expect(body.contains("CalendarEventContextMenu("))
+  #expect(body.contains("event: event, select: selectEvent, edit: editEvent, requestDelete: requestDeleteEvent"))
+}

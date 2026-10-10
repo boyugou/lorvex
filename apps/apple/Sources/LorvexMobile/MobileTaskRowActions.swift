@@ -7,6 +7,8 @@ import SwiftUI
 /// the same actions.
 struct MobileTaskRowActions {
   var complete: () async -> Void
+  /// Returns a finished or cancelled task to the open list.
+  var reopen: () async -> Void
   var start: () async -> Void
   var pause: () async -> Void
   /// Moves the task to the day `days` days after today.
@@ -111,7 +113,9 @@ enum MobileTaskActionCopy {
 /// The shared row actions (``MobileTaskRowActions``): Start or Pause on the
 /// leading swipe; Complete (the full swipe) and Defer to tomorrow on the
 /// trailing swipe; and a context menu with Complete, Start or Pause, and a
-/// Defer menu of days. Used by the plain action row and the batch-selectable
+/// Defer menu of days. A finished or cancelled task has nothing to complete,
+/// start, or defer, so its trailing swipe (the full swipe) and its context menu
+/// offer Reopen alone. Used by the plain action row and the batch-selectable
 /// workspace row; the latter passes `isBatchSelecting: true` to suppress the
 /// actions while selecting. An open task held up by an unfinished one
 /// (`isHeldUp`) offers no Start, since the core would refuse it; its row's
@@ -133,40 +137,59 @@ private struct MobileTaskRowActionsModifier: ViewModifier {
           .disabled(isMutating || isBatchSelecting)
       }
       .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-        Button {
-          Task { await actions.complete() }
-        } label: {
-          Label(MobileTaskActionCopy.complete, systemImage: "checkmark.circle")
-        }
-        .tint(LorvexDesign.Palette.done)
-        .disabled(isMutating || isResolved || isBatchSelecting)
-
-        Button {
-          Task { await actions.deferByDays(MobileDeferChoice.tomorrow.rawValue) }
-        } label: {
-          Label(MobileTaskActionCopy.deferTask, systemImage: "clock")
-        }
-        .tint(LorvexDesign.Palette.dueSoon)
-        .disabled(isMutating || isResolved || isBatchSelecting)
-      }
-      .contextMenu {
-        if !isBatchSelecting {
+        if isResolved {
+          reopenButton
+            .tint(LorvexDesign.Palette.accent)
+            .disabled(isMutating || isBatchSelecting)
+        } else {
           Button {
             Task { await actions.complete() }
           } label: {
             Label(MobileTaskActionCopy.complete, systemImage: "checkmark.circle")
           }
-          .disabled(isMutating || isResolved)
+          .tint(LorvexDesign.Palette.done)
+          .disabled(isMutating || isBatchSelecting)
 
-          startOrPauseButton
-            .disabled(isMutating)
-
-          MobileDeferMenu(deferByDays: actions.deferByDays) {
+          Button {
+            Task { await actions.deferByDays(MobileDeferChoice.tomorrow.rawValue) }
+          } label: {
             Label(MobileTaskActionCopy.deferTask, systemImage: "clock")
           }
-          .disabled(isMutating || isResolved)
+          .tint(LorvexDesign.Palette.dueSoon)
+          .disabled(isMutating || isBatchSelecting)
         }
       }
+      .contextMenu {
+        if !isBatchSelecting {
+          if isResolved {
+            reopenButton
+              .disabled(isMutating)
+          } else {
+            Button {
+              Task { await actions.complete() }
+            } label: {
+              Label(MobileTaskActionCopy.complete, systemImage: "checkmark.circle")
+            }
+            .disabled(isMutating)
+
+            startOrPauseButton
+              .disabled(isMutating)
+
+            MobileDeferMenu(deferByDays: actions.deferByDays) {
+              Label(MobileTaskActionCopy.deferTask, systemImage: "clock")
+            }
+            .disabled(isMutating)
+          }
+        }
+      }
+  }
+
+  private var reopenButton: some View {
+    Button {
+      Task { await actions.reopen() }
+    } label: {
+      Label(MobileTaskActionCopy.reopen, systemImage: "arrow.counterclockwise")
+    }
   }
 
   /// Start on an open task that is not held up, Pause on a started one,

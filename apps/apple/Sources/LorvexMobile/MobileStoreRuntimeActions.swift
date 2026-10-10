@@ -147,6 +147,7 @@ extension MobileStore {
         }
       }
       await reloadArchivedHabitsIfLoaded()
+      await reloadArchivedListsIfLoaded()
       if selectedTaskID == nil {
         selectedTaskID = snapshot.today.tasks.first?.id
       }
@@ -187,6 +188,8 @@ extension MobileStore {
     habitDetailsByID = [:]
     archivedHabits = []
     archivedHabitsAreLoaded = false
+    archivedLists = []
+    archivedListsAreLoaded = false
     calendarTimeline = nil
     calendarScheduledTasks = []
     dailyReview = nil

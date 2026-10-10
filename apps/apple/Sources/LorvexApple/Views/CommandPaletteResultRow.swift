@@ -9,8 +9,12 @@ struct CommandPaletteResultRow: View {
   let hover: () -> Void
 
   private var subtitle: String? {
-    if case .openTask(_, _, let subtitle, _, _) = result { return subtitle }
-    return nil
+    switch result {
+    case .openTask(_, _, let subtitle, _, _): subtitle
+    case .openHabit(_, _, _, _, let cue): cue
+    case .openEvent(_, let subtitle): subtitle
+    default: nil
+    }
   }
 
   private var excerpt: LorvexTaskSearchMatch? {
@@ -84,8 +88,9 @@ struct CommandPaletteResultRow: View {
     }
   }
 
-  /// A list wears its own icon and color, as in the sidebar; every other row
-  /// shows its symbol, tinted while highlighted.
+  /// A list wears its own icon and color, as in the sidebar, and a habit its
+  /// own symbol and color, as on its card; every other row shows its symbol,
+  /// tinted while highlighted.
   @ViewBuilder
   private var icon: some View {
     if case .openList(_, _, let listIcon, let colorHex) = result {
@@ -94,6 +99,10 @@ struct CommandPaletteResultRow: View {
         tint: Color(lorvexHex: colorHex) ?? .accentColor,
         size: 20,
         font: LorvexDesign.Typography.secondaryText)
+    } else if case .openHabit(_, _, let habitIcon, let colorHex, _) = result {
+      Image(systemName: LorvexSymbol.name(for: habitIcon, fallback: result.systemImage))
+        .frame(width: 20)
+        .foregroundStyle(Color(lorvexHex: colorHex) ?? .accentColor)
     } else {
       Image(systemName: result.systemImage)
         .frame(width: 20)

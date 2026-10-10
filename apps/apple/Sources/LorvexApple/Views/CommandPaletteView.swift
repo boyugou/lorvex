@@ -12,6 +12,7 @@ struct CommandPaletteView: View {
 
   @State private var query: String
   @State private var taskResults: [LorvexTask] = []
+  @State private var eventResults: [CalendarTimelineEvent] = []
   @State private var highlightedIndex = 0
   @FocusState private var fieldFocused: Bool
   // Keyboard navigation and query resets scroll the highlighted row into view;
@@ -26,6 +27,11 @@ struct CommandPaletteView: View {
   // as "no results."
   @State private var searchError: String?
 
+  /// How many matching events the palette reads. It lists the first few from
+  /// today on (``CommandPaletteResults/eventResultLimit``), so the read has to
+  /// reach past the past events that match as well.
+  private static let eventSearchLimit = 50
+
   /// `initialQuery` opens the palette already filtered; the preview tour uses
   /// it to capture a typed state.
   init(store: AppStore, initialQuery: String = "") {
@@ -37,6 +43,7 @@ struct CommandPaletteView: View {
     CommandPaletteResults.groups(
       query: query, tasks: taskResults,
       lists: store.orderedLists + store.orderedArchivedLists,
+      habits: store.orderedHabits, events: eventResults, todayKey: store.logicalTodayDateString,
       now: LorvexPreviewClock.now(in: .current),
       timeZone: store.logicalTimeZone,
       capturePreview: { store.quickAddPreview($0) })
@@ -69,7 +76,7 @@ struct CommandPaletteView: View {
     .task(id: query) {
       scrollsToHighlight = true
       highlightedIndex = 0
-      await loadTaskResults()
+      await loadResults()
     }
   }
 
@@ -213,6 +220,10 @@ struct CommandPaletteView: View {
       }
     case .openList(let id, _, _, _):
       store.openTaskListScope(id)
+    case .openHabit(let id, _, _, _, _):
+      store.applyRouteNavigation(.habit(id))
+    case .openEvent(let event, _):
+      store.showEventInCalendar(event, onDayKey: event.startDate)
     case .createTask(let line, _):
       Task { await store.captureLine(line) }
     case .action(let command):
@@ -221,29 +232,35 @@ struct CommandPaletteView: View {
     dismiss()
   }
 
-  /// Searches tasks for the query on every keystroke: one indexed query is
-  /// quick enough that the palette needs no typing pause. A newer keystroke
-  /// cancels this run without awaiting it, so a cancelled run drops its reply
-  /// rather than replace the newer query's results.
-  private func loadTaskResults() async {
+  /// Searches tasks and calendar events for the query on every keystroke: two
+  /// indexed queries are quick enough that the palette needs no typing pause.
+  /// A newer keystroke cancels this run without awaiting it, so a cancelled run
+  /// drops its reply rather than replace the newer query's results.
+  private func loadResults() async {
     let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else {
       taskResults = []
+      eventResults = []
       searchError = nil
       return
     }
     do {
-      let results = try await store.core.searchTasks(
+      async let tasks = store.core.searchTasks(
         query: trimmed,
         status: "all",
         limit: CommandPaletteResults.taskResultLimit,
         offset: 0)
+      async let events = store.core.searchCalendarEvents(
+        query: trimmed, from: nil, to: nil, limit: Self.eventSearchLimit)
+      let (foundTasks, foundEvents) = try await (tasks, events)
       guard !Task.isCancelled else { return }
-      taskResults = results.tasks
+      taskResults = foundTasks.tasks
+      eventResults = foundEvents
       searchError = nil
     } catch {
       guard !Task.isCancelled else { return }
       taskResults = []
+      eventResults = []
       searchError = await store.userFacingBannerMessage(
         for: error, source: "macos.ui.command_palette.search_failed")
     }

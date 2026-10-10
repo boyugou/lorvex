@@ -157,6 +157,7 @@ extension MobileStore {
     }
     return MobileTaskRowActions(
       complete: then { await self.completeTask(id) },
+      reopen: then { await self.reopenTask(id) },
       start: then { await self.startTask(id) },
       pause: then { await self.pauseTask(id) },
       deferByDays: { days in

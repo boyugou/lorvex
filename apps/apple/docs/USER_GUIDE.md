@@ -3373,6 +3373,14 @@ command from the task's right-click menu or its detail. Either way a
 confirmation comes first, and the task with its checklist items, reminders,
 and links is removed. A deleted task cannot be brought back.
 
+**Copy or share a task** as plain text to paste into a message or a note.
+On the Mac, right-click the task and choose **Copy as Text** to put it on the
+clipboard (⌘C does the same for the highlighted tasks, one after another), or **Share** to send it with Mail, Messages, Notes, or AirDrop. On
+iPhone and iPad, tap **Share** in the task's detail. The text is laid out the
+same on every device and written in your language: the title, the status
+unless the task is open, the notes, one line per field with days written as
+dates, the assistant context, and the checklist.
+
 ---
 
 ## Calendar & EventKit
@@ -3888,6 +3896,7 @@ These act on the selected task.
 | ⌘⇧Return | Complete task |
 | ⌘⇧O | Reopen task |
 | ⌘⌫ | Cancel task (while you type in a text field or editor, it deletes to the start of the line instead) |
+| ⌘C | Copy the highlighted tasks as plain text (while a task list has focus; in a text field it copies the selected text) |
 
 Complete and Cancel (for a task that does not repeat) can be undone with ⌘Z,
 **Edit → Undo Complete Task** or **Undo Cancel Task**, however you started them:

@@ -20,12 +20,12 @@ enum MobileTaskDeleteCopy {
       task.title)
   }
 
-  /// What a delete takes with it, and the way to keep the record instead.
+  /// What a delete takes with it, and that it cannot be undone.
   static var message: String {
     String(
       localized: "task.permanent_delete.message",
       defaultValue:
-        "This task and all its checklist items, reminders, and links are removed for good. This can’t be undone — use Cancel to keep the record instead.",
+        "This task and all its checklist items, reminders, and links are removed for good. This can’t be undone.",
       table: "Localizable", bundle: MobileL10n.bundle)
   }
 

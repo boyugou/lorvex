@@ -23,6 +23,7 @@ struct TodayView: View {
         .background(alignment: .top) { sky(content.nowMinutes) }
       }
       .cancelSelectedTaskOnDelete(store, on: .today)
+      .copySelectedTasksAsText(store, on: .today)
       .dropDestination(for: LorvexTaskRef.self) { refs, _ in
         let ids = refs.droppedTaskIDs
         guard !ids.isEmpty else { return false }

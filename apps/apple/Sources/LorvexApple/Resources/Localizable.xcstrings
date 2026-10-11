@@ -70033,6 +70033,191 @@
         }
       }
     },
+    "common.share": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشاركة"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শেয়ার করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teilen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κοινή χρήση"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هم‌رسانی"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שיתוף"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "साझा करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bagikan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共有"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공유"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शेअर करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kongsi"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deel"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udostępnij"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartilhar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partajați"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поделиться"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பகிர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "షేర్"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แชร์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paylaş"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поділитися"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شیئر کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chia sẻ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享"
+          }
+        }
+      }
+    },
     "common.try_again": {
       "comment": "Button that runs a failed load again, shown under the reason the load failed.",
       "extractionState": "manual",
@@ -162363,561 +162548,6 @@
         }
       }
     },
-    "settings.group.basics": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الأساسيات"
-          }
-        },
-        "bn": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "মৌলিক"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grundlagen"
-          }
-        },
-        "el": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Βασικά"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Basics"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Básicos"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "پایه"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Essentiel"
-          }
-        },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "בסיסי"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "बुनियादी"
-          }
-        },
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dasar"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Base"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "基本"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "기본"
-          }
-        },
-        "mr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "मूलभूत"
-          }
-        },
-        "ms": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Asas"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Basis"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podstawy"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Básico"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "De bază"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Основное"
-          }
-        },
-        "ta": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "அடிப்படைகள்"
-          }
-        },
-        "te": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ప్రాథమికాలు"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "พื้นฐาน"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Temel"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Основне"
-          }
-        },
-        "ur": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بنیادی"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cơ bản"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "基础"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "基本"
-          }
-        }
-      }
-    },
-    "settings.group.connections": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الاتصالات"
-          }
-        },
-        "bn": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "কানেকশন"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verbindungen"
-          }
-        },
-        "el": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Συνδέσεις"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connections"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conexiones"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اتصال‌ها"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connexions"
-          }
-        },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "חיבורים"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कनेक्शन"
-          }
-        },
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Koneksi"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connessioni"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "接続"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "연결"
-          }
-        },
-        "mr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "कनेक्शन"
-          }
-        },
-        "ms": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sambungan"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verbindingen"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Połączenia"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conexões"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conexiuni"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Подключения"
-          }
-        },
-        "ta": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "இணைப்புகள்"
-          }
-        },
-        "te": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "కనెక్షన్‌లు"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "การเชื่อมต่อ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bağlantılar"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Підключення"
-          }
-        },
-        "ur": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "کنکشنز"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kết nối"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "连接"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "連線"
-          }
-        }
-      }
-    },
-    "settings.group.operations": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "العمليات"
-          }
-        },
-        "bn": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "পরিচালনা"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vorgänge"
-          }
-        },
-        "el": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Συντήρηση"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operations"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mantenimiento"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "عملیات"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opérations"
-          }
-        },
-        "he": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "תפעול"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "संचालन"
-          }
-        },
-        "id": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operasi"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operazioni"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メンテナンス"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "유지 관리"
-          }
-        },
-        "mr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "संचालन"
-          }
-        },
-        "ms": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operasi"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beheer"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operacje"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operações"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Operațiuni"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Операции"
-          }
-        },
-        "ta": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "பராமரிப்பு"
-          }
-        },
-        "te": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "నిర్వహణ"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "การบำรุงรักษา"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bakım"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Операції"
-          }
-        },
-        "ur": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "آپریشنز"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Thao tác"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "维护"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "維護"
-          }
-        }
-      }
-    },
     "settings.language": {
       "extractionState": "manual",
       "localizations": {
@@ -179238,6 +178868,192 @@
         }
       }
     },
+    "share.field": {
+      "comment": "A line of shared task text: a field's name and its value (\"Due: Tue, Sep 29, 2026\"). %1$@ is the field name, %2$@ its value.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ : %2$@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@：%2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@：%2$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@：%2$@"
+          }
+        }
+      }
+    },
     "sidebar.item.calendar": {
       "comment": "Sidebar name of the calendar workspace (day, week, month grids).",
       "extractionState": "manual",
@@ -182763,6 +182579,192 @@
         }
       }
     },
+    "task.action.copy_as_text": {
+      "comment": "A task's context-menu item that puts the task's title, notes, fields, and checklist on the clipboard as plain text.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ كنص"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টেক্সট হিসেবে কপি করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als Text kopieren"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αντιγραφή ως κείμενο"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy as Text"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar como texto"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کپی به‌صورت متن"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier comme texte"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "העתקה כטקסט"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "टेक्स्ट के रूप में कॉपी करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salin sebagai Teks"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia come testo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "テキストとしてコピー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "텍스트로 복사"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "मजकूर म्हणून कॉपी करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salin sebagai Teks"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopieer als tekst"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiuj jako tekst"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar como texto"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiați ca text"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопировать как текст"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "உரையாக நகலெடு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టెక్స్ట్‌గా కాపీ చేయండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "คัดลอกเป็นข้อความ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin Olarak Kopyala"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скопіювати як текст"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متن کے طور پر کاپی کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sao chép dưới dạng văn bản"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制为文本"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷貝為文字"
+          }
+        }
+      }
+    },
     "task.action.move_to_list": {
       "comment": "Label of the task context menu's list submenu and name of the Edit menu's undo item for moving tasks to another list",
       "extractionState": "manual",
@@ -184763,186 +184765,187 @@
       }
     },
     "task.permanent_delete.message": {
+      "comment": "Explains that a permanent delete removes the task with its checklist items, reminders, and links, and cannot be undone.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ستتم إزالة هذه المهمة وجميع عناصر قائمة التحقق والتذكيرات والروابط الخاصة بها نهائيًا. لا يمكن التراجع عن هذا الإجراء. استخدم \"إلغاء المهمة\" للاحتفاظ بالسجل بدلًا من ذلك."
+            "value": "ستتم إزالة هذه المهمة وجميع عناصر قائمة التحقق والتذكيرات والروابط الخاصة بها نهائيًا. لا يمكن التراجع عن هذا الإجراء."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এই টাস্ক এবং এর সব চেকলিস্ট আইটেম, রিমাইন্ডার ও লিঙ্ক চিরতরে সরিয়ে ফেলা হবে। এটি পূর্বাবস্থায় ফেরানো যাবে না – রেকর্ড রেখে দিতে চাইলে বরং টাস্কটি বাতিল করুন।"
+            "value": "এই টাস্ক এবং এর সব চেকলিস্ট আইটেম, রিমাইন্ডার ও লিঙ্ক চিরতরে সরিয়ে ফেলা হবে। এটি পূর্বাবস্থায় ফেরানো যাবে না।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Aufgabe und alle zugehörigen Checklistenpunkte, Erinnerungen und Verknüpfungen werden endgültig entfernt. Dies kann nicht rückgängig gemacht werden – verwende stattdessen „Aufgabe abbrechen“, um den Eintrag zu behalten."
+            "value": "Diese Aufgabe und alle zugehörigen Checklistenpunkte, Erinnerungen und Verknüpfungen werden endgültig entfernt. Dies kann nicht rückgängig gemacht werden."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Αυτή η εργασία και όλα τα στοιχεία της λίστας ελέγχου, οι υπομνήσεις και οι σύνδεσμοί της αφαιρούνται οριστικά. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί – χρησιμοποιήστε «Ακύρωση» για να διατηρήσετε την εγγραφή."
+            "value": "Αυτή η εργασία και όλα τα στοιχεία της λίστας ελέγχου, οι υπομνήσεις και οι σύνδεσμοί της αφαιρούνται οριστικά. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This task and all its checklist items, reminders, and links are removed for good. This can’t be undone — use Cancel to keep the record instead."
+            "value": "This task and all its checklist items, reminders, and links are removed for good. This can’t be undone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta tarea y todos sus elementos de lista de comprobación, recordatorios y vínculos se eliminan para siempre. Esta acción no se puede deshacer; usa Cancelar para conservar el registro."
+            "value": "Esta tarea y todos sus elementos de lista de comprobación, recordatorios y vínculos se eliminan para siempre. Esta acción no se puede deshacer."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "این کار و همه موارد چک‌لیست، یادآورها و پیوندهایش برای همیشه حذف می‌شوند. این کار قابل بازگشت نیست — برای حفظ سابقه، به‌جای آن از «لغو کار» استفاده کنید."
+            "value": "این کار و همه موارد چک‌لیست، یادآورها و پیوندهایش برای همیشه حذف می‌شوند. این کار قابل بازگشت نیست."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette tâche, ainsi que tous ses éléments de liste de contrôle, rappels et liens, sera supprimée définitivement. Cette action est irréversible. Pour conserver une trace, annulez plutôt la tâche."
+            "value": "Cette tâche, ainsi que tous ses éléments de liste de contrôle, rappels et liens, sera supprimée définitivement. Cette action est irréversible."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "המשימה וכל פריטי רשימת התיוג, התזכורות והקישורים שלה יימחקו לצמיתות. לא ניתן לבטל פעולה זו — כדי לשמור את הרשומה, יש להשתמש במקום זאת ב\"ביטול\"."
+            "value": "המשימה וכל פריטי רשימת התיוג, התזכורות והקישורים שלה יימחקו לצמיתות. לא ניתן לבטל פעולה זו."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "यह कार्य और उसके सभी चेकलिस्ट आइटम, रिमाइंडर और लिंक हमेशा के लिए हट जाते हैं। इसे पूर्ववत नहीं किया जा सकता — रिकॉर्ड रखना हो तो इसके बजाय “रद्द करें” का उपयोग करें।"
+            "value": "यह कार्य और उसके सभी चेकलिस्ट आइटम, रिमाइंडर और लिंक हमेशा के लिए हट जाते हैं। इसे पूर्ववत नहीं किया जा सकता।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tugas ini beserta semua item daftar centang, pengingat, dan tautannya dihapus secara permanen. Tindakan ini tidak dapat diurungkan – gunakan Batalkan agar catatannya tetap tersimpan."
+            "value": "Tugas ini beserta semua item daftar centang, pengingat, dan tautannya dihapus secara permanen. Tindakan ini tidak dapat diurungkan."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa attività, insieme a tutti i suoi elementi della lista di controllo, promemoria e collegamenti, verrà eliminata definitivamente. L’azione non può essere annullata. Per conservare una traccia, annulla invece l’attività."
+            "value": "Questa attività, insieme a tutti i suoi elementi della lista di controllo, promemoria e collegamenti, verrà eliminata definitivamente. L’azione non può essere annullata."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このタスクと、そのチェックリスト項目、リマインダー、リンクがすべて完全に削除されます。この操作は取り消せません。記録を残したい場合は、代わりに「キャンセル」を使用してください。"
+            "value": "このタスクと、そのチェックリスト項目、リマインダー、リンクがすべて完全に削除されます。この操作は取り消せません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 할 일과 모든 체크리스트 항목, 알림, 링크가 완전히 제거됩니다. 이 동작은 취소할 수 없습니다. 기록을 남기려면 대신 ‘취소’를 사용하세요."
+            "value": "이 할 일과 모든 체크리스트 항목, 알림, 링크가 완전히 제거됩니다. 이 동작은 취소할 수 없습니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "हे कार्य आणि त्याचे सर्व तपासणी यादी आयटम, रिमाइंडर आणि लिंक कायमचे काढून टाकले जातात. हे पूर्ववत करता येणार नाही – त्याऐवजी नोंद ठेवण्यासाठी कार्य रद्द करा."
+            "value": "हे कार्य आणि त्याचे सर्व तपासणी यादी आयटम, रिमाइंडर आणि लिंक कायमचे काढून टाकले जातात. हे पूर्ववत करता येणार नाही."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tugas ini beserta semua item senarai semak, peringatan dan pautannya dipadam secara kekal. Tindakan ini tidak boleh dibuat asal – gunakan Batalkan untuk mengekalkan rekod sebaliknya."
+            "value": "Tugas ini beserta semua item senarai semak, peringatan dan pautannya dipadam secara kekal. Tindakan ini tidak boleh dibuat asal."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze taak en alle bijbehorende checklistonderdelen, herinneringen en koppelingen worden definitief verwijderd. Dit kan niet ongedaan worden gemaakt – gebruik in plaats daarvan ‘Annuleer taak’ om het item te behouden."
+            "value": "Deze taak en alle bijbehorende checklistonderdelen, herinneringen en koppelingen worden definitief verwijderd. Dit kan niet ongedaan worden gemaakt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "To zadanie wraz ze wszystkimi elementami listy kontrolnej, przypomnieniami i linkami zostanie usunięte na zawsze. Tej operacji nie można cofnąć — aby zachować zapis, zamiast tego anuluj zadanie."
+            "value": "To zadanie wraz ze wszystkimi elementami listy kontrolnej, przypomnieniami i linkami zostanie usunięte na zawsze. Tej operacji nie można cofnąć."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta tarefa e todos os seus itens da lista de verificação, lembretes e vínculos serão removidos permanentemente. Esta ação não pode ser desfeita. Para manter o registro, cancele a tarefa."
+            "value": "Esta tarefa e todos os seus itens da lista de verificação, lembretes e vínculos serão removidos permanentemente. Esta ação não pode ser desfeita."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Această sarcină, împreună cu toate elementele listei de control, mementourile și legăturile ei, va fi eliminată definitiv. Acțiunea nu poate fi anulată – folosiți în schimb „Anulați sarcina” pentru a păstra înregistrarea."
+            "value": "Această sarcină, împreună cu toate elementele listei de control, mementourile și legăturile ei, va fi eliminată definitiv. Acțiunea nu poate fi anulată."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта задача со всеми пунктами чек-листа, напоминаниями и ссылками будет удалена навсегда. Это действие необратимо — чтобы сохранить запись, вместо этого отмените задачу."
+            "value": "Эта задача со всеми пунктами чек-листа, напоминаниями и ссылками будет удалена навсегда. Это действие необратимо."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "இந்தப் பணியும் அதன் சரிபார்ப்புப் பட்டியல் ஐட்டங்கள், நினைவூட்டல்கள், இணைப்புகள் அனைத்தும் நிரந்தரமாக நீக்கப்படும். இதைச் செயல்தவிர்க்க முடியாது – அதற்குப் பதிலாகப் பதிவை வைத்திருக்க, பணியை ரத்துசெய்யவும்."
+            "value": "இந்தப் பணியும் அதன் சரிபார்ப்புப் பட்டியல் ஐட்டங்கள், நினைவூட்டல்கள், இணைப்புகள் அனைத்தும் நிரந்தரமாக நீக்கப்படும். இதைச் செயல்தவிர்க்க முடியாது."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "ఈ టాస్క్, దీని చెక్‌లిస్ట్ ఐటెమ్‌లు, రిమైండర్‌లు, లింక్‌లు అన్నీ శాశ్వతంగా తొలగించబడతాయి. ఇది అన్‌డూ చేయబడదు – బదులుగా రికార్డ్‌ను ఉంచడానికి టాస్క్‌ను రద్దు చేయండి."
+            "value": "ఈ టాస్క్, దీని చెక్‌లిస్ట్ ఐటెమ్‌లు, రిమైండర్‌లు, లింక్‌లు అన్నీ శాశ్వతంగా తొలగించబడతాయి. ఇది అన్‌డూ చేయబడదు."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "งานนี้พร้อมรายการเช็คลิสต์ เตือนความจำ และลิงก์ทั้งหมดจะถูกลบอย่างถาวร การดำเนินการนี้ไม่สามารถเลิกทำได้ ให้ใช้ “ยกเลิก” เพื่อเก็บบันทึกไว้แทน"
+            "value": "งานนี้พร้อมรายการเช็คลิสต์ เตือนความจำ และลิงก์ทั้งหมดจะถูกลบอย่างถาวร การดำเนินการนี้ไม่สามารถเลิกทำได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu görev; tüm kontrol listesi öğeleri, anımsatıcıları ve bağlantılarıyla birlikte kalıcı olarak kaldırılır. Bu işlem geri alınamaz; kaydı korumak için bunun yerine “İptal et” seçeneğini kullanın."
+            "value": "Bu görev; tüm kontrol listesi öğeleri, anımsatıcıları ve bağlantılarıyla birlikte kalıcı olarak kaldırılır. Bu işlem geri alınamaz."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Це завдання з усіма пунктами чек-листа, нагадуваннями та посиланнями буде видалено назавжди. Ця дія незворотна — щоб зберегти запис, натомість скасуйте завдання."
+            "value": "Це завдання з усіма пунктами чек-листа, нагадуваннями та посиланнями буде видалено назавжди. Ця дія незворотна."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "یہ کام اور اس کے تمام چیک لسٹ آئٹمز، یاد دہانیاں اور لنکس ہمیشہ کے لیے ہٹا دیے جائیں گے۔ اسے واپس نہیں کیا جا سکتا — ریکارڈ رکھنے کے لیے اس کے بجائے منسوخ کا استعمال کریں۔"
+            "value": "یہ کام اور اس کے تمام چیک لسٹ آئٹمز، یاد دہانیاں اور لنکس ہمیشہ کے لیے ہٹا دیے جائیں گے۔ اسے واپس نہیں کیا جا سکتا۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nhiệm vụ này cùng mọi mục checklist, lời nhắc và liên kết của nó sẽ bị xóa vĩnh viễn. Không thể hoàn tác hành động này – hãy dùng Hủy để giữ lại bản ghi."
+            "value": "Nhiệm vụ này cùng mọi mục checklist, lời nhắc và liên kết của nó sẽ bị xóa vĩnh viễn. Không thể hoàn tác hành động này."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "此任务及其所有清单项、提醒和关联都将被永久删除，无法撤销。如需保留记录，请改用“取消”。"
+            "value": "此任务及其所有清单项、提醒和关联都将被永久删除，无法撤销。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "這個任務及其所有核對清單項目、提醒與連結都會被永久移除，且無法還原。若想保留紀錄，請改用「取消」。"
+            "value": "這個任務及其所有核對清單項目、提醒與連結都會被永久移除，且無法還原。"
           }
         }
       }

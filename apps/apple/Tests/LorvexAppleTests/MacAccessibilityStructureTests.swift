@@ -87,11 +87,12 @@ struct MacAccessibilityStructureTests {
     #expect(catalog.contains(".accessibilityLabel(list.spokenSummary)"))
   }
 
-  @Test("the Settings sidebar hides its symbols and marks its group titles as headings")
+  @Test("the Settings sidebar hides its symbols and sets its groups apart by space, with no group titles")
   func settingsSidebar() throws {
     let chrome = try Self.source("Views/SettingsChrome.swift")
     #expect(Self.follows(".accessibilityHidden(true)", "Image(systemName: category.systemImage)", in: chrome, within: 160))
-    #expect(Self.follows(".accessibilityAddTraits(.isHeader)", "Text(group.title)", in: chrome, within: 200))
+    #expect(!chrome.contains("group.title"))
+    #expect(!chrome.contains("} header: {"))
   }
 
   // MARK: Detail pages

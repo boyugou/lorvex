@@ -134,6 +134,7 @@ struct TasksView: View {
               accessibilityIdentifier: "tasks.history.disclosure")
           }
           .cancelSelectedTaskOnDelete(store, on: .taskWorkspace)
+          .copySelectedTasksAsText(store, on: .taskWorkspace)
         }
       }
       .overlay {

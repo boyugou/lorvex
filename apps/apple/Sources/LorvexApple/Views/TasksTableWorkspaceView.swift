@@ -138,6 +138,7 @@ struct TasksTableWorkspaceView: View {
       }
     }
     .cancelSelectedTaskOnDelete(store, on: .taskWorkspace)
+    .copySelectedTasksAsText(store, on: .taskWorkspace)
   }
 }
 

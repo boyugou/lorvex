@@ -48,20 +48,16 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
   }
 }
 
+/// The blocks of rows the sidebar sets apart with space, as System Settings
+/// groups its panes: the everyday pages, the pages that connect Lorvex to other
+/// things, and the pages about the data it keeps. A block carries no name; the
+/// rows say what each page holds.
 private enum SettingsCategoryGroup: String, CaseIterable, Identifiable {
   case basics
   case connections
   case operations
 
   var id: String { rawValue }
-
-  var title: LocalizedStringResource {
-    switch self {
-    case .basics: LocalizedStringResource("settings.group.basics", defaultValue: "Basics", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .connections: LocalizedStringResource("settings.group.connections", defaultValue: "Connections", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .operations: LocalizedStringResource("settings.group.operations", defaultValue: "Operations", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-  }
 
   var categories: [SettingsCategory] {
     switch self {
@@ -84,11 +80,6 @@ struct SettingsSidebar: View {
               .tag(category)
               .accessibilityIdentifier("settings.sidebar.\(category.rawValue)")
           }
-        } header: {
-          Text(group.title)
-            .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .accessibilityAddTraits(.isHeader)
         }
       }
     }

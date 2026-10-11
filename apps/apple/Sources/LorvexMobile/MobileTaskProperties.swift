@@ -7,6 +7,20 @@ enum MobileTaskField: String, Identifiable, CaseIterable {
   case recurrence = "repeat"
   case tags, waitsOn, hideUntil
   var id: String { rawValue }
+
+  /// The field a line of a task's shared text names.
+  init(_ field: LorvexTaskShareField) {
+    switch field {
+    case .doOn: self = .doOn
+    case .estimate: self = .estimate
+    case .due: self = .due
+    case .list: self = .list
+    case .priority: self = .priority
+    case .recurrence: self = .recurrence
+    case .tags: self = .tags
+    case .hideUntil: self = .hideUntil
+    }
+  }
 }
 
 /// The task's fields as the iPhone task detail lists them, matching the macOS
@@ -21,7 +35,7 @@ enum MobileTaskField: String, Identifiable, CaseIterable {
 struct MobileTaskProperties: Equatable {
   struct Row: Identifiable, Equatable {
     let field: MobileTaskField
-    /// The value as plain text, which is also what leaves the app in shared text.
+    /// The value as plain text.
     let value: String
     /// The parts of a value that is a list (a task's tags); nil for a value
     /// that is one phrase.
@@ -39,24 +53,13 @@ struct MobileTaskProperties: Equatable {
 
   enum Tint: Equatable { case overdue, soon, high }
 
-  /// How the rows name a day.
-  enum DayStyle: Equatable {
-    /// Relative to today, as the detail shows it: "Tomorrow", "Sep 20 · 9
-    /// days late".
-    case relative
-    /// A date that stays true after today, for text that leaves the app:
-    /// "Tue, Sep 29, 2026".
-    case dated
-  }
-
   var rows: [Row]
   var additions: [MobileTaskField]
 
   /// - Parameters:
   ///   - listName: the task's list name, or `nil` when it has none.
   ///   - logicalDay: the product's logical today, `yyyy-MM-dd`.
-  ///   - days: how the rows name a day.
-  init(task: LorvexTask, listName: String?, logicalDay: String, days: DayStyle = .relative) {
+  init(task: LorvexTask, listName: String?, logicalDay: String) {
     typealias Copy = MobileTaskPropertyCopy
     var rows: [Row] = []
     var additions: [MobileTaskField] = []
@@ -67,17 +70,13 @@ struct MobileTaskProperties: Equatable {
         additions.append(field)
       }
     }
-    // A planned day after a deadline that has not passed yet says so in the
-    // detail; text that leaves the app keeps only its dates, which stay true.
-    let isAfterDeadline =
-      days == .relative
-      && LorvexDayPhrase.isPlannedAfterDeadline(planned: task.plannedDate, due: task.dueDate, logicalDay: logicalDay)
+    // A planned day after a deadline that has not passed yet says so.
+    let isAfterDeadline = LorvexDayPhrase.isPlannedAfterDeadline(
+      planned: task.plannedDate, due: task.dueDate, logicalDay: logicalDay)
     field(
       .doOn,
       task.plannedDate.map { planned in
-        let day =
-          days == .dated
-          ? Self.dated(planned) : LorvexDayPhrase.phrase(for: planned, logicalDay: logicalDay, position: .leading)
+        let day = LorvexDayPhrase.phrase(for: planned, logicalDay: logicalDay, position: .leading)
         let when = task.plannedTime.map { Copy.day(day, at: $0) } ?? day
         return isAfterDeadline ? LorvexDayPhrase.afterDeadline(when) : when
       },
@@ -86,9 +85,7 @@ struct MobileTaskProperties: Equatable {
     if let due = task.dueDate {
       let offset = lorvexDayOffset(from: logicalDay, to: due)
       let tint: Tint? = offset.map { $0 < 0 ? .overdue : ($0 <= 1 ? .soon : nil) } ?? nil
-      let day =
-        days == .dated
-        ? Self.dated(due) : Self.sentenceCased(LorvexDayPhrase.due(due, plannedDay: nil, logicalDay: logicalDay))
+      let day = Self.sentenceCased(LorvexDayPhrase.due(due, plannedDay: nil, logicalDay: logicalDay))
       field(.due, day, tint: tint)
     } else {
       field(.due, nil)
@@ -106,19 +103,10 @@ struct MobileTaskProperties: Equatable {
     field(
       .hideUntil,
       hiddenUntil.map {
-        days == .dated
-          ? Self.dated($0)
-          : Self.sentenceCased(LorvexDayPhrase.phrase(for: $0, logicalDay: logicalDay, position: .inline))
+        Self.sentenceCased(LorvexDayPhrase.phrase(for: $0, logicalDay: logicalDay, position: .inline))
       })
     self.rows = rows
     self.additions = additions
-  }
-
-  /// A stored day as a date with its weekday and year, in the user's language
-  /// ("Tue, Sep 29, 2026", "2026年9月29日周二"). The stored day names a calendar
-  /// day, so it is written in UTC and never shifts across time zones.
-  static func dated(_ day: Date) -> String {
-    LorvexDateFormatters.string(day, template: "yMMMEd", timeZone: .gmt)
   }
 
   /// A phrase written to follow other words ("the same day") as it reads

@@ -298,6 +298,24 @@ struct WorkspaceTaskContextMenu: View {
       )
     }
 
+    Button {
+      store.copyShareText(of: task)
+    } label: {
+      Label(
+        String(localized: "task.action.copy_as_text", defaultValue: "Copy as Text", table: "Localizable", bundle: LorvexL10n.bundle),
+        systemImage: "doc.on.doc"
+      )
+    }
+    .accessibilityIdentifier("task.copyAsText.\(task.id)")
+
+    ShareLink(item: store.shareText(for: task)) {
+      Label(
+        String(localized: "common.share", defaultValue: "Share", table: "Localizable", bundle: LorvexL10n.bundle),
+        systemImage: "square.and.arrow.up"
+      )
+    }
+    .accessibilityIdentifier("task.share.\(task.id)")
+
     Button(role: .destructive) {
       // Recurring tasks route to the shared occurrence-vs-series scope dialog
       // (ContentView); non-recurring cancel directly. Matches the detail pane.

@@ -8,27 +8,17 @@ import LorvexCore
 /// item starts with "- ". Days are written as dates rather than "tomorrow",
 /// since the text is read after the day it was shared on.
 enum MobileShareText {
-  /// The task in the order its detail shows it: the title, the status when the
-  /// task is not open, the notes, one "Label: value" line per set field, the
-  /// assistant context, and the checklist (`- [x]` for a finished item).
+  /// The task as ``LorvexTaskShareText`` lays it out, worded from this
+  /// module's catalog.
   static func task(_ task: LorvexTask, listName: String?, logicalDay: String) -> String {
-    var blocks: [String] = []
-    blocks.append(
-      task.status == .open ? task.title : "\(task.title)\n\(task.status.localizedName)")
-    if let notes = nonBlank(task.notes) { blocks.append(notes) }
-    let rows = MobileTaskProperties(task: task, listName: listName, logicalDay: logicalDay, days: .dated).rows
-    if !rows.isEmpty {
-      blocks.append(rows.map { field(MobileTaskPropertyCopy.label($0.field), $0.value) }.joined(separator: "\n"))
-    }
-    if let aiNotes = nonBlank(task.aiNotes) {
-      blocks.append(section(MobileTaskPropertyCopy.assistantContext, aiNotes))
-    }
-    if !task.checklistItems.isEmpty {
-      let items = task.checklistItems.sorted { $0.position < $1.position }
-        .map { "- [\($0.completedAt == nil ? " " : "x")] \($0.text)" }
-      blocks.append(section(MobileTaskPropertyCopy.checklist, items.joined(separator: "\n")))
-    }
-    return blocks.joined(separator: "\n\n")
+    LorvexTaskShareText.text(
+      for: task, listName: listName, logicalDay: logicalDay,
+      labels: LorvexTaskShareLabels(
+        field: { MobileTaskPropertyCopy.label(MobileTaskField($0)) },
+        line: field,
+        dayAtTime: { MobileTaskPropertyCopy.day($0, at: $1) },
+        assistantContext: MobileTaskPropertyCopy.assistantContext,
+        checklist: MobileTaskPropertyCopy.checklist))
   }
 
   /// The day's review: its date, how it felt and the energy it had ("Feeling

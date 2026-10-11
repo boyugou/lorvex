@@ -4,7 +4,10 @@ import SwiftUI
 /// The Habits screen's compact catalog: a row per active habit that matches
 /// the search, an empty state while no habit is active, and the search's
 /// no-results row while none match. The screen's navigation title names the
-/// list, so the section draws no header of its own.
+/// list, so the section draws no header of its own. Each row can move one
+/// place in the manual order, except while a search narrows the list: the
+/// habits between the ones shown are hidden, so a move there would be
+/// ambiguous.
 struct MobileStoreHabitsSection: View {
   let habits: [LorvexHabit]
   let isMutating: Bool
@@ -14,6 +17,7 @@ struct MobileStoreHabitsSection: View {
   let complete: (LorvexHabit) async -> Bool
   let reset: (LorvexHabit) async -> Bool
   let toggleSkip: (LorvexHabit) async -> Bool
+  let move: (LorvexHabit, MobileReorderDirection) -> Void
   let searchQuery: String
   let detailRoute: (LorvexHabit) -> MobileRoute
 
@@ -21,6 +25,8 @@ struct MobileStoreHabitsSection: View {
     Section {
       let activeHabits = habits.filter { !$0.archived }
       let matchingHabits = LorvexCatalogSearch.habits(activeHabits, query: searchQuery)
+      let order = activeHabits.map(\.id)
+      let isFiltering = LorvexCatalogSearch.isFiltering(searchQuery)
       if activeHabits.isEmpty {
         MobileEmptyState(
           icon: "repeat",
@@ -40,6 +46,12 @@ struct MobileStoreHabitsSection: View {
             complete: { await complete(habit) },
             reset: { await reset(habit) },
             toggleSkip: { await toggleSkip(habit) },
+            moves: isFiltering
+              ? nil
+              : MobileHabitRowMoves(
+                canMoveUp: MobileReorderDirection.moved(habit.id, in: order, .up) != nil,
+                canMoveDown: MobileReorderDirection.moved(habit.id, in: order, .down) != nil,
+                moveUp: { move(habit, .up) }, moveDown: { move(habit, .down) }),
             detailRoute: detailRoute(habit)
           )
         }
@@ -49,11 +61,21 @@ struct MobileStoreHabitsSection: View {
   }
 }
 
+/// A habit row's one-place moves in the manual order: whether each applies and
+/// what it does.
+struct MobileHabitRowMoves {
+  let canMoveUp: Bool
+  let canMoveDown: Bool
+  let moveUp: () -> Void
+  let moveDown: () -> Void
+}
+
 /// One habit in the Habits list: icon tile, name, today's progress, the
 /// milestone line, and the trailing completion ring. Tapping the row opens
 /// the habit's detail. Skip Today (Undo Skip once skipped) and Edit ride the
 /// leading swipe and Delete (confirmed) and Archive the trailing one; the
-/// context menu offers the same actions plus complete / reset.
+/// context menu offers the same actions plus complete / reset and, when
+/// `moves` is set, Move Up and Move Down (also VoiceOver actions on the row).
 struct MobileHabitRow: View {
   let habit: LorvexHabit
   let isMutating: Bool
@@ -63,6 +85,7 @@ struct MobileHabitRow: View {
   let complete: () async -> Bool
   let reset: () async -> Bool
   let toggleSkip: () async -> Bool
+  let moves: MobileHabitRowMoves?
   let detailRoute: MobileRoute
 
   @State private var isConfirmingDelete = false
@@ -141,6 +164,14 @@ struct MobileHabitRow: View {
       }
       .disabled(isMutating)
 
+      if let moves {
+        Divider()
+        MobileReorderMenuItems(
+          canMoveUp: moves.canMoveUp, canMoveDown: moves.canMoveDown,
+          moveUp: moves.moveUp, moveDown: moves.moveDown)
+        Divider()
+      }
+
       archiveButton
 
       Button(role: .destructive) {
@@ -150,6 +181,9 @@ struct MobileHabitRow: View {
       }
       .disabled(isMutating)
     }
+    .mobileReorderActions(
+      canMoveUp: moves?.canMoveUp ?? false, canMoveDown: moves?.canMoveDown ?? false,
+      moveUp: { moves?.moveUp() }, moveDown: { moves?.moveDown() })
     .mobileDeleteConfirmation(
       isPresented: $isConfirmingDelete,
       title: MobileHabitDeleteCopy.title(for: habit),

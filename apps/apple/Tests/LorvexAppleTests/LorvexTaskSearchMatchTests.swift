@@ -143,6 +143,21 @@ struct LorvexTaskSearchMatchTests {
     }
   }
 
+  @Test("the Tasks tab home quotes a hidden match on its search results, as the task lists do")
+  func tasksHomeSearchRowsQuoteTheirMatch() throws {
+    let source = try String(
+      contentsOf: URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appending(path: "Sources/LorvexMobile/MobileStoreTasksHomeView.swift"),
+      encoding: .utf8)
+    let start = try #require(source.range(of: "private var searchResultsList"))
+    let end = try #require(source.range(of: "// MARK: - Data"))
+    let results = String(source[start.lowerBound..<end.lowerBound])
+    #expect(results.contains("MobileActionTaskRow("))
+    #expect(results.contains("searchQuery: trimmedQuery"))
+    #expect(source.contains("private var hasQuery: Bool { !trimmedQuery.isEmpty }"))
+  }
+
   @Test("the matched term is bold in the attributed excerpt and nothing else is")
   func attributedExcerptBoldsOnlyTheMatch() throws {
     let planning = task(title: "Quarterly planning", notes: "Call Dana about the budget review")

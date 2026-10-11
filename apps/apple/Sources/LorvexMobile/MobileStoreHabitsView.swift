@@ -145,6 +145,7 @@ public struct MobileStoreHabitsView: View {
             complete: { await store.completeHabit($0) },
             reset: { await store.uncompleteHabit($0) },
             toggleSkip: { await store.toggleHabitSkip($0) },
+            move: move,
             searchQuery: searchQuery,
             detailRoute: { .habit($0.id) }
           )
@@ -349,7 +350,7 @@ public struct MobileStoreHabitsView: View {
   /// the ones shown, so a move up or down there would be ambiguous and is not
   /// offered.
   private var isFilteringHabits: Bool {
-    !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    LorvexCatalogSearch.isFiltering(searchQuery)
   }
 
   private func canMove(_ habit: LorvexHabit, _ direction: MobileReorderDirection) -> Bool {

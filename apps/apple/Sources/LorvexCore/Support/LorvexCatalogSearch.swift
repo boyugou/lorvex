@@ -45,6 +45,13 @@ public enum LorvexCatalogSearch {
     }
   }
 
+  /// Whether `query` narrows a catalog: it holds something besides whitespace.
+  /// A narrowed list hides rows between the ones shown, so a manual reorder is
+  /// not offered while this is true.
+  public static func isFiltering(_ query: String) -> Bool {
+    !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
   public static func lists(_ lists: [LorvexList], query: String) -> [LorvexList] {
     filter(lists, query: query) { list in
       list.matchNames + [list.description, list.aiNotes, list.icon, list.color]
@@ -68,8 +75,8 @@ public enum LorvexCatalogSearch {
     query: String,
     fields: (Item) -> [String?]
   ) -> [Item] {
+    guard isFiltering(query) else { return items }
     let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else { return items }
     return items.filter { matches(trimmed, fields: fields($0)) }
   }
 }

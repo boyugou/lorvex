@@ -97,3 +97,28 @@ func mobileRowsOfferTheMoves() throws {
   #expect(habits.contains("!isFilteringHabits\n      && MobileReorderDirection.moved("))
   #expect(habits.contains("if !isFilteringHabits {"))
 }
+
+@Test("The compact Habits list on iPhone offers the moves too, and withholds them during a search")
+func mobileCompactHabitRowsOfferTheMoves() throws {
+  let sources = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    .appending(path: "Sources/LorvexMobile")
+  let section = try String(
+    contentsOf: sources.appending(path: "MobileStoreHabitSection.swift"), encoding: .utf8)
+  #expect(section.contains("MobileReorderMenuItems("))
+  #expect(section.contains(".mobileReorderActions("))
+  #expect(section.contains("let isFiltering = LorvexCatalogSearch.isFiltering(searchQuery)"))
+  #expect(section.contains("moves: isFiltering\n              ? nil"))
+  let habits = try String(
+    contentsOf: sources.appending(path: "MobileStoreHabitsView.swift"), encoding: .utf8)
+  let compact = try #require(habits.range(of: "MobileStoreHabitsSection("))
+  #expect(habits[compact.lowerBound...].prefix(1200).contains("move: move,"))
+}
+
+@Test("Only a query with something besides whitespace narrows a catalog")
+func catalogSearchFilteringIgnoresWhitespace() {
+  #expect(!LorvexCatalogSearch.isFiltering(""))
+  #expect(!LorvexCatalogSearch.isFiltering("  \n\t "))
+  #expect(LorvexCatalogSearch.isFiltering("run"))
+  #expect(LorvexCatalogSearch.isFiltering("  run "))
+}

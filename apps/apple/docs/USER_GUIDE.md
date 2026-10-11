@@ -3275,8 +3275,8 @@ than normal after the task's title.
   Progress card's dial for today becomes dots around the skip mark. The rhythm
   strip and the heatmap draw a skipped day with a dashed outline.
 - **Mobile Calendar Creation:** Tap **New Event** in the **Calendar** tab to
-  create a canonical Lorvex event; swipe an editable event row to edit or delete
-  it. Today's schedule has no New Event footer.
+  create a canonical Lorvex event; tap an editable event row to edit it, or swipe
+  it to delete it. Today's schedule has no New Event footer.
 - **Via AI:** Ask your connected AI client to create a task. The AI calls the
   `create_task` MCP tool and returns the full created task object.
 

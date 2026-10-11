@@ -65,9 +65,9 @@ struct MobileStoreEditCalendarEventSheet: View {
           .accessibilityIdentifier("mobileEditCalendarEvent.notes")
         }
 
-        // The default grid presentation has no swipe-to-delete (that lives only
-        // in the list view), so the only delete affordance for a grid-selected
-        // event is here. Confirm-gated because deletion is irreversible.
+        // A block on the grid deletes from its context menu, but a tap lands
+        // here, so the sheet carries its own Delete. Confirm-gated because
+        // deletion is irreversible.
         if event.editable {
           Section { deleteButton }
         }

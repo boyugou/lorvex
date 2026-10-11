@@ -10,8 +10,8 @@ import SwiftUI
 /// unfinished one still needs doing. A task row completes, swipes, and
 /// long-presses as every task row does, and drags onto a calendar day to
 /// plan it there. An event row opens its editor on a tap; its context menu
-/// edits or deletes it, and the delete asks first at the row
-/// (``MobileCalendarEventDeletion``). A free today, or a free pinned day, reads
+/// edits or deletes it, and a swipe deletes it, and the delete asks first at
+/// the row (``MobileCalendarEventDeletion``). A free today, or a free pinned day, reads
 /// "Nothing planned"; so does an agenda with no day to list.
 struct MobileCalendarAgendaPanel: View {
   /// Where the agenda stands: `.beside` the grid, a sidebar list on its own
@@ -142,6 +142,23 @@ struct MobileCalendarAgendaPanel: View {
               bundle: MobileL10n.bundle), systemImage: "trash")
         }
         .disabled(isMutating)
+      }
+    }
+    // No `destructive` role: that role collapses the row when the button is
+    // tapped, and the confirmation attached to the row would close with it.
+    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+      if event.editable {
+        Button {
+          deletion.request(event, on: dayKey)
+        } label: {
+          Label(
+            String(
+              localized: "common.delete", defaultValue: "Delete", table: "Localizable",
+              bundle: MobileL10n.bundle), systemImage: "trash")
+        }
+        .mobileDestructiveSwipeStyle()
+        .disabled(isMutating)
+        .accessibilityIdentifier("mobileCalendar.agenda.delete.\(event.id)")
       }
     }
     .mobileCalendarEventDeletion(of: event, on: dayKey, deletion)

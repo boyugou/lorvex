@@ -85,6 +85,25 @@ struct MobileCalendarEventDeletionTests {
     #expect(inert.pending.wrappedValue == nil)
   }
 
+  @Test("An agenda event row deletes from a swipe through the shared question, tinted not destructive")
+  func agendaRowSwipesToTheSharedQuestion() throws {
+    let source = try String(
+      contentsOf: URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appending(path: "Sources/LorvexMobile/MobileCalendarAgendaPanel.swift"),
+      encoding: .utf8)
+    let start = try #require(source.range(of: "private func eventRow("))
+    let end = try #require(source.range(of: "private var listedDays"))
+    let row = String(source[start.lowerBound..<end.lowerBound])
+    #expect(row.contains(".swipeActions(edge: .trailing, allowsFullSwipe: false)"))
+    #expect(row.contains(".mobileDestructiveSwipeStyle()"))
+    #expect(row.contains("\"mobileCalendar.agenda.delete.\\(event.id)\""))
+    #expect(
+      row.components(separatedBy: "deletion.request(event, on: dayKey)").count == 3,
+      "the context menu and the swipe raise the same question")
+    #expect(row.components(separatedBy: "Button(role: .destructive)").count == 2)
+  }
+
   private func request(
     _ event: CalendarTimelineEvent, on dayKey: String, scope: String = ""
   ) -> MobileCalendarEventDeletion.Request {

@@ -31,9 +31,13 @@ public struct MobileStoreTasksHomeView: View {
     self.store = store
   }
 
-  private var hasQuery: Bool {
-    !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  /// What the result rows quote a match against: the search text without its
+  /// outer whitespace, empty outside a search.
+  private var trimmedQuery: String {
+    searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
   }
+
+  private var hasQuery: Bool { !trimmedQuery.isEmpty }
 
   public var body: some View {
     Group {
@@ -374,7 +378,8 @@ public struct MobileStoreTasksHomeView: View {
             task: task,
             isBlocked: searchResults.blockedTaskIDs.contains(task.id),
             isMutating: store.taskIsMutating(task.id),
-            actions: store.rowActions(for: task.id)
+            actions: store.rowActions(for: task.id),
+            searchQuery: trimmedQuery
           )
         }
       }

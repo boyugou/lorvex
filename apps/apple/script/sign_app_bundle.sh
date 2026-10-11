@@ -52,6 +52,11 @@ embed_provisioning_profile() {
     return 0
   fi
   cp "$profile_path" "$dest"
+  # The installer extracts a package as root. A profile that only its owner can
+  # read (a download kept at mode 600) would be unreadable to the user the app
+  # runs as, and App Store Connect rejects the package (90255). Set the mode
+  # here instead of inheriting the source file's.
+  chmod 644 "$dest"
 }
 
 if [[ ! -d "$APP_BUNDLE" ]]; then

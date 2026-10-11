@@ -26,30 +26,39 @@ warn() { printf '  warn  %s\n' "$1"; [[ -n "${2:-}" ]] && printf '          fix:
 bad() { printf '  FAIL  %s\n' "$1"; [[ -n "${2:-}" ]] && printf '          fix: %s\n' "$2"; FAILURES=$((FAILURES + 1)); }
 section() { printf '\n%s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
-
-xcode_major() {  # <Xcode.app> -> major version, empty when unreadable
-  local version
-  version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$1/Contents/Info.plist" 2>/dev/null || true)"
-  printf '%s' "${version%%.*}"
+# Runs "$@" with a deadline of $1 seconds (macOS has no timeout(1)); a command that
+# overruns is killed and counts as failed, so one slow check cannot hang the script.
+with_timeout() {
+  local seconds="$1"
+  shift
+  perl -e 'alarm shift; exec @ARGV or exit 127' "$seconds" "$@"
 }
 
 section "Toolchain"
 sdk="$(xcrun --sdk iphoneos --show-sdk-version 2>/dev/null || true)"
 if [[ -z "$sdk" ]]; then
-  bad "no iOS SDK is selected" "install Xcode 26 or later, then export DEVELOPER_DIR=<Xcode.app>/Contents/Developer"
+  bad "no iOS SDK is selected" "install Xcode 27.x, then export DEVELOPER_DIR=<Xcode.app>/Contents/Developer"
 elif (( ${sdk%%.*} < 26 )); then
-  bad "the selected Xcode ships iOS SDK $sdk, below the App Store floor (26)" "export DEVELOPER_DIR=<an Xcode 26.x>/Contents/Developer"
+  bad "the selected Xcode ships iOS SDK $sdk, below the App Store floor (26)" "export DEVELOPER_DIR=<an Xcode 27.x>/Contents/Developer"
 else
   ok "selected Xcode: $(xcodebuild -version 2>/dev/null | head -1), iOS SDK $sdk, $(swift --version 2>&1 | sed -n 's/.*Swift version \([0-9.]*\).*/Swift \1/p' | head -1)"
 fi
-selected_major="$(xcrun --sdk iphoneos --show-sdk-version 2>/dev/null | cut -d. -f1)"
-if [[ -n "$selected_major" ]] && (( selected_major >= 27 )); then
-  for app in /Applications/Xcode*.app; do
-    [[ -d "$app" && "$(xcode_major "$app")" == "26" ]] || continue
-    warn "the selected Xcode is 27.x but $(basename "$app") is 26.x; the pipeline targets Xcode 26" \
-      "export DEVELOPER_DIR=$app/Contents/Developer"
-    break
-  done
+swift_version="$(swift --version 2>&1 | sed -n 's/.*Swift version \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' | head -1)"
+if (( CHECK_RELEASE == 1 )); then
+  swift_major="${swift_version%%.*}"
+  swift_minor="${swift_version#*.}"
+  if [[ -z "$swift_version" ]] || (( swift_major < 6 || (swift_major == 6 && swift_minor < 4) )); then
+    bad "release builds need Swift 6.4 (Xcode 27); the selected toolchain has Swift ${swift_version:-unknown}" \
+      "export DEVELOPER_DIR=<an Xcode 27.x>/Contents/Developer"
+  else
+    ok "Swift $swift_version can stage a release (script/build_and_run.sh passes a Swift 6.4 flag)"
+  fi
+fi
+if with_timeout 25 xcodebuild -checkFirstLaunchStatus >/dev/null 2>&1; then
+  ok "the selected Xcode's first-launch components are installed"
+else
+  warn "the selected Xcode has first-launch components still to install, or the check timed out" \
+    "sudo xcodebuild -runFirstLaunch (needs an administrator password)"
 fi
 for tool in uv xcodegen gh python3; do
   if have "$tool"; then ok "$tool is installed"; else bad "$tool is missing" "brew install $tool"; fi
@@ -138,7 +147,7 @@ if (( CHECK_RELEASE == 1 )); then
     fi
   done
 
-  if xcrun --find altool >/dev/null 2>&1; then ok "altool is available"; else bad "altool is missing" "install Xcode 26.x"; fi
+  if xcrun --find altool >/dev/null 2>&1; then ok "altool is available"; else bad "altool is missing" "install Xcode 27.x"; fi
 fi
 
 printf '\ndoctor: %d failure(s), %d warning(s)\n' "$FAILURES" "$WARNINGS"

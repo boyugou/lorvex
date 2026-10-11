@@ -264,7 +264,10 @@ One iOS upload carries the iPhone, iPad, and embedded watch apps; the Mac App
 Store package is the second channel. `script/release_testflight.sh` runs both
 in parallel and reads every credential and signing identity from
 `secrets/apple-developer.env` (see `docs/development/NEW_MACHINE.md` at the
-repository root).
+repository root). Release with Xcode 27.x: the Mac staging passes a Swift 6.4
+flag, and Xcode 26.3's App Intents metadata processor rejects the `bundle:`
+argument of an `AppShortcut`'s `shortTitle`. `script/doctor.sh --release`
+checks the toolchain and the credentials before anything builds.
 
 1. Verify the tree: `script/verify_swift.sh` (build, catalog compile, and the
    full suite; add `--core` when `core/` changed) and
@@ -280,10 +283,14 @@ repository root).
    comments, and then runs `script/verify_app_metadata.py`, which names any file
    that disagrees. The marketing version stays unchanged between TestFlight
    builds. Run the AppMetadata tests and commit.
-4. `script/release_testflight.sh upload <log-dir>` archives, validates, and
-   uploads both channels, stops each at its first failure, masks credentials in
-   its logs, and prints the two delivery ids. It takes about 6 to 25 minutes
-   depending on load.
+4. `script/release_testflight.sh validate <log-dir>` archives and signs both
+   channels and has App Store Connect validate each package, without
+   uploading (about 15 minutes). Then `script/release_testflight.sh deliver
+   <log-dir>` uploads exactly those packages, refuses an iOS package of another
+   build number, and prints the two delivery ids. `upload` does both in one
+   run. Each channel stops at its first failing step, and a step that fails
+   with a transient network error (a lost connection, a 502, 503, or 504) runs
+   once more first. Credentials are masked in every log.
 5. `script/release_testflight.sh poll <ios-id> <mac-id> <log-dir>` waits until
    both builds have `"import-status" : "VALID"` and a build status of
    `VALID`, `VALID_BINARY`, or `BETA_INTERNAL_TESTING`. `VALID_BINARY` can sit
@@ -297,8 +304,20 @@ Failures and what they mean:
 - `403 FORBIDDEN_ERROR.CONTRACT_NOT_VALID`: an Apple agreement is waiting for
   the account holder in App Store Connect. After it is accepted, re-run only
   the validate and upload steps.
-- Mac upload `NSURLError -1005` or an HTTP 504: a transient network failure.
-  Re-run `script/archive_mas.sh --upload` alone.
+- `NSURLError -1005` (a lost connection) or an HTTP 504: a transient network
+  failure. The script retries the step once; a second failure means re-running
+  the step alone (`script/archive_mas.sh --upload`, for example).
+- `iOS 26.5 is not installed` from `xcodebuild`: a slim Xcode download holds
+  only the macOS platform. Install the platforms with `xcodebuild
+  -downloadPlatform iOS` and `watchOS`.
+- App Store Connect `90255`, "files that are only readable by the root user":
+  a file in the app bundle is owner-only. `sign_app_bundle.sh` sets the
+  embedded profiles to mode 644 whatever the source file's mode, and
+  `archive_mas.sh --package` stops before building the package when any file
+  in the bundle is not world-readable.
+- A package step that sits at 0 percent CPU for minutes, with a `SecurityAgent`
+  process running, is a keychain dialog asking to let `productbuild` sign with
+  the installer key. Approve it once with Always Allow.
 - `altool --build-status` can hang for several minutes on its first call or
   report that `Defaults.properties` could not be opened. Neither is a
   credential failure; stop that process and poll again.

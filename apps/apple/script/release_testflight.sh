@@ -4,14 +4,25 @@
 # until both builds are processed.
 #
 # Usage:
+#   script/release_testflight.sh validate [log-dir]
 #   script/release_testflight.sh upload [log-dir]
+#   script/release_testflight.sh deliver [log-dir]
 #   script/release_testflight.sh poll <ios-delivery-id> <mac-delivery-id> [log-dir]
+#
+# `validate` runs everything `upload` does except the two uploads: both archives,
+# their signing, and App Store Connect's own validation of each package. Run it
+# whenever the machine, the toolchain, or the signing changed.
+#
+# `deliver` uploads the packages that `validate` (or an earlier `upload`) left in
+# dist/, without archiving again, so exactly the validated bits reach TestFlight;
+# it refuses an iOS package whose build number is not the current one.
 #
 # `upload` runs the two channels in parallel and stops each one at its first
 # failing step; it prints the delivery id of every upload that succeeded, which
-# is what `poll` takes. Bump the build number first (the eight files
-# `script/verify_app_metadata.py` cross-checks) and commit it, so the uploaded
-# build matches a commit on main.
+# is what `poll` takes. A step that fails with a transient network error (a lost
+# connection, a 502, 503, or 504) runs once more before its channel gives up.
+# Bump the build number first (`script/bump_build.py`) and commit it, so the
+# uploaded build matches a commit on main.
 #
 # Credentials come from `secrets/apple-developer.env` at the repository root,
 # which git ignores. It must define APPLE_ID, APPLE_PASSWORD (an app-specific
@@ -42,49 +53,80 @@ export APPLE_APP_PASSWORD="${APPLE_PASSWORD:?APPLE_PASSWORD is not set}"
 
 MASK='s/[a-z]{4}-[a-z]{4}-[a-z]{4}-[a-z]{4}/[redacted]/g; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email]/g'
 cd "$ROOT_DIR" || exit 1
+# shellcheck source=script/lib_run_masked.sh
+source "$ROOT_DIR/script/lib_run_masked.sh"
+source "$ROOT_DIR/script/app_metadata.sh"
 
 delivery_id() {
-  grep -iA2 'delivery' "$1" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1
+  grep -iA2 'delivery' "$1" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | tail -1
 }
 
+# ios_channel <log-dir> <validate|upload>
 ios_channel() {
-  local log="$1/ios.log" ipa=dist/ios-archive/LorvexMobileApp-export/LorvexMobileApp.ipa
+  local log="$1/ios.log" mode="$2" ipa=dist/ios-archive/LorvexMobileApp-export/LorvexMobileApp.ipa
   : > "$log"
-  ./script/archive_ios.sh --scheme LorvexMobileApp --export 2>&1 | sed -E "$MASK" >> "$log" \
-    || { echo "IOS_ARCHIVE_FAILED" >> "$log"; return 1; }
-  xcrun altool --validate-app --type ios -f "$ipa" -u "$APPLE_ID" -p "@env:APPLE_APP_PASSWORD" \
-    --output-format json 2>&1 | sed -E "$MASK" >> "$log" || { echo "IOS_VALIDATE_FAILED" >> "$log"; return 1; }
-  xcrun altool --upload-app --type ios -f "$ipa" -u "$APPLE_ID" -p "@env:APPLE_APP_PASSWORD" \
-    --output-format json 2>&1 | sed -E "$MASK" > "$1/ios_upload.log" || { echo "IOS_UPLOAD_FAILED" >> "$log"; return 1; }
+  if [[ "$mode" == "deliver" ]]; then
+    local ipa_build
+    ipa_build="$(unzip -p "$ipa" 'Payload/*.app/Info.plist' 2>/dev/null | plutil -extract CFBundleVersion raw -o - - 2>/dev/null)"
+    if [[ "$ipa_build" != "$BUILD_VERSION" ]]; then
+      echo "the iOS package at $ipa is build '${ipa_build:-missing}', not $BUILD_VERSION; run validate first" >> "$log"
+      echo "IOS_DELIVER_FAILED" >> "$log"
+      return 1
+    fi
+  else
+    run_masked "$log" ./script/archive_ios.sh --scheme LorvexMobileApp --export \
+      || { echo "IOS_ARCHIVE_FAILED" >> "$log"; return 1; }
+    run_masked "$log" xcrun altool --validate-app --type ios -f "$ipa" -u "$APPLE_ID" -p "@env:APPLE_APP_PASSWORD" \
+      --output-format json || { echo "IOS_VALIDATE_FAILED" >> "$log"; return 1; }
+    if [[ "$mode" == "validate" ]]; then
+      echo "IOS_VALIDATED" >> "$log"
+      return 0
+    fi
+  fi
+  : > "$1/ios_upload.log"
+  run_masked "$1/ios_upload.log" xcrun altool --upload-app --type ios -f "$ipa" -u "$APPLE_ID" -p "@env:APPLE_APP_PASSWORD" \
+    --output-format json || { echo "IOS_UPLOAD_FAILED" >> "$log"; return 1; }
   echo "IOS_UPLOADED" >> "$log"
 }
 
+# mac_channel <log-dir> <validate|upload>
 mac_channel() {
-  local log="$1/mac.log"
+  local log="$1/mac.log" mode="$2" step
   : "${MAS_APP_SIGN_IDENTITY:?MAS_APP_SIGN_IDENTITY is not set}"
   : "${MAS_INSTALLER_SIGN_IDENTITY:?MAS_INSTALLER_SIGN_IDENTITY is not set}"
   : > "$log"
-  local step
-  for step in package validate; do
-    ./script/archive_mas.sh "--$step" 2>&1 | sed -E "$MASK" >> "$log" \
-      || { echo "MAC_${step}_FAILED" >> "$log"; return 1; }
-  done
-  ./script/archive_mas.sh --upload 2>&1 | sed -E "$MASK" > "$1/mac_upload.log" \
+  if [[ "$mode" != "deliver" ]]; then
+    for step in package validate; do
+      run_masked "$log" ./script/archive_mas.sh "--$step" \
+        || { echo "MAC_${step}_FAILED" >> "$log"; return 1; }
+    done
+    if [[ "$mode" == "validate" ]]; then
+      echo "MAC_VALIDATED" >> "$log"
+      return 0
+    fi
+  fi
+  : > "$1/mac_upload.log"
+  run_masked "$1/mac_upload.log" ./script/archive_mas.sh --upload \
     || { echo "MAC_UPLOAD_FAILED" >> "$log"; return 1; }
   echo "MAC_UPLOADED" >> "$log"
 }
 
 case "$MODE" in
-  upload)
+  upload|validate|deliver)
     LOG_DIR="${2:-$(mktemp -d)}"
     mkdir -p "$LOG_DIR"
-    echo "release_testflight: logs in $LOG_DIR"
-    ios_channel "$LOG_DIR" & ios_pid=$!
-    mac_channel "$LOG_DIR" & mac_pid=$!
+    echo "release_testflight: $MODE, logs in $LOG_DIR"
+    ios_channel "$LOG_DIR" "$MODE" & ios_pid=$!
+    mac_channel "$LOG_DIR" "$MODE" & mac_pid=$!
     wait "$ios_pid"; ios_rc=$?
     wait "$mac_pid"; mac_rc=$?
-    [[ $ios_rc -eq 0 ]] && echo "ios delivery: $(delivery_id "$LOG_DIR/ios_upload.log")" || echo "ios channel failed; see $LOG_DIR/ios.log"
-    [[ $mac_rc -eq 0 ]] && echo "mac delivery: $(delivery_id "$LOG_DIR/mac_upload.log")" || echo "mac channel failed; see $LOG_DIR/mac.log"
+    if [[ "$MODE" == "upload" || "$MODE" == "deliver" ]]; then
+      [[ $ios_rc -eq 0 ]] && echo "ios delivery: $(delivery_id "$LOG_DIR/ios_upload.log")" || echo "ios channel failed; see $LOG_DIR/ios.log"
+      [[ $mac_rc -eq 0 ]] && echo "mac delivery: $(delivery_id "$LOG_DIR/mac_upload.log")" || echo "mac channel failed; see $LOG_DIR/mac.log"
+    else
+      [[ $ios_rc -eq 0 ]] && echo "ios channel validated" || echo "ios channel failed; see $LOG_DIR/ios.log"
+      [[ $mac_rc -eq 0 ]] && echo "mac channel validated" || echo "mac channel failed; see $LOG_DIR/mac.log"
+    fi
     [[ $ios_rc -eq 0 && $mac_rc -eq 0 ]]
     ;;
   poll)
@@ -109,7 +151,7 @@ case "$MODE" in
     exit 1
     ;;
   *)
-    sed -n '2,9p' "$0" >&2
+    sed -n '2,10p' "$0" >&2
     exit 2
     ;;
 esac

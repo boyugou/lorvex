@@ -21,10 +21,12 @@ capture, and release command in `apps/apple/CLAUDE.md` works.
 
 ## Tools
 
-- Xcode 26.x with the macOS, iOS, and watchOS SDKs and simulators; the iPhone,
-  iPad, and Apple Watch simulators the capture scripts name. When the Mac's
-  selected Xcode is 27, export `DEVELOPER_DIR=<Xcode 26.x>/Contents/Developer`
-  for the shell rather than changing `xcode-select`.
+- Xcode 27.x for release builds (Swift 6.4; Xcode 26.3 or later is enough to
+  build and test), with the macOS, iOS, and watchOS platforms installed (a slim
+  Xcode download needs `xcodebuild -downloadPlatform iOS` and `watchOS`) and the
+  iPhone, iPad, and Apple Watch simulators the capture scripts name. Choose the
+  toolchain for a shell with `DEVELOPER_DIR=<Xcode>/Contents/Developer` rather
+  than changing `xcode-select`.
 - `uv` for every Python command in this repository.
 - XcodeGen (`script/archive_ios.sh` generates the Xcode project).
 

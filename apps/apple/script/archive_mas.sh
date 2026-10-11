@@ -174,6 +174,18 @@ package_mas() {
     exit 1
   fi
 
+  # The installer extracts the package as root, so a file only its owner can
+  # read would be unreadable to the user the app runs as. App Store Connect
+  # rejects such a package (90255) only after the build and the upload, so
+  # fail here, before the package is built.
+  local unreadable
+  unreadable="$(find "$APP_BUNDLE" -not -perm -004 -print | head -5)"
+  if [[ -n "$unreadable" ]]; then
+    echo "the app bundle holds files other users cannot read (App Store Connect rejects it, 90255):" >&2
+    echo "$unreadable" >&2
+    exit 1
+  fi
+
   "$ROOT_DIR/script/verify_codesign_entitlements.py" \
     --require-cloudkit \
     --require-production-aps \

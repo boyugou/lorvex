@@ -21,13 +21,16 @@ feel native to their platforms.
 - **Language/UI:** Swift 6, SwiftUI, AppKit (macOS)
 - **Build system:** SwiftPM (Package.swift, no Xcode project required for core
   dev; XcodeGen generates the Xcode project for simulator/device builds)
-- **Toolchain:** Xcode 26.x. The pipeline targets it (CI selects the newest
-  installed 26.x, `script/archive_ios.sh` requires an iOS 26+ SDK, App Store
-  submission) and 26.3 (Swift 6.2.4) is the oldest verified compiler, so source
-  must compile there. Xcode 27 is an experimental lane only. When the Mac's
-  selected Xcode is not 26.x, export `DEVELOPER_DIR=<Xcode 26.x>/Contents/Developer`
-  for the shell instead of changing the system selection; `script/doctor.sh`
-  warns about it and checks the rest of the machine
+- **Toolchain:** release builds use Xcode 27.x (Swift 6.4). The Mac release
+  staging in `script/build_and_run.sh` passes `-const-gather-protocols-list`,
+  which earlier compilers reject, and Xcode 26.3's App Intents metadata
+  processor rejects the `bundle:` argument of an `AppShortcut`'s `shortTitle`,
+  so 26.x cannot archive or package. Development builds and the whole test
+  suite also run on Xcode 26.x; 26.3 (Swift 6.2.4) is the oldest verified
+  compiler, so source must still compile there. Pick a toolchain for a shell
+  with `DEVELOPER_DIR=<Xcode>/Contents/Developer` instead of changing the
+  system selection; `script/doctor.sh` checks the selection and the rest of the
+  machine
 - **MCP host:** `LorvexMCPHost` executable using the official Swift SDK
   (`modelcontextprotocol/swift-sdk`)
 - **Markdown:** `swiftlang/swift-markdown` — never hand-write a parser

@@ -92,11 +92,11 @@ architecture change and requires an explicit ownership design first.
 
 ### Prerequisites
 
-- Xcode 26.x (provides the Swift 6 toolchain and the 26 SDKs). 26.3 is the
-  oldest version the source is verified on, and Xcode 27 is an experimental
-  lane. When the Mac's selected Xcode is 27, export
-  `DEVELOPER_DIR=<Xcode 26.x>/Contents/Developer` for the shell rather than
-  changing the system selection
+- Xcode 26.3 or later builds the tree and runs the tests (it provides the Swift
+  6 toolchain and the 26 SDKs). Release builds need Xcode 27.x, whose Swift 6.4
+  compiler the macOS release staging requires. Pick a toolchain for a shell
+  with `DEVELOPER_DIR=<Xcode>/Contents/Developer` rather than changing the
+  system selection
 - Python 3 (for verification scripts)
 - XcodeGen (for iOS/watchOS/Widget Xcode projects): `brew install xcodegen`
 

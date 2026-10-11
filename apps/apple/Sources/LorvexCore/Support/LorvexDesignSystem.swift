@@ -75,6 +75,15 @@ extension LorvexDesign {
     /// The current-time line in the calendar grids (the platform convention).
     public static let nowIndicator: Color = .red
 
+    /// The tint an event wears everywhere it is drawn: its calendar's own
+    /// color, or the neutral gray for an event whose calendar has none (one
+    /// made in Lorvex). Only the user's calendars color an event, so the
+    /// accent stays the color of the user's own plan, which a task on a
+    /// calendar wears as a faint wash.
+    public static func eventTint(_ hex: String?) -> Color {
+      Color(lorvexHex: hex) ?? neutral
+    }
+
     // MARK: Identity — the only non-semantic colors: entity tiles and blocks.
 
     /// Fallback hues for habits without a user-chosen color, chosen by id hash.

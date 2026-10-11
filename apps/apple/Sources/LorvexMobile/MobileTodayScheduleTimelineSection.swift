@@ -104,7 +104,7 @@ struct MobileTodayScheduleTimelineSection: View {
         isCurrent: false, isQuiet: true, isPast: item.isPast
       ) {
         Capsule()
-          .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
+          .fill(LorvexDesign.Palette.eventTint(event.color))
           .frame(width: 3, height: 16)
       }
       .contentShape(Rectangle())

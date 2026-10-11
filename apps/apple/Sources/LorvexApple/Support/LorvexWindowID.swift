@@ -71,7 +71,7 @@ enum LorvexWindowID: String, CaseIterable {
     case .calendar: "calendar"
     case .lists: "list.bullet.rectangle"
     case .habits: "repeat.circle"
-    case .reviews: "text.badge.checkmark"
+    case .reviews: "chart.bar.doc.horizontal"
     case .taskDetail: "sidebar.right"
     }
   }

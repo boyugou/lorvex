@@ -22,7 +22,7 @@ struct CalendarEventInspector: View {
 
   @State private var resolvedSource: EventKitEventSource?
 
-  private var tint: Color { Color(lorvexHex: event.color) ?? .accentColor }
+  private var tint: Color { LorvexDesign.Palette.eventTint(event.color) }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {

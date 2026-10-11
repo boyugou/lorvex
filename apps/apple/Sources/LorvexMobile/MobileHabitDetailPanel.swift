@@ -155,9 +155,10 @@ struct MobileHabitDetailPanel: View {
     }
   }
 
-  /// Complete Today is the page's prominent button while the day is open. Once
-  /// the habit is done, Reset Today is an undo, so it steps back to the
-  /// bordered style beside Edit rather than leading the page.
+  /// Complete Today is the page's prominent button while the day is open, in
+  /// the done green that Complete wears on a task's detail and on a habit
+  /// row's swipe. Once the habit is done, Reset Today is an undo, so it steps
+  /// back to the bordered style beside Edit rather than leading the page.
   @ViewBuilder
   private var completeAction: some View {
     let button = Button {
@@ -181,7 +182,7 @@ struct MobileHabitDetailPanel: View {
     if habit.isCompleteToday {
       button.buttonStyle(.bordered)
     } else {
-      button.buttonStyle(.borderedProminent)
+      button.buttonStyle(.borderedProminent).tint(LorvexDesign.Palette.done)
     }
   }
 

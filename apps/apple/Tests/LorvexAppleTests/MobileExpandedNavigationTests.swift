@@ -39,7 +39,7 @@ struct MobileTabDestinationSetTests {
   @Test("MobileTab.review has correct metadata")
   func mobileTabReviewMetadata() {
     #expect(MobileTab.review.title == "Review")
-    #expect(MobileTab.review.systemImage == "text.badge.checkmark")
+    #expect(MobileTab.review.systemImage == "chart.bar.doc.horizontal")
     #expect(MobileTab.review.rawValue == "review")
   }
 }

@@ -41,7 +41,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
     case .permissions: "checkmark.shield"
     case .calendar: "calendar"
     case .cloudSync: "icloud"
-    case .mcpHost: "network"
+    case .mcpHost: "sparkles"
     case .data: "arrow.down.doc"
     case .diagnostics: "waveform.path.ecg"
     }

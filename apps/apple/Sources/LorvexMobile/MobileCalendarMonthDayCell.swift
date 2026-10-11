@@ -260,7 +260,7 @@ struct MobileCalendarMonthDayCell: View, Equatable {
   }
 
   private func eventColor(_ event: CalendarTimelineEvent) -> Color {
-    Color(lorvexHex: event.color) ?? LorvexDesign.Palette.accent
+    LorvexDesign.Palette.eventTint(event.color)
   }
 
   // MARK: Accessibility

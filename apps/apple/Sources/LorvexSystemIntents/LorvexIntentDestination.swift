@@ -31,7 +31,7 @@ enum LorvexIntentDestination: String, AppEnum {
       image: .init(systemName: "repeat.circle")),
     .reviews: DisplayRepresentation(
       title: LocalizedStringResource("system.destination.reviews", defaultValue: "Reviews", table: "Localizable", bundle: SystemL10n.bundle),
-      image: .init(systemName: "text.badge.checkmark")),
+      image: .init(systemName: "chart.bar.doc.horizontal")),
     .memory: DisplayRepresentation(
       title: LocalizedStringResource("system.destination.memory", defaultValue: "Memory", table: "Localizable", bundle: SystemL10n.bundle),
       image: .init(systemName: "brain")),

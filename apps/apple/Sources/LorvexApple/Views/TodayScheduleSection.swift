@@ -175,7 +175,7 @@ struct TodayEventRow: View {
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
       Capsule()
-        .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
+        .fill(LorvexDesign.Palette.eventTint(event.color))
         .frame(width: 4, height: 18)
         .opacity(isPast ? LorvexDesign.Palette.pastMarkOpacity : 1)
         .frame(width: 24, height: 24)

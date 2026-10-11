@@ -54,6 +54,7 @@ struct ListDetailPane: View {
           }
           .cancelSelectedTaskOnDelete(store, on: .selectedList)
           .copySelectedTasksAsText(store, on: .selectedList)
+          .selectAllTasksOnCommand(store, on: .selectedList)
           .overlay {
             if let state = listDetailEmptyState(for: detail) {
               LorvexEmptyStatePanel(model: state)

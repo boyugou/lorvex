@@ -441,7 +441,7 @@ extension CalendarWeekGridView {
   func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
 
   func eventColor(_ event: CalendarTimelineEvent) -> Color {
-    Color(lorvexHex: event.color) ?? .accentColor
+    LorvexDesign.Palette.eventTint(event.color)
   }
 
   func headerAccessibilityLabel(_ date: Date) -> String {

@@ -151,7 +151,7 @@ extension TasksView {
         chips: [
           LorvexEmptyStateChip(
             title: priorityFilter.localizedPhrase,
-            systemImage: "flag",
+            systemImage: priorityFilter.prioritySymbolName,
             tint: priorityFilter.priorityTint
           )
         ],

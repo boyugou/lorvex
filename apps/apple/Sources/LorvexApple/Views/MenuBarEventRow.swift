@@ -22,7 +22,7 @@ struct MenuBarEventRow: View {
     Button(action: open) {
       HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
         Capsule()
-          .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
+          .fill(LorvexDesign.Palette.eventTint(event.color))
           .frame(width: 3, height: 14)
           .frame(width: 18)
           // The bar sits on the title's first line, centered on its capital

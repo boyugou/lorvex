@@ -28,7 +28,7 @@ extension Color {
 
   /// Parses a `#RRGGBB` / `RRGGBB` / `#RRGGBBAA` hex string into an sRGB
   /// color. Returns `nil` for unparseable or nil input so callers can fall
-  /// back to a system color (e.g. `Color(lorvexHex: event.color) ?? .accentColor`).
+  /// back to a system color (e.g. `Color(lorvexHex: list.color) ?? .accentColor`).
   ///
   /// Shared by the macOS week grid and the iPhone day column, which render
   /// calendar-event colors from the stored hex string.

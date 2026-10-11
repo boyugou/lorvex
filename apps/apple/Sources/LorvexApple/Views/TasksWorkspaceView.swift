@@ -135,6 +135,7 @@ struct TasksView: View {
           }
           .cancelSelectedTaskOnDelete(store, on: .taskWorkspace)
           .copySelectedTasksAsText(store, on: .taskWorkspace)
+          .selectAllTasksOnCommand(store, on: .taskWorkspace)
         }
       }
       .overlay {

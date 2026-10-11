@@ -55,7 +55,7 @@ public struct LorvexReviewTomorrow: View {
 
   private func eventRow(_ event: CalendarTimelineEvent, dayKey: String) -> some View {
     LorvexReviewAheadRow(
-      mark: .event(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral),
+      mark: .event(LorvexDesign.Palette.eventTint(event.color)),
       title: event.title, time: eventTime(event, dayKey: dayKey)
     )
     .accessibilityElement(children: .combine)

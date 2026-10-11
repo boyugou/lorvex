@@ -158,7 +158,7 @@ struct MobileTaskSmartCollection: Identifiable {
       title: String(
         localized: "tasks.scope.priority", defaultValue: "Priority", table: "Localizable",
         bundle: MobileL10n.bundle),
-      systemImage: "flag.fill", tint: LorvexDesign.Palette.Destination.priority),
+      systemImage: "exclamationmark.circle.fill", tint: LorvexDesign.Palette.Destination.priority),
     .init(
       scope: .someday,
       title: String(

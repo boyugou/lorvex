@@ -77,8 +77,7 @@ public struct LorvexProposedScheduleRows: View {
         ) {
           Capsule()
             .fill(
-              Color(lorvexHex: Self.eventColorHex(for: event, among: dayRows))
-                ?? LorvexDesign.Palette.neutral
+              LorvexDesign.Palette.eventTint(Self.eventColorHex(for: event, among: dayRows))
             )
             .frame(width: 3, height: 16)
         }

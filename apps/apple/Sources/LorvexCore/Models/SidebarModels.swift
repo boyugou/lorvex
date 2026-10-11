@@ -36,7 +36,7 @@ public enum SidebarSelection: String, CaseIterable, Identifiable, Sendable {
     case .lists: "folder"
     case .calendar: "calendar"
     case .habits: "repeat.circle"
-    case .reviews: "text.badge.checkmark"
+    case .reviews: "chart.bar.doc.horizontal"
     case .memory: "brain"
     }
   }

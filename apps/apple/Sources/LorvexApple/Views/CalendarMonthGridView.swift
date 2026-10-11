@@ -138,6 +138,6 @@ struct CalendarMonthGridView: View {
   }
 
   private func eventColor(_ event: CalendarTimelineEvent) -> Color {
-    Color(lorvexHex: event.color) ?? .accentColor
+    LorvexDesign.Palette.eventTint(event.color)
   }
 }

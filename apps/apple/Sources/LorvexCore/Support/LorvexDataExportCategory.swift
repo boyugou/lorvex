@@ -100,7 +100,7 @@ extension LorvexDataExportCategory {
     case .habits: "repeat.circle"
     case .calendarEvents: "calendar"
     case .taskCalendarEventLinks: "link"
-    case .dailyReviews: "text.badge.checkmark"
+    case .dailyReviews: "chart.bar.doc.horizontal"
     case .dailyBriefings: "sun.max"
     case .memory: "brain"
     case .preferences: "gearshape"

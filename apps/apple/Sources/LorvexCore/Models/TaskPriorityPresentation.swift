@@ -16,9 +16,10 @@ extension LorvexTask.Priority {
     }
   }
 
-  /// SF Symbol for a priority indicator dot/flag.
+  /// SF Symbol for a priority indicator: the exclamation mark the task
+  /// detail gives its Priority field, apart from the flag that marks a due date.
   public var prioritySymbolName: String {
-    "flag.fill"
+    "exclamationmark.circle.fill"
   }
 
   /// SF Symbol of an open task's circle. With `differentiating` true (the person

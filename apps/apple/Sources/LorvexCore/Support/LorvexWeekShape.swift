@@ -58,8 +58,10 @@ public struct LorvexWeekShape: Equatable, Sendable {
 /// as tall as the day's finished count against the week's busiest day, with
 /// the count above a bar that has one and the day's narrow weekday under
 /// every bar. A day with nothing finished keeps a faint stub, so the week
-/// still reads as seven days. VoiceOver reads the strip as one sentence built
-/// from ``Words``.
+/// still reads as seven days. The seven columns share the width the strip is
+/// given, up to a text-scaled maximum, so on a phone it spans the page's
+/// content width and in a wide column it stays a compact strip at the leading
+/// edge. VoiceOver reads the strip as one sentence built from ``Words``.
 public struct LorvexWeekShapeStrip: View {
   public struct Words {
     /// "Finished each day".
@@ -78,7 +80,7 @@ public struct LorvexWeekShapeStrip: View {
 
   @ScaledMetric(relativeTo: .footnote) private var barHeight: CGFloat = 36
   @ScaledMetric(relativeTo: .footnote) private var barWidth: CGFloat = 12
-  @ScaledMetric(relativeTo: .footnote) private var columnWidth: CGFloat = 26
+  @ScaledMetric(relativeTo: .footnote) private var maxStripWidth: CGFloat = 360
 
   public init(shape: LorvexWeekShape, words: Words) {
     self.shape = shape
@@ -102,12 +104,13 @@ public struct LorvexWeekShapeStrip: View {
             .foregroundStyle(.secondary)
             .fixedSize()
         }
-        // The columns share the width they are given, up to the scaled column
-        // width, so the strip fits a phone-width page at the accessibility
-        // sizes instead of widening the page past the screen.
-        .frame(minWidth: 0, maxWidth: columnWidth)
+        // minWidth 0 lets the columns shrink to the width they are given, so
+        // the strip fits a phone-width page at the accessibility sizes
+        // instead of widening the page past the screen.
+        .frame(minWidth: 0, maxWidth: .infinity)
       }
     }
+    .frame(maxWidth: maxStripWidth, alignment: .leading)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(accessibilityText)
     .accessibilityIdentifier("review.week.shape")

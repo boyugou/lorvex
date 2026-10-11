@@ -179,8 +179,8 @@ struct MobileTaskFieldEditor: View {
   private var priorityEditor: some View {
     Picker(MobileTaskFieldCopy.title(field), selection: $draft.priority) {
       ForEach([LorvexTask.Priority.p1, .p2, .p3], id: \.self) { priority in
-        // The flag takes the priority's own color, as it does on every task
-        // row; a list would otherwise tint all three with the accent.
+        // The mark takes the priority's own color, as a task's circle does; a
+        // list would otherwise tint all three with the accent.
         Label {
           Text(priority.localizedPhrase)
         } icon: {

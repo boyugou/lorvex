@@ -41,7 +41,7 @@ struct WeeklyReviewPage: View {
           LorvexEmptyStatePanel(
             title: String(localized: "reviews.weekly.empty.title", defaultValue: "No review yet", table: "Localizable", bundle: LorvexL10n.bundle),
             message: String(localized: "reviews.weekly.empty.message", defaultValue: "The week appears here once Lorvex has task activity to summarize.", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "text.badge.checkmark",
+            systemImage: "chart.bar.doc.horizontal",
             tint: .secondary,
             style: .inline)
         }

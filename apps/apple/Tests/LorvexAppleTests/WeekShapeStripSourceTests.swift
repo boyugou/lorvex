@@ -15,7 +15,10 @@ func weekShapeStripColumnsShareTheirWidth() throws {
 
   // Seven columns of a fixed, text-scaled width are wider than a phone from
   // the accessibility sizes up. The page then grows past the screen and its
-  // headline and day letters are cut off at both edges.
-  #expect(strip.contains(".frame(minWidth: 0, maxWidth: columnWidth)"))
-  #expect(!strip.contains(".frame(width: columnWidth)"))
+  // headline and day letters are cut off at both edges. The columns instead
+  // flex within a text-scaled maximum, so the strip spans a phone's content
+  // width and stays compact in a wide column.
+  #expect(strip.contains(".frame(minWidth: 0, maxWidth: .infinity)"))
+  #expect(strip.contains(".frame(maxWidth: maxStripWidth, alignment: .leading)"))
+  #expect(!strip.contains(".frame(width: maxStripWidth)"))
 }

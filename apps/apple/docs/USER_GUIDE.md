@@ -3341,7 +3341,8 @@ results quote the same way, and since they show no tags, they quote a tag too.
 
 ### Batch Operations
 
-Select multiple tasks by ⌘-clicking rows (⇧-click extends a range). The
+Select multiple tasks by ⌘-clicking rows (⇧-click extends a range, and ⌘A
+selects every task the focused list shows). The
 workspace selection menu — the batch menu in the header while a selection is
 active — also offers **Select All** and **Clear Selection**. With tasks selected:
 
@@ -3897,6 +3898,7 @@ These act on the selected task.
 | ⌘⇧O | Reopen task |
 | ⌘⌫ | Cancel task (while you type in a text field or editor, it deletes to the start of the line instead) |
 | ⌘C | Copy the highlighted tasks as plain text (while a task list has focus; in a text field it copies the selected text) |
+| ⌘A | Select every task the focused list shows (in a text field it selects the field's text) |
 
 Complete and Cancel (for a task that does not repeat) can be undone with ⌘Z,
 **Edit → Undo Complete Task** or **Undo Cancel Task**, however you started them:

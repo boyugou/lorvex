@@ -48,7 +48,9 @@ Rules that follow from the table:
   (`Color(lorvexHex:)`), and the fixed destination tints of the smart lists and
   workspaces (`Palette.Destination`). Identity colors appear on icon tiles and
   calendar event blocks, never on status text or on a task placed on a
-  calendar. A habit without a chosen color takes
+  calendar. An event whose calendar has no color (one made in Lorvex) is
+  neutral gray on every surface (`Palette.eventTint`), so the accent stays the
+  color of the user's own plan. A habit without a chosen color takes
   a fallback hue from `Palette.identityHues` by a stable hash of its id
   (`LorvexHabitPalette.baseColor(for:)`), so it shows the same color on every
   device; the fallback hues exclude green so an unfinished habit never reads

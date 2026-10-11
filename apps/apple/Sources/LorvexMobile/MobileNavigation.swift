@@ -39,7 +39,7 @@ public enum MobileTab: String, CaseIterable, Identifiable, Sendable {
     case .today: "sun.max"
     case .tasks: "checklist"
     case .calendar: "calendar"
-    case .review: "text.badge.checkmark"
+    case .review: "chart.bar.doc.horizontal"
     }
   }
 }
@@ -98,7 +98,7 @@ public enum MobileDestination: String, CaseIterable, Identifiable, Hashable, Sen
     case .habits: "repeat.circle"
     case .lists: "folder"
     case .memory: "brain"
-    case .review: "text.badge.checkmark"
+    case .review: "chart.bar.doc.horizontal"
     case .settings: "gearshape"
     }
   }

@@ -476,6 +476,7 @@ struct MobileTodayPage: View {
       }
       .buttonStyle(.plain)
       .accessibilityAddTraits(.isHeader)
+      .lorvexFoldState(isExpanded: !doneCollapsed)
       .accessibilityIdentifier("today.done.toggle")
       .listRowInsets(.horizontal, 0)
     }

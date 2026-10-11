@@ -163,16 +163,43 @@ extension MobileStore {
 
   /// Moves every task in `ids` to list `listID` in one core call; the lists'
   /// counts follow, since a task mutation reloads them. A task already in the
-  /// list stays where it is. Returns whether the move committed.
+  /// list stays where it is. Returns whether the move committed. A move that
+  /// changed a task offers its undo, which files each task back into the list
+  /// it came from.
   @discardableResult
   public func moveTasks(_ ids: [LorvexTask.ID], toListID listID: LorvexList.ID) async -> Bool {
     let uniqueIDs = stableUniqueTaskIDs(ids)
     guard !uniqueIDs.isEmpty else { return false }
-    let moved = await mutateTaskReturningToday(affectedIDs: uniqueIDs) {
-      _ = try await self.core.batchMoveTasks(ids: uniqueIDs, toListID: listID)
+    var origin: [LorvexTask.ID: LorvexList.ID] = [:]
+    for id in uniqueIDs {
+      if let task = try? await core.loadTask(id: id) {
+        origin[id] = task.listID ?? LorvexListNaming.inboxID
+      }
+    }
+    guard let movedIDs = await fileTasks(uniqueIDs, toListID: listID) else { return false }
+    let changedIDs = movedIDs.filter { (origin[$0] ?? LorvexListNaming.inboxID) != listID }
+    if !changedIDs.isEmpty {
+      let back = Dictionary(grouping: changedIDs) { origin[$0] ?? LorvexListNaming.inboxID }
+        .map { TaskListMoveStep(ids: $0.value, listID: $0.key) }
+        .sorted { $0.listID < $1.listID }
+      offerListMoveUndo(
+        back: back, movedCount: changedIDs.count, toListID: listID)
+    }
+    return true
+  }
+
+  /// Files `ids` into list `listID` without offering an undo, which is what
+  /// undoing a move runs. Returns the ids the core moved (those already in the
+  /// list stay put), or nil when the move did not commit.
+  @discardableResult
+  func fileTasks(_ ids: [LorvexTask.ID], toListID listID: LorvexList.ID) async -> [LorvexTask.ID]? {
+    var movedIDs: [LorvexTask.ID] = []
+    let committed = await mutateTaskReturningToday(affectedIDs: ids) {
+      movedIDs = try await self.core.batchMoveTasks(ids: ids, toListID: listID).moved.map(\.id)
       return try await self.core.loadToday()
     }
-    if moved { feedbackProvider.playFeedback(.taskMoved) }
-    return moved
+    guard committed else { return nil }
+    feedbackProvider.playFeedback(.taskMoved)
+    return movedIDs
   }
 }

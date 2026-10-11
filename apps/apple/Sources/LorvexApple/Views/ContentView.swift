@@ -29,6 +29,7 @@ struct ContentView: View {
         // Mounted here rather than in the inspector, so an edit sheet or a
         // delete confirmation outlives the inspector closing under it.
         .calendarEventActions(todayEventActions, store: store)
+        .environment(\.todayEventActions, todayEventActions)
         .inspector(isPresented: inspectorPresented) {
           Group {
             if store.selectedTaskID != nil {

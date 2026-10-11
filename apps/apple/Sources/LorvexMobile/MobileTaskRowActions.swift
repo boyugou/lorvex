@@ -2,9 +2,9 @@ import LorvexCore
 import SwiftUI
 
 /// What a task row can do on iPhone and iPad: complete the task, start or
-/// pause it, and move it to a later day. Hosts build it with
-/// ``MobileStore/rowActions(for:afterSuccess:)``, so every row surface offers
-/// the same actions.
+/// pause it, move it to a later day, and file it into another list. Hosts
+/// build it with ``MobileStore/rowActions(for:afterSuccess:)``, so every row
+/// surface offers the same actions.
 struct MobileTaskRowActions {
   var complete: () async -> Void
   /// Returns a finished or cancelled task to the open list.
@@ -13,6 +13,10 @@ struct MobileTaskRowActions {
   var pause: () async -> Void
   /// Moves the task to the day `days` days after today.
   var deferByDays: (Int) async -> Void
+  /// The lists a task can be filed into, in catalog order.
+  var lists: [LorvexList]
+  /// Files the task into the list with the given id.
+  var moveToList: (LorvexList.ID) async -> Void
 }
 
 /// The days a task can be deferred by from a row's context menu or the task
@@ -108,12 +112,18 @@ enum MobileTaskActionCopy {
       localized: "action.defer", defaultValue: "Defer", table: "Localizable",
       bundle: MobileL10n.bundle)
   }
+
+  static var moveToList: String {
+    String(
+      localized: "task.action.move_to_list", defaultValue: "Move to List", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
 }
 
 /// The shared row actions (``MobileTaskRowActions``): Start or Pause on the
 /// leading swipe; Complete (the full swipe) and Defer to tomorrow on the
-/// trailing swipe; and a context menu with Complete, Start or Pause, and a
-/// Defer menu of days. A finished or cancelled task has nothing to complete,
+/// trailing swipe; and a context menu with Complete, Start or Pause, a Defer
+/// menu of days, and a Move to List menu. A finished or cancelled task has nothing to complete,
 /// start, or defer, so its trailing swipe (the full swipe) and its context menu
 /// offer Reopen alone. Used by the plain action row and the batch-selectable
 /// workspace row; the latter passes `isBatchSelecting: true` to suppress the
@@ -179,9 +189,34 @@ private struct MobileTaskRowActionsModifier: ViewModifier {
               Label(MobileTaskActionCopy.deferTask, systemImage: "clock")
             }
             .disabled(isMutating)
+
+            moveToListMenu
           }
         }
       }
+  }
+
+  /// Every list but the one the task is in, so a task is filed from its row
+  /// without opening it. Absent while the catalog holds no other list.
+  @ViewBuilder
+  private var moveToListMenu: some View {
+    let current = task.listID ?? LorvexListNaming.inboxID
+    let targets = actions.lists.filter { $0.id != current }
+    if !targets.isEmpty {
+      Menu {
+        ForEach(targets) { list in
+          Button {
+            Task { await actions.moveToList(list.id) }
+          } label: {
+            MobileListMenuLabel(list: list)
+          }
+        }
+      } label: {
+        Label(MobileTaskActionCopy.moveToList, systemImage: "folder")
+      }
+      .disabled(isMutating)
+      .accessibilityIdentifier("task.row.moveToList")
+    }
   }
 
   private var reopenButton: some View {

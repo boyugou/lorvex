@@ -101,6 +101,11 @@ struct SettingsTimeZonePicker: View {
       TextField(SettingsTimeZoneRow.Copy.search, text: $query)
         .textFieldStyle(.roundedBorder)
         .focused($isSearchFocused)
+        .onSubmit {
+          if let only = LorvexTimeZoneChoice.onlyMatch(in: choices, for: query) {
+            choose(only.identifier)
+          }
+        }
         .padding(LorvexDesign.Spacing.m)
         .accessibilityIdentifier("settings.timeZone.search")
       Divider()

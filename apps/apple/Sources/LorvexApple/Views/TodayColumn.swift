@@ -220,6 +220,7 @@ struct TodayColumn: View {
       }
       .buttonStyle(.plain)
       .accessibilityAddTraits(.isHeader)
+      .lorvexFoldState(isExpanded: !store.isTodayDoneCollapsed)
       .accessibilityIdentifier("today.done.toggle")
       if !store.isTodayDoneCollapsed {
         ForEach(content.doneListTasks) { task in

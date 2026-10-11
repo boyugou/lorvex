@@ -9,6 +9,7 @@ extension MobileStore {
     }
     if didMutate {
       feedbackProvider.playFeedback(.taskCompleted)
+      offerReopenUndo(ids: [id], message: MobileUndoCopy.completed)
     }
     return didMutate
   }
@@ -18,7 +19,10 @@ extension MobileStore {
     let result = await mutateTaskReturningToday(id: id) {
       try await core.cancelTask(id: id)
     }
-    if result { feedbackProvider.playFeedback(.taskCancelled) }
+    if result {
+      feedbackProvider.playFeedback(.taskCancelled)
+      offerReopenUndo(ids: [id], message: MobileUndoCopy.cancelled)
+    }
     return result
   }
 
@@ -96,6 +100,7 @@ extension MobileStore {
     }
     if didMutate {
       feedbackProvider.playFeedback(.taskCompleted)
+      offerReopenUndo(ids: uniqueIDs, message: MobileUndoCopy.completed)
     }
     return didMutate
   }
@@ -162,6 +167,11 @@ extension MobileStore {
       pause: then { await self.pauseTask(id) },
       deferByDays: { days in
         guard await self.deferTask(id, byDays: days), let afterSuccess else { return }
+        await afterSuccess()
+      },
+      lists: lists?.lists ?? [],
+      moveToList: { listID in
+        guard await self.moveTasks([id], toListID: listID), let afterSuccess else { return }
         await afterSuccess()
       })
   }

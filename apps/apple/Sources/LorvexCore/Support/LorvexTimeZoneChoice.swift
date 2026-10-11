@@ -64,6 +64,18 @@ public struct LorvexTimeZoneChoice: Identifiable, Hashable, Sendable {
     }
   }
 
+  /// The one zone in `choices` that `query` names, or nil when the query is
+  /// empty or names none or several. A search field's Return picks it, so a
+  /// typed "Tokyo" chooses without a click, while an ambiguous "San" never
+  /// picks a zone for the person.
+  public static func onlyMatch(in choices: [LorvexTimeZoneChoice], for query: String)
+    -> LorvexTimeZoneChoice?
+  {
+    guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+    let matches = choices.filter { $0.matches(query) }
+    return matches.count == 1 ? matches.first : nil
+  }
+
   /// Every geographic zone the system knows ("Region/City"; bare
   /// abbreviations such as "GMT" are left out) plus "UTC", ordered west to
   /// east by current offset, then by city in `locale`'s collation.

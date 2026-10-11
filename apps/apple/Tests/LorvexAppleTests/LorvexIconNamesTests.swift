@@ -21,6 +21,16 @@ struct LorvexIconNamesTests {
     #expect(Set(names).count == names.count)
   }
 
+  @Test("a search lists the matching icons in the curated order, and an empty one lists them all")
+  func searchListsMatchesInTheCuratedOrder() {
+    #expect(LorvexAppearancePicker.icons(matching: "  ") == LorvexAppearancePicker.iconChoices)
+    let found = LorvexAppearancePicker.icons(matching: "figure.run")
+    #expect(found.first == "figure.run")
+    #expect(found.allSatisfy { LorvexAppearancePicker.iconChoices.contains($0) })
+    #expect(found == LorvexAppearancePicker.iconChoices.filter(found.contains))
+    #expect(LorvexAppearancePicker.icons(matching: "zzzzqx").isEmpty)
+  }
+
   @Test("a filled variant has the name of its outline symbol")
   func filledVariantsResolve() {
     #expect(LorvexIconNames.name(for: "star.fill") == LorvexIconNames.name(for: "star"))

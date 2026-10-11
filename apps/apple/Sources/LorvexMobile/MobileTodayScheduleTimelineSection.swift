@@ -184,6 +184,7 @@ struct MobileTodayScheduleTimelineSection: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .lorvexFoldState(isExpanded: showsPast)
     .accessibilityIdentifier("today.schedule.earlier.toggle")
   }
 }

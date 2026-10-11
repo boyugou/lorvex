@@ -39,6 +39,7 @@ struct EventKitCalendarFilterPicker: View {
     .buttonStyle(.plain)
     .accessibilityIdentifier("settings.calendar.filterToggle")
     .accessibilityAddTraits(.isHeader)
+    .lorvexFoldState(isExpanded: expanded)
     .task {
       await loadCalendarsIfNeeded()
       // The loop ends when the task is cancelled, as the picker leaves the page.

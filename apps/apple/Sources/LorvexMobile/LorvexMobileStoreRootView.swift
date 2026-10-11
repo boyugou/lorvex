@@ -27,6 +27,10 @@ public struct LorvexMobileStoreRootView: View {
     .lorvexMobileMilestoneCelebration(store.milestoneCelebration) {
       lorvexAnimated(.easeOut(duration: 0.2)) { store.milestoneCelebration = nil }
     }
+    .lorvexMobileUndoBanner(
+      store.undoOffer,
+      undo: { Task { await store.performUndoOffer() } },
+      dismiss: { store.dismissUndoOffer() })
     .preferredColorScheme(AppAppearance(rawValue: appearanceRaw)?.colorScheme ?? nil)
     .lorvexClockLocale()
     // Task rows count their due days in the synced product zone.

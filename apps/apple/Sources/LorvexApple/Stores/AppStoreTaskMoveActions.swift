@@ -1,13 +1,6 @@
 import Foundation
 import LorvexCore
 
-/// One leg of a list move: the tasks that go into one list. A move out of
-/// several lists is undone with one leg per list the tasks came from.
-struct TaskListMoveStep: Equatable, Sendable {
-  let ids: [LorvexTask.ID]
-  let listID: LorvexList.ID
-}
-
 extension AppStore {
   /// The shown name of a list. A list this store has not loaded reads as the
   /// Inbox: the core files an undirected capture there, and a task that names

@@ -268,9 +268,7 @@ struct SettingsAdvancedDisclosureButton: View {
     .buttonStyle(.plain)
     .accessibilityIdentifier(accessibilityIdentifier)
     .accessibilityAddTraits(.isHeader)
-    .accessibilityValue(String(localized: isExpanded
-      ? LocalizedStringResource("common.expanded", defaultValue: "Expanded", table: "Localizable", bundle: LorvexL10n.bundle)
-      : LocalizedStringResource("common.collapsed", defaultValue: "Collapsed", table: "Localizable", bundle: LorvexL10n.bundle)))
+    .lorvexFoldState(isExpanded: isExpanded)
     .accessibilityHint(String(
       localized: "settings.advanced.a11y_hint",
       defaultValue: "Shows or hides more detail.",

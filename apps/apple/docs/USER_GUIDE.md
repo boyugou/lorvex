@@ -3075,7 +3075,8 @@ events and the day's timed tasks in time order, above the tasks without a
 time. An event that runs past midnight shows its start on the day it begins
 and "Until" its end at the top of the next day; a day it fills completely
 shows it as all day. Click an event to see its details in the inspector,
-where an event you made in Lorvex can also be edited or deleted. On iPad the
+where an event you made in Lorvex can also be edited or deleted; right-click
+it for **Open Details**, **Edit**, and **Delete** without opening it first. On iPad the
 schedule stands beside the list; on iPhone, tap the day strip under the
 briefing to open it.
 
@@ -3347,6 +3348,16 @@ active — also offers **Select All** and **Clear Selection**. With tasks select
 On iPhone and iPad, tap **Select** in the Tasks workspace toolbar, then tap task
 rows to select them; a bottom action bar offers Complete, Defer, Reopen, and
 List, which opens a menu of the lists to move the selection to.
+
+One task needs no selection. On iPhone and iPad, swipe a task row for Start or
+Pause, Complete, and Defer, or touch and hold it for the same actions plus
+**Move to List**, which opens a menu of every list except the task's own.
+
+Completing, cancelling, or moving tasks on iPhone and iPad floats an **Undo**
+banner above the bottom of the screen for a few seconds ("Completed",
+"Cancelled", or "Moved 1 task to Reading."). Tap **Undo** to take the change
+back: finished or cancelled tasks reopen, and moved tasks return to the lists
+they came from. The banner holds the latest change only.
 
 ---
 

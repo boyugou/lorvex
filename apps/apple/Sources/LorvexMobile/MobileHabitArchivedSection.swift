@@ -44,6 +44,7 @@ struct MobileHabitArchivedSection: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isHeader)
+        .lorvexFoldState(isExpanded: !isCollapsed)
         .accessibilityIdentifier("mobileHabits.archived.toggle")
       }
       .accessibilityIdentifier("mobileHabits.archived")

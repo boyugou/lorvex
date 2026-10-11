@@ -141,4 +141,17 @@ struct LorvexTimeZoneChoiceTests {
     #expect(!(await store.setLogicalTimeZone("Nowhere/Atlantis")))
     #expect(store.logicalTimezoneName == target)
   }
+
+  @Test func returnInTheSearchPicksOnlyAZoneTheQueryNamesAlone() {
+    let all = LorvexTimeZoneChoice.all(now: winter, locale: Locale(identifier: "en_US"))
+
+    #expect(LorvexTimeZoneChoice.onlyMatch(in: all, for: "Tokyo")?.identifier == "Asia/Tokyo")
+    #expect(LorvexTimeZoneChoice.onlyMatch(in: all, for: "  tokyo ")?.identifier == "Asia/Tokyo")
+    // Several zones match, none match, or nothing is typed: Return picks nothing.
+    #expect(all.filter { $0.matches("san") }.count > 1)
+    #expect(LorvexTimeZoneChoice.onlyMatch(in: all, for: "san") == nil)
+    #expect(LorvexTimeZoneChoice.onlyMatch(in: all, for: "Atlantis") == nil)
+    #expect(LorvexTimeZoneChoice.onlyMatch(in: all, for: "") == nil)
+    #expect(LorvexTimeZoneChoice.onlyMatch(in: Array(all.prefix(1)), for: "  ") == nil)
+  }
 }

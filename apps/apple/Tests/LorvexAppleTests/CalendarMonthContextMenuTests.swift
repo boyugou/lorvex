@@ -73,3 +73,27 @@ func theWeekGridAllDayPillsShareTheEventMenu() throws {
   #expect(body.contains("CalendarEventContextMenu("))
   #expect(body.contains("event: event, select: selectEvent, edit: editEvent, requestDelete: requestDeleteEvent"))
 }
+
+@Test
+func todaysScheduleEventRowsShareTheEventMenuThroughTheMainWindowActions() throws {
+  let schedule = try source("Sources/LorvexApple/Views/TodayScheduleSection.swift")
+  #expect(schedule.contains("@Environment(\\.todayEventActions) private var eventActions"))
+  let row = try #require(schedule.range(of: "TodayEventRow("))
+  let body = schedule[row.upperBound...].prefix(900)
+  #expect(body.contains("if let eventActions {"))
+  #expect(body.contains("CalendarEventContextMenu("))
+  #expect(body.contains("event: event, select: store.showEventInToday"))
+  #expect(body.contains("edit: { editEvent($0, using: eventActions) }"))
+  #expect(body.contains("requestDelete: eventActions.requestDelete"))
+
+  // Editing from the menu closes an open task first: the inspector shows one subject.
+  let edit = try #require(schedule.range(of: "private func editEvent("))
+  let editBody = schedule[edit.upperBound...].prefix(220)
+  #expect(editBody.contains("store.selectedTaskID = nil"))
+  #expect(editBody.contains("actions.beginEditing(event, store: store)"))
+
+  // The window hands Today's rows the same actions its sheet and dialogs present.
+  let content = try source("Sources/LorvexApple/Views/ContentView.swift")
+  let host = try #require(content.range(of: ".calendarEventActions(todayEventActions, store: store)"))
+  #expect(content[host.upperBound...].prefix(80).contains(".environment(\\.todayEventActions, todayEventActions)"))
+}

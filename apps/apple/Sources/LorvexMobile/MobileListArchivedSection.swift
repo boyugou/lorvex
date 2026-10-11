@@ -40,6 +40,7 @@ struct MobileListArchivedSection: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isHeader)
+        .lorvexFoldState(isExpanded: !isCollapsed)
         .accessibilityIdentifier("mobileTasks.archived.toggle")
       }
     }

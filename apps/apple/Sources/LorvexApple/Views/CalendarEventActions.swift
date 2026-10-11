@@ -52,6 +52,14 @@ final class CalendarEventActions {
   }
 }
 
+extension EnvironmentValues {
+  /// The edit and delete flows for an event row on Today's schedule. The main
+  /// window sets it beside the host that presents the sheet and the
+  /// confirmations; it is nil where no host stands behind the row, and the row
+  /// then has no menu, since Edit and Delete would have nothing to open.
+  @Entry var todayEventActions: CalendarEventActions?
+}
+
 extension View {
   /// Presents `actions`' create/edit sheet and delete confirmations.
   func calendarEventActions(_ actions: CalendarEventActions, store: AppStore) -> some View {

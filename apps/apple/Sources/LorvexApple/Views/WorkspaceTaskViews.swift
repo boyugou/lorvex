@@ -101,11 +101,7 @@ struct WorkspaceTaskDisclosureHeader: View {
     .buttonStyle(.plain)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(lorvexPairLabel(title, countText))
-    .accessibilityValue(
-      isExpanded
-        ? Text(LocalizedStringResource("common.expanded", defaultValue: "Expanded", table: "Localizable", bundle: LorvexL10n.bundle))
-        : Text(LocalizedStringResource("common.collapsed", defaultValue: "Collapsed", table: "Localizable", bundle: LorvexL10n.bundle))
-    )
+    .lorvexFoldState(isExpanded: isExpanded)
     .accessibilityAddTraits(.isHeader)
     .accessibilityIdentifier(accessibilityIdentifier)
   }

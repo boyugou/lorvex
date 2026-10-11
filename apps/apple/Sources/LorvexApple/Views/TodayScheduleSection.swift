@@ -24,6 +24,7 @@ struct TodayScheduleSection: View {
   /// Today's list entries by task id, for the chips a row carries.
   let items: [LorvexTask.ID: LorvexCalmToday.Item]
   @Environment(\.undoManager) private var undoManager
+  @Environment(\.todayEventActions) private var eventActions
 
   @State private var showsPast = false
 
@@ -77,10 +78,26 @@ struct TodayScheduleSection: View {
         timeLabel: Self.eventTimeLabel(row),
         isPast: row.isPast,
         isSelected: store.selectedCalendarEventID == event.id,
-        open: { store.toggleTodayEventSelection(event) })
+        open: { store.toggleTodayEventSelection(event) }
+      )
+      .contextMenu {
+        if let eventActions {
+          CalendarEventContextMenu(
+            event: event, select: store.showEventInToday,
+            edit: { editEvent($0, using: eventActions) },
+            requestDelete: eventActions.requestDelete)
+        }
+      }
     case .now:
       TodayNowLine(minutes: row.startMinutes ?? 0)
     }
+  }
+
+  /// Opens `event`'s edit form over Today. The inspector shows one subject, so
+  /// an open task closes first, as it does when the event row is clicked.
+  private func editEvent(_ event: CalendarTimelineEvent, using actions: CalendarEventActions) {
+    store.selectedTaskID = nil
+    actions.beginEditing(event, store: store)
   }
 
   /// A running time reads "Until 12:30 PM", since its end is what matters
@@ -128,6 +145,7 @@ struct TodayScheduleSection: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .lorvexFoldState(isExpanded: showsPast)
     .accessibilityIdentifier("today.schedule.earlier.toggle")
   }
 }

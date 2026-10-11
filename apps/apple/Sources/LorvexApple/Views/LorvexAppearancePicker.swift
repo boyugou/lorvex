@@ -50,14 +50,26 @@ struct LorvexAppearancePicker: View {
     )
   }
 
-  /// Curated icons filtered by the search box: every word typed must occur in
-  /// an icon's name or keywords in the user's language, or in its SF Symbol
-  /// name (``LorvexIconNames/matches(_:query:)``). An empty query shows the
-  /// whole set.
-  private var filteredIcons: [String] {
-    let query = iconQuery.trimmingCharacters(in: .whitespaces)
-    guard !query.isEmpty else { return Self.iconChoices }
-    return Self.iconChoices.filter { LorvexIconNames.matches($0, query: query) }
+  private var filteredIcons: [String] { Self.icons(matching: iconQuery) }
+
+  /// Curated icons filtered by a search: every word typed must occur in an
+  /// icon's name or keywords in the user's language, or in its SF Symbol name
+  /// (``LorvexIconNames/matches(_:query:)``). An empty query returns the whole
+  /// set, in the curated order.
+  static func icons(matching query: String) -> [String] {
+    let query = query.trimmingCharacters(in: .whitespaces)
+    guard !query.isEmpty else { return iconChoices }
+    return iconChoices.filter { LorvexIconNames.matches($0, query: query) }
+  }
+
+  /// Return in the search field chooses the first icon the search found, so a
+  /// typed name picks without a click; the grid then shows it selected. An
+  /// empty search leaves the choice alone.
+  private func chooseFirstMatch() {
+    guard !iconQuery.trimmingCharacters(in: .whitespaces).isEmpty,
+      let first = filteredIcons.first
+    else { return }
+    icon = first
   }
 
   /// The icons shown in the grid: the filtered set, with a current icon that is
@@ -87,6 +99,7 @@ struct LorvexAppearancePicker: View {
         )
         .textFieldStyle(.plain)
         .font(LorvexDesign.Typography.primaryText)
+        .onSubmit(chooseFirstMatch)
         .accessibilityIdentifier("\(idPrefix).icon.search")
       }
       .padding(.horizontal, LorvexDesign.Spacing.s)

@@ -232,6 +232,12 @@ public final class MobileStore {
 
   let core: any LorvexCoreServicing
   let feedbackProvider: any LorvexFeedbackProviding
+  /// The change just made that the Undo banner offers to take back; nil when
+  /// none is on offer. Set by ``offerUndo(_:undo:)`` and cleared when the banner
+  /// times out, is used, or is replaced by a newer change.
+  var undoOffer: MobileUndoOffer?
+  /// What the banner's Undo button runs.
+  @ObservationIgnored var undoOfferAction: (@MainActor () async -> Void)?
   let taskReminderScheduler: any TaskReminderScheduling
   let habitReminderScheduler: any HabitReminderScheduling
   let widgetSnapshotPublisher: any MobileWidgetSnapshotPublishing

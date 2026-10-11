@@ -1,12 +1,36 @@
 import SwiftUI
 
+/// The words VoiceOver reads for a fold header's state, "Expanded" or
+/// "Collapsed", in the interface language.
+public enum LorvexFoldState {
+  public static func accessibilityValue(isExpanded: Bool) -> String {
+    isExpanded
+      ? String(
+        localized: "fold.state.expanded", defaultValue: "Expanded", table: "Localizable",
+        bundle: CoreL10n.bundle)
+      : String(
+        localized: "fold.state.collapsed", defaultValue: "Collapsed", table: "Localizable",
+        bundle: CoreL10n.bundle)
+  }
+}
+
+extension View {
+  /// Gives a fold header button its state for VoiceOver ("Expanded" or
+  /// "Collapsed", as the button's value), since its chevron
+  /// (``LorvexDisclosureChevron``) is hidden from accessibility. Apply it to
+  /// every header button that folds a section.
+  public func lorvexFoldState(isExpanded: Bool) -> some View {
+    accessibilityValue(Text(verbatim: LorvexFoldState.accessibilityValue(isExpanded: isExpanded)))
+  }
+}
+
 /// A fold header's disclosure mark: a chevron pointing along the reading
 /// direction while its section is folded and down while it is open, turning
 /// between the two when the change animates. In a right-to-left layout the
 /// folded chevron points left, the way the text runs, and the open one still
 /// points down. Decorative and hidden from accessibility: the header button
-/// carries the state. Style it as an image (`font`, `imageScale`,
-/// `foregroundStyle`).
+/// carries the state (``View/lorvexFoldState(isExpanded:)``). Style it as an
+/// image (`font`, `imageScale`, `foregroundStyle`).
 ///
 /// This is the one place a fold chevron is drawn, so every fold mirrors the
 /// same way; the design-token gate rejects fixed left/right glyphs elsewhere.

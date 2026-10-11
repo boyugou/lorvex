@@ -21,6 +21,13 @@ feel native to their platforms.
 - **Language/UI:** Swift 6, SwiftUI, AppKit (macOS)
 - **Build system:** SwiftPM (Package.swift, no Xcode project required for core
   dev; XcodeGen generates the Xcode project for simulator/device builds)
+- **Toolchain:** Xcode 26.x. The pipeline targets it (CI selects the newest
+  installed 26.x, `script/archive_ios.sh` requires an iOS 26+ SDK, App Store
+  submission) and 26.3 (Swift 6.2.4) is the oldest verified compiler, so source
+  must compile there. Xcode 27 is an experimental lane only. When the Mac's
+  selected Xcode is not 26.x, export `DEVELOPER_DIR=<Xcode 26.x>/Contents/Developer`
+  for the shell instead of changing the system selection; `script/doctor.sh`
+  warns about it and checks the rest of the machine
 - **MCP host:** `LorvexMCPHost` executable using the official Swift SDK
   (`modelcontextprotocol/swift-sdk`)
 - **Markdown:** `swiftlang/swift-markdown` — never hand-write a parser
@@ -285,6 +292,8 @@ implementation or fetching another file.
 2. Check the root `ROADMAP.md` for lane status and open items
 3. Do not run the test suite to establish a baseline; every commit on `main`
    was verified before it landed.
+4. On a Mac you have not built on before, run `script/doctor.sh` (add
+   `--release` for the signing and upload credentials).
 
 ### After Completing Work
 
@@ -307,30 +316,37 @@ stale is mistaken for current behavior.
    Lorvex data. It runs the region of `verify_all.sh` between the
    `# --- static tier: begin ---` and `# --- static tier: end ---` markers, so
    a new static gate added there is picked up by both scripts.
-2. Run `swift build -j 4` — all targets must build cleanly.
-3. Run `swift test -j 4` from `apps/apple` once per batch; while iterating on
-   one area use `swift test --skip-build -j 4 --filter <SuiteName>`. Run the
-   `apps/apple/core` suite only when `core/` changed. Tests use explicit
-   injected fakes or temporary stores; product runtime environment variables
-   must not select preview or in-memory storage.
-4. For UI changes, capture the affected screens headlessly (rule 12) and
+2. Run `script/verify_swift.sh` from `apps/apple` once per batch: it builds
+   every target and test target (all must build cleanly), compiles the string
+   catalogs, and runs the full suite. The compile step matters: the native
+   SwiftPM build system, Xcode 26.x's default, copies the catalogs raw, and a
+   plain `swift build && swift test` there fails about thirty localization
+   tests. While iterating on one area use
+   `script/verify_swift.sh --filter <SuiteName>`. Add `--core` for the
+   `apps/apple/core` suite when `core/` changed. Tests use explicit injected
+   fakes or temporary stores; product runtime environment variables must not
+   select preview or in-memory storage.
+3. For UI changes, capture the affected screens headlessly (rule 12) and
    review them.
-5. Run `./script/verify_all.sh` (every platform build, packaging, MCP smoke
+4. Run `./script/verify_all.sh` (every platform build, packaging, MCP smoke
    checks) only before a release or when touching metadata, entitlements, or
    packaging.
-6. Commit with a descriptive message
+5. Commit with a descriptive message
 
 ### Verification Commands
 
 ```bash
-# Build and test once per batch, at reduced parallelism
-swift build -j 4 && swift test -j 4
+# Build, compile the string catalogs, and test once per batch (4 jobs)
+script/verify_swift.sh
 
-# One suite while iterating (no rebuild)
-swift test --skip-build -j 4 --filter MobileHabitTests
+# One suite while iterating
+script/verify_swift.sh --filter MobileHabitTests
 
-# Core package check (only when core/ changed)
-(cd core && swift test -j 4)
+# The whole app suite, then the core package's (only when core/ changed)
+script/verify_swift.sh --core
+
+# Is this Mac ready to build, test, and release? Read-only; names the fix
+script/doctor.sh --release
 
 # Headless screenshots: iOS simulator, then the macOS preview tour
 script/ios_sim_build.sh && script/ios_sim_screenshots.sh /tmp/shots light today tasks
@@ -341,7 +357,9 @@ script/widget_gallery_macos.sh /tmp/widgets
 # Every static gate, no build or launch (before each push and release build)
 script/verify_static_gates.sh
 
-# TestFlight: archive, validate, and upload both store channels, then poll
+# TestFlight: bump the build number (seven files) and commit, then archive,
+# validate, and upload both store channels, then poll
+script/bump_build.py
 script/release_testflight.sh upload /tmp/release
 script/release_testflight.sh poll <ios-delivery-id> <mac-delivery-id> /tmp/release
 

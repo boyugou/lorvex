@@ -266,18 +266,20 @@ in parallel and reads every credential and signing identity from
 `secrets/apple-developer.env` (see `docs/development/NEW_MACHINE.md` at the
 repository root).
 
-1. Verify the tree: `swift build -j 4 --build-tests`, the full
-   `swift test -j 4`, and `script/verify_static_gates.sh`. Run the `core/`
-   suite too when `core/` changed. App Store Connect checks nothing beyond the
-   signature and metadata, so these local gates are the only gate.
+1. Verify the tree: `script/verify_swift.sh` (build, catalog compile, and the
+   full suite; add `--core` when `core/` changed) and
+   `script/verify_static_gates.sh`. App Store Connect checks nothing beyond the
+   signature and metadata, so these local gates are the only gate. On a new
+   Mac, `script/doctor.sh --release` first.
 2. If a migration or sync payload manifest is new, arm the schema freeze first
    (the section above) and commit it; the archive scripts refuse an unarmed
    ladder.
-3. Bump the build number in the eight files `script/verify_app_metadata.py`
-   cross-checks; the script names any file that disagrees. Edit each file with
-   a single exact replacement; never use PlistBuddy `Set`, which re-sorts the
-   plist and deletes its comments. The marketing version stays unchanged
-   between TestFlight builds. Run the AppMetadata tests and commit.
+3. Run `script/bump_build.py` (or `script/bump_build.py <number>`). It edits
+   each file that holds the build number with one exact replacement that must
+   match once, never PlistBuddy `Set`, which re-sorts the plist and deletes its
+   comments, and then runs `script/verify_app_metadata.py`, which names any file
+   that disagrees. The marketing version stays unchanged between TestFlight
+   builds. Run the AppMetadata tests and commit.
 4. `script/release_testflight.sh upload <log-dir>` archives, validates, and
    uploads both channels, stops each at its first failure, masks credentials in
    its logs, and prints the two delivery ids. It takes about 6 to 25 minutes

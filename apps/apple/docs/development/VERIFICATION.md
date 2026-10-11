@@ -8,6 +8,15 @@ directory outside the repository.
 
 ## Builds and tests
 
+- `script/verify_swift.sh` is the one command for the whole Swift tree: it runs
+  `swift build -j 4 --build-tests`, `script/compile_xcstrings.sh`, and
+  `swift test --skip-build -j 4`, passes its arguments to `swift test`, and
+  `--core` adds the core package's suite. The native SwiftPM build system,
+  Xcode 26.x's default, copies the string catalogs without compiling them, so a
+  plain `swift build && swift test` there fails about thirty localization tests
+  ("1 tasks", a missing `zh-Hans.lproj`). Swift Build, the default from
+  Xcode 27, compiles them itself. A failing run of that shape means the compile
+  step was skipped, not that the code is wrong.
 - `swift build` does not compile test targets, so `swift test --skip-build`
   afterward runs the previous test binary. Build with
   `swift build -j 4 --build-tests`, and confirm a new test's name appears in
@@ -25,8 +34,12 @@ directory outside the repository.
   same commit.
 - `--filter` matches type and function names, never a `@Suite("display name")`.
 - Gate on the test command's own exit code, never on a `grep` of its log.
-- A full run takes about one to two minutes for roughly 4,700 tests. The
-  `@MainActor` tests share one main actor, so a test's reported duration and its
+- A language server's background index (an editor's, or one an agent starts
+  after a Swift edit) can load the machine above 100 and fail time-bound tests;
+  stop it before a full run.
+- A full run takes about three to four minutes for roughly 5,500 tests (4,966
+  Swift Testing tests and 547 XCTest cases) on an otherwise idle Apple Silicon
+  Mac. The `@MainActor` tests share one main actor, so a test's reported duration and its
   `.timeLimit` include queue wait. When a full run shows a few time-bound
   failures, rerun them with `-j 1 --filter`; if they pass alone, the machine was
   loaded. `AppStoreBatchCompleteUndoTests`, `AppStoreCaptureTests`,

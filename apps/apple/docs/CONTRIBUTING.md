@@ -92,18 +92,24 @@ architecture change and requires an explicit ownership design first.
 
 ### Prerequisites
 
-- Xcode 26 or later (provides the Swift 6 toolchain and the 26 SDKs)
+- Xcode 26.x (provides the Swift 6 toolchain and the 26 SDKs). 26.3 is the
+  oldest version the source is verified on, and Xcode 27 is an experimental
+  lane. When the Mac's selected Xcode is 27, export
+  `DEVELOPER_DIR=<Xcode 26.x>/Contents/Developer` for the shell rather than
+  changing the system selection
 - Python 3 (for verification scripts)
 - XcodeGen (for iOS/watchOS/Widget Xcode projects): `brew install xcodegen`
 
 ### Build and test
 
 ```bash
-# Build all SwiftPM targets
-swift build
+# Build every target, compile the string catalogs, and run every test. A plain
+# `swift test` skips the catalog step and fails the localization tests on
+# Xcode 26.x, whose SwiftPM build system copies catalogs without compiling them.
+./script/verify_swift.sh
 
-# Run all tests
-swift test
+# Check that this Mac is ready to build, test, and release (read-only)
+./script/doctor.sh
 
 # Build the macOS app and run a quick smoke check
 ./script/build_and_run.sh --verify

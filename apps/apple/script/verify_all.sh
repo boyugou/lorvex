@@ -61,6 +61,7 @@ swift test
 # runs exactly this region on its own in under a minute, which is how to check the gates
 # before cutting a TestFlight build. Keep builds, launches, and packaging out of it.
 python3 -m py_compile \
+  script/bump_build.py \
   script/generate_acknowledgments.py \
   script/generate_apple_platform_manifest.py \
   script/generate_mcp_client_config.py \

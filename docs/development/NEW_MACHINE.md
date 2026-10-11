@@ -21,20 +21,42 @@ capture, and release command in `apps/apple/CLAUDE.md` works.
 
 ## Tools
 
-- Xcode with the macOS, iOS, and watchOS SDKs and simulators; the iPhone,
-  iPad, and Apple Watch simulators the capture scripts name.
+- Xcode 26.x with the macOS, iOS, and watchOS SDKs and simulators; the iPhone,
+  iPad, and Apple Watch simulators the capture scripts name. When the Mac's
+  selected Xcode is 27, export `DEVELOPER_DIR=<Xcode 26.x>/Contents/Developer`
+  for the shell rather than changing `xcode-select`.
 - `uv` for every Python command in this repository.
 - XcodeGen (`script/archive_ios.sh` generates the Xcode project).
+
+`apps/apple/script/doctor.sh` checks all of this, and with `--release` the
+signing and upload credentials below, without printing a secret or changing
+anything; it names the fix for each failure. Run it first on a new machine.
 
 ## Local files git never carries
 
 | File | Holds | Needed for |
 |---|---|---|
-| `secrets/apple-developer.env` | `APPLE_ID`, `APPLE_PASSWORD` (app-specific), `APPLE_TEAM_ID`, `MAS_APP_SIGN_IDENTITY`, `MAS_INSTALLER_SIGN_IDENTITY`, Developer ID variables | TestFlight and DMG releases |
+| `secrets/apple-developer.env` | `APPLE_ID`, `APPLE_PASSWORD` (app-specific), `APPLE_TEAM_ID`, `MAS_APP_SIGN_IDENTITY`, `MAS_INSTALLER_SIGN_IDENTITY`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`, Developer ID variables | TestFlight and DMG releases |
+| `~/.appstoreconnect/private_keys/` | The App Store Connect API key file (`AuthKey_<id>.p8`, mode 600) that `ASC_KEY_PATH` names | Headless provisioning in `script/archive_ios.sh`; read-only API checks |
 | `apps/apple/secrets/profiles/` | Provisioning profiles for every target | Store and Developer ID archives |
-| Keychain | Apple Distribution, Mac Installer, and Developer ID certificates with their keys; the CloudKit management token | Signing; `xcrun cktool` |
+| Keychain | Apple Distribution, Mac Installer, and Developer ID certificates with their keys | Signing |
+| Keychain, created per machine | The notarytool profile (`xcrun notarytool store-credentials`) and the CloudKit management token (`xcrun cktool save-token --type management`); neither can be copied from another Mac, and TestFlight needs neither | DMG notarization; `xcrun cktool` |
 | `docs/APPLE_DEVELOPER.md` | The signing runbook: team, certificates, renewal dates | Renewing signing material |
 | `CLAUDE.local.md` | Rules for this machine only (below) | Agents working here |
+
+A signing identity imported from a `.p12` reads as invalid (`security
+find-identity -v` reports "0 valid identities") until Apple's intermediate
+certificates are in the keychain: Worldwide Developer Relations G3 for Apple
+Distribution and the Mac installer certificate, and Developer ID G2 for the
+Developer ID certificates. Xcode ships them, so no download is needed:
+
+```bash
+R=<Xcode.app>/Contents/SharedFrameworks/DVTFoundation.framework/Versions/A/Resources
+security add-certificates -k ~/Library/Keychains/login.keychain-db "$R/AppleWWDRCA-2030.cer" "$R/DeveloperIDCA-G2.cer"
+```
+
+`security verify-cert` can pass anyway, because it fetches a missing issuer from
+the network; `find-identity` and `codesign` do not.
 
 ## Rules for a machine that holds real data
 
@@ -53,8 +75,8 @@ write those rules into `CLAUDE.local.md` so agents keep away from it:
 
 ## Releasing a TestFlight build
 
-1. Bump the build number in the eight files `script/verify_app_metadata.py`
-   cross-checks, run it, and commit.
+1. Run `script/bump_build.py`, which writes the next build number into every
+   file that holds it and runs `script/verify_app_metadata.py`, and commit.
 2. `script/release_testflight.sh upload <log-dir>` archives, validates, and
    uploads both store channels in parallel and prints the two delivery ids.
 3. `script/release_testflight.sh poll <ios-id> <mac-id> <log-dir>` waits until

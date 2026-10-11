@@ -346,6 +346,22 @@ extension MobileStore {
     }
   }
 
+  /// Moves habit `id` one place in the order of the active habits, which sets
+  /// the order of the Habits screen, Today's habit row, and the widgets, and
+  /// saves it so it reaches the other devices like any other edit. A habit
+  /// already at that end of the order, an unknown habit, and a move while
+  /// another habit write is saving change nothing and return false.
+  @discardableResult
+  func moveHabit(_ id: LorvexHabit.ID, _ direction: MobileReorderDirection) async -> Bool {
+    let active = (habits?.habits ?? []).filter { !$0.archived }.map(\.id)
+    guard let order = MobileReorderDirection.moved(id, in: active, direction) else { return false }
+    return await mutateHabit {
+      let reordered = try await core.reorderHabits(
+        orderedIDs: order, date: logicalTodayString)
+      lorvexAnimated(.snappy(duration: 0.25)) { habits = reordered }
+    }
+  }
+
   /// Authoritatively re-read the habits list for a `.habit` route whose target
   /// isn't in the currently-loaded list — the list hasn't loaded yet (a deep link
   /// or Handoff before the Habits workspace appeared) or the habit was added

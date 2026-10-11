@@ -3185,6 +3185,13 @@ list and choose **Archive List** from its **List Actions** menu. The
 **Restore** button. The Inbox cannot be archived, and an archived list that
 still holds tasks cannot be deleted until it is restored and emptied.
 
+**Reorder** your lists to put the ones you open most at the top. On the Mac,
+drag a list in the sidebar, or right-click it and choose **Move Up** or
+**Move Down**. On iPhone and iPad, press and hold the list's row on the Tasks
+tab and choose **Move Up** or **Move Down**; VoiceOver lists the same two
+moves among the row's actions. Habits move the same way on the Habits tab,
+while no search narrows the rows. The order syncs to your other devices.
+
 ### The Circle on a Task Row
 
 The circle at the start of a task row checks the task off when you click or tap
@@ -3358,6 +3365,13 @@ banner above the bottom of the screen for a few seconds ("Completed",
 "Cancelled", or "Moved 1 task to Reading."). Tap **Undo** to take the change
 back: finished or cancelled tasks reopen, and moved tasks return to the lists
 they came from. The banner holds the latest change only.
+
+**Delete a task for good** when even its record is not worth keeping;
+Cancel keeps the record. On iPhone and iPad, open the task, scroll to the end
+of its detail, and tap **Delete Permanently…**. On the Mac, choose the same
+command from the task's right-click menu or its detail. Either way a
+confirmation comes first, and the task with its checklist items, reminders,
+and links is removed. A deleted task cannot be brought back.
 
 ---
 

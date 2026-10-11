@@ -68,4 +68,15 @@ struct MobileTaskActionTilesTests {
     #expect(two == doubled)
     #expect(MobileTaskActionLabelFit.height(lines: 2, size: 20) > two)
   }
+
+  @Test("a tile's symbol row scales with the text, so the symbol cannot spill over its name")
+  func symbolRowScalesWithTheText() throws {
+    let url = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources/LorvexMobile/MobileTaskActionViews.swift")
+    let text = try String(contentsOf: url, encoding: .utf8)
+    #expect(text.contains("@ScaledMetric(relativeTo: .body) private var symbolHeight: CGFloat = 22"))
+    #expect(text.contains(".frame(height: symbolHeight)"))
+    #expect(!text.contains(".frame(height: 22)"))
+  }
 }

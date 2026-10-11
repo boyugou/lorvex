@@ -37,6 +37,9 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   /// What the Share button sends (``MobileShareText/task(_:listName:logicalDay:)``).
   let shareText: String
   let editField: (MobileTaskField) -> Void
+  /// Deletes the task for good once the person has confirmed; the row that
+  /// asks is the last of the detail. Nil shows no such row.
+  let deleteTask: (() async -> Void)?
   @ViewBuilder let actions: (_ isHeldUp: Bool) -> Actions
   @ViewBuilder let paneActions: () -> PaneActions
   @Environment(\.mobileDetailPresentation) private var presentation
@@ -46,6 +49,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   // has items keeps an "Add …" row for the next one.
   @State private var isComposingChecklistItem = false
   @State private var isComposingReminder = false
+  @State private var isConfirmingDelete = false
   /// The tasks this task waits on, as the Waits On section last resolved them.
   @State private var resolvedDependencies: [LorvexTask]?
 
@@ -65,6 +69,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     properties: MobileTaskProperties,
     shareText: String,
     editField: @escaping (MobileTaskField) -> Void,
+    deleteTask: (() async -> Void)? = nil,
     @ViewBuilder actions: @escaping (_ isHeldUp: Bool) -> Actions,
     @ViewBuilder paneActions: @escaping () -> PaneActions
   ) {
@@ -83,6 +88,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     self.properties = properties
     self.shareText = shareText
     self.editField = editField
+    self.deleteTask = deleteTask
     self.actions = actions
     self.paneActions = paneActions
   }
@@ -219,6 +225,27 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
         }
       }
       actions(task.isHeldUp(by: resolvedDependencies ?? []))
+      if let deleteTask {
+        // Last, and apart from the actions above: the one control here that
+        // cannot be taken back. The dialog rises from the row that raised it.
+        Section {
+          Button(role: .destructive) {
+            isConfirmingDelete = true
+          } label: {
+            Label(MobileTaskDeleteCopy.action, systemImage: "trash")
+          }
+          .mobileDestructiveRowStyle()
+          .mobileDeleteConfirmation(
+            isPresented: $isConfirmingDelete,
+            title: MobileTaskDeleteCopy.title(for: task),
+            message: MobileTaskDeleteCopy.message,
+            confirmTitle: MobileTaskDeleteCopy.confirm
+          ) {
+            Task { await deleteTask() }
+          }
+          .accessibilityIdentifier("task.detail.delete")
+        }
+      }
     }
     #if DEBUG
       .onAppear {

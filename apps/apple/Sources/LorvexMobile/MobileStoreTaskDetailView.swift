@@ -9,6 +9,7 @@ struct MobileStoreTaskDetailView: View {
   @State private var editingField: MobileTaskField?
   @State private var fieldDraft: MobileTaskEditDraft?
   @Environment(\.mobileDetailPresentation) private var presentation
+  @Environment(\.dismiss) private var dismiss
 
   @Bindable var store: MobileStore
   let task: LorvexTask
@@ -44,7 +45,15 @@ struct MobileStoreTaskDetailView: View {
       isDependencyMutating: { store.taskIsMutating($0) },
       properties: MobileTaskProperties(task: task, listName: listName, logicalDay: store.logicalTodayString),
       shareText: MobileShareText.task(task, listName: listName, logicalDay: store.logicalTodayString),
-      editField: edit
+      editField: edit,
+      // The page pops before the task leaves the lists, so it slides away
+      // intact and its row then disappears from the list beneath it. A split's
+      // pane has nothing to pop; the eviction empties it. A failure surfaces
+      // as the store's error.
+      deleteTask: {
+        dismiss()
+        await store.permanentlyDeleteTask(task.id)
+      }
     ) { isHeldUp in
       MobileTaskActionSection(
         task: task,

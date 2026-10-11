@@ -35,6 +35,22 @@ extension MobileStore {
     return result
   }
 
+  /// Permanently removes task `id` and everything attached to it (checklist,
+  /// reminders, links). It cannot be taken back, so a caller asks first; there
+  /// is no Undo offer. Once the core has deleted it, the read-back that
+  /// confirms the deletion evicts every cached copy, so no list page, Today
+  /// row, Calendar block, or open detail still shows it. Returns whether the
+  /// delete committed.
+  @discardableResult
+  public func permanentlyDeleteTask(_ id: LorvexTask.ID) async -> Bool {
+    let didDelete = await mutateTaskReturningToday(id: id) {
+      try await core.permanentlyDeleteTask(id: id)
+      return try await core.loadToday()
+    }
+    if didDelete { await refreshTaskForRoute(id) }
+    return didDelete
+  }
+
   /// Complete `task`, or reopen it when it is already done. The freshest
   /// loaded copy decides which, since a calendar block may carry an older one.
   @discardableResult

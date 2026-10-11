@@ -131,6 +131,16 @@ public struct MobileStoreTasksHomeView: View {
     .disabled(store.isDeletingList)
   }
 
+  /// Whether `list` has a neighbour to swap with in `direction` in the order
+  /// the Lists section shows.
+  private func canMove(_ list: LorvexList, _ direction: MobileReorderDirection) -> Bool {
+    MobileReorderDirection.moved(list.id, in: userLists.map(\.id), direction) != nil
+  }
+
+  private func move(_ list: LorvexList, _ direction: MobileReorderDirection) {
+    Task { await store.moveList(list.id, direction) }
+  }
+
   // MARK: - Overview
 
   private var overview: some View {
@@ -194,13 +204,21 @@ public struct MobileStoreTasksHomeView: View {
               } label: {
                 Label(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "pencil")
               }
+              Divider()
+              MobileReorderMenuItems(
+                canMoveUp: canMove(list, .up), canMoveDown: canMove(list, .down),
+                moveUp: { move(list, .up) }, moveDown: { move(list, .down) })
               if !list.isInbox {
+                Divider()
                 archiveListButton(list)
                 if list.totalCount == 0 {
                   deleteListButton(list, role: .destructive)
                 }
               }
             }
+            .mobileReorderActions(
+              canMoveUp: canMove(list, .up), canMoveDown: canMove(list, .down),
+              moveUp: { move(list, .up) }, moveDown: { move(list, .down) })
             .accessibilityIdentifier("mobileTasks.list.\(list.id)")
           }
         }

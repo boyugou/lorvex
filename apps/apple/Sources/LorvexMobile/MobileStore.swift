@@ -51,6 +51,9 @@ public final class MobileStore {
   public internal(set) var isDeletingList = false
   /// True while a list is being archived or restored.
   public internal(set) var isArchivingList = false
+  /// True while a new order of the lists is being saved; a second move waits
+  /// for it so it starts from the saved order.
+  @ObservationIgnored var isReorderingLists = false
   /// Archived lists for the Lists screen's restore section, loaded when that
   /// screen appears and refreshed after an archive, restore, or delete.
   public internal(set) var archivedLists: [LorvexList] = []

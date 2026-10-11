@@ -290,6 +290,9 @@ struct MobileTaskActionTile: View {
   var tint: Color = LorvexDesign.Palette.accent
 
   @Environment(\.isEnabled) private var isEnabled
+  /// The symbol's row height. The symbol scales with the text, so a fixed
+  /// height lets it spill over its name at the accessibility sizes.
+  @ScaledMetric(relativeTo: .body) private var symbolHeight: CGFloat = 22
 
   private var isOneWord: Bool { !title.contains(where: \.isWhitespace) }
 
@@ -297,7 +300,7 @@ struct MobileTaskActionTile: View {
     VStack(spacing: LorvexDesign.Spacing.xs) {
       Image(systemName: systemImage)
         .font(LorvexDesign.Typography.primaryText.weight(.semibold))
-        .frame(height: 22)
+        .frame(height: symbolHeight)
       Text(title)
         // The footnote style scaled with the text, then fitted to the row.
         .font(.system(size: label.size, weight: .medium))  // lorvex-design-token: allow

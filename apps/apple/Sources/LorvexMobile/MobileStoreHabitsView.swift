@@ -207,9 +207,19 @@ public struct MobileStoreHabitsView: View {
                 habitCompletionAction(habit)
                 habitSkipAction(habit)
                 habitEditAction(habit)
+                if !isFilteringHabits {
+                  Divider()
+                  MobileReorderMenuItems(
+                    canMoveUp: canMove(habit, .up), canMoveDown: canMove(habit, .down),
+                    moveUp: { move(habit, .up) }, moveDown: { move(habit, .down) })
+                  Divider()
+                }
                 habitArchiveAction(habit)
                 habitDeleteAction(habit)
               }
+              .mobileReorderActions(
+                canMoveUp: canMove(habit, .up), canMoveDown: canMove(habit, .down),
+                moveUp: { move(habit, .up) }, moveDown: { move(habit, .down) })
               .mobileDeleteConfirmation(
                 of: habit,
                 pending: $confirmingDeleteHabit,
@@ -333,6 +343,22 @@ public struct MobileStoreHabitsView: View {
 
   private var allActiveHabitIDs: [LorvexHabit.ID] {
     allActiveHabits.map(\.id)
+  }
+
+  /// Whether a search narrows the rows. A narrowed list hides habits between
+  /// the ones shown, so a move up or down there would be ambiguous and is not
+  /// offered.
+  private var isFilteringHabits: Bool {
+    !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
+  private func canMove(_ habit: LorvexHabit, _ direction: MobileReorderDirection) -> Bool {
+    !isFilteringHabits
+      && MobileReorderDirection.moved(habit.id, in: allActiveHabitIDs, direction) != nil
+  }
+
+  private func move(_ habit: LorvexHabit, _ direction: MobileReorderDirection) {
+    Task { await store.moveHabit(habit.id, direction) }
   }
 
   // Batch actions operate on the full selection, not just the search-visible

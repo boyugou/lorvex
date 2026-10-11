@@ -23,7 +23,9 @@ struct MobileUndoBanner: View {
       if dynamicTypeSize.isAccessibilitySize {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
           messageText
-          undoButton
+          // The button's own side padding is its tap area; pull it back so
+          // the word lines up with the message above.
+          undoButton.padding(.leading, -LorvexDesign.Spacing.m)
         }
       } else {
         HStack(spacing: LorvexDesign.Spacing.l) {
@@ -78,10 +80,15 @@ private struct MobileUndoBannerOverlay: ViewModifier {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-  @ScaledMetric(relativeTo: .body) private var tabBarClearance: CGFloat = 84
+
+  /// The height the iPhone tab bar occupies above the bottom edge. The bar
+  /// keeps one height at every text size, so this does not scale with Dynamic
+  /// Type: a scaled value floats the banner in the middle of the screen at
+  /// accessibility sizes.
+  private static let tabBarClearance: CGFloat = 84
 
   private var bottomPadding: CGFloat {
-    horizontalSizeClass == .compact ? tabBarClearance : LorvexDesign.Spacing.l
+    horizontalSizeClass == .compact ? Self.tabBarClearance : LorvexDesign.Spacing.l
   }
 
   func body(content: Content) -> some View {

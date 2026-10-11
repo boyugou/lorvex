@@ -204,4 +204,8 @@ func mobileRootViewFloatsTheUndoBanner() throws {
   #expect(banner.contains("mobile.undo.banner"))
   #expect(banner.contains("mobile.undo.button"))
   #expect(banner.contains("AccessibilityNotification.Announcement(offer.message).post()"))
+  // The tab bar keeps one height at every text size, so the clearance above it
+  // must not scale with Dynamic Type.
+  #expect(banner.contains("private static let tabBarClearance: CGFloat = 84"))
+  #expect(!banner.contains("@ScaledMetric"))
 }

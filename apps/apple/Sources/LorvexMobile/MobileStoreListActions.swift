@@ -125,6 +125,28 @@ extension MobileStore {
     }
   }
 
+  /// Moves list `id` one place in the order of the active lists and saves the
+  /// new order, which reaches the other devices like any other edit. A list
+  /// already at that end of the order, an unknown list, and a move while
+  /// another is still saving change nothing and return false.
+  @discardableResult
+  func moveList(_ id: LorvexList.ID, _ direction: MobileReorderDirection) async -> Bool {
+    guard !isReorderingLists,
+      let order = MobileReorderDirection.moved(id, in: (lists?.lists ?? []).map(\.id), direction)
+    else { return false }
+    isReorderingLists = true
+    defer { isReorderingLists = false }
+    do {
+      let reordered = try await core.reorderLists(orderedIDs: order)
+      lorvexAnimated(.snappy(duration: 0.25)) { lists = reordered }
+      errorMessage = nil
+      return true
+    } catch {
+      await presentUserFacingError(error)
+      return false
+    }
+  }
+
   /// Loads the archived lists for the Lists screen's restore section. A failed
   /// read keeps the last list rather than raising an error: the section is
   /// secondary to the active lists above it.

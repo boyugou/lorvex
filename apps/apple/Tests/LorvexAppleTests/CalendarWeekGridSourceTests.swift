@@ -405,7 +405,8 @@ func calendarWeekGridPlansTasksThroughOneStoreAction() throws {
   #expect(gestureBody.contains("block.isDone"))
   #expect(gestureBody.contains("? nil"))
   #expect(gestureBody.contains("taskMoveGesture("))
-  #expect(taskBlock.contains("planLaterButtons(for: block.task"))
+  #expect(taskBlock.contains("taskContextMenu(for: block.task"))
+  #expect(chrome.contains("planLaterButtons(for: task, from: day)"))
   // SwiftUI reports the pointer over the column once more while a drop completes,
   // so the indicator is cleared after the payload has loaded, not only on release.
   let delegate = try String(

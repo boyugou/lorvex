@@ -240,3 +240,17 @@ func dragPayloadOfASingleSelectedTaskCarriesNoCompanions() async throws {
 
   #expect(payload.companions.isEmpty)
 }
+
+/// The Tasks table's rows drag with the same payload as list-mode rows, so a
+/// table row can be dropped on a sidebar list and carries its selection along.
+@Test
+func tasksTableRowsDragWithTheSharedTaskPayload() throws {
+  let source = try String(
+    contentsOf: URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources/LorvexApple/Views/TasksTableWorkspaceView.swift"),
+    encoding: .utf8)
+  #expect(source.contains("Table(of: LorvexTask.self, selection: selection, sortOrder: sortOrder)"))
+  #expect(source.contains("TableRow(task)"))
+  #expect(source.contains(".draggable(store.taskDragPayload(for: task, on: .taskWorkspace))"))
+}

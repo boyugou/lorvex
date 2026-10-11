@@ -80,6 +80,7 @@ struct TodayScheduleSection: View {
         isSelected: store.selectedCalendarEventID == event.id,
         open: { store.toggleTodayEventSelection(event) }
       )
+      .lorvexDeleteKey { eventActions?.requestDelete(event) }
       .contextMenu {
         if let eventActions {
           CalendarEventContextMenu(

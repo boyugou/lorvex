@@ -192,6 +192,7 @@ extension CalendarWeekGridView {
     allDayPill(title: event.title, time: event.pillTimeLabel(on: day.dayKey), color: eventColor(event))
       .onTapGesture { selectEvent(event) }
       .lorvexKeyboardActivation { selectEvent(event) }
+      .lorvexDeleteKey { requestDeleteEvent(event) }
       .calendarPointingHandCursor()
       .accessibilityElement(children: .ignore)
       .accessibilityAddTraits(.isButton)
@@ -240,18 +241,7 @@ extension CalendarWeekGridView {
     .draggable(LorvexTaskRef(id: task.id, title: task.title))
     // Pointer-free counterpart to drag-to-reschedule: the same moves,
     // reachable through the context menu / VoiceOver actions rotor.
-    .contextMenu {
-      Button(
-        String(localized: "calendar.task.open", defaultValue: "Open Task", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "arrow.up.forward.square"
-      ) { openTask(task) }
-      Button(
-        taskCompletionLabel(isDone: isDone),
-        systemImage: isDone ? "arrow.uturn.backward.circle" : "checkmark.circle"
-      ) { toggleCompletion(of: task) }
-      Divider()
-      planLaterButtons(for: task, from: day.date)
-    }
+    .contextMenu { taskContextMenu(for: task, isDone: isDone, from: day.date) }
     // One stop per pill: the circle would otherwise read the pill's label too.
     // Opening the task is the default action and completing it a named one.
     .accessibilityElement(children: .ignore)
@@ -339,6 +329,24 @@ extension CalendarWeekGridView {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+  }
+
+  /// The context menu of a task block or pill on the week grid: Open Task, the
+  /// plan-later moves from the block's own day (an unfinished task only), then
+  /// the menu every other task surface offers (``WorkspaceTaskContextMenu``:
+  /// Start, Defer, Complete, Move to List, Copy as Text, and the rest), so the
+  /// block acts like the task's row.
+  @ViewBuilder
+  func taskContextMenu(for task: LorvexTask, isDone: Bool, from day: Date) -> some View {
+    Button(
+      String(localized: "calendar.task.open", defaultValue: "Open Task", table: "Localizable", bundle: LorvexL10n.bundle),
+      systemImage: "arrow.up.forward.square"
+    ) { openTask(task) }
+    if !isDone {
+      planLaterButtons(for: task, from: day)
+    }
+    Divider()
+    WorkspaceTaskContextMenu(store: store, task: task)
   }
 
   /// The context-menu items that plan `task` a day or a week after `day`, the

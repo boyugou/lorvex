@@ -158,6 +158,7 @@ struct HabitMomentumCard: View {
     .onTapGesture { select() }
     .onHover { h in lorvexAnimated(.easeOut(duration: 0.14)) { hovering = h } }
     .lorvexKeyboardActivation(select)
+    .lorvexDeleteKey { isShowingDeleteConfirmation = true }
     .accessibilityElement(children: .contain)
     // The card opens the inspector on tap / Return / Space, but a raw
     // `.onTapGesture` is invisible to VoiceOver. Expose the same affordance as

@@ -3905,6 +3905,10 @@ Complete and Cancel (for a task that does not repeat) can be undone with ⌘Z,
 from the task's circle, from these shortcuts or the **Task** menu, or from a
 selection menu. Completing several selected tasks at once is one step to undo.
 
+A calendar event, a Memory entry, or a habit card that holds the keyboard focus
+(Tab reaches them with Full Keyboard Access) asks to delete itself on ⌫, with
+the same question as its context menu's Delete.
+
 ### Quick-Add Field (macOS)
 
 The inline quick-add sits under today's tasks on Today and at the top of the

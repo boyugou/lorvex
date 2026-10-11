@@ -52,10 +52,14 @@ public struct LorvexTaskSearchMatch: Equatable, Sendable {
   static let trailingContext = 44
 
   /// The excerpt of `source` around the first occurrence of `term`, or `nil`
-  /// when `source` does not contain the term.
+  /// when `source` does not contain the term. The assistant context is
+  /// rendered as markdown wherever it is shown, so its excerpt quotes it
+  /// without the markdown marks (``LorvexMarkdownMarks``); the other fields
+  /// are shown as written and quoted as written.
   static func excerpt(of term: String, in source: String, field: Field) -> LorvexTaskSearchMatch? {
     guard source.containsSearchTerm(term) else { return nil }
-    let text = source.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    let quoted = field == .assistantContext ? readable(source, holding: term) : source
+    let text = quoted.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     guard let range = text.localizedStandardRange(of: term) else {
       return LorvexTaskSearchMatch(
         field: field, before: "", matched: "",
@@ -64,6 +68,13 @@ public struct LorvexTaskSearchMatch: Equatable, Sendable {
     let (before, after) = window(of: text, from: range.lowerBound, to: range.upperBound)
     return LorvexTaskSearchMatch(
       field: field, before: before, matched: String(text[range]), after: after)
+  }
+
+  /// `markdown` without its marks, or `markdown` itself when removing them
+  /// would remove the term too (the term sat in a link address).
+  private static func readable(_ markdown: String, holding term: String) -> String {
+    let plain = LorvexMarkdownMarks.removed(from: markdown)
+    return plain.containsSearchTerm(term) ? plain : markdown
   }
 
   /// The text kept before `lower` and after `upper`, each snapped to a word

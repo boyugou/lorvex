@@ -132,20 +132,7 @@ extension CalendarWeekGridView {
     )
     .onTapGesture { openTask(block.task) }
     .lorvexKeyboardActivation { openTask(block.task) }
-    .contextMenu {
-      Button(
-        String(localized: "calendar.task.open", defaultValue: "Open Task", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "arrow.up.forward.square"
-      ) { openTask(block.task) }
-      Button(
-        taskCompletionLabel(isDone: block.isDone),
-        systemImage: block.isDone ? "arrow.uturn.backward.circle" : "checkmark.circle"
-      ) { toggleCompletion(of: block.task) }
-      if !block.isDone {
-        Divider()
-        planLaterButtons(for: block.task, from: day.date)
-      }
-    }
+    .contextMenu { taskContextMenu(for: block.task, isDone: block.isDone, from: day.date) }
     .help(isCompact ? label : "")
     // One stop per block, as the Today rows are: the completion circle, the
     // title and the time line would each read the label. Opening the task is

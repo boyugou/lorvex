@@ -168,4 +168,51 @@ struct LorvexTaskSearchMatchTests {
     #expect(bold == ["budget"])
     #expect(String(excerpt.characters) == "Call Dana about the budget review")
   }
+
+  @Test("the assistant context is quoted without its markdown marks")
+  func assistantContextDropsMarkdownMarks() throws {
+    let context =
+      "**Context:** the investor asked for the `Q3` deck, see [the plan](https://example.com/plan)."
+    let match = try #require(task(title: "Prep", aiNotes: context).searchMatch(for: "investor"))
+    #expect(match.field == .assistantContext)
+    #expect(match.matched == "investor")
+    #expect(match.text == "Context: the investor asked for the Q3 deck, see the plan.")
+  }
+
+  @Test("heading, quote, list and checkbox markers do not lead the quoted line")
+  func blockMarkersAreDropped() throws {
+    let context = "## Plan\n- [ ] call the investor\n> noted\n1. send the deck\n   * [x] done"
+    let match = try #require(task(title: "Prep", aiNotes: context).searchMatch(for: "investor"))
+    #expect(match.text == "Plan call the investor noted send the deck done")
+  }
+
+  @Test("a term only a link address holds is quoted from the source as written")
+  func termInsideALinkAddressKeepsTheSource() throws {
+    let context = "see [the plan](https://example.com/budget)"
+    let match = try #require(task(title: "Prep", aiNotes: context).searchMatch(for: "budget"))
+    #expect(match.matched == "budget")
+    #expect(match.text == context)
+  }
+
+  @Test("a note's own text is quoted as written, marks included")
+  func notesKeepTheirMarks() throws {
+    let notes = "**Context:** the investor asked"
+    let match = try #require(task(title: "Prep", notes: notes).searchMatch(for: "investor"))
+    #expect(match.text == notes)
+  }
+
+  @Test("assistant context nested or repeated tens of thousands of times is still quoted")
+  func deeplyNestedAssistantContextIsQuoted() throws {
+    let shapes = [
+      String(repeating: "> ", count: 50_000) + "investor",
+      String(repeating: "[", count: 50_000) + "investor",
+      String(repeating: "_a ", count: 8_000) + "investor" + String(repeating: " a_", count: 8_000),
+      "investor" + String(repeating: "*", count: 50_000),
+      String(repeating: "[a](", count: 12_000) + "investor",
+    ]
+    for context in shapes {
+      let match = try #require(task(title: "Prep", aiNotes: context).searchMatch(for: "investor"))
+      #expect(match.matched == "investor")
+    }
+  }
 }

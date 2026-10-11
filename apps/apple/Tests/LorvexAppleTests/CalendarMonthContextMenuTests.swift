@@ -66,6 +66,20 @@ func theWeekGridEventBlocksShareTheEventMenuWithTheMonthGrid() throws {
 }
 
 @Test
+func theWeekGridTaskBlocksAndPillsShareTheTaskMenu() throws {
+  let chrome = try source("Sources/LorvexApple/Views/CalendarWeekGridChrome.swift")
+  let menu = try #require(chrome.range(of: "func taskContextMenu("))
+  let body = chrome[menu.upperBound...].prefix(700)
+  #expect(body.contains("planLaterButtons(for: task, from: day)"))
+  #expect(body.contains("WorkspaceTaskContextMenu(store: store, task: task)"))
+  #expect(chrome.contains(".contextMenu { taskContextMenu(for: task, isDone: isDone, from: day.date) }"))
+
+  let block = try source("Sources/LorvexApple/Views/CalendarWeekGridTaskBlock.swift")
+  #expect(
+    block.contains(".contextMenu { taskContextMenu(for: block.task, isDone: block.isDone, from: day.date) }"))
+}
+
+@Test
 func theWeekGridAllDayPillsShareTheEventMenu() throws {
   let chrome = try source("Sources/LorvexApple/Views/CalendarWeekGridChrome.swift")
   let pill = try #require(chrome.range(of: "private func allDayEventPill("))

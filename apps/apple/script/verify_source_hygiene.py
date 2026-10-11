@@ -437,8 +437,16 @@ RULES = [
         'Sources/LorvexApple/Views/LorvexToast.swift': 1,
         'Sources/LorvexApple/Views/QuickAddRow.swift': 1,
     }),
-    ('contains', ('file', 'Sources/LorvexApple/Views/MemoryEntryRow.swift'), '.onKeyPress(.delete)'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/MemoryEntryRow.swift'), '.onKeyPress(.deleteForward)'),
+    # Delete and Forward Delete on a focused row or card go through
+    # lorvexDeleteKey; each user of it asks before it removes anything.
+    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexKeyboardActivation.swift'), '.onKeyPress(.delete)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexKeyboardActivation.swift'), '.onKeyPress(.deleteForward)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/MemoryEntryRow.swift'), '.lorvexDeleteKey(delete)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/HabitMomentumCard.swift'), '.lorvexDeleteKey { isShowingDeleteConfirmation = true }'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/CalendarWeekGridEventBlock.swift'), '.lorvexDeleteKey { requestDeleteEvent(block.event) }'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/CalendarWeekGridChrome.swift'), '.lorvexDeleteKey { requestDeleteEvent(event) }'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/CalendarMonthGridDayCell.swift'), '.lorvexDeleteKey { onDeleteEvent(event) }'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/TodayScheduleSection.swift'), '.lorvexDeleteKey { eventActions?.requestDelete(event) }'),
     # --- macOSInboxOffersNeitherArchiveNorDelete ---
     # The Inbox is the list every task falls back to; the catalog card (hover
     # button and context menu) and the sidebar row's context menu leave out

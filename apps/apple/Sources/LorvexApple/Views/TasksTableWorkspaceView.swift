@@ -17,7 +17,9 @@ private enum TasksTableMetrics {
 /// and List columns. Cells use the same compact semantic tokens as task rows,
 /// so audit mode is denser without turning into a wall of status text.
 /// Multi-selection (Set<ID>) is shared with the List workspace so batch actions
-/// work identically in both view modes.
+/// work identically in both view modes. A row drags like a list-mode row: onto a
+/// sidebar list to move it, with the whole selection riding along when the row
+/// is one of several selected.
 struct TasksTableWorkspaceView: View {
   @Bindable var store: AppStore
   @Environment(\.undoManager) private var undoManager
@@ -43,7 +45,7 @@ struct TasksTableWorkspaceView: View {
   }
 
   private func table(sortedTasks: [LorvexTask], listNames: [String: String]) -> some View {
-    Table(sortedTasks, selection: selection, sortOrder: sortOrder) {
+    Table(of: LorvexTask.self, selection: selection, sortOrder: sortOrder) {
       TableColumn(
         String(localized: "tasks.column.status", defaultValue: "Status", table: "Localizable", bundle: LorvexL10n.bundle),
         value: \.status
@@ -110,6 +112,11 @@ struct TasksTableWorkspaceView: View {
         ideal: TasksTableMetrics.listColumn.ideal,
         max: TasksTableMetrics.listColumn.max
       )
+    } rows: {
+      ForEach(sortedTasks) { task in
+        TableRow(task)
+          .draggable(store.taskDragPayload(for: task, on: .taskWorkspace))
+      }
     }
     .contextMenu(forSelectionType: LorvexTask.ID.self) { ids in
       let selectedTasks = sortedTasks.filter { ids.contains($0.id) }

@@ -149,6 +149,7 @@ struct CalendarMonthGridDayCell: View {
       .calendarPointingHandCursor()
       .opacity(day.isCurrentMonth ? 1 : 0.55)
       .accessibilityLabel(calendarPillAccessibilityLabel(event))
+      .lorvexDeleteKey { onDeleteEvent(event) }
       .contextMenu {
         CalendarEventContextMenu(
           event: event, select: onSelectEvent, edit: onEditEvent, requestDelete: onDeleteEvent)

@@ -33,14 +33,7 @@ struct MemoryEntryRow: View {
     .contentShape(Rectangle())
     .onTapGesture(perform: edit)
     .lorvexKeyboardActivation(edit)
-    .onKeyPress(.delete) {
-      delete()
-      return .handled
-    }
-    .onKeyPress(.deleteForward) {
-      delete()
-      return .handled
-    }
+    .lorvexDeleteKey(delete)
     .onHover { hovering in
       lorvexAnimated(.easeOut(duration: 0.12)) { isHovering = hovering }
       if hovering { NSCursor.pointingHand.push() } else { NSCursor.pop() }

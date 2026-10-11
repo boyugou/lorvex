@@ -17,6 +17,9 @@
 # dist/, without archiving again, so exactly the validated bits reach TestFlight;
 # it refuses an iOS package whose build number is not the current one.
 #
+# RELEASE_CHANNELS=ios (or mac) runs one channel only, so a channel that failed
+# can be redone without repeating the one that succeeded.
+#
 # `upload` runs the two channels in parallel and stops each one at its first
 # failing step; it prints the delivery id of every upload that succeeded, which
 # is what `poll` takes. A step that fails with a transient network error (a lost
@@ -55,6 +58,8 @@ MASK='s/[a-z]{4}-[a-z]{4}-[a-z]{4}-[a-z]{4}/[redacted]/g; s/[A-Za-z0-9._%+-]+@[A
 cd "$ROOT_DIR" || exit 1
 # shellcheck source=script/lib_run_masked.sh
 source "$ROOT_DIR/script/lib_run_masked.sh"
+# shellcheck source=script/lib_ipa_build.sh
+source "$ROOT_DIR/script/lib_ipa_build.sh"
 source "$ROOT_DIR/script/app_metadata.sh"
 
 delivery_id() {
@@ -67,7 +72,7 @@ ios_channel() {
   : > "$log"
   if [[ "$mode" == "deliver" ]]; then
     local ipa_build
-    ipa_build="$(unzip -p "$ipa" 'Payload/*.app/Info.plist' 2>/dev/null | plutil -extract CFBundleVersion raw -o - - 2>/dev/null)"
+    ipa_build="$(ipa_build_number "$ipa")"
     if [[ "$ipa_build" != "$BUILD_VERSION" ]]; then
       echo "the iOS package at $ipa is build '${ipa_build:-missing}', not $BUILD_VERSION; run validate first" >> "$log"
       echo "IOS_DELIVER_FAILED" >> "$log"
@@ -115,18 +120,26 @@ case "$MODE" in
   upload|validate|deliver)
     LOG_DIR="${2:-$(mktemp -d)}"
     mkdir -p "$LOG_DIR"
+    # RELEASE_CHANNELS="ios" or "mac" runs one channel only, so a channel that
+    # failed can be redone without repeating the one that succeeded.
+    CHANNELS=" ${RELEASE_CHANNELS:-ios mac} "
     echo "release_testflight: $MODE, logs in $LOG_DIR"
-    ios_channel "$LOG_DIR" "$MODE" & ios_pid=$!
-    mac_channel "$LOG_DIR" "$MODE" & mac_pid=$!
-    wait "$ios_pid"; ios_rc=$?
-    wait "$mac_pid"; mac_rc=$?
-    if [[ "$MODE" == "upload" || "$MODE" == "deliver" ]]; then
-      [[ $ios_rc -eq 0 ]] && echo "ios delivery: $(delivery_id "$LOG_DIR/ios_upload.log")" || echo "ios channel failed; see $LOG_DIR/ios.log"
-      [[ $mac_rc -eq 0 ]] && echo "mac delivery: $(delivery_id "$LOG_DIR/mac_upload.log")" || echo "mac channel failed; see $LOG_DIR/mac.log"
-    else
-      [[ $ios_rc -eq 0 ]] && echo "ios channel validated" || echo "ios channel failed; see $LOG_DIR/ios.log"
-      [[ $mac_rc -eq 0 ]] && echo "mac channel validated" || echo "mac channel failed; see $LOG_DIR/mac.log"
-    fi
+    ios_pid="" mac_pid="" ios_rc=0 mac_rc=0
+    if [[ "$CHANNELS" == *" ios "* ]]; then ios_channel "$LOG_DIR" "$MODE" & ios_pid=$!; fi
+    if [[ "$CHANNELS" == *" mac "* ]]; then mac_channel "$LOG_DIR" "$MODE" & mac_pid=$!; fi
+    if [[ -n "$ios_pid" ]]; then wait "$ios_pid"; ios_rc=$?; fi
+    if [[ -n "$mac_pid" ]]; then wait "$mac_pid"; mac_rc=$?; fi
+    for channel in ios mac; do
+      [[ "$CHANNELS" == *" $channel "* ]] || continue
+      rc_name="${channel}_rc"
+      if [[ "${!rc_name}" -ne 0 ]]; then
+        echo "$channel channel failed; see $LOG_DIR/$channel.log"
+      elif [[ "$MODE" == "validate" ]]; then
+        echo "$channel channel validated"
+      else
+        echo "$channel delivery: $(delivery_id "$LOG_DIR/${channel}_upload.log")"
+      fi
+    done
     [[ $ios_rc -eq 0 && $mac_rc -eq 0 ]]
     ;;
   poll)

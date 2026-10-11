@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bump the build number everywhere it is written, then verify the result.
 
-The build number is a literal in seven files; the marketing version stays put
+The build number is a literal in eight files; the marketing version stays put
 between TestFlight builds. Every file is edited with one exact replacement that
 must match exactly once, and all replacements are computed before any file is
 written, so a file that drifted from the expected shape fails loudly and leaves
@@ -38,6 +38,7 @@ TARGETS: list[tuple[str, str]] = [
     ("Config/LorvexWatchComplication-Info.plist", _PLIST_BUILD),
     ("Config/LorvexWidgets-Info.plist", _PLIST_BUILD),
     ("Config/LorvexMCPHost-Info.plist", _PLIST_BUILD),
+    ("Tests/LorvexAppleTests/AppMetadataTests.swift", r'(AppMetadata\.buildVersion == ")\d+(")'),
 ]
 
 

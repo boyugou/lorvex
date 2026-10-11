@@ -74,6 +74,7 @@ preflight() {
   # pre-launch escape hatch.
   require_schema_freeze_armed "$ROOT_DIR"
   require_tool productbuild
+  require_tool productsign
   require_tool xcrun
   require_tool codesign
   "$ROOT_DIR/script/verify_mas_release_readiness.py"
@@ -186,17 +187,33 @@ package_mas() {
     exit 1
   fi
 
+  # App Store Connect also rejects a package holding a file with the
+  # com.apple.quarantine attribute (91109), and reports it only after processing
+  # the upload, which fails the build with no way to repair it in place.
+  local quarantined
+  quarantined="$(xattr -rl "$APP_BUNDLE" 2>/dev/null | grep 'com.apple.quarantine' | cut -d: -f1 | head -5)"
+  if [[ -n "$quarantined" ]]; then
+    echo "the app bundle holds files with the com.apple.quarantine attribute (App Store Connect rejects it, 91109):" >&2
+    echo "$quarantined" >&2
+    exit 1
+  fi
+
   "$ROOT_DIR/script/verify_codesign_entitlements.py" \
     --require-cloudkit \
     --require-production-aps \
     "$APP_BUNDLE"
   "$ROOT_DIR/script/verify_mas_provisioning.py" "$APP_BUNDLE"
 
-  rm -f "$PKG_PATH"
-  productbuild \
-    --component "$APP_BUNDLE" /Applications \
-    --sign "$MAS_INSTALLER_SIGN_IDENTITY" \
-    "$PKG_PATH"
+  # Build the package unsigned and sign it with productsign. `productbuild --sign`
+  # asks the keychain for the installer key from inside productbuild, which can
+  # raise a dialog only a person at the screen can answer and stalls an
+  # unattended run; productsign signs with the same key without one, and App
+  # Store Connect validates the result the same way.
+  local unsigned_pkg="${PKG_PATH%.pkg}.unsigned.pkg"
+  rm -f "$PKG_PATH" "$unsigned_pkg"
+  productbuild --component "$APP_BUNDLE" /Applications "$unsigned_pkg"
+  productsign --sign "$MAS_INSTALLER_SIGN_IDENTITY" "$unsigned_pkg" "$PKG_PATH"
+  rm -f "$unsigned_pkg"
   pkgutil --check-signature "$PKG_PATH" >/dev/null
   echo "MAS package written: $PKG_PATH"
 }

@@ -257,7 +257,8 @@ The package path:
 3. Cross-checks any embedded provisioning profile against the signed
    entitlements: `./script/verify_mas_provisioning.py dist/Lorvex.app`.
 4. Produces `dist/Lorvex-macOS-MAS-<version>+<build>.pkg` with
-   `productbuild --component ... --sign ...`.
+   `productbuild --component ...` and signs it with `productsign` (the
+   installer key signs without a keychain dialog that way).
 
 ### Provisioning profiles
 

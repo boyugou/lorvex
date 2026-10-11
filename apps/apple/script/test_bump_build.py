@@ -29,6 +29,7 @@ FILES = {
     "Config/LorvexWatchComplication-Info.plist": PLIST,
     "Config/LorvexWidgets-Info.plist": PLIST,
     "Config/LorvexMCPHost-Info.plist": PLIST,
+    "Tests/LorvexAppleTests/AppMetadataTests.swift": '  #expect(AppMetadata.buildVersion == "{build}")\n',
 }
 
 

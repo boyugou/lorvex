@@ -153,6 +153,17 @@ case "$MODE" in
         out=$(xcrun altool --build-status --delivery-id "${pair#*:}" -u "$APPLE_ID" \
           -p "@env:APPLE_APP_PASSWORD" --output-format json 2>&1 | sed -E "$MASK")
         status=$(echo "$out" | grep -oE '"import-status" *: *"[A-Z_]+"' | head -1)
+        if [[ -z "$status" ]]; then
+          # altool's JSON writer crashes on a build that failed processing, which
+          # hides the reason; its plain-text report names it.
+          text=$(xcrun altool --build-status --delivery-id "${pair#*:}" -u "$APPLE_ID" \
+            -p "@env:APPLE_APP_PASSWORD" 2>&1 | sed -E "$MASK")
+          if grep -q 'IMPORT-STATUS: *FAILED' <<<"$text"; then
+            echo "$(date +%H:%M:%S) ${pair%%:*} FAILED" | tee -a "$LOG"
+            grep -A3 'PROCESSING-ERRORS' <<<"$text" | tee -a "$LOG"
+            exit 1
+          fi
+        fi
         echo "$(date +%H:%M:%S) ${pair%%:*} $status" | tee -a "$LOG"
         echo "$status" | grep -qE '"(VALID|BETA_INTERNAL_TESTING)"' || still+=("$pair")
       done

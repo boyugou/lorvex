@@ -51,7 +51,11 @@ embed_provisioning_profile() {
     fi
     return 0
   fi
-  cp "$profile_path" "$dest"
+  # -X leaves the source's extended attributes behind. A profile that arrived by
+  # AirDrop or a browser download carries com.apple.quarantine, App Store Connect
+  # rejects a package that holds one (91109) only after processing it, and the
+  # quarantine check above runs before any profile is embedded.
+  cp -X "$profile_path" "$dest"
   # The installer extracts a package as root. A profile that only its owner can
   # read (a download kept at mode 600) would be unreadable to the user the app
   # runs as, and App Store Connect rejects the package (90255). Set the mode

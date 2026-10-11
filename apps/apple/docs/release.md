@@ -249,8 +249,8 @@ The Mac App Store path signs `Lorvex.app` with
 helper distribution provisioning profiles to be embedded, verifies CloudKit
 service, the `iCloud.com.lorvex.apple` container, and
 `com.apple.developer.aps-environment=production` (the native macOS
-push-entitlement key), then builds an App Store signed package with
-`productbuild`.
+push-entitlement key), then builds the package with `productbuild` and signs
+it with `productsign`.
 
 CloudKit production schema promotion and App Store Connect provisioning remain
 human-gated release requirements. The release manifest records both the runtime
@@ -316,8 +316,10 @@ Failures and what they mean:
   `archive_mas.sh --package` stops before building the package when any file
   in the bundle is not world-readable.
 - A package step that sits at 0 percent CPU for minutes, with a `SecurityAgent`
-  process running, is a keychain dialog asking to let `productbuild` sign with
-  the installer key. Approve it once with Always Allow.
+  process running, is a keychain dialog asking to let a tool use the installer
+  key. `productbuild --sign` raised one; the package is signed with
+  `productsign`, which does not. If another tool ever raises it, approve it once
+  with Always Allow.
 - `altool --build-status` can hang for several minutes on its first call or
   report that `Defaults.properties` could not be opened. Neither is a
   credential failure; stop that process and poll again.

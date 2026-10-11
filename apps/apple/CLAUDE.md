@@ -360,7 +360,7 @@ script/widget_gallery_macos.sh /tmp/widgets
 # Every static gate, no build or launch (before each push and release build)
 script/verify_static_gates.sh
 
-# TestFlight: bump the build number (seven files) and commit, then archive,
+# TestFlight: bump the build number (eight files) and commit, then archive,
 # validate, and upload both store channels, then poll
 script/bump_build.py
 script/release_testflight.sh upload /tmp/release

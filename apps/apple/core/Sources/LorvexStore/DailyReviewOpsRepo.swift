@@ -391,6 +391,9 @@ public enum DailyReviewOpsRepo {
     try validateReviewTextBudgets(
       summary: params.summary, wins: params.wins, blockers: params.blockers,
       learnings: params.learnings)
+    // Typed here: inside the mixed-type argument array below, the `String` and
+    // `String?` overloads of `scrubReviewText` tie on the Swift 6.2.4 compiler.
+    let summary: String = scrubReviewText(params.summary)
     try db.execute(
       sql: """
         INSERT INTO daily_reviews \
@@ -409,7 +412,7 @@ public enum DailyReviewOpsRepo {
         WHERE excluded.version > daily_reviews.version
         """,
       arguments: [
-        params.date, scrubReviewText(params.summary), params.mood, params.energyLevel,
+        params.date, summary, params.mood, params.energyLevel,
         scrubReviewText(params.wins), scrubReviewText(params.blockers),
         scrubReviewText(params.learnings),
         params.timezone, params.version, params.now, params.now,

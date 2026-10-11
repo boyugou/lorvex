@@ -1141,13 +1141,14 @@ struct CaptureParserThaiTests {
   func saraAm() {
     let typed = "สํา"
     #expect(scalars(typed) == [Unicode.Scalar(0x0E2A)!, Unicode.Scalar(0x0E4D)!, Unicode.Scalar(0x0E32)!])
-    for (text, check) in [
+    let cases: [(String, (LorvexCaptureParse) -> Bool)] = [
       ("ส่งรายงาน สําคัญ", { (parsed: LorvexCaptureParse) in parsed.priority == .p1 }),
       ("ส่งรายงานสําคัญมาก", { $0.priority == .p1 }),
       ("ส่งรายงานความสําคัญสูง", { $0.priority == .p1 }),
       ("ส่งรายงานทุกวันทําการ", { $0.recurrence == workdays }),
       ("ส่งรายงานภายในสัปดาห์หน้า".replacingOccurrences(of: "ำ", with: "ํา"), { $0.dueDayOffset == 7 }),
-    ] {
+    ]
+    for (text, check) in cases {
       let parsed = parse(text)
       #expect(check(parsed), "\(text)")
       #expect(scalars(parsed.title).starts(with: scalars("ส่งรายงาน")), "\(text): title")

@@ -90,11 +90,13 @@ struct MCPToolSweepFixTests {
     // Newest first: the "blocked" defer precedes the "needs_info" one.
     let newest = try #require(history.first?.objectValue)
     #expect(newest["structured_reason"]?.stringValue == "blocked")
-    #expect(newest["note"]?.stringValue == SecurityFencing.fence("Still blocked" as String))
+    let fencedBlocked: String = SecurityFencing.fence("Still blocked")
+    #expect(newest["note"]?.stringValue == fencedBlocked)
     #expect(newest["initiated_by"]?.stringValue == "assistant")
     let oldest = try #require(history.last?.objectValue)
     #expect(oldest["structured_reason"]?.stringValue == "needs_info")
-    #expect(oldest["note"]?.stringValue == SecurityFencing.fence("Waiting for finance" as String))
+    let fencedWaiting: String = SecurityFencing.fence("Waiting for finance")
+    #expect(oldest["note"]?.stringValue == fencedWaiting)
   }
 
   @Test("get_task defer_history fences the free-text note but not the system fields (Rule 6)")

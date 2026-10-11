@@ -54,3 +54,6 @@ Why the repository is shaped the way it is:
 ## App docs
 
 - `../apps/apple/docs/` (surface design, design system, setup, reference, architecture, execution) and `../apps/apple/CLAUDE.md`.
+- [`../apps/apple/docs/development/ENGINEERING_TRAPS.md`](../apps/apple/docs/development/ENGINEERING_TRAPS.md) — platform traps and data-flow facts, each with its rule.
+- [`../apps/apple/docs/development/VERIFICATION.md`](../apps/apple/docs/development/VERIFICATION.md) — test quirks, probe suites, oracles, and headless capture recipes.
+- [`../apps/apple/docs/release.md`](../apps/apple/docs/release.md) — schema freeze, TestFlight, Mac App Store, and DMG releases.

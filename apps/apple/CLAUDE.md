@@ -367,6 +367,12 @@ python3 script/mcp_stdio_smoke.py
 
 ### Common Pitfalls
 
+`docs/development/ENGINEERING_TRAPS.md` lists the SwiftUI, AppKit, UIKit, and
+data-flow traps this codebase has met, each with its rule; read it before
+changing views, sheets, gestures, async store code, or sync.
+`docs/development/VERIFICATION.md` covers test-suite quirks, the probe suites,
+and every headless capture option.
+
 - **Swift 6 concurrency:** `@MainActor` isolation does not automatically apply
   to closure captures. Annotate explicitly or use `Task { @MainActor in … }`.
 - **`@Observable` vs `ObservableObject`:** do not mix in the same view graph —
@@ -446,3 +452,6 @@ documentation freshness, feature ideation.
   Shortcuts, CloudKit, EventKit, notifications, packaging)
 - `docs/architecture/` — Module boundaries and cross-target dependencies
 - `docs/design/DESIGN_SYSTEM.md` — Color, surface, type, and component contract every surface composes from; `script/verify_design_tokens.py` enforces it
+- `docs/development/ENGINEERING_TRAPS.md` — Platform traps and data-flow facts, each with its rule
+- `docs/development/VERIFICATION.md` — Test quirks, probe suites, oracles, headless capture recipes
+- `docs/release.md` — Schema freeze, TestFlight, Mac App Store, and DMG release steps

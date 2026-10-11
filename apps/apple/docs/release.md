@@ -258,6 +258,54 @@ CloudKit sync readiness and the separate production release readiness gate, so
 shipping docs cannot claim production CloudKit is ready before those account-side
 steps are complete.
 
+## TestFlight builds
+
+One iOS upload carries the iPhone, iPad, and embedded watch apps; the Mac App
+Store package is the second channel. `script/release_testflight.sh` runs both
+in parallel and reads every credential and signing identity from
+`secrets/apple-developer.env` (see `docs/development/NEW_MACHINE.md` at the
+repository root).
+
+1. Verify the tree: `swift build -j 4 --build-tests`, the full
+   `swift test -j 4`, and `script/verify_static_gates.sh`. Run the `core/`
+   suite too when `core/` changed. App Store Connect checks nothing beyond the
+   signature and metadata, so these local gates are the only gate.
+2. If a migration or sync payload manifest is new, arm the schema freeze first
+   (the section above) and commit it; the archive scripts refuse an unarmed
+   ladder.
+3. Bump the build number in the eight files `script/verify_app_metadata.py`
+   cross-checks; the script names any file that disagrees. Edit each file with
+   a single exact replacement; never use PlistBuddy `Set`, which re-sorts the
+   plist and deletes its comments. The marketing version stays unchanged
+   between TestFlight builds. Run the AppMetadata tests and commit.
+4. `script/release_testflight.sh upload <log-dir>` archives, validates, and
+   uploads both channels, stops each at its first failure, masks credentials in
+   its logs, and prints the two delivery ids. It takes about 6 to 25 minutes
+   depending on load.
+5. `script/release_testflight.sh poll <ios-id> <mac-id> <log-dir>` waits until
+   both builds have `"import-status" : "VALID"` and a build status of
+   `VALID`, `VALID_BINARY`, or `BETA_INTERNAL_TESTING`. `VALID_BINARY` can sit
+   next to an import status of `PROCESSING` for several minutes; wait for the
+   import status. Match status values with their quotes, because `VALID` is
+   also a substring of `INVALID_BINARY`.
+6. Delete the superseded packages in `dist/`.
+
+Failures and what they mean:
+
+- `403 FORBIDDEN_ERROR.CONTRACT_NOT_VALID`: an Apple agreement is waiting for
+  the account holder in App Store Connect. After it is accepted, re-run only
+  the validate and upload steps.
+- Mac upload `NSURLError -1005` or an HTTP 504: a transient network failure.
+  Re-run `script/archive_mas.sh --upload` alone.
+- `altool --build-status` can hang for several minutes on its first call or
+  report that `Defaults.properties` could not be opened. Neither is a
+  credential failure; stop that process and poll again.
+- Never print the secrets file or a process list that shows `altool`'s
+  arguments. List variable names only, for example with
+  `awk -F= '/^export / {sub(/^export /, "", $1); print $1}' secrets/apple-developer.env`.
+  BSD `sed` has no `\s`, so a `sed` substitution meant to strip values can
+  match nothing and print the whole line.
+
 ## Produce the direct-distribution release
 
 The credentials live in a notarytool keychain profile created once, so no

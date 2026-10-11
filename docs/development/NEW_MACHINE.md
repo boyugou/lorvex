@@ -60,13 +60,19 @@ write those rules into `CLAUDE.local.md` so agents keep away from it:
 3. `script/release_testflight.sh poll <ios-id> <mac-id> <log-dir>` waits until
    App Store Connect has processed both builds.
 
-The direct-download Mac build is `script/package_dmg.sh`
-(`apps/apple/docs/DISTRIBUTION.md`).
+Failure modes and their fixes are in `apps/apple/docs/release.md`
+("TestFlight builds"). The direct-download Mac build is
+`script/package_dmg.sh` (`apps/apple/docs/DISTRIBUTION.md`).
 
-## Probe suites
+## Probe suites and visual review
 
-The `ZZ…Probe…` tests under `apps/apple/Tests/LorvexAppleTests` are
-randomized walks, fuzzers, and render probes. The light ones run with the
-suite; each heavy one runs only when its environment variable is set (named
-at the top of its file), and render probes write their images to
-`LORVEX_SCRATCH_DIR`.
+The `ZZ…` tests under `apps/apple/Tests/LorvexAppleTests` are randomized
+walks, fuzzers, and render probes. The light ones run with the suite; each
+heavy one runs only when its environment variable is set. Their variables,
+the headless capture options, and the test-suite quirks are in
+`apps/apple/docs/development/VERIFICATION.md`; the platform traps are in
+`apps/apple/docs/development/ENGINEERING_TRAPS.md`.
+
+Simulator identifiers differ per machine; find them with
+`xcrun simctl list devices` and pass `LORVEX_SIM_UDID` when two simulators
+share a name.

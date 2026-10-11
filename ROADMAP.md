@@ -40,6 +40,47 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     languages (`ZZCaptureParserFuzzProbeTests`, `FUZZ_NFD`).
   - Locale follow-ups: weekday and Siri list joins, a few English strings
     outside the catalogs, and the week's first day.
+- Known code gaps, each confirmed by a probe or a test but not yet fixed:
+  - Quick add: the decomposed-Unicode fix keeps the typed text and matches on
+    a composed view with an offset table, composing per grapheme rather than
+    with full NFC (NFC splits composition-excluded letters such as Devanagari
+    U+0958 to U+095F); eight language suites pin the current behavior and flip
+    with the fix. "[pl,de] 15h" reads as 900 minutes; Vietnamese "3 giờ 15
+    phút" reads as 195 minutes; the Romanian reader drops English "in 15 min";
+    a parenthesized phrase leaves "( )" in Turkish, Thai, and Greek titles.
+  - Titles and list names can hold a line break when set over MCP or pasted
+    into the Mac inspector; the core has no single-line title policy.
+  - Cancelling a repeating occurrence whose reserved successor is already
+    finished reports "can't be completed again"; it needs a cancel-specific
+    refusal in all thirty languages. Two lifecycle refusals are English-only
+    (`UserFacingError+Reason.swift`). Batch reopen is all-or-nothing.
+  - A task repeating on the 29th or 30th skips February; clamping to the last
+    day changes the stored rule shape and is a product decision.
+  - Busy flags still span local fan-out in `mutateHabitReminder`, iOS sheet
+    saves, and iOS `mutateTask`.
+  - Stale views: an inbound calendar-only change does not reach an open iOS
+    day review; an inbound habits-only change does not reach the Mac review's
+    habit rows.
+  - Sync convergence limits found by `SyncConvergenceSimulationTests`: a task
+    hard-delete racing a concurrent edit when child edges arrive first; a tag
+    delete cascading a newer live edge before a resurrecting upsert; alias
+    deletes reordered before their redirects; no `habit_completion` fold.
+  - Mac performance: a task mutation awaits a six-stage publishing chain, and
+    each external database signal triggers a full refresh that re-indexes
+    Spotlight and the calendar window.
+  - Mac keyboard: list cards show Edit and Delete only on hover, and the memory
+    list and plan rail have no arrow-key traversal. Mac Today's arrow keys skip
+    event rows.
+  - Polish: Mac icon-picker labels show raw SF Symbol names and search only
+    English names; Settings > Activity shows English changelog summaries; the
+    Settings group "Operations" is a vague name in every language; German
+    Memory sheet titles truncate at 375 pt; the Urdu Today medium widget shows
+    one row.
+- Coverage not yet captured: the largest accessibility text sizes in languages
+  other than English and Chinese, iPad routes other than Review, the Habits,
+  Progress, and Lock Screen widgets in most languages, Mac widgets and watch
+  complications in other languages, and the MCP fuzz families for checklist
+  text, trash and restore, batch tools, and recurring `until` and `count` edits.
 - Needs a device or a person: real drags and resizes (including the Tasks
   table row drag), undo, context menus, Full Keyboard Access, the Quick
   Capture hotkey, Open at Login, the Control Center capture control,

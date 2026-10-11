@@ -105,6 +105,39 @@ func dueSoonIsTodayOrTomorrow() throws {
   #expect(!task(due: nil).isDueSoon(now: now, timeZone: losAngeles.timeZone))
 }
 
+/// The Tasks table's Due cell tints a due-soon date with the same palette color
+/// as the list rows, the list previews, and the task inspector.
+@Test
+func tasksTableDueCellTintsADueSoonDayLikeTheListRows() throws {
+  let source = try String(
+    contentsOf: URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources/LorvexApple/Views/TasksTableWorkspaceView.swift"),
+    encoding: .utf8)
+  let cell = try #require(source.range(of: "private struct TaskTableDueCell: View"))
+  let body = String(source[cell.lowerBound...].prefix(1_600))
+  #expect(body.contains("task.isDueSoon(timeZone: productTimeZone)"))
+  #expect(body.contains("isDueSoon ? AnyShapeStyle(LorvexDesign.Palette.dueSoon)"))
+}
+
+/// The task inspector tints its Due row and shows its Overdue pill only while
+/// the task has work left, the rule every list row follows.
+@Test
+func taskInspectorUrgencyAppliesOnlyToUnfinishedTasks() throws {
+  let views = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    .appending(path: "Sources/LorvexApple/Views")
+  let detail = try String(
+    contentsOf: views.appending(path: "TaskDetailView.swift"), encoding: .utf8)
+  let tint = try #require(detail.range(of: "private var dueTint: Color?"))
+  #expect(String(detail[tint.lowerBound...].prefix(200)).contains("store.taskDetailIsActive"))
+  let summary = try String(
+    contentsOf: views.appending(path: "TaskDetailFieldSummary.swift"), encoding: .utf8)
+  let overdue = try #require(summary.range(of: "var taskDetailDueIsOverdue: Bool"))
+  #expect(String(summary[overdue.lowerBound...].prefix(120)).contains("guard taskDetailIsActive"))
+  #expect(summary.contains("countsLateness: taskDetailIsActive"))
+}
+
 /// The bridge between the storage frame (naive day at UTC midnight) and the
 /// local calendar must hold in BOTH directions and on BOTH sides of UTC:
 /// west of UTC an evening instant formatted via UTC names the next day, and

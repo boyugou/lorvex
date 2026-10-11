@@ -7,7 +7,8 @@ app.
 
 - [`../README.md`](../README.md) — what the monorepo is.
 - [`../CLAUDE.md`](../CLAUDE.md) — operating manual for agents.
-- [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Shared).
+- [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Shared) and open work.
+- [`development/NEW_MACHINE.md`](development/NEW_MACHINE.md) — setting up a development machine, the local files a clone lacks, privacy rules, and releasing.
 
 ## Platform ownership
 

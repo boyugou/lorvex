@@ -410,7 +410,7 @@ accessibility sizes, each action keeping its full label, through an
 `AnyLayout` that swaps the `HStackLayout` for a leading-aligned
 `VStackLayout`.
 
-A menu names its choices in words: a priority reads "High", "Medium", or "Low", never
+A menu names its choices in words: a priority reads "High", "Normal", or "Low", never
 "P1". A group of two or three choices sits inline in its parent menu,
 separated by a divider or titled with a `Section`, instead of a nested submenu
 that hides two items behind an extra hover.

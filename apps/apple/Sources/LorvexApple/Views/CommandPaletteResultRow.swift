@@ -99,10 +99,10 @@ struct CommandPaletteResultRow: View {
         tint: Color(lorvexHex: colorHex) ?? .accentColor,
         size: 20,
         font: LorvexDesign.Typography.secondaryText)
-    } else if case .openHabit(_, _, let habitIcon, let colorHex, _) = result {
+    } else if case .openHabit(let habitID, _, let habitIcon, let colorHex, _) = result {
       Image(systemName: LorvexSymbol.name(for: habitIcon, fallback: result.systemImage))
         .frame(width: 20)
-        .foregroundStyle(Color(lorvexHex: colorHex) ?? .accentColor)
+        .foregroundStyle(LorvexHabitPalette.baseColor(id: habitID, color: colorHex))
     } else {
       Image(systemName: result.systemImage)
         .frame(width: 20)

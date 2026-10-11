@@ -366,7 +366,7 @@ struct HabitMomentumCard: View {
   @ViewBuilder
   private var contextMenu: some View {
     Button(
-      String(localized: "habits.row.reset_today", defaultValue: "Reset today", table: "Localizable", bundle: LorvexL10n.bundle),
+      String(localized: "habits.row.reset_today.title_case", defaultValue: "Reset Today", table: "Localizable", bundle: LorvexL10n.bundle),
       systemImage: "arrow.counterclockwise"
     ) {
       // One stray check-in clears like unchecking a box; more than one is real

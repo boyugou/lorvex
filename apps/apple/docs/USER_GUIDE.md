@@ -3335,9 +3335,12 @@ pickers that Shortcuts and Siri show compare text the same way.
 
 When a word you searched for is in a task's notes, its assistant context, or a
 tag the row does not show, and not in the title, the row quotes the text around
-it on a line under the title, with the word in bold. A task whose title holds
-the word, or whose visible tags do, shows no quote. The command palette's task
-results quote the same way, and since they show no tags, they quote a tag too.
+it on a line under the title, with the word in bold; the Tasks table shows the
+same line under its Title column. The assistant context is formatted text, and
+its quote leaves the formatting marks out (`**`, backticks, list and heading
+markers). A task whose title holds the word, or whose visible tags do, shows no
+quote. The command palette's task results quote the same way, and since they
+show no tags, they quote a tag too.
 
 ### Batch Operations
 

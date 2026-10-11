@@ -43,3 +43,13 @@ apps/apple/docs/APPLE_DEVELOPER.md
 
 # Per-machine Claude Code notes (owner-only, never shared)
 CLAUDE.local.md
+
+# Release products and key material that can land outside dist/ or secrets/
+*.ipa
+*.xcarchive
+*.pkg
+*.dmg
+*.pem
+*.key
+.env.*
+!.env.build.example

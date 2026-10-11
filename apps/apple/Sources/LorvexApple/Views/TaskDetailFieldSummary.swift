@@ -40,7 +40,7 @@ extension AppStore {
   /// passed yet (``LorvexDayPhrase/isPlannedAfterDeadline(planned:due:logicalDay:)``),
   /// which the When row says and tints.
   var taskDetailPlannedIsAfterDeadline: Bool {
-    guard taskDetailHasPlannedDate, taskDetailHasDueDate else { return false }
+    guard taskDetailIsActive, taskDetailHasPlannedDate, taskDetailHasDueDate else { return false }
     return LorvexDayPhrase.isPlannedAfterDeadline(
       planned: taskDetailPlannedDatePickerDate, due: taskDetailDueDatePickerDate,
       logicalDay: logicalTodayDateString)
@@ -54,11 +54,19 @@ extension AppStore {
   var taskDetailDueSummary: String? {
     guard taskDetailHasDueDate else { return nil }
     return LorvexDayPhrase.due(
-      taskDetailDueDatePickerDate, plannedDay: nil, logicalDay: logicalTodayDateString)
+      taskDetailDueDatePickerDate, plannedDay: nil, logicalDay: logicalTodayDateString,
+      countsLateness: taskDetailIsActive)
   }
 
+  /// Whether the open task still has work to do: open, started, or someday.
+  /// A finished task's deadline is a date in its history, so the Due row, its
+  /// tint and the Overdue pill apply only while this holds, the same rule
+  /// the list rows follow. True while no task is open.
+  var taskDetailIsActive: Bool { selectedTask?.status.isActive ?? true }
+
+  /// Whether the open task's deadline has passed and the task is not finished.
   var taskDetailDueIsOverdue: Bool {
-    guard taskDetailHasDueDate,
+    guard taskDetailIsActive, taskDetailHasDueDate,
       let offset = lorvexDayOffset(from: logicalTodayDateString, to: taskDetailDueDatePickerDate)
     else { return false }
     return offset < 0

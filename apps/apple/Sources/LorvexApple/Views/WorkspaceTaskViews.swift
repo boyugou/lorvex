@@ -71,12 +71,14 @@ struct WorkspaceTaskDisclosureHeader: View {
   let countText: String
   let accessibilityIdentifier: String
 
+  private func toggle() {
+    lorvexAnimated(.snappy(duration: 0.16)) {
+      isExpanded.toggle()
+    }
+  }
+
   var body: some View {
-    Button {
-      lorvexAnimated(.snappy(duration: 0.16)) {
-        isExpanded.toggle()
-      }
-    } label: {
+    Button(action: toggle) {
       HStack(spacing: WorkspaceTaskColumns.markerSpacing) {
         LorvexDisclosureChevron(isExpanded: isExpanded)
           .font(WorkspaceTaskSectionTypography.icon)
@@ -103,6 +105,7 @@ struct WorkspaceTaskDisclosureHeader: View {
     .accessibilityLabel(lorvexPairLabel(title, countText))
     .lorvexFoldState(isExpanded: isExpanded)
     .accessibilityAddTraits(.isHeader)
+    .accessibilityAction(.default, toggle)
     .accessibilityIdentifier(accessibilityIdentifier)
   }
 }

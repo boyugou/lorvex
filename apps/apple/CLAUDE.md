@@ -338,8 +338,15 @@ swift build -j 4 --product LorvexApple && script/ui_tour_macos.sh light /tmp/sho
 script/watch_sim_build.sh && script/watch_sim_screenshots.sh /tmp/shots today habits
 script/widget_gallery_macos.sh /tmp/widgets
 
-# Every static gate, no build or launch (before each release build)
+# Every static gate, no build or launch (before each push and release build)
 script/verify_static_gates.sh
+
+# TestFlight: archive, validate, and upload both store channels, then poll
+script/release_testflight.sh upload /tmp/release
+script/release_testflight.sh poll <ios-delivery-id> <mac-delivery-id> /tmp/release
+
+# A heavy probe suite (each is off unless its variable is set)
+FUZZ_RUN=1 swift test -j 4 --filter ZZCaptureParserFuzzProbeTests
 
 # Full gate before a release
 ./script/verify_all.sh
@@ -411,6 +418,8 @@ documentation freshness, feature ideation.
 - **MCP Swift SDK:** https://github.com/modelcontextprotocol/swift-sdk
 - **swift-markdown:** https://github.com/swiftlang/swift-markdown
 - **Build/verify:** `script/verify_all.sh`, `script/build_and_run.sh`
+- **New machine and releases:** `../../docs/development/NEW_MACHINE.md`
+  (local files a clone lacks, machine rules, TestFlight steps).
 - **Packaging:** `script/package_dmg.sh` (fail-closed Release, Developer ID,
   profile-authorized, notarized arm64 DMG — the direct-distribution build;
   Apple Silicon only; its default verification erases the Mac's Lorvex data,

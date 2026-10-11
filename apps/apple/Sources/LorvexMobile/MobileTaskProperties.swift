@@ -71,8 +71,9 @@ struct MobileTaskProperties: Equatable {
       }
     }
     // A planned day after a deadline that has not passed yet says so.
-    let isAfterDeadline = LorvexDayPhrase.isPlannedAfterDeadline(
-      planned: task.plannedDate, due: task.dueDate, logicalDay: logicalDay)
+    let isAfterDeadline = task.status.isActive
+      && LorvexDayPhrase.isPlannedAfterDeadline(
+        planned: task.plannedDate, due: task.dueDate, logicalDay: logicalDay)
     field(
       .doOn,
       task.plannedDate.map { planned in
@@ -84,8 +85,12 @@ struct MobileTaskProperties: Equatable {
     field(.estimate, task.estimatedMinutes.flatMap { $0 > 0 ? LorvexDurationFormat.minutes($0) : nil })
     if let due = task.dueDate {
       let offset = lorvexDayOffset(from: logicalDay, to: due)
-      let tint: Tint? = offset.map { $0 < 0 ? .overdue : ($0 <= 1 ? .soon : nil) } ?? nil
-      let day = Self.sentenceCased(LorvexDayPhrase.due(due, plannedDay: nil, logicalDay: logicalDay))
+      // A finished task's deadline is history: no urgency tint, no lateness count.
+      let tint: Tint? =
+        task.status.isActive ? offset.map { $0 < 0 ? .overdue : ($0 <= 1 ? .soon : nil) } ?? nil : nil
+      let day = Self.sentenceCased(
+        LorvexDayPhrase.due(
+          due, plannedDay: nil, logicalDay: logicalDay, countsLateness: task.status.isActive))
       field(.due, day, tint: tint)
     } else {
       field(.due, nil)

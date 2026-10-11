@@ -9,10 +9,10 @@ import Testing
 struct MobileTaskPropertiesTests {
   private static func task(
     planned: String? = nil, due: String? = nil, priority: LorvexTask.Priority = .p2,
-    estimate: Int? = nil, tags: [String] = []
+    status: LorvexTask.Status = .open, estimate: Int? = nil, tags: [String] = []
   ) -> LorvexTask {
     LorvexTask(
-      id: "t", title: "T", notes: "", priority: priority, status: .open,
+      id: "t", title: "T", notes: "", priority: priority, status: status,
       dueDate: due.flatMap { LorvexDateFormatters.ymdUTC.date(from: $0) },
       plannedDate: planned.flatMap { LorvexDateFormatters.ymdUTC.date(from: $0) },
       estimatedMinutes: estimate, tags: tags)
@@ -48,6 +48,26 @@ struct MobileTaskPropertiesTests {
     let due = try #require(properties.rows.first { $0.field == .due })
     #expect(due.tint == .overdue)
     #expect(due.value == "Yesterday")
+  }
+
+  @Test("A finished task's passed deadline is plain history: no tint and no lateness count")
+  func aFinishedTasksDeadlineIsNotUrgent() throws {
+    let open = MobileTaskProperties(
+      task: Self.task(due: "2026-03-30"), listName: nil, logicalDay: "2026-04-05")
+    let openDue = try #require(open.rows.first { $0.field == .due })
+    #expect(openDue.tint == .overdue)
+    #expect(openDue.value.contains(" · "))
+
+    for status in [LorvexTask.Status.completed, .cancelled] {
+      let finished = MobileTaskProperties(
+        task: Self.task(due: "2026-03-30", status: status), listName: nil, logicalDay: "2026-04-05")
+      let due = try #require(finished.rows.first { $0.field == .due })
+      #expect(due.tint == nil, "\(status)")
+      #expect(!due.value.contains(" · "), "\(status)")
+    }
+    let dueToday = MobileTaskProperties(
+      task: Self.task(due: "2026-04-05", status: .completed), listName: nil, logicalDay: "2026-04-05")
+    #expect(dueToday.rows.first { $0.field == .due }?.tint == nil)
   }
 
   @Test("A planned day after a deadline still ahead says so and is tinted")

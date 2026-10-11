@@ -173,8 +173,6 @@ leads.
 - **Watch.** The first page is Today: the running timed task with its ring when
   there is one, then the list. A task's actions are Start or Pause, Defer, and
   Cancel. The complication shows how many tasks are left and the lead task.
-- **CarPlay.** One list, Today, in the same order; each row offers Complete and
-  Defer.
 - **Siri and Shortcuts.** Intents read today's list, start, pause, or defer a
   task, plan one for today, and read, suggest, or save the day's times.
   Suggesting times for a day with no open tasks answers "Nothing on <date>

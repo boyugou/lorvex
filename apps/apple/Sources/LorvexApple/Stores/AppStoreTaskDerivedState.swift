@@ -130,13 +130,14 @@ extension AppStore {
 
   /// True when something `task` depends on is unfinished, as the loaded
   /// surfaces read it: Today's snapshot, the Tasks workspace's pages, the
-  /// selected list's rows, and the selected task's own check
-  /// (``heldUpTaskID``). One answer for every surface, so a task reads the
-  /// same wherever it shows.
+  /// selected list's rows, the Calendar's unplanned rail, and the selected
+  /// task's own check (``heldUpTaskID``). One answer for every surface, so a
+  /// task reads the same wherever it shows.
   func isBlocked(_ task: LorvexTask) -> Bool {
     today.blockedTaskIDs.contains(task.id)
       || taskWorkspaceStorage.blockedTaskIDs.contains(task.id)
       || selectedListDetail?.blockedTaskIDs.contains(task.id) == true
+      || calendarStorage.calendarUnplannedBlockedTaskIDs.contains(task.id)
       || heldUpTaskID == task.id
   }
 

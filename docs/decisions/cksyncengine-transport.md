@@ -90,9 +90,9 @@ that protocol used.
 ### Ownership
 
 Only the macOS app and the iOS/iPadOS app construct the transport, one engine
-per process for the private database. MCP, widgets, App Intents, the watch,
-and CarPlay still write only through `LorvexCoreServicing`, whose mutations
-enqueue outbox rows. The main app learns about helper-process writes through
+per process for the private database. MCP, widgets, App Intents, and the
+watch still write only through `LorvexCoreServicing`, whose mutations enqueue
+outbox rows. The main app learns about helper-process writes through
 `DatabaseChangeSignal` and hands the new outbox rows to the engine.
 
 The engine is created soon after launch whenever sync is on, with

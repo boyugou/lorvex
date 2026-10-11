@@ -83,21 +83,27 @@ public enum LorvexDayPhrase {
   /// sentence has just named it ("Today, due the same day"). A deadline that
   /// passed before yesterday carries how late it is ("Sep 20 · 9 days late"),
   /// since a date leaves the reader to count; "yesterday" already says so.
+  /// A finished task has nothing left to be late on, so its deadline reads as
+  /// the plain day.
   ///
   /// - Parameters:
   ///   - due: the stored due day.
   ///   - plannedDay: the stored planned day, or `nil` when the task has none.
   ///   - logicalDay: the product's logical today, `yyyy-MM-dd`.
+  ///   - countsLateness: whether a deadline that has passed carries how late
+  ///     it is. `false` for a task that is done or cancelled.
   ///   - locale: the locale a weekday or a date is written in.
   public static func due(
-    _ due: Date, plannedDay: Date?, logicalDay: String,
+    _ due: Date, plannedDay: Date?, logicalDay: String, countsLateness: Bool = true,
     locale: Locale = .autoupdatingCurrent
   ) -> String {
     let isPlannedDay = plannedDay.map {
       LorvexDateFormatters.ymdUTC.string(from: $0) == LorvexDateFormatters.ymdUTC.string(from: due)
     } ?? false
     let day = isPlannedDay ? sameDay : phrase(for: due, logicalDay: logicalDay, position: .inline, locale: locale)
-    guard let offset = lorvexDayOffset(from: logicalDay, to: due), offset < -1 else { return day }
+    guard countsLateness, let offset = lorvexDayOffset(from: logicalDay, to: due), offset < -1 else {
+      return day
+    }
     return "\(day) · \(daysLate(-offset))"
   }
 

@@ -94,7 +94,7 @@ struct CalendarPlanRail: View {
   }
 
   private func row(_ task: LorvexTask) -> some View {
-    TaskRowItem(store: store, task: task)
+    TaskRowItem(store: store, task: task, isBlocked: store.isBlocked(task))
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
       .onTapGesture {

@@ -74,3 +74,16 @@ func sharedFoldHeadersUseTheModifier() throws {
     #expect(!text.contains("common.expanded") && !text.contains("common.collapsed"), "\(file)")
   }
 }
+
+/// A button that carries the header trait is exposed on the Mac as a heading,
+/// and a heading lists no press action of its own, so the task-lane fold header
+/// states its default action and VoiceOver can open and close the section.
+@Test("The task-lane fold header offers VoiceOver a press action")
+func taskLaneFoldHeaderCanBePressedByVoiceOver() throws {
+  let text = try source("Sources/LorvexApple/Views/WorkspaceTaskViews.swift")
+  let header = try #require(text.range(of: "struct WorkspaceTaskDisclosureHeader"))
+  let body = text[header.upperBound...].prefix(2_600)
+
+  #expect(body.contains("Button(action: toggle)"))
+  #expect(body.contains(".accessibilityAction(.default, toggle)"))
+}

@@ -295,3 +295,24 @@ func widgetRenderModelOmitsCompletedTasksFromTheList() {
   #expect(model.taskRows.map(\.id) == ["open-task"])
   #expect(model.taskRows.first?.title == "Still actionable")
 }
+
+/// A widget configured for one list is titled with the name the app shows for
+/// it: the seeded Inbox in the interface language, any other list as typed.
+@Test
+func aListScopedWidgetIsTitledWithTheListsDisplayName() {
+  func headline(of list: WidgetSnapshot.ListSummary) -> String {
+    let now = Date(timeIntervalSince1970: 1_779_465_600)
+    let snapshot = WidgetSnapshot(
+      generatedAt: "2026-05-22T16:00:00Z", timezone: "UTC", logicalDay: "2026-05-22",
+      stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0), briefing: nil,
+      tasks: [], scopeList: list)
+    return WidgetRenderModelBuilder().model(
+      entry: WidgetTimelineEntry(
+        date: now, state: .snapshot(snapshot, freshness: .fresh(ageSeconds: 0)),
+        refreshAfter: now.addingTimeInterval(30 * 60)),
+      family: .systemSmall, statusText: "Updated now"
+    ).headline
+  }
+  #expect(headline(of: .init(id: "inbox", name: "Inbox", icon: nil)) == LorvexListNaming.localizedInboxName)
+  #expect(headline(of: .init(id: "work", name: "  Deep Work ", icon: nil)) == "Deep Work")
+}

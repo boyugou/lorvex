@@ -43,6 +43,27 @@ func theRailListsOpenTasksWithNoPlannedDay() async throws {
 
 @MainActor
 @Test
+func theRailMarksATaskThatWaitsOnAnUnfinishedOne() async throws {
+  let (store, core) = try await makeStore()
+  let blocker = try await core.createTask(title: "Book the room", notes: "")
+  let waiting = try await core.createTask(
+    TaskCreateDraft(title: "Send the invitations", dependsOn: [blocker.id]))
+
+  await store.showCalendarUnplannedTasks()
+
+  #expect(store.isBlocked(waiting))
+  #expect(!store.isBlocked(blocker))
+
+  _ = try await core.completeTask(id: blocker.id)
+  await store.reloadCalendarUnplannedTasksIfShown()
+  #expect(!store.isBlocked(waiting))
+
+  store.hideCalendarUnplannedTasks()
+  #expect(store.calendarStorage.calendarUnplannedBlockedTaskIDs.isEmpty)
+}
+
+@MainActor
+@Test
 func aTaskDeferredToALaterDayIsNotYetSomethingToPlan() async throws {
   let (store, core) = try await makeStore()
   let waiting = try await core.createTask(title: "Wait a week", notes: "")

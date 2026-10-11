@@ -6,10 +6,12 @@ import SwiftUI
 #endif
 
 /// Today's habits as rings, two to a row (one at accessibility text sizes, so
-/// names have the width to read): an open habit shows its own symbol in its
-/// ring, a tap checks it off with a haptic, and a done habit fills green with
-/// a check. A habit set aside for today draws its ring as dots around a skip
-/// mark; a tap still checks it off, which lifts the skip.
+/// names have the width to read), drawn as the phone's Today and the widgets
+/// draw them (``LorvexHabitRingTile``): an open habit shows its own symbol in
+/// its identity color, a habit counted several times a day one arc per
+/// check-in, and a done habit a green check over a quieted name. A tap checks
+/// a habit off with a haptic. A habit set aside for today draws its ring as
+/// dots around a skip mark; a tap still checks it off, which lifts the skip.
 struct LorvexWatchHabitsPage: View {
   @Bindable var store: LorvexWatchStore
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -50,31 +52,13 @@ struct LorvexWatchHabitsPage: View {
         #endif
       }
     } label: {
-      VStack(spacing: LorvexDesign.Spacing.xs) {
-        // An open habit carries its own symbol in the ring, so it never
-        // shows a check before it is done; a done one fills green with one.
-        if habit.isSkipped && !habit.isDoneToday {
-          LorvexHabitCheckRing(
-            fraction: 0, tint: LorvexDesign.Palette.accent, diameter: 40, isSkipped: true)
-        } else {
-          LorvexTaskRing(
-            progress: habit.target > 0 ? Double(habit.completedToday) / Double(habit.target) : 0,
-            isDone: habit.isDoneToday, diameter: 40, showsCheckHint: false)
-            .overlay {
-              if !habit.isDoneToday {
-                Image(systemName: LorvexSymbol.name(for: habit.icon, fallback: "repeat"))
-                  .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
-                  .foregroundStyle(LorvexDesign.Palette.accent)
-                  .accessibilityHidden(true)
-              }
-            }
-        }
-        Text(userContent: habit.name)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .lineLimit(2)
-          .multilineTextAlignment(.center)
-      }
-      .frame(maxWidth: .infinity)
+      LorvexHabitRingTile(
+        name: habit.name,
+        symbol: LorvexSymbol.name(for: habit.icon, fallback: "repeat"),
+        fraction: habit.target > 0 ? Double(habit.completedToday) / Double(habit.target) : 0,
+        tint: LorvexHabitPalette.baseColor(id: habit.id, color: habit.color),
+        diameter: 40, segments: habit.target,
+        isSkipped: habit.isSkipped && !habit.isDoneToday)
     }
     .buttonStyle(.plain)
     .accessibilityLabel(habit.name)

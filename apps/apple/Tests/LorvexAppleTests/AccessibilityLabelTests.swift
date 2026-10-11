@@ -101,6 +101,78 @@ func taskAccessibilityLabelSpeaksTheDueDayInWholeWords() {
   #expect(taskAccessibilityLabel(task("Plan the trip", dueDate: dueDay(-3))) == "Plan the trip: overdue 3 days ago")
 }
 
+/// The Mac Tasks table draws the due day as its own cell, so the cell is
+/// labeled with the same whole-word phrase a row's label uses, and an overdue
+/// day is named rather than only tinted red.
+@Test
+func taskDueAccessibilityPhraseNamesAnOverdueDay() {
+  #expect(taskDueAccessibilityPhrase(task("Plan", dueDate: dueDay(-3)), timeZone: .current) == "overdue 3 days ago")
+  #expect(taskDueAccessibilityPhrase(task("Plan", dueDate: dueDay(0)), timeZone: .current) == "due today")
+  #expect(taskDueAccessibilityPhrase(task("Plan"), timeZone: .current) == nil)
+}
+
+/// The table's Due cell and its estimate-and-tags line speak the list rows'
+/// wording instead of the abbreviations they draw.
+@Test
+func tasksTableCellsSpeakTheListRowWording() throws {
+  let source = try String(
+    contentsOf: URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources/LorvexApple/Views/TasksTableWorkspaceView.swift"),
+    encoding: .utf8)
+  #expect(source.contains(".accessibilityLabel(taskDueAccessibilityPhrase(task, timeZone: productTimeZone) ?? label)"))
+  #expect(source.contains("LorvexDurationFormat.minutes(minutes, style: .spoken)"))
+  #expect(source.contains(".accessibilityLabel(secondarySpokenText ?? secondaryText)"))
+}
+
+/// The Tasks table marks an open task whose dependencies are unfinished the way
+/// the list rows' badge does: the word "Blocked" with its lock, drawn and spoken,
+/// in place of "Open".
+@Test
+func tasksTableStatusCellNamesABlockedOpenTask() throws {
+  let source = try String(
+    contentsOf: URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources/LorvexApple/Views/TasksTableWorkspaceView.swift"),
+    encoding: .utf8)
+  let cell = try #require(source.range(of: "private struct TaskTableStatusCell: View"))
+  let body = String(source[cell.lowerBound...].prefix(1_200))
+  #expect(body.contains("isBlocked && status == .open"))
+  #expect(body.contains("TaskDisplayText.blocked"))
+  #expect(body.contains(".accessibilityLabel(name)"))
+}
+
+/// The Tasks table mutes a Someday task's title as a list row does, and strikes
+/// through only the finished and cancelled ones.
+@Test
+func tasksTableMutesASomedayTitleLikeTheListRows() throws {
+  let source = try String(
+    contentsOf: URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources/LorvexApple/Views/TasksTableWorkspaceView.swift"),
+    encoding: .utf8)
+  let cell = try #require(source.range(of: "private struct TaskTableTitleCell: View"))
+  let body = String(source[cell.lowerBound...].prefix(2_200))
+  #expect(body.contains("private var isDormant: Bool { isInactive || task.status == .someday }"))
+  #expect(body.contains(".foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))"))
+  #expect(body.contains(".strikethrough(isInactive, color: .secondary)"))
+}
+
+/// The Mac list row draws the quiet repeat glyph the iPhone row draws, after
+/// the due date, and leaves it to the spoken label to say "repeats".
+@Test
+func macTaskRowMarksARepeatingTask() throws {
+  let source = try String(
+    contentsOf: URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources/LorvexApple/Views/LorvexTaskRow.swift"),
+    encoding: .utf8)
+  let line = try #require(source.range(of: "private var metadataLine: some View"))
+  let body = String(source[line.lowerBound...].prefix(5_500))
+  #expect(body.contains("let repeats = task.recurrence != nil"))
+  #expect(body.contains("Image(systemName: \"repeat\").foregroundStyle(.secondary).accessibilityHidden(true)"))
+}
+
 /// A repeating task says so, as its row shows a repeat glyph.
 @Test
 func taskAccessibilityLabelSpeaksARepeatingTask() {

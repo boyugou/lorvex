@@ -89,6 +89,7 @@ python3 -m py_compile \
   script/verify_mcp_tool_catalog.py \
   script/verify_migration_ladder.py \
   script/verify_privacy_manifests.py \
+  script/verify_public_safety.py \
   script/verify_repo_hygiene.py \
   script/verify_release_manifest.py \
   script/verify_schema_freeze.py \
@@ -118,6 +119,9 @@ python3 -m unittest discover -s script -p 'test_*.py'
 # released sync-payload contract.
 ./script/verify_schema_freeze.py
 ./script/verify_repo_hygiene.py
+# The repository is public: no tracked file may hold an email address, a
+# developer machine's path, a key, or a credential file.
+./script/verify_public_safety.py
 # Reject over-broad grants in the source .entitlements plists (sandbox-disable,
 # network, files.all, temporary-exceptions) before they can be signed into a build.
 ./script/verify_source_entitlements.py

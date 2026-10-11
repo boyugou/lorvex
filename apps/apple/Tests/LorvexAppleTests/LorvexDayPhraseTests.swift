@@ -70,6 +70,19 @@ struct LorvexDayPhraseTests {
         == "the same day · 7 days late")
   }
 
+  @Test func aFinishedTasksDeadlineIsJustItsDay() throws {
+    #expect(
+      LorvexDayPhrase.due(
+        try day("2026-09-20"), plannedDay: nil, logicalDay: logicalDay, countsLateness: false,
+        locale: locale)
+        == "Sep 20")
+    #expect(
+      LorvexDayPhrase.due(
+        try day("2026-09-15"), plannedDay: try day("2026-09-15"), logicalDay: logicalDay,
+        countsLateness: false, locale: locale)
+        == "the same day")
+  }
+
   /// A planned day after a deadline still ahead would finish the task late;
   /// one on the deadline is in time, and once the deadline has passed,
   /// planning the task for today or later is how it catches up.

@@ -13,6 +13,9 @@ struct AppStoreCalendarStorage {
   /// (the first ``AppStore/calendarUnplannedLimit``, in the canonical task
   /// order). Nil while the rail is hidden and until its first load succeeds.
   var calendarUnplannedTasks: [LorvexTask]?
+  /// The rail's tasks that wait on an unfinished one, which their rows mark
+  /// as blocked.
+  var calendarUnplannedBlockedTaskIDs = Set<LorvexTask.ID>()
   /// The rail is on screen, so task changes reload its tasks.
   var calendarUnplannedRailIsShown = false
   /// How many open tasks have no planned day in all, which can exceed what the
@@ -39,6 +42,7 @@ struct AppStoreCalendarStorage {
     calendarTimeline = nil
     calendarScheduledTasks = nil
     calendarUnplannedTasks = nil
+    calendarUnplannedBlockedTaskIDs = []
     calendarUnplannedRailIsShown = false
     calendarUnplannedTotal = 0
     selectedCalendarEventID = nil

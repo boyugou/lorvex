@@ -8,7 +8,8 @@ import SwiftUI
 ///   task off **without** opening its detail inspector;
 /// - the title, struck through and dimmed once the task is done or cancelled;
 /// - one compact metadata line that reads as a single unit — the due date
-///   (tinted when overdue) leads, followed by estimate and tags, the last tags
+///   (tinted when overdue) leads, followed by a repeat glyph on a repeating
+///   task, then estimate and tags, the last tags
 ///   dropping whole when the line runs out of room — rendered only
 ///   when there's something to say. Due and overdue share this inline treatment
 ///   so the row never strands a badge against the far edge.
@@ -228,8 +229,9 @@ struct LorvexTaskRow: View {
     // section, search); on the day surfaces the task is filtered out entirely.
     let hiddenLabel = task.hiddenUntilShortLabel(timeZone: productTimeZone)
     let calm = calmMetadata
+    let repeats = task.recurrence != nil
     if timeLabel != nil || owningList != nil || hiddenLabel != nil || dueLabel != nil
-      || !calm.isEmpty
+      || repeats || !calm.isEmpty
     {
       HStack(spacing: LorvexDesign.Spacing.sm) {
         if let timeLabel {
@@ -241,7 +243,7 @@ struct LorvexTaskRow: View {
           .foregroundStyle(
             timeIsRunning ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.secondary))
           .layoutPriority(2)
-          if owningList != nil || hiddenLabel != nil || dueLabel != nil {
+          if owningList != nil || hiddenLabel != nil || dueLabel != nil || repeats {
             Text("·").foregroundStyle(.tertiary)
           }
         }
@@ -282,12 +284,19 @@ struct LorvexTaskRow: View {
               ? AnyShapeStyle(LorvexDesign.Palette.overdue)
               : isDueSoon ? AnyShapeStyle(LorvexDesign.Palette.dueSoon) : AnyShapeStyle(.secondary))
         }
+        if repeats {
+          if owningList != nil || hiddenLabel != nil || dueLabel != nil {
+            Text("·").foregroundStyle(.tertiary)
+          }
+          // VoiceOver already hears "repeats" in the row's spoken label.
+          Image(systemName: "repeat").foregroundStyle(.secondary).accessibilityHidden(true)
+        }
         if !calm.isEmpty {
           // Short of room, the last tags drop whole rather than truncating.
           LorvexWholeLabelsLine(
             calm,
             leadingSeparator: timeLabel != nil || owningList != nil || hiddenLabel != nil
-              || dueLabel != nil,
+              || dueLabel != nil || repeats,
             spacing: LorvexDesign.Spacing.sm)
         }
       }

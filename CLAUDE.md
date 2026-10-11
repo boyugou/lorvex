@@ -41,6 +41,21 @@ context only, never a dependency or a behavioral oracle.
 3. **Contact routes through the lorvex.app support/privacy pages.** No email
    addresses anywhere.
 
+## Repository and privacy
+
+This repository (`github.com/boyugou/lorvex`) is public and is the only
+working repository: every tracked file is published when it is pushed.
+
+- Never commit credentials, signing material, email addresses, a personal
+  name in a signing identity, or a developer machine's paths. The static gate
+  `apps/apple/script/verify_public_safety.py` rejects them; run
+  `apps/apple/script/verify_static_gates.sh` before pushing.
+- Local-only files (`secrets/`, `CLAUDE.local.md`, tool state, build and
+  capture output) are listed in `.gitignore`; add any new kind there.
+- Commit with a GitHub noreply address.
+- Setting up a machine, the local files a clone lacks, and the release steps:
+  `docs/development/NEW_MACHINE.md`. Open work: `ROADMAP.md`.
+
 ## Where things are
 
 - **Apple app** (`apps/apple`): SwiftPM package, `swift build`/`swift test` from

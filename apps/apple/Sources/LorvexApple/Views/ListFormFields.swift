@@ -13,7 +13,7 @@ struct ListSheetHeader: View {
       icon: $store.draftListIcon,
       color: $store.draftListColor,
       name: $store.draftListName,
-      defaultIcon: "list.bullet",
+      defaultIcon: "folder",
       namePrompt: String(
         localized: "lists.sheet.field.name_prompt", defaultValue: "List name", table: "Localizable",
         bundle: LorvexL10n.bundle),

@@ -148,3 +148,30 @@ func taskDetailRemindersSummaryNamesOneReminderAndCountsSeveral() async throws {
       == lorvexReminderDayTime(first, logicalDay: store.logicalTodayDateString, timeZone: store.logicalTimeZone))
   #expect(store.taskDetailRemindersSummary(task: task([first, second])) == "2 reminders")
 }
+
+/// A finished task's deadline is history: the inspector's Due row stops
+/// counting days late and the Overdue pill's condition clears, as on the rows.
+@MainActor
+@Test
+func taskDetailStopsFlaggingAFinishedTasksDeadline() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  var draft = TaskCreateDraft(title: "Renew the permit", notes: "")
+  draft.dueDate = try store.storageDate(daysFromLogicalToday: -9)
+  let task = try await core.createTask(draft)
+  await store.refresh()
+
+  store.selectTaskFromList(task.id)
+  #expect(store.taskDetailIsActive)
+  #expect(store.taskDetailDueIsOverdue)
+  #expect(store.taskDetailDueSummary?.contains(" · ") == true)
+
+  _ = try await core.completeTask(id: task.id)
+  await store.refresh()
+  store.selectedTaskID = nil
+  store.selectTaskFromList(task.id)
+  #expect(!store.taskDetailIsActive)
+  #expect(!store.taskDetailDueIsOverdue)
+  #expect(store.taskDetailDueSummary?.contains(" · ") == false)
+}

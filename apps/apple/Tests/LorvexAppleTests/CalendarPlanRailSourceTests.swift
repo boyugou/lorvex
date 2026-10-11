@@ -35,7 +35,7 @@ func planRailReusesTheSharedTaskRowAndFollowsTaskChanges() throws {
   let workspaceActions = try source("Sources/LorvexApple/Stores/AppStoreTaskWorkspaceActions.swift")
   let unplanned = try source("Sources/LorvexApple/Stores/AppStoreCalendarUnplannedActions.swift")
 
-  #expect(rail.contains("TaskRowItem(store: store, task: task)"))
+  #expect(rail.contains("TaskRowItem(store: store, task: task, isBlocked: store.isBlocked(task))"))
   #expect(rail.contains("WorkspaceTaskContextMenu(store: store, task: task)"))
   #expect(rail.contains("ReviewCalmCopy.moreCount("))
   let reload = try #require(workspaceActions.range(of: "func reloadTaskWorkspaceIfLoaded() async {"))

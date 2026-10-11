@@ -115,8 +115,10 @@ public struct WidgetRenderModelBuilder: Sendable {
     if family == .accessoryInline, let lead {
       return lead.title
     }
-    if let name = scope?.name.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
-      return name
+    if let scope {
+      let name = LorvexListNaming.displayName(id: scope.id, name: scope.name)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+      if !name.isEmpty { return name }
     }
     return String(
       localized: "widget.title.today", defaultValue: "Today",

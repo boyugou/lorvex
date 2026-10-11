@@ -215,4 +215,18 @@ struct LorvexTaskSearchMatchTests {
       #expect(match.matched == "investor")
     }
   }
+
+  @Test("the Mac Tasks table quotes the match under a row's title like list mode")
+  func tasksTableTitleCellQuotesTheMatch() throws {
+    let source = try String(
+      contentsOf: URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appending(path: "Sources/LorvexApple/Views/TasksTableWorkspaceView.swift"),
+      encoding: .utf8)
+    #expect(source.contains("let searchQuery = store.trimmedSearchText"))
+    #expect(
+      source.contains(
+        "task.searchMatch(for: searchQuery, visibleTagCount: LorvexTaskRow.visibleTagCount)"))
+    #expect(source.contains("if let searchMatch { LorvexSearchExcerptLine(match: searchMatch) }"))
+  }
 }

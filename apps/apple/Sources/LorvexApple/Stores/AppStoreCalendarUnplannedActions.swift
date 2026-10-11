@@ -17,6 +17,7 @@ extension AppStore {
   func hideCalendarUnplannedTasks() {
     calendarStorage.calendarUnplannedRailIsShown = false
     calendarStorage.calendarUnplannedTasks = nil
+    calendarStorage.calendarUnplannedBlockedTaskIDs = []
     calendarStorage.calendarUnplannedTotal = 0
   }
 
@@ -28,18 +29,20 @@ extension AppStore {
 
   /// Loads the rail's tasks: open and started tasks with no planned day that
   /// are available now (a task deferred to a later day is not yet something to
-  /// plan), in the canonical order (priority, then due date). A failed read keeps
-  /// what is shown, as the other quiet reloads do, and a rail hidden while the
-  /// read ran stays empty.
+  /// plan), in the canonical order (priority, then due date), with the ones
+  /// that wait on an unfinished task marked blocked. A failed read keeps what
+  /// is shown, as the other quiet reloads do, and a rail hidden while the read
+  /// ran stays empty.
   private func loadCalendarUnplannedTasks() async {
     let query = TaskListQueryRequest(
       status: LorvexTask.Status.actionableFilter, availability: "visible",
       plannedPresence: "absent",
       limit: Self.calendarUnplannedLimit)
-    guard let page = try? await core.listTasks(query: query),
-      calendarStorage.calendarUnplannedRailIsShown
-    else { return }
+    guard let page = try? await core.listTasks(query: query) else { return }
+    let blocked = await blockedTaskIDs(in: page.tasks)
+    guard calendarStorage.calendarUnplannedRailIsShown else { return }
     calendarStorage.calendarUnplannedTasks = page.tasks
+    calendarStorage.calendarUnplannedBlockedTaskIDs = blocked
     calendarStorage.calendarUnplannedTotal = page.totalMatching
   }
 }

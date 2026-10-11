@@ -1,13 +1,17 @@
 import LorvexCore
 import SwiftUI
 
+/// Column widths in points. The table gets about 716 pt at the smallest
+/// three-pane window (inspector open), and a `Table` lays columns out at their
+/// ideal widths and scrolls sideways when those sum to more, so the five ideals
+/// stay under that; a wider window spreads the spare width across the columns up to their maximums.
 private enum TasksTableMetrics {
   static let minSurfaceHeight: CGFloat = 360
-  static let statusColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (92, 112, 132)
-  static let priorityColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (56, 64, 76)
-  static let titleColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (320, 560, 820)
-  static let dueColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (88, 108, 132)
-  static let listColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (120, 160, 220)
+  static let statusColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (108, 108, 140)
+  static let priorityColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (80, 80, 104)
+  static let titleColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (240, 280, 820)
+  static let dueColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (108, 108, 144)
+  static let listColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (120, 120, 220)
 }
 
 /// Flat, sortable `Table` view for the macOS Tasks workspace.
@@ -17,9 +21,10 @@ private enum TasksTableMetrics {
 /// and List columns. Cells use the same compact semantic tokens as task rows,
 /// so audit mode is denser without turning into a wall of status text.
 /// Multi-selection (Set<ID>) is shared with the List workspace so batch actions
-/// work identically in both view modes. A row drags like a list-mode row: onto a
-/// sidebar list to move it, with the whole selection riding along when the row
-/// is one of several selected.
+/// work identically in both view modes. Scoped to one list, the table drops its
+/// List column, since every row would repeat the list the header names. A row
+/// drags like a list-mode row: onto a sidebar list to move it, with the whole
+/// selection riding along when the row is one of several selected.
 struct TasksTableWorkspaceView: View {
   @Bindable var store: AppStore
   @Environment(\.undoManager) private var undoManager
@@ -45,12 +50,14 @@ struct TasksTableWorkspaceView: View {
   }
 
   private func table(sortedTasks: [LorvexTask], listNames: [String: String]) -> some View {
-    Table(of: LorvexTask.self, selection: selection, sortOrder: sortOrder) {
+    let searchQuery = store.trimmedSearchText
+    let isListScoped = store.taskWorkspaceListScopeID != nil
+    return Table(of: LorvexTask.self, selection: selection, sortOrder: sortOrder) {
       TableColumn(
         String(localized: "tasks.column.status", defaultValue: "Status", table: "Localizable", bundle: LorvexL10n.bundle),
         value: \.status
       ) { task in
-        TaskTableStatusCell(status: task.status)
+        TaskTableStatusCell(status: task.status, isBlocked: store.isBlocked(task))
       }
       .width(
         min: TasksTableMetrics.statusColumn.min,
@@ -74,7 +81,10 @@ struct TasksTableWorkspaceView: View {
         String(localized: "tasks.column.title", defaultValue: "Title", table: "Localizable", bundle: LorvexL10n.bundle),
         value: \.title
       ) { task in
-        TaskTableTitleCell(task: task)
+        TaskTableTitleCell(
+          task: task,
+          searchMatch: searchQuery.isEmpty
+            ? nil : task.searchMatch(for: searchQuery, visibleTagCount: LorvexTaskRow.visibleTagCount))
       }
       .width(
         min: TasksTableMetrics.titleColumn.min,
@@ -95,23 +105,25 @@ struct TasksTableWorkspaceView: View {
         max: TasksTableMetrics.dueColumn.max
       )
 
-      TableColumn(
-        String(localized: "tasks.column.list", defaultValue: "List", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: \.listID,
-        comparator: ListNameComparator(namesByID: listNames)
-      ) { task in
-        if let listID = task.listID, let name = listNames[listID] {
-          Text(name)
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
+      if !isListScoped {
+        TableColumn(
+          String(localized: "tasks.column.list", defaultValue: "List", table: "Localizable", bundle: LorvexL10n.bundle),
+          value: \.listID,
+          comparator: ListNameComparator(namesByID: listNames)
+        ) { task in
+          if let listID = task.listID, let name = listNames[listID] {
+            Text(name)
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+          }
         }
+        .width(
+          min: TasksTableMetrics.listColumn.min,
+          ideal: TasksTableMetrics.listColumn.ideal,
+          max: TasksTableMetrics.listColumn.max
+        )
       }
-      .width(
-        min: TasksTableMetrics.listColumn.min,
-        ideal: TasksTableMetrics.listColumn.ideal,
-        max: TasksTableMetrics.listColumn.max
-      )
     } rows: {
       ForEach(sortedTasks) { task in
         TableRow(task)
@@ -149,15 +161,22 @@ struct TasksTableWorkspaceView: View {
   }
 }
 
+/// A task's state in words. An open task whose dependencies are unfinished
+/// reads "Blocked" with the lock its list-row badge uses, in place of "Open";
+/// every other state keeps its own word and symbol.
 private struct TaskTableStatusCell: View {
   let status: LorvexTask.Status
+  var isBlocked = false
+
+  private var showsBlocked: Bool { isBlocked && status == .open }
 
   var body: some View {
-    Label(status.localizedName, systemImage: status.statusSymbolName)
+    let name = showsBlocked ? TaskDisplayText.blocked : status.localizedName
+    Label(name, systemImage: showsBlocked ? "lock.fill" : status.statusSymbolName)
       .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-      .foregroundStyle(status.statusTint)
+      .foregroundStyle(showsBlocked ? LorvexDesign.Palette.blocked : status.statusTint)
       .lineLimit(1)
-      .accessibilityLabel(status.localizedName)
+      .accessibilityLabel(name)
   }
 }
 
@@ -166,7 +185,7 @@ private struct TaskTablePriorityCell: View {
 
   var body: some View {
     Text(priority.localizedName)
-      .font(LorvexDesign.Typography.tertiaryText.monospaced().weight(.semibold))
+      .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
       .foregroundStyle(priority.priorityTint)
       .padding(.horizontal, LorvexDesign.Spacing.sm)
       .padding(.vertical, LorvexDesign.Spacing.xxs)
@@ -177,10 +196,18 @@ private struct TaskTablePriorityCell: View {
 
 private struct TaskTableTitleCell: View {
   let task: LorvexTask
+  /// Why the task is in the search results when its title does not show the
+  /// searched word, quoted under the title as in list mode
+  /// (``LorvexTask/searchMatch(for:visibleTagCount:)``).
+  var searchMatch: LorvexTaskSearchMatch? = nil
 
   private var isInactive: Bool {
     task.status.isResolved
   }
+
+  /// Finished, cancelled and parked (Someday) tasks read muted, as a list row's
+  /// title does; only the resolved ones are struck through.
+  private var isDormant: Bool { isInactive || task.status == .someday }
 
   private var secondaryText: String? {
     var parts: [String] = []
@@ -189,18 +216,32 @@ private struct TaskTableTitleCell: View {
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
 
+  /// The estimate and tags line as VoiceOver reads it: the same spelled-out
+  /// duration and `#tag` words a list row's label uses, in place of the
+  /// abbreviation and the middle dots the line draws.
+  private var secondarySpokenText: String? {
+    var parts: [String] = []
+    if let minutes = task.estimatedMinutes {
+      parts.append(LorvexDurationFormat.minutes(minutes, style: .spoken))
+    }
+    parts.append(contentsOf: task.tags.prefix(3).map { "#\($0)" })
+    return parts.isEmpty ? nil : parts.joined(separator: ", ")
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       Text(task.title)
         .font(LorvexDesign.Typography.primaryText)
-        .foregroundStyle(isInactive ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+        .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
         .strikethrough(isInactive, color: .secondary)
         .lineLimit(1)
+      if let searchMatch { LorvexSearchExcerptLine(match: searchMatch) }
       if let secondaryText {
         Text(secondaryText)
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .lineLimit(1)
+          .accessibilityLabel(secondarySpokenText ?? secondaryText)
       }
     }
   }
@@ -215,6 +256,7 @@ private struct TaskTableDueCell: View {
     // core formatter and computed once for this cell body.
     let label = task.cachedDueRelativeLabel(timeZone: productTimeZone)
     let isOverdue = task.isOverdue(timeZone: productTimeZone)
+    let isDueSoon = task.isDueSoon(timeZone: productTimeZone)
     if let label {
       HStack(spacing: 4) {
         if isOverdue {
@@ -225,7 +267,10 @@ private struct TaskTableDueCell: View {
           .monospacedDigit()
       }
       .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(isOverdue ? AnyShapeStyle(LorvexDesign.Palette.overdue) : AnyShapeStyle(.secondary))
+      .foregroundStyle(
+        isOverdue
+          ? AnyShapeStyle(LorvexDesign.Palette.overdue)
+          : isDueSoon ? AnyShapeStyle(LorvexDesign.Palette.dueSoon) : AnyShapeStyle(.secondary))
       .padding(.horizontal, isOverdue ? LorvexDesign.Spacing.sm : 0)
       .padding(.vertical, isOverdue ? LorvexDesign.Spacing.xxs : 0)
       .background {
@@ -234,7 +279,7 @@ private struct TaskTableDueCell: View {
             .fill(LorvexDesign.Palette.overdue.opacity(0.10))
         }
       }
-      .accessibilityLabel(label)
+      .accessibilityLabel(taskDueAccessibilityPhrase(task, timeZone: productTimeZone) ?? label)
     }
   }
 }

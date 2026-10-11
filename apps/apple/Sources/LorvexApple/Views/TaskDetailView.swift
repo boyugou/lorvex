@@ -225,9 +225,10 @@ struct TaskDetailView: View {
     return String(first).uppercased(with: locale) + phrase.dropFirst()
   }
 
-  /// Red once the deadline has passed, orange when it is today or tomorrow.
+  /// Red once the deadline has passed, orange when it is today or tomorrow;
+  /// never on a finished task.
   private var dueTint: Color? {
-    guard store.taskDetailHasDueDate,
+    guard store.taskDetailIsActive, store.taskDetailHasDueDate,
       let offset = lorvexDayOffset(from: store.logicalTodayDateString, to: store.taskDetailDueDatePickerDate)
     else { return nil }
     if offset < 0 { return LorvexDesign.Palette.overdue }

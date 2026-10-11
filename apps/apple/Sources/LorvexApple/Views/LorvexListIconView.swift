@@ -87,7 +87,7 @@ struct LorvexListMenuLabel: View {
     } else if let emoji = list.icon, !emoji.isEmpty {
       Text(verbatim: "\(emoji) \(list.displayName)")
     } else {
-      Label(list.displayName, systemImage: "list.bullet")
+      Label(list.displayName, systemImage: "folder")
     }
   }
 }

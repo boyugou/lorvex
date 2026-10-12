@@ -174,6 +174,11 @@ extension TaskRepo {
     /// Ids, among `taskIDs`, that cannot be started because at least one task
     /// they depend on is still active. Empty input returns empty.
     ///
+    /// The blocker test is an `EXISTS` so the query walks the dependency rows of
+    /// the listed tasks. As a join the planner started from the active tasks and
+    /// probed the dependency index once per listed id, which took 440 ms for a
+    /// list of 3,000 tasks that had no dependencies at all.
+    ///
     /// Day surfaces show a blocked task rather than hiding it — it was planned
     /// for today, so silently dropping it reads as data loss — but they must be
     /// able to mark it, since it is the one row in the list that cannot be
@@ -187,10 +192,11 @@ extension TaskRepo {
         db,
         sql: """
           SELECT DISTINCT td.task_id AS task_id FROM task_dependencies td \
-          JOIN tasks AS blocker ON blocker.id = td.depends_on_task_id \
           WHERE td.task_id IN (\(placeholders)) \
+          AND EXISTS (SELECT 1 FROM tasks AS blocker \
+          WHERE blocker.id = td.depends_on_task_id \
           AND blocker.status IN (\(StatusName.activeStatusSqlList)) \
-          AND blocker.archived_at IS NULL
+          AND blocker.archived_at IS NULL)
           """,
         arguments: StatementArguments(taskIDs))
       return Set(rows.compactMap { $0["task_id"] as String? })

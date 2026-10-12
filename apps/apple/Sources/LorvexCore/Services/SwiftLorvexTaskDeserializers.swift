@@ -254,7 +254,7 @@ enum SwiftLorvexTaskDeserializers {
   /// day.
   static func date(from object: [String: Any], column: String) -> Date? {
     guard let raw = object[column] as? String, !raw.isEmpty else { return nil }
-    return plannedDateFormatter.date(from: raw)
+    return LorvexDateFormatters.utcMidnight(ofDayKey: raw) ?? plannedDateFormatter.date(from: raw)
   }
 
   /// Formats/parses `due_date` and `planned_date` day keys. Both are stored as

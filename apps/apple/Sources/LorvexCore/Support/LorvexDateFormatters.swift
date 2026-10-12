@@ -67,6 +67,37 @@ public enum LorvexDateFormatters {
     return f
   }()
 
+  /// The UTC midnight of a `yyyy-MM-dd` day key, or nil when `key` is not a real
+  /// calendar day written exactly that way. Equal to ``ymdUTC``'s parse for every
+  /// such key and about two orders of magnitude faster, which matters where a
+  /// read decodes thousands of rows (each task carries two day keys).
+  public static func utcMidnight(ofDayKey key: String) -> Date? {
+    var utf8 = key.utf8.makeIterator()
+    func digits(_ count: Int) -> Int? {
+      var value = 0
+      for _ in 0..<count {
+        guard let byte = utf8.next(), byte >= 48, byte <= 57 else { return nil }
+        value = value * 10 + Int(byte - 48)
+      }
+      return value
+    }
+    guard key.utf8.count == 10, let y = digits(4), utf8.next() == 45,
+      let m = digits(2), utf8.next() == 45, let d = digits(2),
+      y >= 1, (1...12).contains(m)
+    else { return nil }
+    let isLeap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+    let monthLengths = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    guard (1...monthLengths[m - 1]).contains(d) else { return nil }
+    // Days from the civil date to 1970-01-01 (Howard Hinnant's algorithm).
+    let shiftedYear = m <= 2 ? y - 1 : y
+    let era = shiftedYear / 400
+    let yearOfEra = shiftedYear - era * 400
+    let dayOfYear = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1
+    let dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
+    let daysSinceEpoch = era * 146_097 + dayOfEra - 719_468
+    return Date(timeIntervalSince1970: TimeInterval(daysSinceEpoch) * 86_400)
+  }
+
   /// `yyyy-MM-dd` in UTC — for day keys that must be timezone-stable (e.g.
   /// values compared against UTC-anchored stored dates).
   public static let ymdUTC: DateFormatter = {

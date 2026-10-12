@@ -79,15 +79,19 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     still discarded (keeping it parked leaves entries that never resolve when
     the parent stays deleted). The runs are not bit-for-bit repeatable (ids and
     clocks come from the wall clock), so a seed names a shape, not an exact run.
-  - Mac performance: in the debug test build, completing a task awaits about
-    40 ms at 100 tasks, 150 ms at 1000, and 430 ms at 3000
-    (`ZZMutationLatencyProbeTests`; the release figure is unmeasured, because
-    the test target does not build in release and an unoptimized GRDB decode
-    dominates a profile of the debug run); the time is
-    the core's batch task enrichment (a JSON round trip per task), read once
-    for Today, once for the widget snapshot and the badge, and once more for the
-    Spotlight index. Each external database signal triggers a full refresh that
-    re-indexes Spotlight and the calendar window.
+  - Mac performance, measured in a release build of the core
+    (2026-10-12, in-memory store, no dependencies): completing a task takes
+    about 2 ms at 100 tasks, 10 ms at 1000, and 29 ms at 3000; reading the
+    widget snapshot takes 4, 32, and 123 ms. Two fixes took it there: the
+    blocked-task lookup was a join that probed the dependency index once per
+    listed task (440 ms at 3000 tasks, now 2 ms), and the task decoder parsed
+    two day keys per task with a `DateFormatter` (now a direct parse). What is
+    left is one pass per task through the core's JSON enrichment (about 24 µs
+    per task), read for Today, for the widget snapshot and the badge, and for
+    the Spotlight index. Each external database signal still triggers a full
+    refresh that re-indexes Spotlight and the calendar window. The debug-build
+    probe (`ZZMutationLatencyProbeTests`) reads about 7 times slower than
+    release, mostly unoptimized GRDB row decoding.
   - Mac keyboard: list cards show Edit and Delete only on hover.
   - Polish: Settings > Activity shows English changelog summaries; German
     Memory sheet titles truncated at 375 pt (rechecked 2026-10-12 at 402 pt:

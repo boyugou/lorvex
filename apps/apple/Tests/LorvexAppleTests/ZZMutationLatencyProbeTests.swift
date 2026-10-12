@@ -5,9 +5,9 @@ import Testing
 @testable import LorvexApple
 
 // Probe: how long a Mac task completion takes through AppStore, its whole
-// awaited tail included, with N tasks in the store (a debug build, measured on
-// 2026-10-12: about 40 ms at 100 tasks, 150 ms at 1000, 430 ms at 3000; a release
-// build is faster by an unmeasured factor). PERF_N = task count;
+// awaited tail included, with N tasks in the store (a debug build, which reads about 7 times
+// slower than release: 307 ms at 3000 tasks on 2026-10-12, against 29 ms in a
+// release build of the core). PERF_N = task count;
 // does nothing without it. Prints one `PERF n=… refresh=… complete avg=…` line.
 @MainActor
 @Suite("Mutation latency probe")

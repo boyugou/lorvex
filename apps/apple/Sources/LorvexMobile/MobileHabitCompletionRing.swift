@@ -60,7 +60,8 @@ struct MobileHabitCompletionRing: View {
         size: size,
         isComplete: isComplete,
         symbol: showsSymbol ? habit.tileSymbol : nil,
-        isSkipped: habit.isSkipped
+        isSkipped: habit.isSkipped,
+        segments: habit.ringSegments
       )
       .reduceMotionPop(isActive: pulse)
       .padding(tapOutset)

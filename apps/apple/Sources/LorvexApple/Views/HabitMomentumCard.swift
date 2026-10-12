@@ -21,6 +21,10 @@ struct HabitProgressRing: View {
   let icon: String
   var diameter: CGFloat = 46
   var isSkipped = false
+  /// How many check-ins the ring counts: a habit kept several times a day draws
+  /// one arc per check-in (``LorvexRingSegments``), as the Today grid and the
+  /// iPhone do. Any other count is one continuous arc.
+  var segments = 1
   let action: () -> Void
 
   @State private var hovering = false
@@ -40,11 +44,16 @@ struct HabitProgressRing: View {
         if showsSkipped {
           LorvexDottedRing(dotDiameter: lineWidth)
             .fill(.tertiary)
+          LorvexProgressArc(fraction: fraction, style: tint.gradient, lineWidth: lineWidth)
+        } else if LorvexRingSegments.isSegmented(segments) {
+          LorvexRingSegments(
+            segments: segments, fraction: fraction, tint: AnyShapeStyle(tint), lineWidth: lineWidth,
+            diameter: diameter)
         } else {
           Circle()
             .stroke(.tertiary, lineWidth: lineWidth)
+          LorvexProgressArc(fraction: fraction, style: tint.gradient, lineWidth: lineWidth)
         }
-        LorvexProgressArc(fraction: fraction, style: tint.gradient, lineWidth: lineWidth)
         if isComplete {
           Image(systemName: "checkmark")
             .font(.system(size: diameter * 0.35, weight: .bold))  // lorvex-design-token: allow
@@ -217,6 +226,7 @@ struct HabitMomentumCard: View {
         tint: tint,
         icon: LorvexSymbol.name(for: habit.icon, fallback: "repeat.circle"),
         isSkipped: habit.isSkipped,
+        segments: habit.ringSegments,
         action: ringTapped
       )
       .help(ringAction.label(for: habit))

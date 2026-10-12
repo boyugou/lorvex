@@ -30,6 +30,10 @@ struct MobileProgressRing: View {
   var symbol: String? = nil
   /// Draws the ring as set aside for the day. Ignored once the ring is complete.
   var isSkipped: Bool = false
+  /// How many check-ins the ring counts: a habit kept several times a day draws
+  /// one arc per check-in (``LorvexRingSegments``), so the count reads without a
+  /// number. Any other count is one continuous arc.
+  var segments: Int = 1
 
   private var isShownSkipped: Bool { isSkipped && !isComplete }
 
@@ -41,6 +45,10 @@ struct MobileProgressRing: View {
         if value > 0 {
           LorvexProgressArc(fraction: value, style: tint, lineWidth: lineWidth)
         }
+      } else if LorvexRingSegments.isSegmented(segments) {
+        LorvexRingSegments(
+          segments: segments, fraction: value, tint: AnyShapeStyle(tint), lineWidth: lineWidth,
+          diameter: size)
       } else {
         Circle()
           .stroke(.tertiary, lineWidth: lineWidth)

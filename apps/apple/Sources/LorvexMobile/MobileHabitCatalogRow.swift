@@ -47,7 +47,8 @@ struct MobileHabitCatalogRow: View {
           tint: habit.isCompleteForPeriod ? LorvexDesign.Palette.done : habit.tileTint,
           size: 32,
           isComplete: habit.isCompleteForPeriod,
-          isSkipped: habit.isSkipped
+          isSkipped: habit.isSkipped,
+          segments: habit.ringSegments
         )
         .accessibilityHidden(true)
       }

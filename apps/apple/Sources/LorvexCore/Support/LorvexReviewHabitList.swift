@@ -80,30 +80,14 @@ public struct LorvexHabitCheckRing: View {
       : .system(size: diameter * 0.42, weight: .bold)  // lorvex-design-token: allow
   }
 
-  private var segmentCount: Int { (2...12).contains(segments) ? segments : 1 }
-
-  private var filledSegments: Int {
-    Int((min(max(fraction, 0), 1) * Double(segmentCount)).rounded())
-  }
-
-  /// The gap between two segments as a share of the circumference: a little
-  /// less than the stroke is wide, so the gaps read as cuts at any diameter.
-  private var segmentGap: CGFloat {
-    min(0.3 / CGFloat(segmentCount), lineWidth * 0.9 / (.pi * diameter))
-  }
-
   public var body: some View {
     ZStack {
       if isSkipped {
         LorvexDottedRing(dotDiameter: lineWidth).fill(.tertiary)
-      } else if segmentCount > 1 {
-        ForEach(0..<segmentCount, id: \.self) { index in
-          LorvexProgressArc(
-            from: Double(index) / Double(segmentCount) + segmentGap / 2,
-            to: Double(index + 1) / Double(segmentCount) - segmentGap / 2,
-            style: index < filledSegments ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary),
-            lineWidth: lineWidth, lineCap: .butt)
-        }
+      } else if LorvexRingSegments.isSegmented(segments) {
+        LorvexRingSegments(
+          segments: segments, fraction: fraction, tint: AnyShapeStyle(tint), lineWidth: lineWidth,
+          diameter: diameter)
       } else {
         Circle().stroke(.tertiary, lineWidth: lineWidth)
         LorvexProgressArc(fraction: fraction, style: tint, lineWidth: lineWidth)

@@ -24,8 +24,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - watchOS / Widgets design audits (need on-device).
 
 - Open UI/UX work, each verified against the code but not yet done:
-  - A habit counted several times a day draws its ring as segments on some
-    surfaces and as one arc on others.
   - In the Tasks table at the smallest Mac window with the inspector open,
     long translated text (Russian) overflows its column by about 20 pt.
   - Calendar events offer no Copy as Text or Share action.

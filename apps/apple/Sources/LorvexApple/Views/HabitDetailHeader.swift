@@ -138,6 +138,7 @@ struct HabitDetailHeader: View {
       icon: LorvexSymbol.name(for: shownIcon, fallback: "repeat.circle"),
       diameter: 34,
       isSkipped: habit.isSkipped,
+      segments: habit.ringSegments,
       action: ringTapped
     )
     .padding(.top, 2)

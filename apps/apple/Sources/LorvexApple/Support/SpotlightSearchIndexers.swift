@@ -84,6 +84,12 @@ actor SpotlightDomainIndexer {
   private let backend: SpotlightIndexBackend
   private let defaults: UserDefaults
   private var indexedIdentifiers: [String: Set<String>] = [:]
+  /// What each item of a domain looked like when it was last added in this
+  /// run. A replace adds only the items whose look changed, so a refresh that
+  /// changed nothing writes nothing to the system index. A domain this run has
+  /// not replaced yet adds everything, because the index may hold an older run's
+  /// view of it.
+  private var addedFingerprints: [String: [String: Int]] = [:]
 
   init(
     defaultsStore: SpotlightDefaultsStore = SpotlightDefaultsStore(defaults: .standard),
@@ -105,10 +111,19 @@ actor SpotlightDomainIndexer {
       try await backend.deleteDomains([domain])
       persist([], forDomain: domain)
       indexedIdentifiers[domain] = []
+      addedFingerprints[domain] = [:]
       return
     }
 
-    try await backend.addItems(SpotlightItemBatch(items: items))
+    var fingerprints: [String: Int] = [:]
+    fingerprints.reserveCapacity(items.count)
+    for item in items { fingerprints[item.uniqueIdentifier] = Self.fingerprint(of: item) }
+    let known = addedFingerprints[domain]
+    let changed = items.filter { known?[$0.uniqueIdentifier] != fingerprints[$0.uniqueIdentifier] }
+    if !changed.isEmpty {
+      try await backend.addItems(SpotlightItemBatch(items: changed))
+    }
+    addedFingerprints[domain] = fingerprints
     let stale = previous.subtracting(newIdentifiers)
     if !stale.isEmpty {
       try await backend.deleteIdentifiers(Array(stale))
@@ -117,6 +132,23 @@ actor SpotlightDomainIndexer {
       persist(newIdentifiers, forDomain: domain)
     }
     indexedIdentifiers[domain] = newIdentifiers
+  }
+
+  /// A value that differs whenever the attributes the app writes to an item
+  /// differ. Process-local: it is never stored, so its seed may change per run.
+  private static func fingerprint(of item: CSSearchableItem) -> Int {
+    let attributes = item.attributeSet
+    var hasher = Hasher()
+    hasher.combine(item.uniqueIdentifier)
+    hasher.combine(item.domainIdentifier)
+    hasher.combine(attributes.title)
+    hasher.combine(attributes.contentDescription)
+    hasher.combine(attributes.keywords)
+    hasher.combine(attributes.contentURL)
+    hasher.combine(attributes.dueDate)
+    hasher.combine(attributes.startDate)
+    hasher.combine(attributes.endDate)
+    return hasher.finalize()
   }
 
   private func persistedKey(_ domain: String) -> String { "spotlight.indexedIdentifiers.\(domain)" }

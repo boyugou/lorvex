@@ -88,8 +88,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     two day keys per task with a `DateFormatter` (now a direct parse). What is
     left is one pass per task through the core's JSON enrichment (about 24 µs
     per task), read for Today, for the widget snapshot and the badge, and for
-    the Spotlight index. Each external database signal still triggers a full
-    refresh that re-indexes Spotlight and the calendar window. The debug-build
+    the Spotlight index. The Spotlight index now adds only the items whose
+    title, link, or dates changed since the last replace in the run, so a
+    refresh that changed nothing writes nothing to the system index. Each
+    external database signal still triggers a full refresh that reads the
+    tasks and the calendar window again. The debug-build
     probe (`ZZMutationLatencyProbeTests`) reads about 7 times slower than
     release, mostly unoptimized GRDB row decoding.
   - Mac keyboard: list cards show Edit and Delete only on hover.

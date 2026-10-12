@@ -25,7 +25,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 
 - Open UI/UX work, each verified against the code but not yet done:
   - Quick add misreads lines typed in decomposed Unicode in about fifteen
-    languages (`ZZCaptureParserFuzzProbeTests`, `FUZZ_NFD`).
+    languages (`ZZCaptureParserFuzzProbeTests`, `FUZZ_NFD`). Low priority in
+    practice: keyboards, dictation, and most pasteboards give composed text;
+    decomposed text comes from file names and a few apps, and only a keyword
+    that carries an accent is affected.
   - Locale follow-ups: weekday and Siri list joins, a few English strings
     outside the catalogs, and the week's first day.
 - Known code gaps, each confirmed by a probe or a test but not yet fixed:

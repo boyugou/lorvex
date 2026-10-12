@@ -52981,371 +52981,559 @@
       }
     },
     "habits.sheet.field.milestone_goal_hint_count": {
+      "comment": "Habit editor: hint under the milestone-goal field of a monthly or times-a-week habit, whose milestone counts completions.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "احتفل عند هذا العدد من الإكمالات. تستمر العادة بعد ذلك."
+            "value": "إجمالي الإكمالات، مثل خمسين. تستمر العادة."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এই সংখ্যক বার সম্পন্ন হলে উদযাপন হবে। এরপরও অভ্যাসটি চলতে থাকে।"
+            "value": "মোট সম্পন্ন হওয়ার সংখ্যা, যেমন 50। অভ্যাসটি চলতে থাকে।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bei dieser Anzahl an Erledigungen wird gefeiert. Die Gewohnheit läuft danach weiter."
+            "value": "Gesamtzahl der Erledigungen (z. B. 50). Die Gewohnheit läuft weiter."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Γιορτάστε όταν φτάσετε αυτό το πλήθος ολοκληρώσεων. Η συνήθεια συνεχίζεται και μετά."
+            "value": "Συνολικές ολοκληρώσεις, π.χ. 50. Η συνήθεια συνεχίζεται."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Celebrate at this many completions. The habit keeps going after."
+            "value": "Total completions, like 50. The habit keeps going."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Celebra al llegar a este número de registros. El hábito continúa después."
+            "value": "Total de registros, por ejemplo 50. El hábito continúa."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "با رسیدن به این تعداد تکمیل جشن می‌گیرید. عادت پس از آن ادامه دارد."
+            "value": "تعداد کل تکمیل‌ها، مثلاً 50. عادت ادامه دارد."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Célébrez à ce nombre de réalisations. L’habitude continue ensuite."
+            "value": "Nombre total de réalisations, par exemple 50. L’habitude continue."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "חוגגים בהגעה למספר ההשלמות הזה. ההרגל נמשך לאחר מכן."
+            "value": "סך כל ההשלמות, למשל 50. ההרגל נמשך."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इतने चेक-इन पूरे होने पर जश्न मनाएँ। उसके बाद भी आदत जारी रहती है।"
+            "value": "कुल चेक-इन, जैसे 50। आदत जारी रहती है।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rayakan pada jumlah penyelesaian ini. Kebiasaan tetap berlanjut setelahnya."
+            "value": "Total penyelesaian, misalnya 50. Kebiasaan tetap berlanjut."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Festeggia a questo numero di completamenti. L’abitudine continua anche dopo."
+            "value": "Completamenti totali, ad esempio 50. L’abitudine continua."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "この完了回数に達したらお祝いします。習慣はその後も続きます。"
+            "value": "完了回数の合計（例：50）。習慣はその後も続きます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 완료 횟수에 도달하면 축하합니다. 이후에도 습관은 계속됩니다."
+            "value": "총 완료 횟수(예: 50). 이후에도 습관은 계속됩니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "इतक्या वेळा पूर्ण झाल्यावर उत्सव साजरा केला जाईल. त्यानंतरही सवय सुरू राहते."
+            "value": "एकूण पूर्ण केलेल्या वेळा, उदा. 50. सवय सुरूच राहते."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Raikan pada bilangan penyelesaian ini. Tabiat terus berjalan selepas itu."
+            "value": "Jumlah penyelesaian, contohnya 50. Tabiat ini terus berjalan."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bij dit aantal keren wordt er gevierd. De gewoonte gaat daarna door."
+            "value": "Totaal aantal keren, bijvoorbeeld 50. De gewoonte gaat door."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liczba wykonań, którą warto uczcić. Nawyk trwa także po jej osiągnięciu."
+            "value": "Łączna liczba wykonań, np. 50. Nawyk trwa dalej."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comemore ao atingir este número de conclusões. O hábito continua depois disso."
+            "value": "Total de conclusões, como 50. O hábito continua."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "La acest număr de finalizări se sărbătorește. Obiceiul continuă și după aceea."
+            "value": "Numărul total de finalizări, de exemplu 50. Obiceiul continuă."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Число выполнений, которое стоит отпраздновать. Привычка продолжается и после этого."
+            "value": "Всего выполнений, например 50. Привычка продолжается."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "இத்தனை முறை முடிக்கும்போது கொண்டாடவும். அதற்குப் பிறகும் பழக்கம் தொடரும்."
+            "value": "முடித்த மொத்த முறைகள், எ.கா. 50. பழக்கம் தொடரும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "ఇన్ని సార్లు పూర్తి చేసినప్పుడు వేడుక చేసుకోండి. ఆ తర్వాత కూడా అలవాటు కొనసాగుతుంది."
+            "value": "పూర్తయిన మొత్తం సార్లు, ఉదా. 50. అలవాటు కొనసాగుతుంది."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ฉลองเมื่อทำครบจำนวนครั้งนี้ นิสัยนี้จะดำเนินต่อไปหลังจากนั้น"
+            "value": "จำนวนครั้งที่ทำสำเร็จทั้งหมด เช่น 50 ครั้ง นิสัยนี้จะดำเนินต่อไป"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu kadar tamamlamaya ulaşınca kutlanır. Alışkanlık sonrasında da devam eder."
+            "value": "Toplam tamamlama sayısı (örneğin 50). Alışkanlık devam eder."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Кількість виконань, яку варто відсвяткувати. Звичка триває й після цього."
+            "value": "Усього виконань, наприклад 50. Звичка триває."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "اتنی تکمیلات پر جشن منائیں۔ عادت اس کے بعد بھی جاری رہتی ہے۔"
+            "value": "کل تکمیلات، جیسے 50۔ عادت جاری رہتی ہے۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ăn mừng khi đạt số lần hoàn thành này. Thói quen vẫn tiếp tục sau đó."
+            "value": "Tổng số lần hoàn thành, ví dụ 50. Thói quen vẫn tiếp tục."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "达到这么多次完成时庆祝。习惯之后仍会继续。"
+            "value": "累计完成次数，例如 50。习惯会继续。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "達到這個完成次數時會慶祝一下，習慣之後仍會繼續。"
+            "value": "完成總次數，例如 50。習慣仍會持續。"
           }
         }
       }
     },
     "habits.sheet.field.milestone_goal_hint_streak": {
+      "comment": "Habit editor: hint under the milestone-goal field of a daily habit, whose streak counts days.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "احتفل عند هذا الطول للسلسلة. تستمر العادة بعد ذلك."
+            "value": "طول السلسلة بالأيام، مثل ثلاثين. تستمر العادة."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "ধারা এই দৈর্ঘ্যে পৌঁছালে উদযাপন হবে। এরপরও অভ্যাসটি চলতে থাকে।"
+            "value": "দিনের হিসাবে ধারার দৈর্ঘ্য, যেমন 30। অভ্যাসটি চলতে থাকে।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bei dieser Serienlänge wird gefeiert. Die Gewohnheit läuft danach weiter."
+            "value": "Länge der Serie in Tagen (z. B. 30). Die Gewohnheit läuft weiter."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Γιορτάστε όταν φτάσετε αυτή τη διάρκεια σερί. Η συνήθεια συνεχίζεται και μετά."
+            "value": "Διάρκεια σερί σε ημέρες, π.χ. 30. Η συνήθεια συνεχίζεται."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Celebrate at this streak length. The habit keeps going after."
+            "value": "Streak length in days, like 30. The habit keeps going."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Celebra cuando la racha llegue a esta duración. El hábito continúa después."
+            "value": "Duración de la racha en días, por ejemplo 30. El hábito continúa."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "با رسیدن به این طول زنجیره جشن می‌گیرید. عادت پس از آن ادامه دارد."
+            "value": "طول زنجیره به روز، مثلاً 30. عادت ادامه دارد."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Célébrez à cette durée de série. L’habitude continue ensuite."
+            "value": "Durée de la série en jours, par exemple 30. L’habitude continue."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "חוגגים בהגעה לאורך הרצף הזה. ההרגל נמשך לאחר מכן."
+            "value": "אורך הרצף בימים, למשל 30. ההרגל נמשך."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इतनी लंबी स्ट्रीक होने पर जश्न मनाएँ। उसके बाद भी आदत जारी रहती है।"
+            "value": "स्ट्रीक की लंबाई दिनों में, जैसे 30। आदत जारी रहती है।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rayakan pada panjang rekor ini. Kebiasaan tetap berlanjut setelahnya."
+            "value": "Panjang rekor dalam hari, misalnya 30. Kebiasaan tetap berlanjut."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Festeggia a questa durata della serie. L’abitudine continua anche dopo."
+            "value": "Durata della serie in giorni, ad esempio 30. L’abitudine continua."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "この連続記録の長さに達したらお祝いします。習慣はその後も続きます。"
+            "value": "連続記録の日数（例：30）。習慣はその後も続きます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 연속 기록 길이에 도달하면 축하합니다. 이후에도 습관은 계속됩니다."
+            "value": "연속 기록 일수(예: 30). 이후에도 습관은 계속됩니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "स्ट्रीक इतकी झाल्यावर उत्सव साजरा केला जाईल. त्यानंतरही सवय सुरू राहते."
+            "value": "स्ट्रीकची लांबी दिवसांमध्ये, उदा. 30. सवय सुरूच राहते."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Raikan pada panjang rentetan ini. Tabiat terus berjalan selepas itu."
+            "value": "Panjang rentetan dalam hari, contohnya 30. Tabiat ini terus berjalan."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bij deze reekslengte wordt er gevierd. De gewoonte gaat daarna door."
+            "value": "Lengte van de reeks in dagen, bijvoorbeeld 30. De gewoonte gaat door."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Długość serii, którą warto uczcić. Nawyk trwa także po jej osiągnięciu."
+            "value": "Długość serii w dniach, np. 30. Nawyk trwa dalej."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comemore ao atingir esta duração de sequência. O hábito continua depois disso."
+            "value": "Duração da sequência em dias, como 30. O hábito continua."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "La această lungime a seriei se sărbătorește. Obiceiul continuă și după aceea."
+            "value": "Lungimea seriei în zile, de exemplu 30. Obiceiul continuă."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Длина серии, которую стоит отпраздновать. Привычка продолжается и после этого."
+            "value": "Длина серии в днях, например 30. Привычка продолжается."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "இந்த ஸ்ட்ரீக் நீளத்தை அடையும்போது கொண்டாடவும். அதற்குப் பிறகும் பழக்கம் தொடரும்."
+            "value": "நாட்களில் ஸ்ட்ரீக் நீளம், எ.கா. 30. பழக்கம் தொடரும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "ఈ స్ట్రీక్ నిడివికి చేరినప్పుడు వేడుక చేసుకోండి. ఆ తర్వాత కూడా అలవాటు కొనసాగుతుంది."
+            "value": "రోజుల్లో స్ట్రీక్ పొడవు, ఉదా. 30. అలవాటు కొనసాగుతుంది."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ฉลองเมื่อสถิติต่อเนื่องถึงความยาวนี้ นิสัยนี้จะดำเนินต่อไปหลังจากนั้น"
+            "value": "ความยาวสถิติต่อเนื่องเป็นวัน เช่น 30 วัน นิสัยนี้จะดำเนินต่อไป"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu seri uzunluğuna ulaşınca kutlanır. Alışkanlık sonrasında da devam eder."
+            "value": "Gün olarak seri uzunluğu (örneğin 30). Alışkanlık devam eder."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Тривалість серії, яку варто відсвяткувати. Звичка триває й після цього."
+            "value": "Тривалість серії в днях, наприклад 30. Звичка триває."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "اس تسلسل کی لمبائی پر جشن منائیں۔ عادت اس کے بعد بھی جاری رہتی ہے۔"
+            "value": "تسلسل کی لمبائی دنوں میں، جیسے 30۔ عادت جاری رہتی ہے۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ăn mừng khi chuỗi đạt độ dài này. Thói quen vẫn tiếp tục sau đó."
+            "value": "Độ dài chuỗi tính theo ngày, ví dụ 30. Thói quen vẫn tiếp tục."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "达到该连续长度时庆祝。习惯之后仍会继续。"
+            "value": "连续天数，例如 30。习惯会继续。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "達到這個連續紀錄長度時會慶祝一下，習慣之後仍會繼續。"
+            "value": "連續天數，例如 30。習慣仍會持續。"
+          }
+        }
+      }
+    },
+    "habits.sheet.field.milestone_goal_hint_streak_weeks": {
+      "comment": "Habit editor: hint under the milestone-goal field of a habit kept on chosen weekdays, whose streak counts weeks.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طول السلسلة بالأسابيع، مثل ثمانية. تستمر العادة."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সপ্তাহের হিসাবে ধারার দৈর্ঘ্য, যেমন 8। অভ্যাসটি চলতে থাকে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Länge der Serie in Wochen (z. B. 8). Die Gewohnheit läuft weiter."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Διάρκεια σερί σε εβδομάδες, π.χ. 8. Η συνήθεια συνεχίζεται."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streak length in weeks, like 8. The habit keeps going."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duración de la racha en semanas, por ejemplo 8. El hábito continúa."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طول زنجیره به هفته، مثلاً 8. عادت ادامه دارد."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durée de la série en semaines, par exemple 8. L’habitude continue."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אורך הרצף בשבועות, למשל 8. ההרגל נמשך."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्ट्रीक की लंबाई सप्ताहों में, जैसे 8। आदत जारी रहती है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panjang rekor dalam minggu, misalnya 8. Kebiasaan tetap berlanjut."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durata della serie in settimane, ad esempio 8. L’abitudine continua."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連続記録の週数（例：8）。習慣はその後も続きます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연속 기록 주 수(예: 8). 이후에도 습관은 계속됩니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्ट्रीकची लांबी आठवड्यांमध्ये, उदा. 8. सवय सुरूच राहते."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panjang rentetan dalam minggu, contohnya 8. Tabiat ini terus berjalan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lengte van de reeks in weken, bijvoorbeeld 8. De gewoonte gaat door."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Długość serii w tygodniach, np. 8. Nawyk trwa dalej."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duração da sequência em semanas, como 8. O hábito continua."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lungimea seriei în săptămâni, de exemplu 8. Obiceiul continuă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Длина серии в неделях, например 8. Привычка продолжается."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வாரங்களில் ஸ்ட்ரீக் நீளம், எ.கா. 8. பழக்கம் தொடரும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "వారాల్లో స్ట్రీక్ పొడవు, ఉదా. 8. అలవాటు కొనసాగుతుంది."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ความยาวสถิติต่อเนื่องเป็นสัปดาห์ เช่น 8 สัปดาห์ นิสัยนี้จะดำเนินต่อไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hafta olarak seri uzunluğu (örneğin 8). Alışkanlık devam eder."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тривалість серії в тижнях, наприклад 8. Звичка триває."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسلسل کی لمبائی ہفتوں میں، جیسے 8۔ عادت جاری رہتی ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Độ dài chuỗi tính theo tuần, ví dụ 8. Thói quen vẫn tiếp tục."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续周数，例如 8。习惯会继续。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連續週數，例如 8。習慣仍會持續。"
           }
         }
       }

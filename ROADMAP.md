@@ -26,8 +26,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   policy is `apps/apple/docs/release.md`, "GitHub Releases".
 
 - Open UI/UX work, each verified against the code but not yet done:
-  - The iPhone milestone-goal hint says "streak length" for a weekly habit;
-    the Mac hint says weeks. It needs a new string in all thirty languages.
   - Mac Lists cards omit the list's description, which the iPhone Lists rows
     show; a habit counted several times a day draws its ring as segments on
     some surfaces and as one arc on others.

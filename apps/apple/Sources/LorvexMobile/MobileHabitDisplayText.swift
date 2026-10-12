@@ -146,16 +146,19 @@ enum MobileHabitDisplayText {
       phrase, habitName)
   }
 
-  /// Cadence-aware hint for the optional milestone-goal field: a streak length
-  /// for the streak cadences (daily / weekly), a completion count for the
-  /// cumulative cadences (times-a-week / monthly). Both note that the habit does
-  /// not stop at the goal — a milestone is a celebration moment, not an end.
+  /// Cadence-aware hint for the optional milestone-goal field, as the Mac words
+  /// it: a streak length in days for a daily habit, in weeks for one on chosen
+  /// weekdays (its streak counts weeks), and a completion count for the
+  /// cumulative cadences (times-a-week / monthly). Each notes that the habit
+  /// does not stop at the goal — a milestone is a celebration, not an end.
   static func milestoneGoalHint(frequencyType: String) -> String {
     switch frequencyType {
     case "times_per_week", "monthly":
-      return String(localized: "habits.sheet.field.milestone_goal_hint_count", defaultValue: "Celebrate at this many completions. The habit keeps going after.", table: "Localizable", bundle: MobileL10n.bundle)
+      return String(localized: "habits.sheet.field.milestone_goal_hint_count", defaultValue: "Total completions, like 50. The habit keeps going.", table: "Localizable", bundle: MobileL10n.bundle)
+    case "weekly":
+      return String(localized: "habits.sheet.field.milestone_goal_hint_streak_weeks", defaultValue: "Streak length in weeks, like 8. The habit keeps going.", table: "Localizable", bundle: MobileL10n.bundle)
     default:
-      return String(localized: "habits.sheet.field.milestone_goal_hint_streak", defaultValue: "Celebrate at this streak length. The habit keeps going after.", table: "Localizable", bundle: MobileL10n.bundle)
+      return String(localized: "habits.sheet.field.milestone_goal_hint_streak", defaultValue: "Streak length in days, like 30. The habit keeps going.", table: "Localizable", bundle: MobileL10n.bundle)
     }
   }
 }

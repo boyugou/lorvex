@@ -141,6 +141,22 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   transitions. A layout that depends on width must be stateless (a custom
   `Layout`); storing a measured width in state makes a pushed screen flip every
   frame ("Geometry action is cycling between duplicate values").
+- **A row of `.fixedSize()` pieces never narrows, and the panel around it
+  widens to fit.** The habit inspector's state label beside its Skip chip and
+  menu fit in English and asked for more than the inspector's 300 pt in Russian
+  and German, so the whole scroll content grew and the close button and the
+  right edge of every panel went out of view. Give such a row a second layout
+  in `ViewThatFits` (the state on a line of its own, wrapping if it must, with
+  the chips below) and test it by rendering at a width narrower than the row
+  (`ImageRenderer` with a proposed width, as `HabitDetailActionsLayoutTests`
+  does). Check a new row in Russian or German at the smallest window with the
+  tour (`-AppleLanguages (ru)`, `-uiPreviewWindowSize 1000x600`).
+- **A `Table` column takes about 17 pt of cell padding beyond its width**, and
+  the table squeezes columns toward their minimums but never below them, then
+  scrolls sideways and cuts the last column at its edge. Keep the sum of the
+  minimums plus 17 pt a column under the narrowest width the table gets, and
+  let the column that truncates (the title) give up the room. Changing a
+  column's ideal width does nothing while the table sits at its minimums.
 - `.contentMargins` reaches a `List` but never a `ScrollView`.
 - `NSHostingController.sizingOptions = [.preferredContentSize]` can recurse
   into a stack overflow; size a panel from `NSHostingView.fittingSize`.

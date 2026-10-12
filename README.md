@@ -35,6 +35,8 @@ form-filling UI.
   ads. Intelligence comes from *your* assistant, connected on *your* terms.
 - **Native everywhere.** macOS, iPhone, iPad, Apple Watch, widgets,
   Shortcuts, Spotlight, and two-way EventKit calendar integration.
+- **Thirty languages.** The apps, widgets, and Shortcuts follow your system
+  language, from Arabic to Vietnamese, right-to-left scripts included.
 
 ## How it works
 
@@ -78,8 +80,8 @@ Lorvex began as a cross-platform Tauri app. That implementation was removed on
 [latest release](https://github.com/boyugou/lorvex/releases/latest), open it,
 and drag Lorvex to Applications. It needs a Mac with Apple silicon and macOS 26
 or later, is notarized by Apple, and syncs with Lorvex on your other devices
-through your iCloud account. The DMG does not update itself; each new version
-is posted on the same releases page.
+through your iCloud account. The DMG does not update itself; the newest build
+is always on the same releases page.
 
 ## Getting started
 

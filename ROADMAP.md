@@ -25,7 +25,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 
 - Open UI/UX work, each verified against the code but not yet done:
   - In the Tasks table at the smallest Mac window with the inspector open,
-    long translated text (Russian) overflows its column by about 20 pt.
+    long translated text (Russian) was reported to overflow its column by
+    about 20 pt. The sample data in Russian and German fits there (2026-10-12
+    tours); recheck with `-lorvexSeedStressData` before closing the item.
   - Calendar events offer no Copy as Text or Share action.
   - Quick add misreads lines typed in decomposed Unicode in about fifteen
     languages (`ZZCaptureParserFuzzProbeTests`, `FUZZ_NFD`).
@@ -36,7 +38,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     a composed view with an offset table, composing per grapheme rather than
     with full NFC (NFC splits composition-excluded letters such as Devanagari
     U+0958 to U+095F); eight language suites pin the current behavior and flip
-    with the fix. "[pl,de] 15h" reads as 900 minutes; Vietnamese "3 giờ 15
+    with the fix. The fuzz probe at its default seed reports the same gap as 18
+    lines where a combining accent glued onto a keyword's last letter
+    ("tomorroẅ") still reads as the keyword and leaves the mark in the title.
+    "[pl,de] 15h" reads as 900 minutes; Vietnamese "3 giờ 15
     phút" reads as 195 minutes; the Romanian reader drops English "in 15 min";
     a parenthesized phrase leaves "( )" in Turkish, Thai, and Greek titles.
   - Cancelling a repeating occurrence whose reserved successor is already

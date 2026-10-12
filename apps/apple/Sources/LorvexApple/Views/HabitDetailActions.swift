@@ -22,6 +22,12 @@ import SwiftUI
 /// first. A reset that would clear more than one check-in asks first too. The
 /// menu and the skip button wear the task inspector's quiet chip
 /// (``InspectorActionChip``), as tall as the row's other control.
+///
+/// The standing, the skip chip, and the overflow menu share one line while
+/// they fit it. A translation too long for that at the inspector's narrowest
+/// width puts the standing on a line of its own, wrapping if it must, with the
+/// chips below it, so the row never asks for more width than the inspector
+/// has.
 struct HabitDetailActions: View {
   let store: AppStore
   let habit: LorvexHabit
@@ -35,17 +41,23 @@ struct HabitDetailActions: View {
   private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit) }
 
   var body: some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      if habit.isSkipped {
-        skippedStanding
-      } else if isMultiCount {
-        dayCountStepper
-      } else {
-        standing
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: LorvexDesign.Spacing.s) {
+        leading(wrapping: false)
+        Spacer(minLength: 0)
+        skipChip
+        overflowMenu
       }
-      Spacer(minLength: 0)
-      skipChip
-      overflowMenu
+      .fixedSize(horizontal: false, vertical: true)
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+        leading(wrapping: true)
+        HStack(spacing: LorvexDesign.Spacing.s) {
+          skipChip
+          Spacer(minLength: 0)
+          overflowMenu
+        }
+        .fixedSize(horizontal: false, vertical: true)
+      }
     }
     // The overflow chip fills the row's height, which is the tallest control's.
     .fixedSize(horizontal: false, vertical: true)
@@ -80,12 +92,27 @@ struct HabitDetailActions: View {
 
   // MARK: - Standing
 
+  /// What the row says at its leading edge: a day set aside, the day's count
+  /// to step, or the period's standing. With `wrapping`, a standing's words
+  /// may break across lines in the width they are given; otherwise they keep
+  /// their own length, which the row's one-line layout measures.
+  @ViewBuilder
+  private func leading(wrapping: Bool) -> some View {
+    if habit.isSkipped {
+      skippedStanding(wrapping: wrapping)
+    } else if isMultiCount {
+      dayCountStepper
+    } else {
+      standing(wrapping: wrapping)
+    }
+  }
+
   /// The period's standing in words, green with a check once the period's
   /// plan is met.
-  private var standing: some View {
+  private func standing(wrapping: Bool) -> some View {
     Label {
       Text(standingText)
-        .fixedSize()
+        .fixedSize(horizontal: !wrapping, vertical: true)
     } icon: {
       Image(systemName: progress.isComplete ? "checkmark.circle.fill" : "circle.dashed")
     }
@@ -97,10 +124,10 @@ struct HabitDetailActions: View {
 
   /// The statement of a habit set aside for today, in the quiet secondary
   /// style: nothing is asked of it, so it is neither green nor open.
-  private var skippedStanding: some View {
+  private func skippedStanding(wrapping: Bool) -> some View {
     Label {
       Text(HabitSkipText.skippedToday)
-        .fixedSize()
+        .fixedSize(horizontal: !wrapping, vertical: true)
     } icon: {
       Image(systemName: LorvexHabitSkip.glyph)
     }

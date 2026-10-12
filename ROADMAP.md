@@ -60,7 +60,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     re-indexes Spotlight and the calendar window.
   - Mac keyboard: list cards show Edit and Delete only on hover.
   - Polish: Settings > Activity shows English changelog summaries; German
-    Memory sheet titles truncate at 375 pt; the Urdu Today medium widget shows
+    Memory sheet titles truncated at 375 pt (rechecked 2026-10-12 at 402 pt:
+    "Neuer Gedächtniseintrag" wraps to two lines in the title bar's three-step
+    fit, so only a 375 pt device could still show it; none is installed here); the Urdu Today medium widget shows
     one row.
 - Coverage not yet captured: the largest accessibility text sizes in languages
   other than English and Chinese, iPad routes other than Review, the Habits,

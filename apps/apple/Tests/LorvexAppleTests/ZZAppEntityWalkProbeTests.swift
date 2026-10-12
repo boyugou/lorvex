@@ -1219,7 +1219,7 @@ private final class AppEntityWalk {
   func checkReviews() async {
     let day = store.dailyReviewEditorDate
     if let fresh = try? await core.loadDailyReview(date: day) {
-      if fresh != nil { coverage["data.reviewSaved", default: 0] += 1 }
+      coverage["data.reviewSaved", default: 0] += 1
       if store.dailyReview != fresh {
         fail(
           "review-stale",

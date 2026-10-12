@@ -948,7 +948,7 @@ private final class EntityWalk {
 
     // Daily review: a clean editor shows exactly what the core holds.
     if let fresh = try? await core.loadDailyReview(date: store.selectedReviewDate) {
-      if fresh != nil { coverage["data.reviewSaved", default: 0] += 1 }
+      coverage["data.reviewSaved", default: 0] += 1
       if store.dailyReviewDraftMatchesLoaded {
         if store.dailyReview != fresh {
           fail(

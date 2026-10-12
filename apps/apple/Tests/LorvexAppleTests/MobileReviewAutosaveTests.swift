@@ -133,7 +133,7 @@ func mobileStoreRefreshKeepsTextTypedWhileItReadsTheReview() async throws {
   core.loadDailyReviewGate = nil
   store.dailyReviewDraft.summary = "Saved text and more"
   await gate.release()
-  await refresh.value
+  _ = await refresh.value
 
   #expect(store.dailyReviewDraft.summary == "Saved text and more")
   #expect(!store.dailyReviewDraftMatchesLoaded)
@@ -160,7 +160,7 @@ func mobileStoreRefreshDoesNotAdoptADayTheReviewMovedOffDuringIt() async throws 
   core.loadDailyReviewGate = nil
   await store.selectReviewDay(yesterday)
   await gate.release()
-  await refresh.value
+  _ = await refresh.value
 
   #expect(store.selectedReviewDate == yesterday)
   #expect(store.dailyReview?.summary == "Yesterday's note")

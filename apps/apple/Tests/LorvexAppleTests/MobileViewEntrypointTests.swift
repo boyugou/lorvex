@@ -334,7 +334,7 @@ func mobileSheetsTitleThemselvesThroughTheFittingSheetTitle() throws {
   // the data import preview keep the system's large title, which has a line
   // of its own and so never competes with the buttons.
   let largeTitled: Set<String> = ["MobileHabitReminderList.swift", "MobileStoreDataImportSection.swift"]
-  let directory = try mobileSourceRoot().appendingPathComponent("Sources/LorvexMobile")
+  let directory = mobileSourceRoot().appendingPathComponent("Sources/LorvexMobile")
   let names = try FileManager.default.contentsOfDirectory(atPath: directory.path)
     .filter { $0.hasSuffix(".swift") && !largeTitled.contains($0) }
     .sorted()

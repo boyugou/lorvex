@@ -32,7 +32,7 @@ func theRailCommandIsNamedByWhatChoosingItDoes() {
 
 @Test
 func theContextCarriesTheWorkspacesLiveState() {
-  final class State {
+  final class State: @unchecked Sendable {
     var mode = CalendarPresentationMode.week
     var showsRail = false
     var jumps = 0

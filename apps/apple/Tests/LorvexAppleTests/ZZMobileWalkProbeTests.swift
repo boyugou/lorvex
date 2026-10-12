@@ -216,17 +216,17 @@ private final class MobileWalk {
           counter += 1
           var draft = MobileTaskEditDraft(task: task)
           draft.title = "Edited \(counter)"
-          await store.saveTaskEditDraft(draft)
+          _ = await store.saveTaskEditDraft(draft)
         })
       steps.append(
         Step(weight: 2, name: "add-checklist \(brief(task))") { [self] in
           counter += 1
-          await store.addChecklistItem(taskID: task.id, text: "step \(counter)")
+          _ = await store.addChecklistItem(taskID: task.id, text: "step \(counter)")
         })
       steps.append(
         Step(weight: 2, name: "add-reminder \(brief(task))") { [self] in
           let hours = 2 + Int(rng.next() % 48)
-          await store.addReminder(
+          _ = await store.addReminder(
             taskID: task.id, date: Date().addingTimeInterval(Double(hours) * 3600))
         })
     }
@@ -241,7 +241,7 @@ private final class MobileWalk {
     if let task = pick(tasks.filter { !$0.reminders.isEmpty }), let reminder = task.reminders.first {
       steps.append(
         Step(weight: 2, name: "remove-reminder \(brief(task))") { [self] in
-          await store.removeReminder(taskID: task.id, reminder: reminder)
+          _ = await store.removeReminder(taskID: task.id, reminder: reminder)
         })
     }
     if !actionable.isEmpty {

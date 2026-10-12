@@ -53,9 +53,7 @@ three must authorize `group.com.lorvex.apple`.
 
 ```bash
 xcrun notarytool store-credentials LorvexNotary \
-  --apple-id "APPLE_ACCOUNT_ID" \
-  --team-id "ABCDE12345" \
-  --password "xxxx-xxxx-xxxx-xxxx"
+  --key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID"
 
 export APPLE_TEAM_ID="ABCDE12345"
 export CODE_SIGN_IDENTITY="Developer ID Application: Team Name (ABCDE12345)"

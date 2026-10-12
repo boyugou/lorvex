@@ -21,9 +21,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - watchOS / Widgets design audits (need on-device).
 - Direct-download DMG: the only release on the releases page is 1.0.0 (59),
   58 builds and sixteen languages behind the current build. A new release
-  (tag `v1.0.0+<build>`) needs Developer ID provisioning profiles for the
-  three current bundle identifiers and a notarytool credential profile. The
-  policy is `apps/apple/docs/release.md`, "GitHub Releases".
+  (tag `v1.0.0+<build>`) is built with `script/package_dmg.sh`; the Developer
+  ID profiles and the notarytool profile are in place on the release machine.
+  The policy is `apps/apple/docs/release.md`, "GitHub Releases".
 
 - Open UI/UX work, each verified against the code but not yet done:
   - Mac Lists cards omit the list's description, which the iPhone Lists rows

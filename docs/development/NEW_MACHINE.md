@@ -42,7 +42,7 @@ anything; it names the fix for each failure. Run it first on a new machine.
 | `~/.appstoreconnect/private_keys/` | The App Store Connect API key file (`AuthKey_<id>.p8`, mode 600) that `ASC_KEY_PATH` names | Headless provisioning in `script/archive_ios.sh`; read-only API checks |
 | `apps/apple/secrets/profiles/` | Provisioning profiles for every target | Store and Developer ID archives |
 | Keychain | Apple Distribution, Mac Installer, and Developer ID certificates with their keys | Signing |
-| Keychain, created per machine | The notarytool profile (`xcrun notarytool store-credentials`) and the CloudKit management token (`xcrun cktool save-token --type management`); neither can be copied from another Mac, and TestFlight needs neither | DMG notarization; `xcrun cktool` |
+| Keychain, created per machine | The notarytool profile and the CloudKit management token (`xcrun cktool save-token --type management`); neither can be copied from another Mac, and TestFlight needs neither. The notarytool profile comes from the App Store Connect API key, with no password: after `source secrets/apple-developer.env`, `xcrun notarytool store-credentials lorvex-notary --key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID"` | DMG notarization; `xcrun cktool` |
 | `docs/APPLE_DEVELOPER.md` | The signing runbook: team, certificates, renewal dates | Renewing signing material |
 | `CLAUDE.local.md` | Rules for this machine only (below) | Agents working here |
 

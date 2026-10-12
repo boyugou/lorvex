@@ -335,11 +335,12 @@ Failures and what they mean:
 ## Produce the direct-distribution release
 
 The credentials live in a notarytool keychain profile created once, so no
-secret is passed on the command line:
+secret is passed on the command line. The App Store Connect API key that signs
+the TestFlight builds also notarizes, so the profile needs no password:
 
 ```bash
 xcrun notarytool store-credentials "lorvex-notary" \
-  --apple-id "APPLE_ACCOUNT_ID" --team-id "TEAMID" --password "app-specific-password"
+  --key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID"
 
 export APPLE_TEAM_ID="TEAMID"
 export CODE_SIGN_IDENTITY="Developer ID Application: Example, Inc. (TEAMID)"

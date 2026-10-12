@@ -367,25 +367,29 @@ Connect; use `archive_mas.sh` for that separate channel.
 The releases page is the download channel for people who cannot or will not use
 the App Store, including DMG users in mainland China. A DMG never updates
 itself, so the page has to answer which file is current and what changed. It
-lists public versions only. A TestFlight build is not a release: App Store
+lists published DMG builds only. A TestFlight build is not a release: App Store
 Connect and the `Build N` commits already record each one, and a notarized DMG
-for every build would bury the versions people choose between.
+for every build would bury the ones people choose between.
 
-- One release per marketing version: tag `vMAJOR.MINOR.PATCH`, title
-  `Lorvex <version> (<build>)`, never a pre-release, never left as a draft.
-  Superseded releases stay; each is the record of what that version shipped.
-- The tag marks the commit the DMG was built from and never moves. Code that
-  DMG users should get is a new version and a new release; the newest release is
-  the one `releases/latest` serves, which is what the README links to.
-- Only repackaging the same commit (a failed notarization, a signing mistake)
-  replaces a release's DMG in place, with `gh release upload <tag> <dmg>
-  <sha256> --clobber`; the notes then say it was repackaged.
+- One release per published DMG build: tag `v<version>+<build>`
+  (`v1.0.0+117`), title `Lorvex <version> (<build>)`, created with `--latest`,
+  never a pre-release, never left as a draft. The marketing version belongs to
+  the App Store's version train and does not move for a DMG; the build number
+  tells two DMGs of one version apart. Earlier releases stay, each the record
+  of what that build shipped. The first release, `v1.0.0` for build 59,
+  predates the build suffix.
+- The tag marks the commit the DMG was built from and never moves, so the
+  source archive GitHub attaches to a release is the source of its DMG. New
+  code that DMG users should get is a new release. Only repackaging the same
+  commit (a failed notarization, a signing mistake) replaces a release's DMG in
+  place, with `gh release upload <tag> <dmg> <sha256> --clobber`; the notes then
+  say it was repackaged.
 - Every release carries the same two asset names, `Lorvex-macOS-arm64.dmg` and
   `Lorvex-macOS-arm64.dmg.sha256`. `package_dmg.sh` writes
   `Lorvex-macOS-<version>+<build>-arm64.dmg`; rename both files when uploading.
 - The notes, in English, keep the shape of the existing release: install
   steps, the Mac and macOS requirement, what changed since the previous
   release, the language count, and the SHA-256 the download must print.
-- Cut a DMG release at a milestone, not per build: a new set of languages, a
-  feature people asked for, or a fix DMG users need. A version number is spent
-  once a DMG or the App Store ships it, so the next release is a new version.
+- Cut a release at a milestone, not per TestFlight build: a new set of
+  languages, a feature people asked for, or a fix DMG users need, on a build
+  that has processed VALID in App Store Connect and passed the full suites.

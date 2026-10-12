@@ -105,9 +105,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     fit, so only a 375 pt device could still show it; none is installed here); the Urdu Today medium widget shows
     one row.
 - German at the largest accessibility text size (iPhone, 2026-10-12) was
-  captured for Today, Calendar, Tasks, Habits, and the event detail. Two rough
-  edges remain, both only at that size: the Habits large title truncates
-  ("Gewohnheit…") and a streak chip breaks inside its compound ("12-Tag / e-Serie").
+  captured for Today, Calendar, Tasks, Habits, and the event detail. One rough
+  edge remains, only at that size: the Habits large title truncates
+  ("Gewohnheit…"). A streak chip that used to break inside its compound
+  ("12-Tag / e-Serie") now breaks at the hyphen.
 - Also captured and clean on 2026-10-12: iPad in German (Today, event detail,
   Habits, Memory), and the iPhone Habits, Progress, and Lock Screen widgets in
   German and Arabic (mirrored, Arabic-Indic digits).

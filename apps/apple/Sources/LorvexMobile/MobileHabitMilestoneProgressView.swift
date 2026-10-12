@@ -77,9 +77,15 @@ struct MobileHabitMilestoneProgressView: View {
         Text(verbatim: "·").foregroundStyle(.tertiary).accessibilityHidden(true)
         compactNext
       }
+      HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+        compactFlag
+        compactValue(wraps: false)
+      }
       // `ViewThatFits` also shows its last candidate when none fits, so this
       // one's reading wraps rather than pushing the row past the screen edge.
-      HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+      // The flag sits above it, so the reading keeps the whole width and a
+      // compound such as "12-Tage-Serie" stays on one line where it can.
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         compactFlag
         compactValue(wraps: true)
       }

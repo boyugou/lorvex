@@ -111,9 +111,17 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
   /// Days of the current period on which the per-day target was met, counted
   /// from the period's first day through the day the habit was loaded for: the
   /// month for a `monthly` cadence and the ISO week (Monday first) for a
-  /// `times_per_week` one. 0 for every other cadence, and for value-only
-  /// constructions (seed data, fixtures) that do not project it.
+  /// `times_per_week` or `weekly` one. A `weekly` habit pinned to weekdays
+  /// counts only its pinned days, since a check-in on another day does not
+  /// satisfy the week. 0 for a `daily` habit, and for value-only constructions
+  /// (seed data, fixtures) that do not project it.
   public var periodMetDays: Int
+  /// Days of the current ISO week, through the day the habit was loaded for, on
+  /// which a `weekly` habit was scheduled and the user set it aside without
+  /// checking it in. Each one lowers the week's requirement by one
+  /// (``HabitPeriodProgress``), the way the streak math excuses it. 0 for every
+  /// other cadence, and for value-only constructions that do not project it.
+  public var periodExcusedDays: Int
   public var totalCompletions: Int
   public var completionRate30d: Double
   public var archived: Bool
@@ -150,6 +158,7 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
     milestoneTarget: Int? = nil,
     milestone: HabitMilestoneInfo? = nil,
     periodMetDays: Int = 0,
+    periodExcusedDays: Int = 0,
     isSkipped: Bool = false
   ) {
     self.id = id
@@ -164,6 +173,7 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
     self.targetCount = targetCount
     self.completionsToday = completionsToday
     self.periodMetDays = periodMetDays
+    self.periodExcusedDays = periodExcusedDays
     self.totalCompletions = totalCompletions
     self.completionRate30d = completionRate30d
     self.archived = archived

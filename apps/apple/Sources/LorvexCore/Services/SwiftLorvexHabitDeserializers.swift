@@ -83,6 +83,7 @@ enum SwiftLorvexHabitDeserializers {
     weekdays: [Int],
     completionsToday: Int,
     periodMetDays: Int,
+    periodExcusedDays: Int = 0,
     totalCompletions: Int,
     completionRate30d: Double,
     milestoneTarget: Int?,
@@ -114,6 +115,7 @@ enum SwiftLorvexHabitDeserializers {
       milestoneTarget: milestoneTarget,
       milestone: milestone,
       periodMetDays: periodMetDays,
+      periodExcusedDays: periodExcusedDays,
       isSkipped: isSkipped)
   }
 

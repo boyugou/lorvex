@@ -75,6 +75,8 @@ extension SwiftLorvexCoreService {
     let isSkipped = try completionsToday == 0 && habitIsSkipped(db, habitId: id, date: date)
     let periodMetDays = try habitPeriodMetDays(
       db, habitId: id, cadence: cadence, targetCount: targetCount, through: date)
+    let periodExcusedDays = try habitPeriodExcusedDays(
+      db, habitId: id, cadence: cadence, through: date)
     let totalCompletions = try Int.fetchOne(
       db, sql: "SELECT COALESCE(SUM(value), 0) FROM habit_completions WHERE habit_id = ?",
       arguments: [id]) ?? 0
@@ -89,7 +91,8 @@ extension SwiftLorvexCoreService {
       metric: metric, value: metricValue, target: milestoneTarget)
     return SwiftLorvexHabitDeserializers.habit(
       row, weekdays: weekdays, completionsToday: completionsToday,
-      periodMetDays: periodMetDays, totalCompletions: totalCompletions,
+      periodMetDays: periodMetDays, periodExcusedDays: periodExcusedDays,
+      totalCompletions: totalCompletions,
       completionRate30d: rate, milestoneTarget: milestoneTarget, milestone: milestone,
       isSkipped: isSkipped)
   }
@@ -97,8 +100,10 @@ extension SwiftLorvexCoreService {
   /// How many days of the period `day` falls in have a completion that met the
   /// habit's per-day target, counted from the period's first day through
   /// `day`: the Gregorian month for a monthly habit and the ISO week (Monday
-  /// first) for a times-per-week one. Other cadences are not counted per
-  /// period and read 0, as does a `day` that is not a date.
+  /// first) for a times-per-week or a weekly one. A weekly habit pinned to
+  /// weekdays counts only those days, the way its streak does, so a check-in on
+  /// another day does not satisfy the week. A daily habit is not counted per
+  /// period and reads 0, as does a `day` that is not a date.
   static func habitPeriodMetDays(
     _ db: Database, habitId: String, cadence: HabitCadence, targetCount: Int64,
     through day: String
@@ -108,19 +113,52 @@ extension SwiftLorvexCoreService {
     switch cadence {
     case .monthly:
       first = IsoDate.YMD(year: date.ymd.year, month: date.ymd.month, day: 1)
-    case .timesPerWeek:
-      first = IsoDate.ymdFromDayNumber(
-        IsoDate.dayNumber(date.ymd) - WeekDay.from(date: date).rawValue)
-    case .daily, .weekly:
+    case .timesPerWeek, .weekly:
+      first = isoWeekStart(date)
+    case .daily:
       return 0
     }
-    return try Int.fetchOne(
+    let arguments: StatementArguments = [habitId, first.canonicalString, day, max(targetCount, 1)]
+    guard case .weekly = cadence else {
+      return try Int.fetchOne(
+        db,
+        sql: """
+          SELECT COUNT(*) FROM habit_completions
+          WHERE habit_id = ? AND completed_date >= ? AND completed_date <= ? AND value >= ?
+          """,
+        arguments: arguments) ?? 0
+    }
+    return try String.fetchAll(
       db,
       sql: """
-        SELECT COUNT(*) FROM habit_completions
+        SELECT completed_date FROM habit_completions
         WHERE habit_id = ? AND completed_date >= ? AND completed_date <= ? AND value >= ?
         """,
-      arguments: [habitId, first.canonicalString, day, max(targetCount, 1)]) ?? 0
+      arguments: arguments
+    ).filter { raw in
+      guard let met = lorvexDate(raw) else { return false }
+      return isHabitScheduledOnDay(cadence, met)
+    }.count
+  }
+
+  /// How many days of the ISO week `day` falls in, through `day`, a weekly habit
+  /// was scheduled and the user set it aside without checking it in. Each one
+  /// lowers the week's requirement by one, the way the streak math excuses it
+  /// (``habitExcusedDates(_:habitId:cadence:from:through:)``). Every other
+  /// cadence excuses nothing, and a `day` that is not a date reads 0.
+  static func habitPeriodExcusedDays(
+    _ db: Database, habitId: String, cadence: HabitCadence, through day: String
+  ) throws -> Int {
+    guard case .weekly = cadence, let date = lorvexDate(day) else { return 0 }
+    return try habitExcusedDates(
+      db, habitId: habitId, cadence: cadence, from: isoWeekStart(date).canonicalString,
+      through: day
+    ).count
+  }
+
+  /// The Monday of the ISO week `date` falls in.
+  private static func isoWeekStart(_ date: LorvexDate) -> IsoDate.YMD {
+    IsoDate.ymdFromDayNumber(IsoDate.dayNumber(date.ymd) - WeekDay.from(date: date).rawValue)
   }
 
   /// The current milestone metric reading for a habit: total completions for the

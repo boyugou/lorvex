@@ -45,7 +45,7 @@ struct HabitDetailHeader: View {
     _color = State(initialValue: habit.color)
   }
 
-  private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit, progress: progress) }
+  private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit) }
 
   /// The habit's icon and identity color, or the ones being chosen while the
   /// icon and color popover is open.

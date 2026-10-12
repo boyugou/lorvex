@@ -97,25 +97,14 @@ struct HabitsWorkspaceView: View {
     }
   }
 
-  /// Whether each visible habit meets its current period's plan, keyed by id.
-  /// `HabitPeriodProgress.current` parses the habit's completion JSON, so the
-  /// header summary and per-cadence stats share this one pass.
+  /// Whether each visible habit meets its current period's plan, keyed by id,
+  /// so the header summary and per-cadence stats share this one pass.
   ///
   /// "On track" means meeting the current period's plan (today for daily, this
   /// week / month for weekly / monthly), so the figure is honest across cadences
   /// rather than treating every habit as a daily task.
   private func onTrackByHabitID(_ habits: [LorvexHabit]) -> [LorvexHabit.ID: Bool] {
-    Dictionary(uniqueKeysWithValues: habits.map { habit in
-      (
-        habit.id,
-        HabitPeriodProgress.current(
-          habit: habit,
-          recentCompletions: store.habitStats(for: habit.id)?.recentCompletions ?? [],
-          recentSkips: store.habitStats(for: habit.id)?.recentSkips ?? [],
-          timeZone: store.logicalTimeZone
-        ).isComplete
-      )
-    })
+    Dictionary(uniqueKeysWithValues: habits.map { ($0.id, HabitPeriodProgress.current(habit: $0).isComplete) })
   }
 
   @ViewBuilder

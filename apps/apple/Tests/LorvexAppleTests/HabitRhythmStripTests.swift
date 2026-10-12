@@ -141,38 +141,17 @@ struct HabitRhythmStripTests {
 
 @Suite("Habit period progress")
 struct HabitPeriodProgressTests {
-  private func calendar() -> Calendar {
-    var cal = Calendar(identifier: .gregorian)
-    cal.timeZone = TimeZone(identifier: "UTC")!
-    cal.locale = Locale(identifier: "en_US_POSIX")
-    return cal
-  }
-
-  private func date(_ string: String) -> Date {
-    let parts = string.split(separator: "-").compactMap { Int($0) }
-    return calendar().date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))!
-  }
-
+  /// A habit as the core loads it for a day: `met` and `excused` are what it
+  /// projects as `periodMetDays` and `periodExcusedDays` for that day.
   private func habit(
     freq: String, weekdays: [Int]? = nil, perPeriodTarget: Int? = nil, dayOfMonth: Int? = nil,
-    target: Int = 1, today: Int = 0, isSkipped: Bool = false
+    target: Int = 1, today: Int = 0, met: Int = 0, excused: Int = 0, isSkipped: Bool = false
   ) -> LorvexHabit {
     LorvexHabit(
       id: "h", name: "H", icon: nil, color: nil, cue: nil, frequencyType: freq,
       targetCount: target, completionsToday: today, totalCompletions: 0, completionRate30d: 0,
       archived: false, weekdays: weekdays, perPeriodTarget: perPeriodTarget, dayOfMonth: dayOfMonth,
-      isSkipped: isSkipped)
-  }
-
-  // today = 2026-06-24 (Wed); current Mon–Sun week is 2026-06-22…06-28; month June.
-
-  private func weeklyRequirement(
-    _ habit: LorvexHabit, skips: [String], completions: [String] = []
-  ) -> Int {
-    HabitPeriodProgress.current(
-      habit: habit, recentCompletions: completions, recentSkips: skips,
-      today: date("2026-06-24"), timeZone: calendar().timeZone
-    ).required
+      periodMetDays: met, periodExcusedDays: excused, isSkipped: isSkipped)
   }
 
   @Test("The counted period is the day for any per-day target, else the cadence's own")
@@ -188,57 +167,39 @@ struct HabitPeriodProgressTests {
 
   @Test("Daily uses today's count against the per-day target")
   func daily() {
-    let value = HabitPeriodProgress.current(
-      habit: habit(freq: "daily", target: 8, today: 3), recentCompletions: [],
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
+    let value = HabitPeriodProgress.current(habit: habit(freq: "daily", target: 8, today: 3))
     #expect(value == HabitPeriodProgress.Value(completed: 3, required: 8))
     #expect(!value.isComplete)
   }
 
-  @Test("Times-a-week counts this week's completions toward N, not just today")
+  @Test("Times-a-week counts this week's met days toward N, not just today")
   func timesPerWeek() {
     let value = HabitPeriodProgress.current(
-      habit: habit(freq: "times_per_week", perPeriodTarget: 3),
-      recentCompletions: ["2026-06-22", "2026-06-23", "2026-06-15"],  // Mon, Tue this week; one last week
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
+      habit: habit(freq: "times_per_week", perPeriodTarget: 3, met: 2))
     #expect(value == HabitPeriodProgress.Value(completed: 2, required: 3))
     #expect(!value.isComplete)
   }
 
   @Test("Specific weekdays complete only when the whole week's days are done")
   func weeklySpecificDays() {
-    let value = HabitPeriodProgress.current(
-      habit: habit(freq: "weekly", weekdays: [0, 2, 4]),
-      recentCompletions: ["2026-06-22", "2026-06-24", "2026-06-26"],  // Mon, Wed, Fri
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
+    let value = HabitPeriodProgress.current(habit: habit(freq: "weekly", weekdays: [0, 2, 4], met: 3))
     #expect(value == HabitPeriodProgress.Value(completed: 3, required: 3))
     #expect(value.isComplete)
   }
 
   @Test("Weekly every-day progress requires all seven met days")
   func weeklyEveryDay() {
-    let value = HabitPeriodProgress.current(
-      habit: habit(freq: "weekly", weekdays: []),
-      recentCompletions: ["2026-06-22"],
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
+    let value = HabitPeriodProgress.current(habit: habit(freq: "weekly", weekdays: [], met: 1))
     #expect(value == HabitPeriodProgress.Value(completed: 1, required: 7))
     #expect(!value.isComplete)
   }
 
-  @Test("Monthly is done when this month has a completion, and persists across days")
+  @Test("Monthly is done when this month has a met day, and persists across days")
   func monthly() {
-    let done = HabitPeriodProgress.current(
-      habit: habit(freq: "monthly", dayOfMonth: 1),
-      recentCompletions: ["2026-06-01"],  // earlier this month, not today
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
+    let done = HabitPeriodProgress.current(habit: habit(freq: "monthly", dayOfMonth: 1, met: 1))
     #expect(done == HabitPeriodProgress.Value(completed: 1, required: 1))
     #expect(done.isComplete)
-
-    let lastMonthOnly = HabitPeriodProgress.current(
-      habit: habit(freq: "monthly", dayOfMonth: 1),
-      recentCompletions: ["2026-05-10"],
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
-    #expect(!lastMonthOnly.isComplete)
+    #expect(!HabitPeriodProgress.current(habit: habit(freq: "monthly", dayOfMonth: 1)).isComplete)
   }
 
   @Test("Accumulative (multi-count) non-daily habits track today's count, not days-in-period")
@@ -248,73 +209,52 @@ struct HabitPeriodProgressTests {
     // days-in-period (the single-count behavior) would leave taps with no
     // feedback — the bug where a "21×/day" weekly habit's ring never moved.
     let value = HabitPeriodProgress.current(
-      habit: habit(
-        freq: "weekly",
-        weekdays: [0, 1, 2, 3, 4, 5, 6],
-        target: 21, today: 5),
-      recentCompletions: ["2026-06-22", "2026-06-23"],
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
+      habit: habit(freq: "weekly", weekdays: [0, 1, 2, 3, 4, 5, 6], target: 21, today: 5, met: 2))
     #expect(value == HabitPeriodProgress.Value(completed: 5, required: 21))
     #expect(!value.isComplete)
 
-    let met = HabitPeriodProgress.current(
-      habit: habit(freq: "weekly", weekdays: [0], target: 3, today: 3),
-      recentCompletions: [], today: date("2026-06-24"), timeZone: calendar().timeZone)
+    let met = HabitPeriodProgress.current(habit: habit(freq: "weekly", weekdays: [0], target: 3, today: 3))
     #expect(met == HabitPeriodProgress.Value(completed: 3, required: 3))
     #expect(met.isComplete)
   }
 
-  @Test("A skipped pinned weekday lowers the week's requirement by one")
-  func skippedPinnedDayLowersTheWeeklyRequirement() {
-    let pinned = habit(freq: "weekly", weekdays: [0, 2, 4])  // Mon, Wed, Fri
-    #expect(weeklyRequirement(pinned, skips: []) == 3)
-    #expect(weeklyRequirement(pinned, skips: ["2026-06-24"]) == 2)
-    #expect(weeklyRequirement(pinned, skips: ["2026-06-22", "2026-06-24"]) == 1)
+  @Test("Each excused day of a pinned week lowers the requirement by one")
+  func excusedPinnedDaysLowerTheWeeklyRequirement() {
+    func required(_ excused: Int) -> Int {
+      HabitPeriodProgress.current(habit: habit(freq: "weekly", weekdays: [0, 2, 4], excused: excused)).required
+    }
+    #expect(required(0) == 3)
+    #expect(required(1) == 2)
+    #expect(required(2) == 1)
 
     // The lowered requirement is what completes the week.
     let value = HabitPeriodProgress.current(
-      habit: pinned, recentCompletions: ["2026-06-22", "2026-06-26"], recentSkips: ["2026-06-24"],
-      today: date("2026-06-24"), timeZone: calendar().timeZone)
+      habit: habit(freq: "weekly", weekdays: [0, 2, 4], met: 2, excused: 1))
     #expect(value == HabitPeriodProgress.Value(completed: 2, required: 2))
     #expect(value.isComplete)
   }
 
-  @Test("A skip on a day the week did not ask for, in another week, or twice changes nothing more")
-  func skipsThatExcuseNothingExtra() {
-    let pinned = habit(freq: "weekly", weekdays: [0, 2, 4])
-    #expect(weeklyRequirement(pinned, skips: ["2026-06-23"]) == 3, "Tuesday is not a pinned day")
-    #expect(weeklyRequirement(pinned, skips: ["2026-06-17"]) == 3, "last week's Wednesday")
-    #expect(weeklyRequirement(pinned, skips: ["2026-07-01"]) == 3, "next week's Wednesday")
-    #expect(weeklyRequirement(pinned, skips: ["2026-06-24", "2026-06-24"]) == 2)
-  }
-
-  @Test("Skipping every pinned day leaves a requirement of one, never zero")
+  @Test("Excusing every pinned day leaves a requirement of one, never zero")
   func weeklyRequirementKeepsAFloorOfOne() {
-    let pinned = habit(freq: "weekly", weekdays: [0, 2, 4])
-    let all = ["2026-06-22", "2026-06-24", "2026-06-26"]
-    #expect(weeklyRequirement(pinned, skips: all) == 1)
-    #expect(weeklyRequirement(habit(freq: "weekly", weekdays: [2]), skips: ["2026-06-24"]) == 1)
+    #expect(HabitPeriodProgress.current(habit: habit(freq: "weekly", weekdays: [0, 2, 4], excused: 3)).required == 1)
+    #expect(HabitPeriodProgress.current(habit: habit(freq: "weekly", weekdays: [2], excused: 1)).required == 1)
   }
 
-  @Test("An every-day weekly habit loses one required day per skipped day")
+  @Test("An every-day weekly habit loses one required day per excused day")
   func everyDayWeeklyHabit() {
-    let everyDay = habit(freq: "weekly", weekdays: [])
-    #expect(weeklyRequirement(everyDay, skips: ["2026-06-23", "2026-06-24"]) == 5)
+    #expect(HabitPeriodProgress.current(habit: habit(freq: "weekly", weekdays: [], excused: 2)).required == 5)
   }
 
-  @Test("A skip changes no other cadence's count")
-  func otherCadencesIgnoreSkips() {
-    let quota = habit(freq: "times_per_week", perPeriodTarget: 3)
-    #expect(weeklyRequirement(quota, skips: ["2026-06-22", "2026-06-23"]) == 3)
+  @Test("Excused days change no other cadence's requirement")
+  func otherCadencesIgnoreExcusedDays() {
+    let quota = HabitPeriodProgress.current(
+      habit: habit(freq: "times_per_week", perPeriodTarget: 3, excused: 2))
+    #expect(quota == HabitPeriodProgress.Value(completed: 0, required: 3))
 
-    let monthly = HabitPeriodProgress.current(
-      habit: habit(freq: "monthly", dayOfMonth: 1), recentCompletions: [],
-      recentSkips: ["2026-06-24"], today: date("2026-06-24"), timeZone: calendar().timeZone)
+    let monthly = HabitPeriodProgress.current(habit: habit(freq: "monthly", dayOfMonth: 1, excused: 1))
     #expect(monthly == HabitPeriodProgress.Value(completed: 0, required: 1))
 
-    let daily = HabitPeriodProgress.current(
-      habit: habit(freq: "daily", target: 2, isSkipped: true), recentCompletions: [],
-      recentSkips: ["2026-06-24"], today: date("2026-06-24"), timeZone: calendar().timeZone)
+    let daily = HabitPeriodProgress.current(habit: habit(freq: "daily", target: 2, excused: 1, isSkipped: true))
     #expect(daily == HabitPeriodProgress.Value(completed: 0, required: 2))
   }
 

@@ -50,9 +50,7 @@ struct HabitDetailInspector: View {
   private func content(habit: LorvexHabit) -> some View {
     let detail = store.habitDetail(for: habit.id)
     let stats = detail?.stats ?? store.habitStats(for: habit.id)
-    let progress = HabitPeriodProgress.current(
-      habit: habit, recentCompletions: stats?.recentCompletions ?? [],
-      recentSkips: stats?.recentSkips ?? [], timeZone: store.logicalTimeZone)
+    let progress = HabitPeriodProgress.current(habit: habit)
     let rhythm = detail.flatMap {
       HabitWeekdayRhythm.make(
         habit: habit, completions: $0.completions.completions, today: Date(),

@@ -67,6 +67,21 @@ Rules that follow from the table:
   something to tap. The arc carries the habit's hue, and a completed ring
   turns green with a check.
 
+- A habit's rings and its Complete and Reset controls are judged against one of
+  two bases (`LorvexHabitCheckIn.Basis`). A day's list of open habits (Today,
+  the day reviews, the menu bar, the widgets, the watch) judges by the day. The
+  Habits screens (the Mac's cards and inspector, the iPhone's rows and detail)
+  judge by the habit's period (`HabitPeriodProgress`): the day for a daily
+  habit or one counted several times a day, the ISO week for a habit kept on
+  weekdays or a number of times a week, the month for a monthly one. A habit
+  whose period earlier days met and which holds no check-in today reads done
+  and offers no check-in there.
+
+- A streak reads "12-day streak" where nothing else names it (a card, a row's
+  milestone line) and "12 days" under a "Current Streak" or "Best Streak"
+  label, which already carries the noun. Both come from the habit's own
+  cadence unit: days, weeks, or months.
+
 - The tertiary style (`.tertiary`) is for what a reader can skip without
   losing anything: the "·" between facts, disclosure chevrons, drag handles,
   a cancelled task's circle, and the days outside the month a calendar shows.

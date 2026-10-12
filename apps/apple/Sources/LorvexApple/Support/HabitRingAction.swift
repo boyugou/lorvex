@@ -3,7 +3,8 @@ import LorvexCore
 /// What clicking a habit's check-in ring does — the ring on its card and the
 /// one in its inspector's header — read against the period progress the ring
 /// draws (``HabitPeriodProgress``), so the click always agrees with what the
-/// ring shows.
+/// ring shows. The rule is ``LorvexHabitCheckIn`` on its period basis, shared
+/// with the iPhone's Habits screen; this type adds the Mac's labels.
 ///
 /// A habit counted several times a day adds one check-in per click until the
 /// day's count is met. A habit checked in once a day checks in, or clears
@@ -18,10 +19,13 @@ enum HabitRingAction: Equatable {
   case undoToday
   case none
 
-  static func action(habit: LorvexHabit, progress: HabitPeriodProgress.Value) -> HabitRingAction {
-    if habit.targetCount > 1 { return progress.isComplete ? .none : .addOne }
-    guard progress.isComplete else { return .checkIn }
-    return habit.completionsToday > 0 ? .undoToday : .none
+  static func action(habit: LorvexHabit) -> HabitRingAction {
+    switch LorvexHabitCheckIn.action(for: habit, basis: .period) {
+    case .addOne: .addOne
+    case .complete: .checkIn
+    case .uncomplete: .undoToday
+    case .none: .none
+    }
   }
 
   /// The ring's help tag and VoiceOver label: the action it takes, or the

@@ -32,7 +32,7 @@ struct HabitDetailActions: View {
   @State private var isConfirmingReset = false
 
   private var isMultiCount: Bool { habit.targetCount > 1 }
-  private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit, progress: progress) }
+  private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit) }
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {

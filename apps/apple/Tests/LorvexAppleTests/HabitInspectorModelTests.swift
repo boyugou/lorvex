@@ -33,13 +33,14 @@ private enum Fixture {
     perPeriodTarget: Int? = nil,
     dayOfMonth: Int? = nil,
     completionsToday: Int = 0,
+    periodMetDays: Int = 0,
     milestone: HabitMilestoneInfo? = nil
   ) -> LorvexHabit {
     LorvexHabit(
       id: "h1", name: "Walk", icon: nil, color: nil, cue: nil, frequencyType: frequencyType,
       targetCount: targetCount, completionsToday: completionsToday, totalCompletions: 0,
       completionRate30d: 0, archived: false, weekdays: weekdays, perPeriodTarget: perPeriodTarget,
-      dayOfMonth: dayOfMonth, milestone: milestone)
+      dayOfMonth: dayOfMonth, milestone: milestone, periodMetDays: periodMetDays)
   }
 
   static func entry(_ date: String, value: Int = 1) -> HabitCompletionEntry {
@@ -283,19 +284,23 @@ struct HabitGoalChoicesTests {
 struct HabitRingActionTests {
   @Test("A habit counted several times a day adds one until the day is met")
   func multiCount() {
-    let habit = Fixture.habit(targetCount: 3, completionsToday: 1)
-    #expect(HabitRingAction.action(habit: habit, progress: .init(completed: 1, required: 3)) == .addOne)
-    #expect(HabitRingAction.action(habit: habit, progress: .init(completed: 3, required: 3)) == .none)
+    #expect(HabitRingAction.action(habit: Fixture.habit(targetCount: 3, completionsToday: 1)) == .addOne)
+    #expect(HabitRingAction.action(habit: Fixture.habit(targetCount: 3, completionsToday: 3)) == .none)
   }
 
   @Test("A habit checked in once checks in, clears today's check-in, or does nothing once earlier days met the period")
   func singleCount() {
-    #expect(HabitRingAction.action(habit: Fixture.habit(), progress: .init(completed: 0, required: 1)) == .checkIn)
-    #expect(
-      HabitRingAction.action(habit: Fixture.habit(completionsToday: 1), progress: .init(completed: 1, required: 1))
-        == .undoToday)
-    let weekly = Fixture.habit(frequencyType: "times_per_week", perPeriodTarget: 2)
-    #expect(HabitRingAction.action(habit: weekly, progress: .init(completed: 2, required: 2)) == .none)
+    #expect(HabitRingAction.action(habit: Fixture.habit()) == .checkIn)
+    #expect(HabitRingAction.action(habit: Fixture.habit(completionsToday: 1)) == .undoToday)
+    let weekly = Fixture.habit(frequencyType: "times_per_week", perPeriodTarget: 2, periodMetDays: 2)
+    #expect(HabitRingAction.action(habit: weekly) == .none)
+  }
+
+  @Test("A check-in made today toward an unmet week is what the next click clears")
+  func todaysCheckInTowardAnUnmetWeekIsUndone() {
+    let weekly = Fixture.habit(
+      frequencyType: "times_per_week", perPeriodTarget: 3, completionsToday: 1, periodMetDays: 1)
+    #expect(HabitRingAction.action(habit: weekly) == .undoToday)
   }
 
   @Test("Each action has its own card identifier")

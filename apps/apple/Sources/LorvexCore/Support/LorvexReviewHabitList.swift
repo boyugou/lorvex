@@ -4,19 +4,33 @@ import SwiftUI
 /// once a day toggles, and one counted several times a day adds one until it
 /// meets its count, after which checking in does nothing, so a tap never wipes
 /// a day's tally. The menu bar panel and both day reviews share the rule.
+///
+/// A surface that shows a habit's standing for its period (the Habits screens)
+/// judges by ``Basis/period`` instead: a habit kept once a week or a month whose
+/// period earlier days already met, and which holds no check-in today, has
+/// nothing to check in, since another one would only over-log the period.
 public enum LorvexHabitCheckIn: Equatable, Sendable {
   case complete
   case uncomplete
   case addOne
   case none
 
+  /// What a check-in is read against: the day it is made on, as on a day's
+  /// list of open habits, or the habit's period (``HabitPeriodProgress``).
+  public enum Basis: Equatable, Sendable {
+    case day
+    case period
+  }
+
   /// The check-in for `habit`, read against its completions on the day the
-  /// habit was loaded for.
-  public static func action(for habit: LorvexHabit) -> LorvexHabitCheckIn {
+  /// habit was loaded for (and, on the period basis, its period's met days).
+  public static func action(for habit: LorvexHabit, basis: Basis = .day) -> LorvexHabitCheckIn {
     let target = max(habit.targetCount, 1)
     let isMet = habit.completionsToday >= target
     if target > 1 { return isMet ? .none : .addOne }
-    return isMet ? .uncomplete : .complete
+    if isMet { return .uncomplete }
+    if basis == .period, HabitPeriodProgress.current(habit: habit).isComplete { return .none }
+    return .complete
   }
 }
 

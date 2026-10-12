@@ -15,7 +15,7 @@ struct MobileHabitVisualizationSection: View {
         .accessibilityAddTraits(.isHeader)
 
       if let detail {
-        MobileHabitMomentumPanel(habit: habit, stats: detail.stats, timeZone: productTimeZone)
+        MobileHabitMomentumPanel(habit: habit, stats: detail.stats)
         MobileHabitRhythmPanel(habit: habit, stats: detail.stats, timeZone: productTimeZone)
         MobileHabitHeatmapPanel(habit: habit, detail: detail, timeZone: productTimeZone)
       } else {
@@ -39,15 +39,10 @@ struct MobileHabitVisualizationSection: View {
 private struct MobileHabitMomentumPanel: View {
   let habit: LorvexHabit
   let stats: HabitStats
-  let timeZone: TimeZone
 
   private enum StatLayout { case column, row }
 
-  private var progress: HabitPeriodProgress.Value {
-    HabitPeriodProgress.current(
-      habit: habit, recentCompletions: stats.recentCompletions, recentSkips: stats.recentSkips,
-      timeZone: timeZone)
-  }
+  private var progress: HabitPeriodProgress.Value { HabitPeriodProgress.current(habit: habit) }
 
   /// Today was set aside and the dial counts today: it shows the skip, not a
   /// count of check-ins the day has none of.

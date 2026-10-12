@@ -108,12 +108,9 @@ struct HabitMomentumCard: View {
   /// Progress toward the *current period's* plan — today for daily, this week
   /// for weekly/custom, this month for monthly — so the ring fills and checks
   /// off by period (persisting across days) rather than because the habit was
-  /// logged once today.
-  private var progress: HabitPeriodProgress.Value {
-    HabitPeriodProgress.current(
-      habit: habit, recentCompletions: stats?.recentCompletions ?? [],
-      recentSkips: stats?.recentSkips ?? [], timeZone: productTimeZone)
-  }
+  /// logged once today. Read from the habit itself, which the core loads for
+  /// the same day as its check-ins.
+  private var progress: HabitPeriodProgress.Value { HabitPeriodProgress.current(habit: habit) }
   private var isComplete: Bool { progress.isComplete }
   /// A habit whose per-day target is more than one check-in (e.g. "8 glasses of
   /// water"); these accumulate per ring tap and clear only via the menu.
@@ -229,7 +226,7 @@ struct HabitMomentumCard: View {
     }
   }
 
-  private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit, progress: progress) }
+  private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit) }
 
   /// Ring tap, by the shared rule (``HabitRingAction``): `adjust(1)` adds a
   /// check-in and `adjust(0)` toggles the day.

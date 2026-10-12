@@ -34,7 +34,7 @@ struct CalendarEventInspector: View {
           if let location = event.location, !location.isEmpty {
             detailRow(icon: "mappin.and.ellipse", title: locationTitle) { plainText(location) }
           }
-          if event.isRecurring || event.supportsScopedMutation {
+          if event.hasRecurrenceRow {
             detailRow(icon: "repeat", title: recurrenceTitle) {
               plainText(Self.recurrenceLabel(for: event))
             }
@@ -86,26 +86,30 @@ struct CalendarEventInspector: View {
         .lineLimit(3)
         .fixedSize(horizontal: false, vertical: true)
       Spacer(minLength: LorvexDesign.Spacing.s)
+      LorvexIconMenu(
+        systemImage: "ellipsis",
+        label: String(
+          localized: "common.more", defaultValue: "More", table: "Localizable",
+          bundle: LorvexL10n.bundle),
+        accessibilityIdentifier: "calendar.event.inspector.more"
+      ) {
+        CalendarEventShareMenuItems(event: event)
+      }
       InspectorCloseButton(accessibilityIdentifier: "calendar.event.inspector.close", action: close)
     }
     .padding(LorvexDesign.Spacing.m)
   }
 
   private var scheduleRow: some View {
-    let span = event.timedSpanLabel
+    let when = event.whenLines(
+      allDay: String(
+        localized: "calendar.event.all_day", defaultValue: "All day", table: "Localizable",
+        bundle: LorvexL10n.bundle))
     return detailRow(icon: "calendar", title: whenTitle) {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-        plainText(span ?? Self.dayLabel(for: event))
-        if event.allDay {
-          Text(
-            LocalizedStringResource(
-              "calendar.event.all_day", defaultValue: "All day", table: "Localizable",
-              bundle: LorvexL10n.bundle)
-          )
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
-        } else if span == nil, let start = event.startTime {
-          Text(lorvexClockRangeLabel(start: start, end: event.endTime))
+        plainText(when.first)
+        if let second = when.second {
+          Text(verbatim: second)
             .font(LorvexDesign.Typography.secondaryText)
             .foregroundStyle(.secondary)
         }
@@ -207,43 +211,15 @@ struct CalendarEventInspector: View {
       .fixedSize(horizontal: false, vertical: true)
   }
 
-  /// Render a `yyyy-MM-dd` event date as a localized weekday + month-day label,
-  /// falling back to the raw key if it can't be parsed. The day key is a
-  /// current-time-zone anchor (matching the localized label's default zone), so
-  /// parse it through the shared current-tz `ymd` formatter.
-  static func dateLabel(_ ymd: String) -> String {
-    guard let date = LorvexDateFormatters.ymd.date(from: ymd) else { return ymd }
-    return LorvexDateFormatters.string(
-      date, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent, position: .leading)
-  }
-
-  /// The days `event` takes time on: one day ("Friday, October 2"), or the
-  /// first and last ("Friday, October 2 – Sunday, October 4") for an event
-  /// that spans several (``CalendarTimelineEvent/lastOccupiedDay``).
-  static func dayLabel(for event: CalendarTimelineEvent) -> String {
-    let lastDay = event.lastOccupiedDay
-    guard lastDay > event.startDate,
-      let first = LorvexDateFormatters.ymd.date(from: event.startDate),
-      let last = LorvexDateFormatters.ymd.date(from: lastDay)
-    else { return dateLabel(event.startDate) }
-    return LorvexDateFormatters.range(
-      from: first, to: last, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent,
-      position: .leading)
-  }
-
   /// How the event repeats, in the words the repeat editor uses ("Every 2
   /// weeks · Mon, Wed · 10 times"): the source's own summary for a mirrored
   /// event, else the stored rule's. A one-off change to a series occurrence
   /// carries no rule of its own and reads as a generic repeating event.
   static func recurrenceLabel(for event: CalendarTimelineEvent) -> String {
-    if let summary = event.recurrenceSummary, !summary.isEmpty { return summary }
-    guard let rule = TaskRecurrenceRule.bridgeRule(from: event.recurrenceRule) else {
-      return String(
+    event.recurrenceDescription(
+      generic: String(
         localized: "calendar.event.repeats_generic", defaultValue: "Repeating event",
-        table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-    return rule.localizedDisplaySummary(
-      anchorDay: LorvexDateFormatters.ymd.date(from: event.startDate))
+        table: "Localizable", bundle: LorvexL10n.bundle))
   }
 
   private var whenTitle: String {

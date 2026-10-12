@@ -1,9 +1,11 @@
 import LorvexCore
 import SwiftUI
 
-/// The right-click menu of a calendar event on the week and month grids. Every
-/// event opens its details; only a Lorvex-owned (editable) event can also be
-/// edited or deleted, since an imported EventKit event is a read-only overlay.
+/// The right-click menu of a calendar event on the week and month grids, in
+/// search results, and on Today's schedule. Every event opens its details and
+/// can be copied or shared as text (``CalendarEventShare``); only a
+/// Lorvex-owned (editable) event can also be edited or deleted, since an
+/// imported EventKit event is a read-only overlay.
 struct CalendarEventContextMenu: View {
   let event: CalendarTimelineEvent
   let select: (CalendarTimelineEvent) -> Void
@@ -20,6 +22,7 @@ struct CalendarEventContextMenu: View {
           table: "Localizable", bundle: LorvexL10n.bundle),
         systemImage: "sidebar.right")
     }
+    CalendarEventShareMenuItems(event: event)
     if event.editable {
       Button {
         edit(event)

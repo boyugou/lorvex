@@ -131,12 +131,12 @@ struct MobileAccessibilityStructureTests {
 
   // MARK: Structure of the calendar
 
-  @Test("an event block is one element, a button only when it can be opened")
+  @Test("an event block is one element and a button, since every event opens its editor or its detail")
   func eventBlockIsOneElement() throws {
     let block = try Self.source("Sources/LorvexMobile/MobileCalendarEventBlock.swift")
     #expect(Self.follows(".accessibilityLabel(", ".accessibilityElement(children: .ignore)", in: block))
-    #expect(block.contains(".accessibilityAddTraits(block.event.editable ? .isButton : [])"))
-    #expect(block.contains(".accessibilityAction { if block.event.editable { onTapEvent(block.event) } }"))
+    #expect(block.contains(".accessibilityAddTraits(.isButton)"))
+    #expect(block.contains(".accessibilityAction { onTapEvent(block.event) }"))
     #expect(block.contains(".accessibilitySortPriority(Self.accessibilitySortPriority("))
     let task = try Self.source("Sources/LorvexMobile/MobileCalendarTaskBlock.swift")
     #expect(task.contains(".accessibilitySortPriority(Self.accessibilitySortPriority("))
@@ -157,8 +157,8 @@ struct MobileAccessibilityStructureTests {
     #expect(chrome.contains(".mobileCalendarPageReachability(hidden: isFree)"))
     #expect(
       Self.follows(
-        ".accessibilityAddTraits(event.editable ? .isButton : [])",
-        ".onTapGesture { if event.editable { onTapEvent(event) } }", in: chrome, within: 1500))
+        ".accessibilityAddTraits(.isButton)",
+        ".onTapGesture { onTapEvent(event) }", in: chrome, within: 1500))
   }
 
   @Test("only the visible week of the week strip pager is reachable by VoiceOver")

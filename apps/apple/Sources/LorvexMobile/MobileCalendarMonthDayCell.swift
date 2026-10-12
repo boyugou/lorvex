@@ -175,8 +175,8 @@ struct MobileCalendarMonthDayCell: View, Equatable {
     return Int(slot)
   }
 
-  /// Opens the entry of the chip under the tap; a tap anywhere else, or on a
-  /// chip that opens nothing, chooses the day.
+  /// Opens the entry of the chip under the tap, an event or a task; a tap
+  /// anywhere else chooses the day.
   private func tap(at point: CGPoint) {
     guard case .titled(let maxChips) = style else { return choose() }
     let chips = CalendarMonthGridModel.chips(for: day, maxVisible: maxChips).visible
@@ -185,9 +185,8 @@ struct MobileCalendarMonthDayCell: View, Equatable {
         atY: point.y, dayNumberSize: dayNumberSize, chipHeight: chipHeight, count: chips.count)
     else { return choose() }
     switch chips[index] {
-    case .event(let event) where event.editable: openEvent(event)
+    case .event(let event): openEvent(event)
     case .task(let task), .timedTask(let task, _): openTask(task)
-    case .event: choose()
     }
   }
 

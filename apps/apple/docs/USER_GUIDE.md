@@ -3406,7 +3406,16 @@ The **Calendar** workspace shows a merged timeline of Lorvex planning blocks
 and Apple Calendar events. EventKit events appear in a distinct style alongside
 your Lorvex tasks so you can see scheduling conflicts at a glance.
 Use the row buttons or context menu to edit or delete Lorvex-owned events.
-Imported EventKit events are read-only overlays.
+Imported EventKit events are read-only overlays: on the Mac they open in the
+inspector, and on iPhone and iPad a tap opens a read-only **Event** sheet with
+the event's time, place, repeat rule, attendees, link, and notes.
+
+**Copy or share an event** as plain text. On the Mac, right-click the event (on
+the calendar, in search results, or on Today's schedule) or open its inspector's
+**More** menu, and choose **Copy as Text** or **Share**. On iPhone and iPad, tap
+**Share** in the read-only event sheet. The text is the title, one line each
+for when, where, how it repeats, who is invited, and the link, and then the
+notes, written in your language.
 
 On iPhone and iPad, the control at the top of the **Calendar** tab switches
 between **Day**, **Week**, and **Month**, and keeps the day you were looking

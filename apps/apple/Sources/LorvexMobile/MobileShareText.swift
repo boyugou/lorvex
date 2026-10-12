@@ -1,7 +1,7 @@
 import Foundation
 import LorvexCore
 
-/// The text the share sheet sends for a task or a review: plain lines in the
+/// The text the share sheet sends for a task, an event, or a review: plain lines in the
 /// user's language that read the same in Messages, Mail, Notes, or a Markdown
 /// editor, worded as the screen words them. Blocks are separated by a blank
 /// line, a section is its name on one line with its content below, and a list
@@ -19,6 +19,23 @@ enum MobileShareText {
         dayAtTime: { MobileTaskPropertyCopy.day($0, at: $1) },
         assistantContext: MobileTaskPropertyCopy.assistantContext,
         checklist: MobileTaskPropertyCopy.checklist))
+  }
+
+  /// The calendar event as ``LorvexEventShareText`` lays it out, worded from
+  /// this module's catalog.
+  static func event(_ event: CalendarTimelineEvent) -> String {
+    LorvexEventShareText.text(
+      for: event,
+      labels: LorvexEventShareLabels(
+        field: { MobileCalendarEventCopy.label($0) },
+        line: field,
+        dayAtTime: { day, time in
+          String(
+            localized: "task_detail.do_on.day_time", defaultValue: "\(day), \(time)",
+            table: "Localizable", bundle: MobileL10n.bundle)
+        },
+        allDay: MobileCalendarEventCopy.allDay,
+        repeating: MobileCalendarEventCopy.repeatingEvent))
   }
 
   /// The day's review: its date, how it felt and the energy it had ("Feeling

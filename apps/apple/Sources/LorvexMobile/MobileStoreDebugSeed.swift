@@ -35,10 +35,18 @@
   /// once, so later visits start with the sheet closed.
   enum MobileCalendarDebugState {
     @MainActor static var initialCreateDraft: MobileCalendarDraft?
+    /// The event the `lorvex://sheet/eventdetail` hook asks Today to open the
+    /// detail of at its next appearance. Consumed once.
+    @MainActor static var pendingDetailEvent: CalendarTimelineEvent?
 
     @MainActor static func takeInitialCreateDraft() -> MobileCalendarDraft? {
       defer { initialCreateDraft = nil }
       return initialCreateDraft
+    }
+
+    @MainActor static func takePendingDetailEvent() -> CalendarTimelineEvent? {
+      defer { pendingDetailEvent = nil }
+      return pendingDetailEvent
     }
   }
 
@@ -502,6 +510,24 @@
       }
     }
 
+    /// The mirrored event the `lorvex://sheet/eventdetail` hook opens the
+    /// detail of: a repeating meeting from a device calendar on `now`'s day,
+    /// with every field the detail can show.
+    static func debugMirroredEvent(now: Date) -> CalendarTimelineEvent {
+      CalendarTimelineEvent(
+        id: "debug-mirrored-event", title: "Quarterly planning with the product group",
+        source: "provider", editable: false, startDate: LorvexDateFormatters.ymd.string(from: now),
+        startTime: "13:00", endDate: LorvexDateFormatters.ymd.string(from: now), endTime: "14:30",
+        allDay: false, location: "Room 4B, Building 2, 400 Market Street",
+        notes: "Bring the roadmap deck and the latest numbers. We decide the order of the three launches.",
+        url: "https://example.com/meet/quarterly-planning", color: nil, eventType: "event",
+        attendees: [
+          CalendarEventAttendee(email: "sam@example.com", name: "Sam Rivera"),
+          CalendarEventAttendee(email: "lee@example.com"),
+        ],
+        timezone: nil, isRecurring: true, recurrenceSummary: "Every week on Tuesday")
+    }
+
     private func debugApplyNavigation(to url: URL) {
       // `lorvex://tab/<name>` selects a tab, and `lorvex://tab/habits` opens
       // the Habits workspace on the Tasks stack, where the Tasks home's row
@@ -556,7 +582,8 @@
       // `lorvex://sheet/editlist` the Edit List sheet of the first list with a
       // description, and `lorvex://sheet/newhabit` the Habits workspace's New
       // Habit sheet; each of the three takes a `/appearance` suffix that also
-      // opens the header's icon and color popover.
+      // opens the header's icon and color popover. `lorvex://sheet/eventdetail`
+      // opens Today on the read-only detail of a staged mirrored event.
       if url.host == "sheet", let name = url.pathComponents.dropFirst().first {
         switch name {
         case "capture":
@@ -566,6 +593,9 @@
           let kind = url.pathComponents.count > 2 ? url.pathComponents[2] : nil
           MobileCalendarDebugState.initialCreateDraft = Self.debugEventDraft(kind: kind, now: now())
           selectedTab = .calendar
+        case "eventdetail":
+          MobileCalendarDebugState.pendingDetailEvent = Self.debugMirroredEvent(now: now())
+          selectedTab = .today
         case "newlist", "editlist":
           MobileSheetDebugState.pending = name == "newlist" ? .newList : .editList
           MobileSheetDebugState.opensAppearance = url.pathComponents.last == "appearance"

@@ -123,7 +123,7 @@ struct MobileCalendarMonthView: View {
       MobileStoreCreateCalendarEventSheet(store: store, isPresented: $isShowingCreateEvent)
     }
     .sheet(item: $editingEvent) { event in
-      MobileStoreEditCalendarEventSheet(
+      MobileStoreCalendarEventSheet(
         event: event,
         store: store,
         // A constant-true getter: deriving the binding from `editingEvent`,

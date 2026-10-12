@@ -42,7 +42,7 @@ struct MobileCalendarSearchResults: View {
         if !isMutating { Task { await reload() } }
       }
       .sheet(item: $editingEvent) { event in
-        MobileStoreEditCalendarEventSheet(
+        MobileStoreCalendarEventSheet(
           event: event,
           store: store,
           // A constant-true getter, as in the day view: deriving it from

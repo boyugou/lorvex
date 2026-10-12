@@ -14,6 +14,13 @@ struct MobileStoreTodayView: View {
     content
     #if DEBUG
       .task { await suggestTimesForPreviewIfRequested() }
+      .onAppear {
+        // Dev/QA only: the `lorvex://sheet/eventdetail` screenshot hook opens
+        // the detail of a staged mirrored event without a tap.
+        if let event = MobileCalendarDebugState.takePendingDetailEvent() {
+          editingCalendarEvent = event
+        }
+      }
     #endif
   }
 
@@ -168,7 +175,7 @@ private struct MobileTodayPageChrome: ViewModifier {
           })
       }
       .sheet(item: $editingCalendarEvent) { event in
-        MobileStoreEditCalendarEventSheet(
+        MobileStoreCalendarEventSheet(
           event: event,
           store: store,
           isPresented: Binding(

@@ -24,7 +24,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - watchOS / Widgets design audits (need on-device).
 
 - Open UI/UX work, each verified against the code but not yet done:
-  - Calendar events offer no Copy as Text or Share action.
   - Quick add misreads lines typed in decomposed Unicode in about fifteen
     languages (`ZZCaptureParserFuzzProbeTests`, `FUZZ_NFD`).
   - Locale follow-ups: weekday and Siri list joins, a few English strings

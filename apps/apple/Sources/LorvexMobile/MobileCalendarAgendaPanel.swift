@@ -9,8 +9,8 @@ import SwiftUI
 /// rows it has cleared; a task keeps full strength until it is done, since an
 /// unfinished one still needs doing. A task row completes, swipes, and
 /// long-presses as every task row does, and drags onto a calendar day to
-/// plan it there. An event row opens its editor on a tap; its context menu
-/// edits or deletes it, and a swipe deletes it, and the delete asks first at
+/// plan it there. An event row opens its editor on a tap, or its detail when a
+/// device calendar owns the event; its context menu edits or deletes it, and a swipe deletes it, and the delete asks first at
 /// the row (``MobileCalendarEventDeletion``). A free today, or a free pinned day, reads
 /// "Nothing planned"; so does an agenda with no day to list.
 struct MobileCalendarAgendaPanel: View {
@@ -120,7 +120,6 @@ struct MobileCalendarAgendaPanel: View {
     }
     .buttonStyle(.plain)
     .lorvexRowHoverEffect()
-    .disabled(!event.editable)
     .contextMenu {
       if event.editable {
         Button {

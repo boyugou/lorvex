@@ -178,7 +178,7 @@ public struct MobileCalendarDayView: View {
       MobileStoreCreateCalendarEventSheet(store: store, isPresented: $isShowingCreateEvent)
     }
     .sheet(item: $editingEvent) { event in
-      MobileStoreEditCalendarEventSheet(
+      MobileStoreCalendarEventSheet(
         event: event,
         store: store,
         // See CalendarWorkspaceView: constant-true getter avoids the

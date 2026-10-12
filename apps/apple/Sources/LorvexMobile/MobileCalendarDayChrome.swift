@@ -177,7 +177,7 @@ struct MobileCalendarAllDayStrip: View {
             allDayPill(
               title: event.title, time: isCompact ? nil : event.pillTimeLabel(on: day.dayKey),
               color: eventColor(event))
-              .onTapGesture { if event.editable { onTapEvent(event) } }
+              .onTapGesture { onTapEvent(event) }
               .contextMenu {
                 if event.editable {
                   Button {
@@ -201,11 +201,11 @@ struct MobileCalendarAllDayStrip: View {
               }
               .mobileCalendarEventDeletion(of: event, on: day.dayKey, deletion)
               .accessibilityElement(children: .ignore)
-              .accessibilityAddTraits(event.editable ? .isButton : [])
+              .accessibilityAddTraits(.isButton)
               .accessibilityLabel(
                 allDayEventAccessibilityLabel(event, namingDayOf: columns.count > 1 ? day : nil)
               )
-              .accessibilityAction { if event.editable { onTapEvent(event) } }
+              .accessibilityAction { onTapEvent(event) }
           }
           ForEach(day.scheduledTasks) { task in
             allDayTaskPill(task, namingDayOf: columns.count > 1 ? day : nil)

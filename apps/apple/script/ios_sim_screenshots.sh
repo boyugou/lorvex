@@ -36,6 +36,7 @@
 #         memory-composer-filled tasks-search-empty habits-search-empty
 #         sheet-newlist sheet-editlist sheet-newhabit task-edit
 #         sheet-newlist-appearance sheet-editlist-appearance sheet-newhabit-appearance
+#         event-detail
 #         widgets widgets-large widgets-lock widgets-more, or any raw
 #         lorvex:// URL. A route written as <first>+<second> launches on
 #         <first> and opens <second> two seconds later (the DEBUG
@@ -73,7 +74,9 @@
 #         a description; sheet-newhabit opens Habits with its New Habit sheet
 #         raised; task-edit opens Today's first task with its full Edit sheet
 #         raised (the DEBUG lorvex://sheet/<newlist|editlist|newhabit> and
-#         lorvex://firsttask/edit hooks). The -appearance variants of the
+#         lorvex://firsttask/edit hooks); event-detail opens Today on the
+#         read-only detail of a staged event mirrored from a device calendar
+#         (lorvex://sheet/eventdetail). The -appearance variants of the
 #         New List, Edit List, and New Habit routes also open the icon and
 #         color popover over the sheet's header.
 #         habit-detail-end opens the first habit's detail scrolled to its end
@@ -160,6 +163,7 @@ url_for() {
     sheet-editlist-appearance) echo "lorvex://sheet/editlist/appearance" ;;
     sheet-newhabit-appearance) echo "lorvex://sheet/newhabit/appearance" ;;
     task-edit) echo "lorvex://firsttask/edit" ;;
+    event-detail) echo "lorvex://sheet/eventdetail" ;;
     *) echo "lorvex://tab/today" ;;
   esac
 }

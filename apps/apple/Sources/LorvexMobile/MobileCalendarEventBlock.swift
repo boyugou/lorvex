@@ -57,7 +57,7 @@ extension MobileCalendarDayColumn {
     .offset(x: dragOffsetX, y: dragOffsetY)
     .opacity(active ? 0.82 : 1)
     .shadow(color: active ? .black.opacity(0.18) : .clear, radius: 6, y: 2)
-    .onTapGesture { if block.event.editable { onTapEvent(block.event) } }
+    .onTapGesture { onTapEvent(block.event) }
     // A block that lifts for rescheduling carries an empty menu, which attaches
     // no menu interaction: a real one would hold back the lift's press
     // (`MobileCalendarEventLift`). Its editor offers Delete, and VoiceOver gets
@@ -84,14 +84,14 @@ extension MobileCalendarDayColumn {
     .mobileCalendarEventDeletion(of: block.event, on: day.dayKey, deletion)
     // One VoiceOver element per block, as for a task block: the label on a
     // container with several texts would land on the title and on the time
-    // separately and read the block twice. An event that cannot be edited
-    // opens nothing, so it is not a button.
+    // separately and read the block twice. Every event is a button: it opens
+    // its editor, or its detail when a device calendar owns it.
     .accessibilityElement(children: .ignore)
-    .accessibilityAddTraits(block.event.editable ? .isButton : [])
+    .accessibilityAddTraits(.isButton)
     .accessibilityLabel(
       blockAccessibilityLabel(block, namingDayOf: allDays.count > 1 ? day : nil)
     )
-    .accessibilityAction { if block.event.editable { onTapEvent(block.event) } }
+    .accessibilityAction { onTapEvent(block.event) }
     .accessibilityActions {
       if block.event.editable && isReschedulable { deleteButton(for: block.event, on: day.dayKey) }
     }

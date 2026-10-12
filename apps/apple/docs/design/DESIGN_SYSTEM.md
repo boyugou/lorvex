@@ -286,7 +286,13 @@ under its title only when both fit, and the habit heatmap, whose month labels
 would otherwise outgrow their months' columns. A label and its value that
 share a line (a milestone and its rung, a stat and its reading, a review task
 and its due date) move onto two lines, or become rows, before either breaks
-inside a word.
+inside a word. A row of a state and chips in a narrow inspector does the same
+for a long translation: the habit inspector's standing ("Not done yet today")
+sits beside its Skip chip and its menu while they fit one line, and otherwise on
+a line of its own above them (`ViewThatFits`), so a row never asks for more
+width than the panel has. A table sizes its columns to fit its narrowest
+window, counting each column's cell padding, and the column that truncates (the
+title) gives up the room.
 
 Text the user or the assistant wrote (a task's title and notes, a checklist
 item, a list, habit, or memory, an event, a briefing, a review summary) enters
@@ -339,6 +345,7 @@ them and in the platform module otherwise.
 | `LorvexTaskRow` (macOS) / `MobileTaskRow` (mobile) | the single task row: completion circle, title, metadata line, status chips |
 | `.lorvexCalendarTaskSurface(...)` | the one shape a task wears on a calendar — a timed block, an all-day pill, a month chip — on every platform: a faint accent wash inside a hollow dashed outline, where an event wears its calendar's solid fill and leading rail; running or selected firms the outline, done fades it. Blocks and pills also lead with the task's completion circle |
 | `LorvexIconButton` (macOS) | the one icon-only button: a semibold secondary glyph in a 28 pt circular hit area that fills faintly on hover, with its label as tooltip and VoiceOver name; inspector pin and close (`InspectorCloseButton`), pager arrows, and remove buttons in editors |
+| `LorvexIconMenu` (macOS) | the icon-only menu: `LorvexIconButton`'s glyph, 28 pt hit area, and hover, opening a menu through the plain button style with no indicator; the calendar event inspector's More menu (Copy as Text, Share) |
 | `InspectorColumn` + `InspectorPanel` (macOS) | the trailing inspector's content column (top-leading, at most 500 pt wide, shared insets) and the faint grouped card each of its sections sits in; the header's panel draws no card, and inside a popover no panel does. The task and habit inspectors are both built from them |
 | `InspectorProperties` (macOS) | a task's or a habit's set fields as rows (icon, field name, value) with dashed "+ Field" additions; a row opens its field's popover editor, or a native menu for short fixed choices |
 | `InspectorGlyphLabelStyle` (macOS) | the label of an inspector panel's title or reading (a habit's Progress, History and By Weekday titles and its Progress readings, and the task inspector's Checklist and Notes titles): the glyph centered in a column as wide as the widest symbol of its face (`.inspectorPanelTitle` 20 pt, `.inspectorReading` 16 pt), on the title's first baseline, so sibling titles start on one edge whatever their symbols' widths |

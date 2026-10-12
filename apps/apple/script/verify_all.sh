@@ -62,6 +62,7 @@ swift test
 # before cutting a TestFlight build. Keep builds, launches, and packaging out of it.
 python3 -m py_compile \
   script/bump_build.py \
+  script/clean_test_defaults.py \
   script/generate_acknowledgments.py \
   script/generate_apple_platform_manifest.py \
   script/generate_mcp_client_config.py \

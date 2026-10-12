@@ -118,6 +118,14 @@ Notes:
   table is declared backed up or local, and a restore is lossless apart from
   clocks and some timestamps), and `TitleFieldFitTests`.
 
+## Housekeeping
+
+A full test run leaves empty preference files named `<Suite>.<uuid>.plist` in
+`~/Library/Preferences`, because a test's own `UserDefaults` suite cannot erase
+its file. Delete them with `script/clean_test_defaults.py` (`--dry-run` counts
+first); it removes only the files of the suites the tests name, never another
+project's.
+
 ## Headless visual review
 
 Rebuild before capturing and delete old capture folders, so nothing stale is

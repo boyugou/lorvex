@@ -22,9 +22,9 @@ extension UserFacingError {
   /// - a ``TaskLifecycleError`` for a status change the task refuses: starting
   ///   a task whose dependencies are not finished, starting a done, canceled,
   ///   or Someday task, completing a canceled task, canceling a done task,
-  ///   pausing a task that is not in progress, or reopening or completing an
-  ///   occurrence of a repeating task whose next occurrence has already moved
-  ///   on;
+  ///   pausing a task that is not in progress, or reopening, completing, or
+  ///   cancelling an occurrence of a repeating task whose next occurrence has
+  ///   already moved on;
   /// - a ``RecurrenceScheduleError`` for moving an occurrence of a repeating
   ///   task to a day another occurrence of its series already holds;
   /// - a ``HabitReminderError/timeTaken(habitId:time:)`` for a second habit
@@ -71,6 +71,9 @@ extension UserFacingError {
     /// Completing an occurrence of a repeating task again after its next
     /// occurrence has already moved on.
     case completingAdvancedRepeat
+    /// Cancelling an occurrence of a repeating task after its next occurrence
+    /// has already moved on.
+    case cancelingAdvancedRepeat
     /// Moving an occurrence of a repeating task to a day another occurrence of
     /// the same series already holds.
     case repeatDayTaken
@@ -128,6 +131,7 @@ extension UserFacingError {
           .reopenBlockedByLaterOccurrence:
           self = .reopeningAdvancedRepeat
         case .completeBlockedByAdvancedSuccessor: self = .completingAdvancedRepeat
+        case .cancelBlockedByAdvancedSuccessor: self = .cancelingAdvancedRepeat
         }
         return
       }
@@ -236,6 +240,12 @@ extension UserFacingError {
           localized: "error.reason.completing_advanced_repeat",
           defaultValue:
             "This repeating task has already moved on to its next occurrence, so it can’t be completed again.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .cancelingAdvancedRepeat:
+        String(
+          localized: "error.reason.canceling_advanced_repeat",
+          defaultValue:
+            "This repeating task has already moved on to its next occurrence, so it can’t be cancelled.",
           table: "Localizable", bundle: CoreL10n.bundle)
       case .repeatDayTaken:
         String(

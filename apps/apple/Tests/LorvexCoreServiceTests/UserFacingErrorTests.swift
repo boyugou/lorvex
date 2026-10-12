@@ -294,6 +294,7 @@ struct UserFacingErrorTests {
       (.reopenBlockedByOtherGeneration(taskId: id, successorId: id), .reopeningAdvancedRepeat),
       (.reopenBlockedByLaterOccurrence(taskId: id), .reopeningAdvancedRepeat),
       (.completeBlockedByAdvancedSuccessor(taskId: id, successorId: id), .completingAdvancedRepeat),
+      (.cancelBlockedByAdvancedSuccessor(taskId: id, successorId: id), .cancelingAdvancedRepeat),
     ]
     for (error, reason) in cases {
       let classification = UserFacingError.classify(error)
@@ -328,6 +329,12 @@ struct UserFacingErrorTests {
     #expect(
       TaskLifecycleError.completeBlockedByAdvancedSuccessor(taskId: id, successorId: "next")
         .description == "Cannot re-complete task \(id): successor next has already advanced")
+    #expect(
+      TaskLifecycleError.cancelBlockedByAdvancedSuccessor(taskId: id, successorId: "next")
+        .description == "Cannot cancel task \(id): recurrence successor next has already advanced")
+    #expect(
+      UserFacingError.Reason.cancelingAdvancedRepeat.localizedMessage
+        != UserFacingError.Reason.completingAdvancedRepeat.localizedMessage)
   }
 
   @Test("a day another occurrence holds shows the app's own sentence; the detail keeps the date")
@@ -407,7 +414,7 @@ struct UserFacingErrorTests {
       "error.reason.completing_canceled_task", "error.reason.canceling_done_task",
       "error.reason.pausing_unstarted_task", "error.reason.record_too_long_to_sync",
       "error.reason.reopening_advanced_repeat", "error.reason.completing_advanced_repeat",
-      "error.reason.repeat_day_taken",
+      "error.reason.canceling_advanced_repeat", "error.reason.repeat_day_taken",
     ]
     #expect(keys.count == reasons.count, "a reason is missing from this key list")
     let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))

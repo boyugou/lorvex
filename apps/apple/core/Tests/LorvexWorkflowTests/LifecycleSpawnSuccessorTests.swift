@@ -1117,6 +1117,61 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
     }
   }
 
+  func testCancelRejectsASuccessorThatAlreadyAdvancedAsACancel() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try seedTimezonePreference(store.writer, "UTC")
+    try seedTask(
+      store.writer,
+      SeedTask(
+        id: "cancel-parent", title: "Parent",
+        dueDate: "2026-04-01",
+        canonicalOccurrenceDate: "2026-04-01",
+        recurrence: #"{"FREQ":"DAILY","INTERVAL":1}"#,
+        recurrenceGroupId: "cancel-group"))
+    let first = try runCompletion(
+      store, taskId: "cancel-parent", now: "2026-04-01T10:00:00Z",
+      version: "0000000000001_0000_5555555555555555")
+    let successorId = try XCTUnwrap(first.spawnedSuccessorId)
+    _ = try runReopen(
+      store, taskId: "cancel-parent", oldStatus: .completed,
+      now: "2026-04-01T11:00:00Z",
+      version: "0000000000002_0000_5555555555555555")
+    // Another device finished the reserved successor while this parent was open.
+    try store.writer.write { db in
+      let advancedVersion = "0000000000003_0000_5555555555555555"
+      try db.execute(
+        sql:
+          "UPDATE tasks SET status = 'completed', "
+          + "completed_at = '2026-04-02T10:00:00Z', lifecycle_version = ?1, "
+          + "version = ?1 WHERE id = ?2",
+        arguments: [advancedVersion, successorId])
+    }
+
+    XCTAssertThrowsError(
+      try store.writer.write { db in
+        try LifecycleTransitions.applyCancelTransition(
+          db, taskId: tid("cancel-parent"), now: "2026-04-02T12:00:00Z",
+          reminderVersion: "0000000000004_0000_5555555555555555",
+          cancelSeries: false, seriesClearVersion: nil)
+      }
+    ) { error in
+      guard
+        case TaskLifecycleError.cancelBlockedByAdvancedSuccessor(
+          let blockedTaskId, let blockingSuccessorId) = error
+      else {
+        XCTFail("expected cancelBlockedByAdvancedSuccessor, got \(error)")
+        return
+      }
+      XCTAssertEqual(blockedTaskId, "cancel-parent")
+      XCTAssertEqual(blockingSuccessorId, successorId)
+    }
+    // The refused cancel left the parent as it was.
+    let status: String? = try store.writer.read { db in
+      try String.fetchOne(db, sql: "SELECT status FROM tasks WHERE id = 'cancel-parent'")
+    }
+    XCTAssertEqual(status, "open")
+  }
+
   func testSomedaySuccessorIsRewindableAndCancelled() throws {
     let store = try WorkflowTestSupport.freshStore()
     try seedTimezonePreference(store.writer, "UTC")

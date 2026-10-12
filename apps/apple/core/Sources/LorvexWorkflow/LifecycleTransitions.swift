@@ -209,15 +209,22 @@ public enum LifecycleTransitions {
           throw StoreError.staleVersion(entity: "task", id: taskId.asString)
         }
       } else {
-        if let spawn = try handler.spawnRecurrenceSuccessor(
-          db, taskId: taskId, snapshot: snap,
-          activeReminderTimes: activeReminderTimes,
-          now: now, reminderVersion: reminderVersion)
-        {
-          spawnedSuccessorId = spawn.successorId
-          spawnedTagEdges = spawn.copiedTagEdges
-          spawnedChecklistItemIds = spawn.copiedChecklistItemIds
-          spawnedReminderIds = spawn.copiedReminderIds
+        // The spawn reserves the next occurrence; when a finished one already
+        // holds it, the refusal is about this cancel, not about a completion.
+        do {
+          if let spawn = try handler.spawnRecurrenceSuccessor(
+            db, taskId: taskId, snapshot: snap,
+            activeReminderTimes: activeReminderTimes,
+            now: now, reminderVersion: reminderVersion)
+          {
+            spawnedSuccessorId = spawn.successorId
+            spawnedTagEdges = spawn.copiedTagEdges
+            spawnedChecklistItemIds = spawn.copiedChecklistItemIds
+            spawnedReminderIds = spawn.copiedReminderIds
+          }
+        } catch TaskLifecycleError.completeBlockedByAdvancedSuccessor(let blockedId, let successorId) {
+          throw TaskLifecycleError.cancelBlockedByAdvancedSuccessor(
+            taskId: blockedId, successorId: successorId)
         }
       }
     }

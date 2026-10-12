@@ -12111,6 +12111,192 @@
         }
       }
     },
+    "error.reason.canceling_advanced_repeat": {
+      "comment": "Alert shown when a person cancels an occurrence of a repeating task whose next occurrence has already moved on.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه المهمة المتكررة انتقلت بالفعل إلى تكرارها التالي، لذا لا يمكن إلغاؤها."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই পুনরাবৃত্ত টাস্কটি ইতিমধ্যেই পরবর্তী বারে চলে গেছে, তাই এটি বাতিল করা যাবে না।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese sich wiederholende Aufgabe ist bereits bei der nächsten Wiederholung angekommen und kann deshalb nicht abgebrochen werden."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η επαναλαμβανόμενη εργασία έχει ήδη περάσει στην επόμενη επανάληψή της, επομένως δεν μπορεί να ακυρωθεί."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This repeating task has already moved on to its next occurrence, so it can’t be cancelled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea recurrente ya ha pasado a su siguiente repetición, así que no se puede cancelar."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این کار تکرارشونده از قبل به تکرار بعدی خود رفته است، بنابراین نمی‌توان آن را لغو کرد."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche récurrente est déjà passée à son occurrence suivante et ne peut donc pas être annulée."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המשימה החוזרת הזו כבר עברה למופע הבא שלה, ולכן אי אפשר לבטל אותה."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह दोहराया जाने वाला कार्य पहले ही अगली बार के लिए आगे बढ़ चुका है, इसलिए इसे रद्द नहीं किया जा सकता।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas berulang ini sudah berlanjut ke kejadian berikutnya, sehingga tidak dapat dibatalkan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività ricorrente è già passata alla sua occorrenza successiva, quindi non può essere annullata."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この繰り返しタスクはすでに次回分に進んでいるため、キャンセルできません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 반복 할 일은 이미 다음 반복으로 넘어갔기 때문에 취소할 수 없습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "हे पुनरावृत्ती होणारे कार्य आधीच पुढच्या वेळेकडे सरकले आहे, त्यामुळे ते रद्द करता येत नाही."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas berulang ini sudah beralih ke kejadian seterusnya, jadi tidak boleh dibatalkan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze terugkerende taak is al doorgegaan naar de volgende herhaling en kan daarom niet worden geannuleerd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie cykliczne przeszło już do kolejnego wystąpienia, więc nie można go anulować."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa recorrente já passou para a próxima ocorrência, então não pode ser cancelada."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină repetitivă a trecut deja la următoarea apariție, deci nu poate fi anulată."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта повторяющаяся задача уже перешла к следующему повторению, поэтому её нельзя отменить."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் நிகழும் இந்தப் பணி ஏற்கெனவே அடுத்த நேர்வுக்குச் சென்றுவிட்டது, எனவே அதை ரத்துசெய்ய முடியாது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృతమయ్యే ఈ టాస్క్ ఇప్పటికే తదుపరి సందర్భానికి వెళ్ళిపోయింది, కాబట్టి దాన్ని రద్దు చేయలేరు."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานทำประจำนี้ไปถึงครั้งถัดไปแล้ว จึงยกเลิกไม่ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yinelenen görev zaten sonraki yinelemeye geçti, bu yüzden iptal edilemez."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це повторюване завдання вже перейшло до наступного повторення, тому його не можна скасувати."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ دہرایا جانے والا کام پہلے ہی اگلی تکرار پر جا چکا ہے، اس لیے اسے منسوخ نہیں کیا جا سکتا۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ lặp lại này đã chuyển sang lần lặp tiếp theo, nên không thể hủy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个重复任务已经进入下一次，所以无法取消。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個重複任務已經進入下一次，所以無法取消。"
+          }
+        }
+      }
+    },
     "error.reason.canceling_done_task": {
       "comment": "Alert shown when a person cancels a task that is already done.",
       "extractionState": "manual",

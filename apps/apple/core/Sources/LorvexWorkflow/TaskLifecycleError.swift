@@ -41,6 +41,11 @@ public enum TaskLifecycleError: Error, Equatable, Sendable, CustomStringConverti
   /// `successorId` that its earlier completion generated has already been
   /// finished, and completing `taskId` would fork the series.
   case completeBlockedByAdvancedSuccessor(taskId: String, successorId: String)
+  /// Cancelling `taskId`, an occurrence of a repeating task, was refused
+  /// because the next occurrence `successorId` that cancelling it would
+  /// reserve has already been finished, and cancelling `taskId` would fork the
+  /// series.
+  case cancelBlockedByAdvancedSuccessor(taskId: String, successorId: String)
 
   public var description: String {
     switch self {
@@ -61,6 +66,8 @@ public enum TaskLifecycleError: Error, Equatable, Sendable, CustomStringConverti
       return "Cannot reopen task \(taskId): a later recurrence descendant is still active"
     case let .completeBlockedByAdvancedSuccessor(taskId, successorId):
       return "Cannot re-complete task \(taskId): successor \(successorId) has already advanced"
+    case let .cancelBlockedByAdvancedSuccessor(taskId, successorId):
+      return "Cannot cancel task \(taskId): recurrence successor \(successorId) has already advanced"
     }
   }
 

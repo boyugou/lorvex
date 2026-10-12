@@ -19,6 +19,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   proof on TestFlight builds, including the iOS sync pass that runs inside a
   background task before the database suspends, and silent-push wakes.
 - watchOS / Widgets design audits (need on-device).
+- Direct-download DMG: the only release on the releases page is 1.0.0 (59),
+  58 builds and sixteen languages behind the current build. A new release
+  needs Developer ID provisioning profiles for the three current bundle
+  identifiers, a notarytool credential profile, and a marketing version
+  above 1.0.0, which `script/bump_build.py` does not change. The policy is
+  `apps/apple/docs/release.md`, "GitHub Releases".
 
 - Open UI/UX work, each verified against the code but not yet done:
   - iPhone habit rows and the habit detail's Complete Today button judge

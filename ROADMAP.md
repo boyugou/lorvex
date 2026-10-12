@@ -56,8 +56,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     10 (`LORVEX_SYNC_SIM_SEEDS=150 LORVEX_SYNC_SIM_FIRST_SEED=1000`). The ones
     read so far end with a `task_tag` edge present on one replica and absent on
     the other, or held under the sibling edge's clock, in runs where two
-    replicas created tags concurrently; a trace of seed 1018 points at a
-    deferred edge drained with a wrong row clock. Not yet isolated.
+    replicas created tags concurrently. Seed 1018 reproduces alone in half a
+    second (ids differ per run, the divergence does not): one replica holds
+    the edges of the same-named loser tag folded onto the winner (`EdgeAliasFold`),
+    the other lacks a loser edge entirely and keeps a winner edge at the lower
+    clock, as if it never folded. Not yet isolated.
   - Mac performance: in the debug test build, completing a task awaits about
     40 ms at 100 tasks, 150 ms at 1000, and 430 ms at 3000
     (`ZZMutationLatencyProbeTests`; the release figure is unmeasured, because

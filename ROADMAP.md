@@ -42,8 +42,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     "[pl,de] 15h" reads as 900 minutes; Vietnamese "3 giờ 15
     phút" reads as 195 minutes; the Romanian reader drops English "in 15 min";
     a parenthesized phrase leaves "( )" in Turkish, Thai, and Greek titles.
-  - Two lifecycle refusals are English-only (`UserFacingError+Reason.swift`).
-    Batch reopen is all-or-nothing.
+  - Batch reopen is all-or-nothing. Every lifecycle refusal a person can reach
+    is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
+    core's English (a start on an already open task, a finished-to-finished
+    transition that is not complete or cancel) are not reachable from the UI.
   - A task repeating on the 29th or 30th skips February; clamping to the last
     day changes the stored rule shape and is a product decision.
   - Busy flags still span local fan-out in `mutateHabitReminder`, iOS sheet

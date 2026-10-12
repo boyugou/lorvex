@@ -35,7 +35,7 @@ let package = Package(
         // GRDB.swift — SQLite over a typed, value-oriented Swift API. Powers
         // the LorvexStore layer; the rest of the core (LorvexDomain) stays
         // dependency-free.
-        .package(url: "https://github.com/groue/GRDB.swift.git", from: "6.0.0")
+        .package(url: "https://github.com/groue/GRDB.swift.git", from: "7.0.0")
     ],
     targets: [
         .target(name: "LorvexDomain"),

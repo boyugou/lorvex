@@ -202,13 +202,12 @@ public final class LorvexStore: @unchecked Sendable {
     var config = Configuration()
     config.foreignKeysEnabled = true
     config.busyMode = .timeout(5)
-    // Begin every `write {}` block with BEGIN IMMEDIATE rather than the GRDB
-    // default DEFERRED. A deferred block reads first (taking a WAL snapshot)
-    // then writes, so a commit by the MCP host in between returns
-    // SQLITE_BUSY_SNAPSHOT immediately — the busy handler can't help a stale
-    // snapshot. Acquiring the write lock up front lets the busy timeout absorb
-    // the contention, the product's primary write pattern (app + assistant).
-    config.defaultTransactionKind = .immediate
+    // GRDB begins every `write {}` block with BEGIN IMMEDIATE (a deferred block
+    // reads first, taking a WAL snapshot, then writes, so a commit by the MCP
+    // host in between returns SQLITE_BUSY_SNAPSHOT immediately and the busy
+    // handler cannot help). Taking the write lock up front lets the busy timeout
+    // absorb the contention, the product's primary write pattern (app +
+    // assistant). GRDB 7 manages that kind itself; there is nothing to set.
     // This file lives in the shared App Group container, and iOS terminates a
     // process (`0xdead10cc`) that is suspended while holding a lock on such a
     // file. With BEGIN IMMEDIATE taking the write lock up front and a 5-second
@@ -247,7 +246,6 @@ public final class LorvexStore: @unchecked Sendable {
     var config = Configuration()
     config.foreignKeysEnabled = true
     config.busyMode = .timeout(5)
-    config.defaultTransactionKind = .immediate
     registerSearchFunctions(in: &config)
     let queue = try DatabaseQueue(configuration: config)
     try applySchema(

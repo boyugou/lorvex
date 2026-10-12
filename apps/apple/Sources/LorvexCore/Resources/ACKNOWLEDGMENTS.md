@@ -31,7 +31,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-## GRDB.swift 6.29.3
+## GRDB.swift 7.11.1
 
 - Repository: https://github.com/groue/GRDB.swift.git
 - License: MIT

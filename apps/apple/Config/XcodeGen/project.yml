@@ -33,7 +33,7 @@ packages:
   # (DatabaseWriter etc.). Pinned to match core/Package.swift.
   GRDB:
     url: https://github.com/groue/GRDB.swift.git
-    from: 6.0.0
+    from: 7.0.0
   # swift-markdown — the AST parser backing LorvexMarkdownUI's renderer. Pinned
   # to match Package.swift.
   SwiftMarkdown:

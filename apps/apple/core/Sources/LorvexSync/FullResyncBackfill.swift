@@ -373,6 +373,72 @@ extension Outbox {
     }
   }
 
+  // MARK: - Children of a parent whose delete lost
+
+  /// Re-emits, at fresh dominating versions, the live children a parent keeps
+  /// after an inbound delete of it lost to a newer local version. Peers that
+  /// applied that delete cascaded the children away, and the parent upsert that
+  /// outlives it reaches them without those rows; re-asserting each child (a
+  /// habit's completions and skips, a task's checklist items) lets them
+  /// converge. A replay at the stored version would be a no-op, because the
+  /// outbox already carries that version, so each child takes a new one.
+  ///
+  /// - Parameter mintVersion: a version that dominates its argument, the
+  ///   child's stored version.
+  public static func reassertChildrenAfterLostDelete(
+    _ db: Database, parentKind: EntityKind, parentId: String,
+    mintVersion: (Hlc?) -> String
+  ) throws {
+    let deviceId = try SyncCheckpoints.getOrCreateDeviceId(db)
+    func reassert(
+      _ kind: EntityKind, entityId: String, stored: String,
+      payload: () throws -> JSONValue?
+    ) throws {
+      guard let payload = try payload() else { return }
+      let floor = try? Hlc.parseCanonical(stored)
+      try OutboxEnqueue.enqueuePayloadUpsert(
+        db, entityType: kind.asString, entityId: entityId, payload: payload,
+        context: OutboxWriteContext(version: mintVersion(floor), deviceId: deviceId))
+    }
+    switch parentKind {
+    case .habit:
+      for row in try Row.fetchAll(
+        db,
+        sql: "SELECT completed_date AS d, version FROM habit_completions WHERE habit_id = ?",
+        arguments: [parentId])
+      {
+        let date: String = row["d"]
+        try reassert(.habitCompletion, entityId: "\(parentId):\(date)", stored: row["version"]) {
+          try PayloadLoaders.loadHabitCompletionSyncPayload(
+            db, habitId: parentId, completedDate: date)
+        }
+      }
+      for row in try Row.fetchAll(
+        db,
+        sql: "SELECT skipped_date AS d, version FROM habit_skips WHERE habit_id = ?",
+        arguments: [parentId])
+      {
+        let date: String = row["d"]
+        try reassert(.habitSkip, entityId: "\(parentId):\(date)", stored: row["version"]) {
+          try PayloadLoaders.loadHabitSkipSyncPayload(db, habitId: parentId, skippedDate: date)
+        }
+      }
+    case .task:
+      for row in try Row.fetchAll(
+        db, sql: "SELECT id, version FROM task_checklist_items WHERE task_id = ?",
+        arguments: [parentId])
+      {
+        let itemId: String = row["id"]
+        try reassert(.taskChecklistItem, entityId: itemId, stored: row["version"]) {
+          try OutboxEnqueue.readEntityPayloadSnapshot(
+            db, entityType: EntityKind.taskChecklistItem.asString, entityId: itemId)
+        }
+      }
+    default:
+      return
+    }
+  }
+
   // MARK: - Per-entity isolation
 
   /// Re-enqueue one entity at `version`, isolated in a SAVEPOINT so a single

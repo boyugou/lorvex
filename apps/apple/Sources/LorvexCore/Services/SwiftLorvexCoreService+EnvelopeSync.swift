@@ -149,6 +149,18 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
     return upserts + deletes + redirects + aliasSourceDeletes
   }
 
+  /// Whether a habit or task row with this id exists on this device.
+  private static func parentIsLive(_ db: Database, kind: EntityKind, id: String) throws -> Bool {
+    let table: String
+    switch kind {
+    case .habit: table = "habits"
+    case .task: table = "tasks"
+    default: return false
+    }
+    return try Bool.fetchOne(
+      db, sql: "SELECT EXISTS (SELECT 1 FROM \(table) WHERE id = ?)", arguments: [id]) ?? false
+  }
+
   /// `"<type>|<id>"` of the entity an `entity_redirect` envelope folds away, read
   /// from its payload; nil when the payload does not name one.
   private static func redirectSourceKey(_ envelope: SyncEnvelope) -> String? {
@@ -315,6 +327,17 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
             try FutureRecordHold.reconcileTerminalEnvelope(
               db, envelope: envelope, outcome: outcome)
             skipped += 1
+            // A delete that lost to this device's newer row leaves the parent
+            // live here with its children, while peers that applied the delete
+            // dropped them: re-assert them so the parent upsert that outlives the
+            // delete reaches those peers with its children.
+            if envelope.operation == .delete,
+              try Self.parentIsLive(db, kind: envelope.entityType, id: envelope.entityId)
+            {
+              try Outbox.reassertChildrenAfterLostDelete(
+                db, parentKind: envelope.entityType, parentId: envelope.entityId,
+                mintVersion: { floor in hlc.nextVersionString(dominating: floor) })
+            }
           case .deferred(let reason):
             do {
               try PendingInboxDrain.enqueueDeferred(db, envelope: envelope, reason: reason)

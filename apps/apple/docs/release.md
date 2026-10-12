@@ -432,8 +432,18 @@ Check these at the start of a maintenance session. Dates are absolute.
   advisory GHSA-qcc5-f287-vgmq in `NIOWebSocket` is fixed in 2.101.0; no shipped
   binary links that decoder), swift-markdown and swift-cmark to 0.9.0,
   swift-collections to 1.7.2, swift-log to 1.16.1, swift-system to 1.8.1,
-  swift-atomics to 1.3.1, and eventsource to 1.5.1. GRDB stays on 6.29.3, the
-  last 6.x release; 7.x is a separate migration.
+  swift-atomics to 1.3.1, and eventsource to 1.5.1. swift-collections went to
+  1.7.3 later that day. GRDB stays on 6.29.3, the last 6.x release. A trial of
+  7.11.1 on 2026-10-12 (a scratch worktree, never merged) built and passed the
+  whole suite after two changes: dropping the two
+  `config.defaultTransactionKind = .immediate` lines in `LorvexStore.swift`
+  (GRDB 7 manages the kind itself) and returning plain values, not a `Row`,
+  out of the two database reads in `SwiftLorvexCoreServiceToolSweepFixTests`
+  (that part is already in the tree and works on 6 as well). It was not
+  adopted because it changes the transaction behavior under the shared App
+  Group store with no advisory or fix to gain, and the real-device lock
+  behavior cannot be exercised headlessly; adopt it with a TestFlight build
+  that is watched for lock errors.
 - **Validation of record.** Hosted CI is paused (macOS minutes are not
   available), so `script/verify_swift.sh`, `script/verify_static_gates.sh`, and
   the release scripts are the gate before every push and release.

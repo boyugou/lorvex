@@ -535,7 +535,7 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
     let list = try await service.createList(
       name: "Project", description: "Original", color: nil, icon: nil, aiNotes: nil)
     let before = try await store.writer.read { db in
-      try Row.fetchOne(
+      let row = try Row.fetchOne(
         db,
         sql: """
           SELECT
@@ -545,6 +545,9 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
             (SELECT value FROM local_counters WHERE name = 'local_change_seq') AS local_seq
           """,
         arguments: [list.id])!
+      return ListWriteCounters(
+        version: row["version"], outboxCount: row["outbox_count"],
+        changelogCount: row["changelog_count"], localSeq: row["local_seq"])
     }
 
     let result = try await service.updateList(
@@ -553,7 +556,7 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
     XCTAssertEqual(result.id, list.id)
     XCTAssertEqual(result.name, "Project")
     let after = try await store.writer.read { db in
-      try Row.fetchOne(
+      let row = try Row.fetchOne(
         db,
         sql: """
           SELECT
@@ -563,11 +566,11 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
             (SELECT value FROM local_counters WHERE name = 'local_change_seq') AS local_seq
           """,
         arguments: [list.id])!
+      return ListWriteCounters(
+        version: row["version"], outboxCount: row["outbox_count"],
+        changelogCount: row["changelog_count"], localSeq: row["local_seq"])
     }
-    XCTAssertEqual(after["version"] as String, before["version"] as String)
-    XCTAssertEqual(after["outbox_count"] as Int64, before["outbox_count"] as Int64)
-    XCTAssertEqual(after["changelog_count"] as Int64, before["changelog_count"] as Int64)
-    XCTAssertEqual(after["local_seq"] as Int64, before["local_seq"] as Int64)
+    XCTAssertEqual(after, before)
   }
 
   func testSnapshotsExposeRealLocalChangeSequence() async throws {
@@ -785,4 +788,13 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
     XCTAssertEqual(tombstoneVersion, deleteVersion)
   }
 
+}
+
+/// What a no-op list update must leave untouched, read inside a database access
+/// (a `Row` cannot leave one).
+private struct ListWriteCounters: Equatable, Sendable {
+  let version: String
+  let outboxCount: Int64
+  let changelogCount: Int64
+  let localSeq: Int64
 }

@@ -85,6 +85,10 @@ struct MacAccessibilityStructureTests {
     #expect(lists.contains("spokenLabel: list.spokenSummary"))
     let catalog = try Self.source("Views/ListCatalogRow.swift")
     #expect(catalog.contains(".accessibilityLabel(list.spokenSummary)"))
+    // The card's Edit and Delete buttons appear on hover only, so VoiceOver gets
+    // them as actions.
+    #expect(Self.follows("list_row.edit.action", ".accessibilityActions {", in: catalog, within: 250))
+    #expect(Self.follows("list_row.delete.action", ".accessibilityActions {", in: catalog, within: 800))
   }
 
   @Test("the Settings sidebar hides its symbols and sets its groups apart by space, with no group titles")

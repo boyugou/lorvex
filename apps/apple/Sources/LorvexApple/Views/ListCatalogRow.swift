@@ -76,6 +76,17 @@ struct ListCatalogRow: View {
     // users can activate it, mirroring `HabitMomentumCard`.
     .accessibilityAddTraits(.isButton)
     .accessibilityAction { select() }
+    // The hover-only Edit and Delete buttons are not in the accessibility tree,
+    // so VoiceOver reaches the same commands here (the Inbox offers Edit only).
+    .accessibilityActions {
+      Button(String(localized: "list_row.edit.action", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle), action: edit)
+      if !list.isInbox {
+        Button(String(localized: "list_row.archive.action", defaultValue: "Archive List", table: "Localizable", bundle: LorvexL10n.bundle), action: archive)
+        Button(String(localized: "list_row.delete.action", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle)) {
+          isShowingDeleteConfirmation = true
+        }
+      }
+    }
     .accessibilityIdentifier("list.row.\(list.id)")
     .contextMenu {
       Button(String(localized: "list_row.move_up", defaultValue: "Move Up", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "chevron.up") {

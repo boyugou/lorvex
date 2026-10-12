@@ -59,9 +59,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Mac keyboard: list cards show Edit and Delete only on hover, and the memory
     list and plan rail have no arrow-key traversal. Mac Today's arrow keys skip
     event rows.
-  - Polish: Mac icon-picker labels show raw SF Symbol names and search only
-    English names; Settings > Activity shows English changelog summaries; the
-    Settings group "Operations" is a vague name in every language; German
+  - Polish: Settings > Activity shows English changelog summaries; German
     Memory sheet titles truncate at 375 pt; the Urdu Today medium widget shows
     one row.
 - Coverage not yet captured: the largest accessibility text sizes in languages

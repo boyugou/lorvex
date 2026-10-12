@@ -104,6 +104,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     "Neuer Gedächtniseintrag" wraps to two lines in the title bar's three-step
     fit, so only a 375 pt device could still show it; none is installed here); the Urdu Today medium widget shows
     one row.
+- Russian at the largest accessibility text size (iPhone, 2026-10-12) was
+  captured for Today, Tasks, Habits, and the event detail: legible, hyphenated
+  by the system, nothing overlapping.
 - German at the largest accessibility text size (iPhone, 2026-10-12) was
   captured for Today, Calendar, Tasks, Habits, and the event detail. One rough
   edge remains, only at that size: the Habits large title truncates
@@ -113,7 +116,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   Habits, Memory), and the iPhone Habits, Progress, and Lock Screen widgets in
   German and Arabic (mirrored, Arabic-Indic digits).
 - Coverage not yet captured: the largest accessibility text sizes in languages
-  other than English, Chinese, and German, iPad routes other than those above
+  other than English, Chinese, German, and Russian, iPad routes other than those above
   and Review, the Habits, Progress, and Lock Screen widgets in the other
   languages, Mac widgets and watch
   complications in other languages, and the MCP fuzz families for checklist

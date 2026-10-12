@@ -69,7 +69,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     delete that loses to a newer local habit or task now re-emits that parent's
     surviving children at fresh versions (`reassertChildrenAfterLostDelete`):
     checklist items no longer diverge in the soak, and 150 seeds from 1000 fell
-    from 10 to 3. A habit completion still diverged once in 300 seeds, and a
+    from 10 to 3. A habit completion still diverges in seed 1030's shape: with
+    record-slot coalescing the parent's newer upsert replaces the delete in the
+    log, so the replica that authored the upsert never sees the delete to lose
+    to it and re-emits nothing, while the others cascaded the child and then
+    apply the resurrecting upsert (fixing it needs the upsert to carry or
+    request its children). A
     child that reaches a replica before the upsert that resurrects its parent is
     still discarded (keeping it parked leaves entries that never resolve when
     the parent stays deleted). The runs are not bit-for-bit repeatable (ids and

@@ -225,4 +225,37 @@ final class RedirectApplyOrderConvergenceTests: XCTestCase {
     }
     XCTAssertEqual(edgeTagIds, [winner], "the edge to the merged-away tag now names the winner")
   }
+
+  /// The same pair when the winner has not reached this replica yet: the redirect
+  /// parks until the winner arrives, and the loser's delete must park with it,
+  /// or it cascades the edge away with nothing left to fold when the redirect
+  /// finally applies.
+  func testLoserDeleteParksWithItsRedirectUntilTheWinnerArrives() throws {
+    let service = try makeService()
+    let (winner, loser, taskX) = (self.winner, self.loser, self.taskX)
+    let (vLoser, vWinner, vDelete, vEdge) = (self.vLoser, self.vWinner, self.vDelete, self.vEdge)
+    try service.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO tasks (id, title, status, list_id, version, created_at, updated_at, defer_count)
+          VALUES (?, 'X', 'open', 'inbox', ?, '2026-04-01T00:00:00.000Z', '2026-04-01T00:00:00.000Z', 0)
+          """,
+        arguments: [taskX, vLoser])
+    }
+    _ = try service.applyInbound([try tagUpsertEnv(loser, vLoser, name: "Other")], undecodable: 0)
+    _ = try service.applyInbound([try taskTagUpsertEnv(taskX, loser, vEdge)], undecodable: 0)
+
+    let parked = try service.applyInbound(
+      [
+        tagDeleteEnv(loser, vDelete),
+        try entityRedirectEnv(sourceId: loser, targetId: winner, version: vDelete),
+      ], undecodable: 0)
+    XCTAssertEqual(parked.deferred, 2, "the redirect and the loser's delete both park behind the missing winner")
+    _ = try service.applyInbound([try tagUpsertEnv(winner, vWinner)], undecodable: 0)
+
+    let edgeTagIds = try service.read { db in
+      try String.fetchAll(db, sql: "SELECT tag_id FROM task_tags WHERE task_id = ?", arguments: [taskX])
+    }
+    XCTAssertEqual(edgeTagIds, [winner], "the edge reaches the winner once the winner arrives")
+  }
 }

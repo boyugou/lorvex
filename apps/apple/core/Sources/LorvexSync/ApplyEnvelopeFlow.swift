@@ -345,6 +345,29 @@ enum ApplyLwwGate {
       // remoteWins — fall through to apply.
     }
 
+    // A tag's delete waits for its own parked redirect. Applied first, the delete
+    // would cascade away the task edges the redirect folds onto the winner once
+    // the winner arrives; the redirect parks while its target is missing, and
+    // this delete parks behind it on the same missing target.
+    if envelope.operation == .delete, envelope.entityType == .tag,
+      let parked = try Row.fetchOne(
+        db,
+        sql: """
+          SELECT missing_entity_type, missing_entity_id FROM sync_pending_inbox
+           WHERE envelope_entity_type = ?1 AND envelope_entity_id = ?2
+             AND missing_entity_type IS NOT NULL AND missing_entity_id IS NOT NULL
+          """,
+        arguments: [
+          EntityName.entityRedirect,
+          EntityRedirect.wireEntityId(sourceType: .tag, sourceId: envelope.entityId),
+        ]),
+      let missingTypeRaw: String = parked["missing_entity_type"],
+      let missingType = EntityKind.parse(missingTypeRaw),
+      let missingId: String = parked["missing_entity_id"]
+    {
+      return .deferred(reason: .missingDependency(entityType: missingType, entityId: missingId))
+    }
+
     // FK dependency preflight for upserts (after LWW so a stale envelope is
     // rejected before deferring on a missing dependency).
     if envelope.operation == .upsert {

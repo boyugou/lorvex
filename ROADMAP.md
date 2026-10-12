@@ -53,10 +53,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     delete cascading a newer live edge before a resurrecting upsert; alias
     deletes reordered before their redirects; no `habit_completion` fold. A
     soak (`LORVEX_SYNC_SIM_SEEDS=300 LORVEX_SYNC_SIM_FIRST_SEED=2000`, 120 steps,
-    the log transport) still diverges on about 10 seeds in 300, after a batch
-    that carried a tag's redirect and its death together stopped cascading the
-    tag's edges away before the fold (`orderedForApply`). The rest are other
-    classes: a `task_tag` edge held by one replica only where one replica
+    the log transport) still diverges on about 7 seeds in 300, after a tag's
+    delete stopped cascading its edges away before its redirect's fold, in the
+    same batch (`orderedForApply`) and while the redirect waits for its winner
+    (`gateLwwAndFk`). The rest are other classes: a `task_tag` edge held by one replica only where one replica
     authored the alias and the edge under the same clock value (seed 2000), a
     lost `task_checklist_item`, and a `habit_completion` tombstone with a
     different death version. The runs are not bit-for-bit repeatable (ids and

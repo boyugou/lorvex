@@ -3253,9 +3253,11 @@ than normal after the task's title.
   Apple Watch a line under the actions says why, and on the Mac the button's
   tooltip does. Finishing the last of them makes Start available again.
 - **Mobile Today habits:** When you have habits, the iPhone and iPad Today tab
-  shows them as rings. Tap a ring to complete the habit for today or tap a
-  completed one to reset it; touch and hold one to open its details or to skip
-  it for today. A skipped habit's ring is drawn as dots with a skip mark, and
+  shows them as rings. Tap a ring to check the habit in for today, or tap a
+  completed once-a-day habit to clear it; a habit counted several times a day
+  adds one per tap until its count is met, then a tap does nothing, so a tap
+  never wipes the tally. Touch and hold one to open its details, to reset
+  today's check-ins, or to skip it for today. A skipped habit's ring is drawn as dots with a skip mark, and
   its name is quiet. Creating habits, events, and lists lives on their own
   tabs, not in Today.
 - **Mobile Lists:** On iPhone and iPad, lists live in the **Tasks** tab. The

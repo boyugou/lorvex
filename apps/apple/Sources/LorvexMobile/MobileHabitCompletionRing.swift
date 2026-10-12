@@ -2,8 +2,11 @@ import LorvexCore
 import SwiftUI
 
 /// The habit progress ring rendered as a real completion control: tapping it
-/// logs today's completion (or resets it once the target is met) with a spring
-/// pop and a success haptic, while the ring fills toward its target. Plain so it
+/// checks the habit in with a spring pop and a success haptic, while the ring
+/// fills toward its target. A habit kept once a day toggles; one counted several
+/// times a day adds one per tap until its count is met, after which a tap does
+/// nothing, so a tap never wipes the day's tally (Reset Today in the menus
+/// clears it). Plain so it
 /// owns only its own hit area — the rest of the row still selects/opens the
 /// habit. Shared by the compact habit row, the regular/iPad catalog row, and
 /// Today's habit strip so all give the same completion moment.
@@ -45,14 +48,9 @@ struct MobileHabitCompletionRing: View {
     basis == .period ? habit.isCompleteForPeriod : habit.isCompleteToday
   }
 
-  /// What a tap does. The day basis completes the habit, or resets it once the
-  /// day's count is met.
-  private var checkIn: LorvexHabitCheckIn {
-    switch basis {
-    case .period: habit.periodCheckIn
-    case .day: habit.isCompleteToday ? .uncomplete : .complete
-    }
-  }
+  /// What a tap does, by the shared rule (``LorvexHabitCheckIn``) on the ring's
+  /// basis.
+  private var checkIn: LorvexHabitCheckIn { LorvexHabitCheckIn.action(for: habit, basis: basis) }
 
   var body: some View {
     Button(action: trigger) {

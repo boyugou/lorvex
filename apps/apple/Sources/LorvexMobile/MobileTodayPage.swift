@@ -420,11 +420,20 @@ struct MobileTodayPage: View {
       .accessibilityHidden(true)
   }
 
-  /// A habit's long-press menu: its details, and Skip Today (Undo Skip once
-  /// skipped) while today holds no check-in.
+  /// A habit's long-press menu: its details, Reset Today while today holds a
+  /// check-in, and Skip Today (Undo Skip once skipped) while today holds none.
   @ViewBuilder
   private func habitMenu(_ habit: LorvexHabit) -> some View {
     Button(MobileTodayCalmCopy.openDetails, systemImage: "pencil") { editHabit(habit) }
+    if habit.offersResetToday {
+      Button(
+        String(localized: "habits.detail.reset", defaultValue: "Reset Today", table: "Localizable", bundle: MobileL10n.bundle),
+        systemImage: "arrow.counterclockwise"
+      ) {
+        Task { await store.uncompleteHabit(habit) }
+      }
+      .disabled(store.isMutatingHabit)
+    }
     if let action = LorvexHabitSkip.action(for: habit) {
       Button(
         MobileHabitSkipCopy.title(for: action),

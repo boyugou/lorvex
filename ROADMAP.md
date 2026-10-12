@@ -58,7 +58,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     same batch (`orderedForApply`) and while the redirect waits for its winner
     (`gateLwwAndFk`). The rest are other classes: a `task_tag` edge held by one replica only where one replica
     authored the alias and the edge under the same clock value (seed 2000), a
-    lost `task_checklist_item`, and a `habit_completion` tombstone with a
+    lost `task_checklist_item` (seed 1037: a child authored after its task's
+    hard delete is discarded as `fk_unresolved` before the task upsert that
+    resurrects the task arrives; keeping such children parked leaves entries
+    that never resolve when the task stays deleted, so 104 of 300 seeds then
+    end with pending entries, and the change was backed out), and a `habit_completion` tombstone with a
     different death version. The runs are not bit-for-bit repeatable (ids and
     clocks come from the wall clock), so a seed names a shape, not an exact run.
   - Mac performance: in the debug test build, completing a task awaits about

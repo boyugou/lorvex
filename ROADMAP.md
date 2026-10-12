@@ -108,9 +108,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   captured for Today, Calendar, Tasks, Habits, and the event detail. Two rough
   edges remain, both only at that size: the Habits large title truncates
   ("Gewohnheit…") and a streak chip breaks inside its compound ("12-Tag / e-Serie").
+- Also captured and clean on 2026-10-12: iPad in German (Today, event detail,
+  Habits, Memory), and the iPhone Habits, Progress, and Lock Screen widgets in
+  German and Arabic (mirrored, Arabic-Indic digits).
 - Coverage not yet captured: the largest accessibility text sizes in languages
-  other than English, Chinese, and German, iPad routes other than Review, the Habits,
-  Progress, and Lock Screen widgets in most languages, Mac widgets and watch
+  other than English, Chinese, and German, iPad routes other than those above
+  and Review, the Habits, Progress, and Lock Screen widgets in the other
+  languages, Mac widgets and watch
   complications in other languages, and the MCP fuzz families for checklist
   text, trash and restore, batch tools, and recurring `until` and `count` edits.
 - Needs a device or a person: real drags and resizes (including the Tasks

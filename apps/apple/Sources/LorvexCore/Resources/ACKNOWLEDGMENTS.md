@@ -235,7 +235,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## swift-collections 1.7.2
+## swift-collections 1.7.3
 
 - Repository: https://github.com/apple/swift-collections.git
 - License: Apache-2.0

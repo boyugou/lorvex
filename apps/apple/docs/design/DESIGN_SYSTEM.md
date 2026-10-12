@@ -77,6 +77,13 @@ Rules that follow from the table:
   whose period earlier days met and which holds no check-in today reads done
   and offers no check-in there.
 
+- A habit counted two to twelve times a day draws its check-in ring as one arc
+  per check-in (`LorvexRingSegments`, with the habit's rule in
+  `LorvexHabit.ringSegments`), on every surface, so the count reads without a
+  number: two of three arcs filled is two of three done. Any other count is one
+  continuous arc, and so is a ring that stands for a week or a month, which
+  counts days.
+
 - A streak reads "12-day streak" where nothing else names it (a card, a row's
   milestone line) and "12 days" under a "Current Streak" or "Best Streak"
   label, which already carries the noun. Both come from the habit's own

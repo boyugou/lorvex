@@ -3934,6 +3934,13 @@ A calendar event, a Memory entry, or a habit card that holds the keyboard focus
 (Tab reaches them with Full Keyboard Access) asks to delete itself on ⌫, with
 the same question as its context menu's Delete.
 
+In a task list, ↑ and ↓ select the row above or below and open it in Task
+Detail, Home and End jump to the first and last row, and holding ⇧ grows the
+selection from where it started. On Today the same keys also stop on the
+schedule's calendar events and open them in the inspector. In the Memory list
+and the Calendar's Unplanned Tasks panel, ↑, ↓, Home, and End move the focus
+between rows, and Return or Space opens the focused one.
+
 ### Quick-Add Field (macOS)
 
 The inline quick-add sits under today's tasks on Today and at the top of the

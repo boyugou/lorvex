@@ -9,11 +9,11 @@
 /// replicate across the sync boundary.
 public enum ListValidation {
 
-  /// Sanitize and validate a required list name: non-empty after stripping
-  /// invisibles, within ``ValidationLimits/maxTitleLength`` codepoints.
+  /// Sanitize and validate a required list name: one line (line breaks fold to
+  /// a space), non-empty after stripping invisibles, within
+  /// ``ValidationLimits/maxTitleLength`` codepoints.
   public static func normalizeName(_ raw: String) throws -> String {
-    let trimmed = UnicodeHygiene.sanitizeUserText(raw)
-      .trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmed = UnicodeHygiene.sanitizeSingleLineText(raw)
     if trimmed.isEmpty || ValidationText.isVisuallyEmpty(trimmed) {
       throw ValidationError.empty("name")
     }

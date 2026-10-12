@@ -111,8 +111,7 @@ public func validateHabitUpdateDraft(
 }
 
 private func normalizeHabitName(_ value: String) throws -> String {
-  let sanitized = UnicodeHygiene.sanitizeUserText(value)
-  let trimmed = sanitized.trimmingCharacters(in: .whitespacesAndNewlines)
+  let trimmed = UnicodeHygiene.sanitizeSingleLineText(value)
   if trimmed.isEmpty || ValidationText.isVisuallyEmpty(trimmed) {
     throw ValidationError.empty("habit name")
   }

@@ -135,14 +135,15 @@ public struct TaskUpdateInput: Sendable {
 }
 
 /// Free-text Unicode sanitizer for an update patch: every free-text
-/// scalar runs through ``UnicodeHygiene/sanitizeUserText(_:)``; the
-/// tag set-fields apply the same sanitizer to each element.
+/// scalar runs through ``UnicodeHygiene/sanitizeUserText(_:)`` (the title
+/// through ``UnicodeHygiene/sanitizeSingleLineText(_:)``, since it draws on one
+/// line); the tag set-fields apply the same sanitizer to each element.
 ///
 /// Operates in-place so orchestrator call sites read the sanitized
 /// patch directly.
 public enum TaskUpdateSanitize {
   public static func sanitizeInput(_ patch: inout TaskUpdateInput) {
-    patch.title = patch.title.map(UnicodeHygiene.sanitizeUserText)
+    patch.title = patch.title.map(UnicodeHygiene.sanitizeSingleLineText)
     patch.body = patch.body.map(UnicodeHygiene.sanitizeUserText)
     patch.rawInput = patch.rawInput.map(UnicodeHygiene.sanitizeUserText)
     patch.aiNotes = patch.aiNotes.map(UnicodeHygiene.sanitizeUserText)

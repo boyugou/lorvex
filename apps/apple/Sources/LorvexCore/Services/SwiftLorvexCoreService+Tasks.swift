@@ -192,9 +192,17 @@ extension SwiftLorvexCoreService {
   /// (sync-correctness invariant) this drives the per-row primitive
   /// `applySingleUpdateInSavepoint` directly — the exact contract its docstring
   /// delegates to the caller. Records an `update` changelog row.
+  ///
+  /// The free-text fields are sanitized here, as `TaskUpdate.updateTask` and the
+  /// batch update do for the paths that go through them: this is the one funnel
+  /// the UI, Shortcuts, and the assistant's update tools share, and it used to
+  /// store a title or a note exactly as given (bidi controls, zero-width
+  /// characters, and line breaks in a title included).
   func performTaskUpdate(
-    _ db: Database, hlc: HlcSession, deviceId: String, input: TaskUpdateInput
+    _ db: Database, hlc: HlcSession, deviceId: String, input rawInput: TaskUpdateInput
   ) throws -> LorvexTask {
+    var input = rawInput
+    TaskUpdateSanitize.sanitizeInput(&input)
     let typedId = TaskId(trusted: input.id)
     let beforeTask = try TaskResponse.loadEnrichedTaskJSON(db, taskId: typedId)
     let beforeSyncPayload = try OutboxEnqueue.readEntityPayloadSnapshot(

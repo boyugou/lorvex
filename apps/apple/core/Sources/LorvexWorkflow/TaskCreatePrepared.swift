@@ -98,7 +98,7 @@ public enum TaskCreatePrepared {
           + "(only 'open' or 'someday' accepted)")
     }
 
-    let title = UnicodeHygiene.sanitizeUserText(input.title)
+    let title = UnicodeHygiene.sanitizeSingleLineText(input.title)
     let body = bodyRaw.map(UnicodeHygiene.sanitizeUserText)
     let aiNotes = aiNotesRaw.map(UnicodeHygiene.sanitizeUserText)
     let rawInput = rawInputRaw.map(UnicodeHygiene.sanitizeUserText)

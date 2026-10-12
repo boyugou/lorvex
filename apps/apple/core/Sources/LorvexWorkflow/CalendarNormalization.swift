@@ -153,8 +153,7 @@ public enum CalendarNormalization {
   // MARK: - Title normalization (shared by create + update)
 
   static func normalizeCalendarTitle(_ title: String) throws -> String {
-    let cleaned = UnicodeHygiene.sanitizeUserText(title)
-    let trimmed = trimWhitespace(cleaned)
+    let trimmed = UnicodeHygiene.sanitizeSingleLineText(title)
     if trimmed.isEmpty {
       throw CalendarEventOpError.validation(
         "calendar event title must not be empty")

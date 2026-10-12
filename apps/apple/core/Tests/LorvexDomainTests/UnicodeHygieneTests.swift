@@ -5,6 +5,35 @@ import XCTest
 final class UnicodeHygieneTests: XCTestCase {
   private func sanitize(_ s: String) -> String { UnicodeHygiene.sanitizeUserText(s) }
 
+  // MARK: - Single-line text
+
+  private func oneLine(_ s: String) -> String { UnicodeHygiene.sanitizeSingleLineText(s) }
+
+  func testSingleLineFoldsEachLineBreakRunIntoOneSpace() {
+    XCTAssertEqual(oneLine("Line one\nline two"), "Line one line two")
+    XCTAssertEqual(oneLine("a\r\nb"), "a b")
+    XCTAssertEqual(oneLine("a\rb"), "a b")
+    XCTAssertEqual(oneLine("a\n\n\nb"), "a b")
+    XCTAssertEqual(oneLine("a \n  b"), "a b", "the spaces around a break fold into it")
+    XCTAssertEqual(oneLine("a\t\tb"), "a b")
+    XCTAssertEqual(oneLine("买\n牛奶"), "买 牛奶")
+  }
+
+  func testSingleLineKeepsSpacesThatHoldNoBreakAndTrimsTheEnds() {
+    XCTAssertEqual(oneLine("a  b"), "a  b", "only a run holding a line break or tab is folded")
+    XCTAssertEqual(oneLine("\n\t  Pay rent \n"), "Pay rent")
+    XCTAssertEqual(oneLine("   "), "")
+    XCTAssertEqual(oneLine("\n\n"), "")
+  }
+
+  func testSingleLineStillSanitizesAndIsIdempotent() {
+    XCTAssertEqual(oneLine("ad\u{200B}min\nx"), "admin x")
+    XCTAssertEqual(oneLine("pay\u{2028}rent"), "payrent", "a line separator is stripped before folding")
+    XCTAssertEqual(oneLine("e\u{0301}\nx"), "\u{00E9} x", "text is normalized to NFC")
+    let once = oneLine(" a \n b\tc ")
+    XCTAssertEqual(oneLine(once), once)
+  }
+
   func testStripsRTLOverride() {
     XCTAssertEqual(sanitize("pay\u{202E}dlrow_olleh.exe"), "paydlrow_olleh.exe")
   }

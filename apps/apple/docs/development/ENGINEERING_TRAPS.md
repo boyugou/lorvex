@@ -255,7 +255,10 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   rewrites the text from `.onChange`; a transforming `Binding` setter does not
   re-sync an active field. AppKit's select-all on focus overrides a caret
   position set in the same turn; set it again from
-  `.onChange(of: fieldFocused)`.
+  `.onChange(of: fieldFocused)`. The core folds a title's or name's line breaks
+  to a space itself (`UnicodeHygiene.sanitizeSingleLineText`, on every local
+  write of a task title, list name, habit name, and event title), so a field
+  without that modifier still stores one line.
 - XXXL is a standard text size, not an accessibility size. Rows with a time
   column switch layout on `DynamicTypeSize.stacksTimeColumn` (xxLarge and up,
   `LorvexTextSizeLayout.swift`). A `@ScaledMetric` base must hold at the

@@ -42,8 +42,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     with the fix. "[pl,de] 15h" reads as 900 minutes; Vietnamese "3 giờ 15
     phút" reads as 195 minutes; the Romanian reader drops English "in 15 min";
     a parenthesized phrase leaves "( )" in Turkish, Thai, and Greek titles.
-  - Titles and list names can hold a line break when set over MCP or pasted
-    into the Mac inspector; the core has no single-line title policy.
   - Cancelling a repeating occurrence whose reserved successor is already
     finished reports "can't be completed again"; it needs a cancel-specific
     refusal in all thirty languages. Two lifecycle refusals are English-only

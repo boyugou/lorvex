@@ -70,6 +70,44 @@ public enum UnicodeHygiene {
     String(keptScalars(input)).precomposedStringWithCanonicalMapping
   }
 
+  /// Sanitize user-supplied text for a field that draws on one line, such as a
+  /// task title or a list, habit, or event name: ``sanitizeUserText(_:)``, then
+  /// each run of line breaks and tabs, with the spaces around it, becomes one
+  /// space, and the ends are trimmed. A multi-line paste or an assistant's
+  /// multi-line argument then reads as one line everywhere the field is shown,
+  /// instead of growing a row or being cut off by it. Idempotent.
+  public static func sanitizeSingleLineText(_ input: String) -> String {
+    var folded = String.UnicodeScalarView()
+    // A pending run of spaces, tabs, and line breaks, kept until the next
+    // visible scalar says whether the run held a break.
+    var run = String.UnicodeScalarView()
+    var runHoldsBreak = false
+    func flushRun() {
+      if run.isEmpty { return }
+      if runHoldsBreak {
+        folded.append(" ")
+      } else {
+        folded.append(contentsOf: run)
+      }
+      run.removeAll()
+      runHoldsBreak = false
+    }
+    for scalar in sanitizeUserText(input).unicodeScalars {
+      switch scalar {
+      case "\n", "\r", "\t":
+        run.append(scalar)
+        runHoldsBreak = true
+      case " ":
+        run.append(scalar)
+      default:
+        flushRun()
+        folded.append(scalar)
+      }
+    }
+    flushRun()
+    return String(folded).trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
   /// Whether ``sanitizeUserText(_:)`` would remove any codepoint of `input`
   /// (normalization aside).
   public static func containsStrippedCodepoint(_ input: String) -> Bool {

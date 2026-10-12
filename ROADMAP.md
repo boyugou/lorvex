@@ -123,8 +123,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - The shipped set of thirty languages is complete
   (`apps/apple/docs/LOCALIZATION.md`, "Language coverage"); the language count
   is capped at about thirty, with room for up to five more later (the owner
-  allowed it on 2026-10-12; translate them with Claude Haiku 5.5). Every new
-  string carries every shipped language:
+  allowed it on 2026-10-12; translate them with Claude Haiku 5.5). Candidates,
+  chosen for App Store reach among languages not yet shipped: Swedish, Danish,
+  Norwegian Bokmål, Finnish (each `one`/`other`), and Czech (`one`/`few`/`many`/
+  `other`); Hungarian and Catalan follow if a fifth slot is not Czech. Adding a
+  language means its `PLURAL_CATEGORIES` entry in
+  `script/verify_localization_catalog.py`, every catalog string through
+  `localization_transfer.py`, the App Store listing copy, and a capture review
+  at the largest text size. Every new string carries every shipped language:
   `apps/apple/script/localization_transfer.py` exports what a language lacks
   and imports translations, and the catalog verifier and `LocalizationTests`
   reject a partial language.

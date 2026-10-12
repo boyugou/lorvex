@@ -10,7 +10,8 @@ private enum ListCatalogRowMetrics {
   static let progressMaxWidth: CGFloat = 76
 }
 
-/// One list in the Lists catalog as a card: its icon, name, counts, and
+/// One list in the Lists catalog as a card: its icon, name, description (a
+/// line, when the list has one, as the iPhone's Lists row shows it), counts, and
 /// progress, then its first open tasks in the canonical order with a count of
 /// the rest, so the catalog shows what each list holds next. Clicking the card
 /// opens the list's Tasks scope; clicking a previewed task opens that task
@@ -68,6 +69,7 @@ struct ListCatalogRow: View {
     .help(String(localized: "list_row.open_scope.help", defaultValue: "Open Tasks in This List", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityElement(children: .contain)
     .accessibilityLabel(list.spokenSummary)
+    .accessibilityHint(list.description ?? "")
     // The row opens its Tasks scope on tap / Return / Space, but a raw
     // `.onTapGesture` is invisible to VoiceOver. Announce it as a button and
     // expose the same open affordance as the default accessibility action so VO
@@ -163,6 +165,13 @@ struct ListCatalogRow: View {
           .font(LorvexDesign.Typography.primaryEmphasis)
           .foregroundStyle(.primary)
           .lineLimit(1)
+
+        if let description = list.description, !description.isEmpty {
+          Text(userContent: description)
+            .font(LorvexDesign.Typography.tertiaryText)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
 
         listProgress
       }

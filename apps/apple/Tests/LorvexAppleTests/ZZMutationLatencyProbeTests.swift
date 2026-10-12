@@ -5,8 +5,9 @@ import Testing
 @testable import LorvexApple
 
 // Probe: how long a Mac task completion takes through AppStore, its whole
-// awaited tail included, with N tasks in the store (measured on 2026-10-12: about
-// 40 ms at 100 tasks, 140 ms at 1000, 430 ms at 3000). PERF_N = task count;
+// awaited tail included, with N tasks in the store (a debug build, measured on
+// 2026-10-12: about 40 ms at 100 tasks, 150 ms at 1000, 430 ms at 3000; a release
+// build is faster by an unmeasured factor). PERF_N = task count;
 // does nothing without it. Prints one `PERF n=… refresh=… complete avg=…` line.
 @MainActor
 @Suite("Mutation latency probe")
@@ -32,6 +33,9 @@ struct ZZMutationLatencyProbeTests {
       let s = Date()
       await store.completeTask(id: id)
       samples.append(Date().timeIntervalSince(s) * 1000)
+    }
+    if ProcessInfo.processInfo.environment["PERF_LOOP"] != nil {
+      for _ in 0..<40 { _ = try await core.loadWidgetStatsSource() }
     }
     let avg = samples.reduce(0, +) / Double(samples.count)
     print("PERF n=\(n) refresh=\(Int(refreshMs))ms complete avg=\(Int(avg))ms max=\(Int(samples.max() ?? 0))ms first=\(Int(samples[0]))ms")

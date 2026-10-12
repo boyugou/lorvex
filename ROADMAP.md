@@ -52,8 +52,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     hard-delete racing a concurrent edit when child edges arrive first; a tag
     delete cascading a newer live edge before a resurrecting upsert; alias
     deletes reordered before their redirects; no `habit_completion` fold.
-  - Mac performance: completing a task awaits about 40 ms at 100 tasks, 150 ms
-    at 1000, and 430 ms at 3000 (`ZZMutationLatencyProbeTests`); the time is
+  - Mac performance: in the debug test build, completing a task awaits about
+    40 ms at 100 tasks, 150 ms at 1000, and 430 ms at 3000
+    (`ZZMutationLatencyProbeTests`; the release figure is unmeasured, because
+    the test target does not build in release and an unoptimized GRDB decode
+    dominates a profile of the debug run); the time is
     the core's batch task enrichment (a JSON round trip per task), read once
     for Today, once for the widget snapshot and the badge, and once more for the
     Spotlight index. Each external database signal triggers a full refresh that

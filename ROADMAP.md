@@ -130,10 +130,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   chosen for App Store reach among languages not yet shipped: Swedish, Danish,
   Norwegian Bokmål, Finnish (each `one`/`other`), and Czech (`one`/`few`/`many`/
   `other`); Hungarian and Catalan follow if a fifth slot is not Czech. Adding a
-  language means its `PLURAL_CATEGORIES` entry in
-  `script/verify_localization_catalog.py`, every catalog string through
-  `localization_transfer.py`, the App Store listing copy, and a capture review
-  at the largest text size. Every new string carries every shipped language:
+  language is more than its strings (2,700 catalog entries and 17 InfoPlist keys
+  per language, measured with `localization_transfer.py export`): its
+  `PLURAL_CATEGORIES` entry in `script/verify_localization_catalog.py`, its
+  entry in the app's language list (`AppLanguageTests`), its quick-add
+  vocabulary in `LorvexCaptureVocabulary.swift` with a `CaptureParser<Language>Tests`
+  file and a pass of the fuzz probe, the widget and text-direction test
+  tables, the App Store listing copy, and a capture review at the largest text
+  size. The vocabulary and parser work is the part that needs a fluent reader. Every new string carries every shipped language:
   `apps/apple/script/localization_transfer.py` exports what a language lacks
   and imports translations, and the catalog verifier and `LocalizationTests`
   reject a partial language.

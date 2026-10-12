@@ -52,15 +52,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     hard-delete racing a concurrent edit when child edges arrive first; a tag
     delete cascading a newer live edge before a resurrecting upsert; alias
     deletes reordered before their redirects; no `habit_completion` fold. A
-    soak of 150 seeds from seed 1000 (120 steps, the log transport) diverged on
-    10 (`LORVEX_SYNC_SIM_SEEDS=150 LORVEX_SYNC_SIM_FIRST_SEED=1000`). The ones
-    read so far end with a `task_tag` edge present on one replica and absent on
-    the other, or held under the sibling edge's clock, in runs where two
-    replicas created tags concurrently. Seed 1018 reproduces alone in half a
-    second (ids differ per run, the divergence does not): one replica holds
-    the edges of the same-named loser tag folded onto the winner (`EdgeAliasFold`),
-    the other lacks a loser edge entirely and keeps a winner edge at the lower
-    clock, as if it never folded. Not yet isolated.
+    soak (`LORVEX_SYNC_SIM_SEEDS=300 LORVEX_SYNC_SIM_FIRST_SEED=2000`, 120 steps,
+    the log transport) still diverges on about 10 seeds in 300, after a batch
+    that carried a tag's redirect and its death together stopped cascading the
+    tag's edges away before the fold (`orderedForApply`). The rest are other
+    classes: a `task_tag` edge held by one replica only where one replica
+    authored the alias and the edge under the same clock value (seed 2000), a
+    lost `task_checklist_item`, and a `habit_completion` tombstone with a
+    different death version. The runs are not bit-for-bit repeatable (ids and
+    clocks come from the wall clock), so a seed names a shape, not an exact run.
   - Mac performance: in the debug test build, completing a task awaits about
     40 ms at 100 tasks, 150 ms at 1000, and 430 ms at 3000
     (`ZZMutationLatencyProbeTests`; the release figure is unmeasured, because

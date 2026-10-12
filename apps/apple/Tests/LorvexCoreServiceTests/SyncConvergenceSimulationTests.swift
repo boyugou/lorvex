@@ -275,8 +275,21 @@ private final class SimulationRun {
       }
     }
     if !problems.isEmpty {
+      // An alias loser's own history explains what its winner holds, so every
+      // traced entity brings the ids that were merged into it.
+      for entity in tracedEntities {
+        for replica in replicas {
+          let losers: [String] =
+            (try? replica.service.read { db in
+              try String.fetchAll(
+                db, sql: "SELECT source_id FROM sync_entity_redirects WHERE target_id = ?",
+                arguments: [entity])
+            }) ?? []
+          tracedEntities.append(contentsOf: losers)
+        }
+      }
       var seen = Set<String>()
-      for entity in tracedEntities where seen.insert(entity).inserted && seen.count <= 5 {
+      for entity in tracedEntities where seen.insert(entity).inserted && seen.count <= 8 {
         problems.append(
           "trace of \(entity):\n"
             + trace.filter { $0.contains(entity) }.suffix(40).map { "  " + $0 }

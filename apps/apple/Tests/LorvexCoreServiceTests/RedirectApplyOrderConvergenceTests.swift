@@ -49,12 +49,14 @@ final class RedirectApplyOrderConvergenceTests: XCTestCase {
   private let vDelete = "1711234569000_0000_dec0000300000003"
   private let vEdge = "1711234570000_0000_dec0000400000004"
 
-  private func tagUpsertEnv(_ id: String, _ version: String) throws -> SyncEnvelope {
+  private func tagUpsertEnv(
+    _ id: String, _ version: String, name: String = "Shared"
+  ) throws -> SyncEnvelope {
     let payload =
       try SyncCanonicalize.canonicalizeJSON(
         .object([
-          "display_name": .string("Shared"),
-          "lookup_key": .string("shared"),
+          "display_name": .string(name),
+          "lookup_key": .string(name.lowercased()),
           "color": .null,
           "created_at": .string("2026-04-01T00:00:00.000Z"),
           "updated_at": .string("2026-04-01T00:00:00.000Z"),
@@ -174,5 +176,53 @@ final class RedirectApplyOrderConvergenceTests: XCTestCase {
     XCTAssertEqual(
       upsertFirst.redirect, deleteFirst.redirect, "both source orders converge on the redirect")
     XCTAssertEqual(upsertFirst.edgeTagId, deleteFirst.edgeTagId)
+  }
+
+  func testAliasSourceDeleteRunsAfterItsRedirectInTheSameBatch() throws {
+    let alias = try entityRedirectEnv(sourceId: loser, targetId: winner, version: vDelete)
+    let loserDelete = tagDeleteEnv(loser, vDelete)
+    let otherDelete = tagDeleteEnv("00000000-0000-7000-8000-00000000000b", vDelete)
+    let upsert = try tagUpsertEnv(winner, vWinner)
+
+    let ordered = SwiftLorvexCoreService.orderedForApply([loserDelete, alias, otherDelete, upsert])
+
+    XCTAssertEqual(
+      ordered.map(\.entityId),
+      [winner, otherDelete.entityId, alias.entityId, loser],
+      "the delete of the alias's source is the last of the batch; other deletes stay before it")
+  }
+
+  /// A peer authored the alias and the loser's death together, so one batch can
+  /// carry both while this replica still holds a live edge to the loser. The
+  /// loser's delete must not cascade that edge away before the redirect folds it
+  /// onto the winner.
+  func testRedirectAndLoserDeleteInOneBatchKeepTheLoserEdgeOnTheWinner() throws {
+    let service = try makeService()
+    let (winner, loser, taskX) = (self.winner, self.loser, self.taskX)
+    let (vLoser, vWinner, vDelete, vEdge) = (self.vLoser, self.vWinner, self.vDelete, self.vEdge)
+    try service.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO tasks (id, title, status, list_id, version, created_at, updated_at, defer_count)
+          VALUES (?, 'X', 'open', 'inbox', ?, '2026-04-01T00:00:00.000Z', '2026-04-01T00:00:00.000Z', 0)
+          """,
+        arguments: [taskX, vLoser])
+    }
+    // Two names, so the replica derives no alias of its own from the tags.
+    _ = try service.applyInbound(
+      [try tagUpsertEnv(winner, vWinner), try tagUpsertEnv(loser, vLoser, name: "Other")],
+      undecodable: 0)
+    _ = try service.applyInbound([try taskTagUpsertEnv(taskX, loser, vEdge)], undecodable: 0)
+
+    let batch = [
+      tagDeleteEnv(loser, vDelete),
+      try entityRedirectEnv(sourceId: loser, targetId: winner, version: vDelete),
+    ]
+    _ = try service.applyInbound(batch, undecodable: 0)
+
+    let edgeTagIds = try service.read { db in
+      try String.fetchAll(db, sql: "SELECT tag_id FROM task_tags WHERE task_id = ?", arguments: [taskX])
+    }
+    XCTAssertEqual(edgeTagIds, [winner], "the edge to the merged-away tag now names the winner")
   }
 }

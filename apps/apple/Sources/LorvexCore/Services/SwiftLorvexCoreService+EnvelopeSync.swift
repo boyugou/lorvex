@@ -113,28 +113,51 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
     }
   }
 
-  /// Stable ordinary-upsert → ordinary-delete → permanent-alias partition of an
-  /// inbound batch. Applying a
+  /// Stable ordinary-upsert → ordinary-delete → permanent-alias → alias-source
+  /// delete partition of an inbound batch. Applying a
   /// winner upsert first lets the post-upsert aggregate merge tail see
   /// both the winner and the still-live loser sharing the natural key, derive the
   /// `loser → winner` alias locally before its ordinary loser delete. Explicit
-  /// `entity_redirect` records run last so every live target or terminal target
-  /// tombstone in the same page is established first. Relative order within each
-  /// partition is preserved; HLC decides same-identity state.
+  /// `entity_redirect` records run after the other deletes so every live target or
+  /// terminal target tombstone in the same page is established first. The delete
+  /// of an alias source that the same batch carries a redirect for runs last of
+  /// all: applied before its redirect it would cascade away the edges the
+  /// redirect folds onto the winner. Relative order within each partition is
+  /// preserved; HLC decides same-identity state.
   static func orderedForApply(_ envelopes: [SyncEnvelope]) -> [SyncEnvelope] {
+    var aliasSources = Set<String>()
+    for e in envelopes where e.entityType == .entityRedirect {
+      if let key = redirectSourceKey(e) { aliasSources.insert(key) }
+    }
     var upserts: [SyncEnvelope] = []
     var deletes: [SyncEnvelope] = []
     var redirects: [SyncEnvelope] = []
+    var aliasSourceDeletes: [SyncEnvelope] = []
     for e in envelopes {
       if e.entityType == .entityRedirect {
         redirects.append(e)
       } else if e.operation == .delete {
-        deletes.append(e)
+        if aliasSources.contains("\(e.entityType.asString)|\(e.entityId)") {
+          aliasSourceDeletes.append(e)
+        } else {
+          deletes.append(e)
+        }
       } else {
         upserts.append(e)
       }
     }
-    return upserts + deletes + redirects
+    return upserts + deletes + redirects + aliasSourceDeletes
+  }
+
+  /// `"<type>|<id>"` of the entity an `entity_redirect` envelope folds away, read
+  /// from its payload; nil when the payload does not name one.
+  private static func redirectSourceKey(_ envelope: SyncEnvelope) -> String? {
+    guard
+      let data = envelope.payload.data(using: .utf8),
+      let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+      let type = object["source_type"] as? String, let id = object["source_id"] as? String
+    else { return nil }
+    return "\(type)|\(id)"
   }
 
   public func applyInbound(_ envelopes: [SyncEnvelope], undecodable: Int) throws

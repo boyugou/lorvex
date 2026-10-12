@@ -164,6 +164,8 @@ struct MemoryWorkspaceView: View {
     }
   }
 
+  @FocusState private var focusedEntryID: String?
+
   private var entriesList: some View {
     ScrollView {
       WorkspaceDashboardLane {
@@ -176,6 +178,9 @@ struct MemoryWorkspaceView: View {
               entry: entry,
               edit: { store.beginEditingMemory(entry) },
               delete: { entryPendingDeletion = entry }
+            )
+            .lorvexArrowKeyFocus(
+              id: entry.id, order: store.filteredMemoryEntries.map(\.id), focus: $focusedEntryID
             )
             .padding(.vertical, LorvexDesign.Spacing.xs)
           }

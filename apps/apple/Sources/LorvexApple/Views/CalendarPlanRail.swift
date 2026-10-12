@@ -19,6 +19,8 @@ struct CalendarPlanRail: View {
 
   static let width: CGFloat = 280
 
+  @FocusState private var focusedTaskID: String?
+
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       header
@@ -75,8 +77,10 @@ struct CalendarPlanRail: View {
           .fixedSize(horizontal: false, vertical: true)
           .padding(.horizontal, LorvexDesign.Spacing.m)
           .padding(.vertical, LorvexDesign.Spacing.s)
+        let order = tasks.map(\.id)
         ForEach(tasks) { task in
           row(task)
+            .lorvexArrowKeyFocus(id: task.id, order: order, focus: $focusedTaskID)
         }
         let hidden = store.calendarUnplannedTotal - tasks.count
         if hidden > 0 {

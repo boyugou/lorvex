@@ -37,4 +37,26 @@ extension View {
         return .handled
       }
   }
+
+  /// Moves the keyboard focus between rows that each hold a focus stop
+  /// (``lorvexKeyboardActivation(_:)``): ↑ and ↓ focus the neighboring row in
+  /// `order`, Home and End the first and last, and none wraps. The row
+  /// registers `id` with `focus`, so the surface holds one `@FocusState` for
+  /// the whole list. SwiftUI scrolls the newly focused row into view.
+  func lorvexArrowKeyFocus(
+    id: String, order: [String], focus: FocusState<String?>.Binding
+  ) -> some View {
+    func move(_ step: WorkspaceTaskArrowKeyStep) -> KeyPress.Result {
+      guard
+        let target = WorkspaceTaskArrowKeyMovement.target(for: step, anchor: id, orderedIDs: order)
+      else { return .handled }
+      focus.wrappedValue = target
+      return .handled
+    }
+    return focused(focus, equals: id)
+      .onKeyPress(.upArrow) { move(.previous) }
+      .onKeyPress(.downArrow) { move(.next) }
+      .onKeyPress(.home) { move(.first) }
+      .onKeyPress(.end) { move(.last) }
+  }
 }

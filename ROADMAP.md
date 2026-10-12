@@ -55,8 +55,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Mac performance: a task mutation awaits a six-stage publishing chain, and
     each external database signal triggers a full refresh that re-indexes
     Spotlight and the calendar window.
-  - Mac keyboard: list cards show Edit and Delete only on hover, and the memory
-    list and plan rail have no arrow-key traversal.
+  - Mac keyboard: list cards show Edit and Delete only on hover.
   - Polish: Settings > Activity shows English changelog summaries; German
     Memory sheet titles truncate at 375 pt; the Urdu Today medium widget shows
     one row.

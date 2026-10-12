@@ -51,7 +51,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Sync convergence limits found by `SyncConvergenceSimulationTests`: a task
     hard-delete racing a concurrent edit when child edges arrive first; a tag
     delete cascading a newer live edge before a resurrecting upsert; alias
-    deletes reordered before their redirects; no `habit_completion` fold.
+    deletes reordered before their redirects; no `habit_completion` fold. A
+    soak of 150 seeds from seed 1000 (120 steps, the log transport) diverged on
+    10 (`LORVEX_SYNC_SIM_SEEDS=150 LORVEX_SYNC_SIM_FIRST_SEED=1000`). The ones
+    read so far end with a `task_tag` edge present on one replica and absent on
+    the other, or held under the sibling edge's clock, in runs where two
+    replicas created tags concurrently; a trace of seed 1018 points at a
+    deferred edge drained with a wrong row clock. Not yet isolated.
   - Mac performance: in the debug test build, completing a task awaits about
     40 ms at 100 tasks, 150 ms at 1000, and 430 ms at 3000
     (`ZZMutationLatencyProbeTests`; the release figure is unmeasured, because

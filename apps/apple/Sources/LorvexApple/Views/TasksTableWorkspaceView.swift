@@ -2,14 +2,18 @@ import LorvexCore
 import SwiftUI
 
 /// Column widths in points. The table gets about 716 pt at the smallest
-/// three-pane window (inspector open), and a `Table` lays columns out at their
-/// ideal widths and scrolls sideways when those sum to more, so the five ideals
-/// stay under that; a wider window spreads the spare width across the columns up to their maximums.
+/// three-pane window (inspector open), and each column takes about 17 pt of cell
+/// padding beyond its width. A `Table` squeezes its columns toward their
+/// minimums when it is narrower than their ideals but never below them, and then
+/// scrolls sideways, which cuts the last column at the table's edge. The five
+/// minimums plus that padding therefore stay under 716 pt, with the title, the
+/// column that truncates, giving the most; a wider window spreads the spare
+/// width across the columns up to their maximums.
 private enum TasksTableMetrics {
   static let minSurfaceHeight: CGFloat = 360
   static let statusColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (108, 108, 140)
   static let priorityColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (80, 80, 104)
-  static let titleColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (240, 280, 820)
+  static let titleColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (200, 280, 820)
   static let dueColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (108, 108, 144)
   static let listColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (120, 120, 220)
 }

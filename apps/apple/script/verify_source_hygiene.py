@@ -497,7 +497,7 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), 'static let minSurfaceHeight: CGFloat = 360'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), 'static let statusColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (108, 108, 140)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), 'static let priorityColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (80, 80, 104)'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), 'static let titleColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (240, 280, 820)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), 'static let titleColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (200, 280, 820)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), 'static let dueColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (108, 108, 144)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), 'static let listColumn: (min: CGFloat, ideal: CGFloat, max: CGFloat) = (120, 120, 220)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TasksTableWorkspaceView.swift'), '.frame(minHeight: TasksTableMetrics.minSurfaceHeight)'),

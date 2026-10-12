@@ -133,6 +133,20 @@ struct InboundReloadScopeTests {
     #expect(InboundReloadScope.recomputesBadge([.reviews]) == false)
   }
 
+  @Test("an open review page re-reads for habits, the calendar, and the reviews, not for tasks or memory")
+  func reviewReadsPredicate() {
+    #expect(InboundReloadScope.refreshesReviewReads([.habits]))
+    #expect(InboundReloadScope.refreshesReviewReads([.calendar]))
+    #expect(InboundReloadScope.refreshesReviewReads([.reviews]))
+    #expect(InboundReloadScope.refreshesReviewReads([.tasks, .habits]))
+    // Task changes move the task revision the keys already hold.
+    #expect(InboundReloadScope.refreshesReviewReads([.tasks]) == false)
+    #expect(InboundReloadScope.refreshesReviewReads([.today]) == false)
+    #expect(InboundReloadScope.refreshesReviewReads([.lists]) == false)
+    #expect(InboundReloadScope.refreshesReviewReads([.memory]) == false)
+    #expect(InboundReloadScope.refreshesReviewReads([.diagnostics]) == false)
+  }
+
   @Test("widget republishes for today/tasks/habits/lists, not calendar/reviews")
   func widgetRepublishPredicate() {
     #expect(InboundReloadScope.republishesWidget([.today]))

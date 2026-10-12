@@ -272,3 +272,24 @@ func appStoreInboundTaskReloadAdoptsCleanRecurrenceDraft() async throws {
   #expect(store.taskDetailRecurrenceIntervalText == "4")
   #expect(!store.selectedTaskHasUnsavedEditorState)
 }
+
+@MainActor
+@Test("an inbound habits-only sync moves the key an open review page re-reads on")
+func appStoreInboundHabitSyncMovesTheReviewReadKey() async throws {
+  // A habit change leaves the day's evidence and the task generation equal, so
+  // without its own counter the open review page kept showing the old habit
+  // rows.
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let widget = RecordingWidgetSnapshotPublisher()
+  let store = try await makeSelectiveAppStore(
+    core: core,
+    records: [inboundSelectiveRecord(.habit, "01966a3f-7c8b-7d4e-8f3a-0000000000a9", 1)],
+    widget: widget)
+  let before = store.dayReviewReadKey.inboundRevision
+
+  await store.refresh()
+
+  #expect(store.reviewReadGeneration == before + 1)
+  #expect(store.dayReviewReadKey.inboundRevision == before + 1)
+  #expect(store.weekReviewReadKey.inboundRevision == before + 1)
+}

@@ -9,13 +9,15 @@ extension AppStore {
   /// ``loadTomorrowAgenda()``) follow; the page re-reads when it changes.
   var dayReviewReadKey: DayReviewReadKey {
     DayReviewReadKey(
-      date: selectedReviewDate, evidence: dayReviewEvidence, taskRevision: taskDataGeneration)
+      date: selectedReviewDate, evidence: dayReviewEvidence, taskRevision: taskDataGeneration,
+      inboundRevision: reviewReadGeneration)
   }
 
   /// What the week review page's own reads (``loadWeekAheadAgenda()`` and
   /// ``loadWeekShape()``) follow; the page re-reads when it changes.
   var weekReviewReadKey: WeekReviewReadKey {
-    WeekReviewReadKey(review: weeklyReview, taskRevision: taskDataGeneration)
+    WeekReviewReadKey(
+      review: weeklyReview, taskRevision: taskDataGeneration, inboundRevision: reviewReadGeneration)
   }
 
   /// The active habits that count in `date`'s review

@@ -170,6 +170,10 @@ public final class MobileStore {
   /// relevant key so an already-visible page re-reads without navigation churn.
   public internal(set) var taskWorkspaceRevision: UInt64 = 0
   public internal(set) var habitDetailRevision: UInt64 = 0
+  /// Advances when an inbound change reloaded habits, the calendar, or the
+  /// reviews, so an open review page re-runs its own reads
+  /// (``InboundReloadScope/refreshesReviewReads(_:)``).
+  public internal(set) var reviewReadRevision: UInt64 = 0
   public var taskDetailRecurrenceDraft = TaskRecurrenceEditorDraft()
   public var selectedTab: MobileTab
   public var routePath: [MobileRoute]

@@ -200,3 +200,27 @@ func mobileInboundMemoryReloadPreservesDraft() async throws {
   #expect(store.memoryContentDraft == "unsaved local edit")
   #expect(store.memoryEditingKey == nil)
 }
+
+@MainActor
+@Test("an inbound habits-only or calendar-only sync moves the key an open review page re-reads on")
+func mobileInboundHabitOrCalendarSyncMovesTheReviewReadKey() async throws {
+  // A renamed habit or an edited event leaves the day's evidence and the task
+  // revision equal, so without its own counter the open review page kept showing
+  // the old habit rows and tomorrow's agenda. The full load of the pass advances
+  // the counter once; the selective reload of habits or the calendar advances it
+  // again.
+  for record in [
+    inboundSelectiveRecord(.habit, "01966a3f-7c8b-7d4e-8f3a-000000000061", 1),
+    inboundSelectiveRecord(.calendarEvent, "01966a3f-7c8b-7d4e-8f3a-000000000062", 2),
+  ] {
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+    let store = try await makeSelectiveLiveStore(core: core, records: [record])
+    let before = store.dayReviewReadKey.inboundRevision
+
+    _ = await store.refresh()
+
+    #expect(store.reviewReadRevision == before + 2)
+    #expect(store.dayReviewReadKey.inboundRevision == before + 2)
+    #expect(store.weekReviewReadKey.inboundRevision == before + 2)
+  }
+}

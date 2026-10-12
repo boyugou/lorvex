@@ -8,15 +8,25 @@ import Foundation
 /// for tomorrow leaves the evidence equal. The task revision (the store's
 /// counter of task data re-read after a change) moves in that case too, and the
 /// page re-reads when either part moves.
+///
+/// Neither holds a habit's name, nor an event on tomorrow's agenda, so a peer
+/// that renames a habit or edits an event leaves both equal. The inbound
+/// revision (``InboundReloadScope/refreshesReviewReads(_:)``) moves with every
+/// habit, calendar, or review change the store re-reads, and the page re-reads
+/// then too.
 public struct DayReviewReadKey: Equatable, Sendable {
   public var date: String
   public var evidence: DayReviewSummary?
   public var taskRevision: UInt64
+  public var inboundRevision: UInt64
 
-  public init(date: String, evidence: DayReviewSummary?, taskRevision: UInt64) {
+  public init(
+    date: String, evidence: DayReviewSummary?, taskRevision: UInt64, inboundRevision: UInt64 = 0
+  ) {
     self.date = date
     self.evidence = evidence
     self.taskRevision = taskRevision
+    self.inboundRevision = inboundRevision
   }
 }
 
@@ -26,13 +36,16 @@ public struct DayReviewReadKey: Equatable, Sendable {
 /// The weekly snapshot holds what happened in the week, not what is planned for
 /// the days after today, so planning a task for next week leaves it equal. The
 /// task revision moves in that case too, and the page re-reads when either part
-/// moves.
+/// moves. The inbound revision moves with a calendar change the store re-reads,
+/// since an event on the days ahead leaves both equal.
 public struct WeekReviewReadKey: Equatable, Sendable {
   public var review: WeeklyReviewSnapshot?
   public var taskRevision: UInt64
+  public var inboundRevision: UInt64
 
-  public init(review: WeeklyReviewSnapshot?, taskRevision: UInt64) {
+  public init(review: WeeklyReviewSnapshot?, taskRevision: UInt64, inboundRevision: UInt64 = 0) {
     self.review = review
     self.taskRevision = taskRevision
+    self.inboundRevision = inboundRevision
   }
 }

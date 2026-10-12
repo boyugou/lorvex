@@ -131,5 +131,8 @@ extension AppStore {
     if reloadsTaskBearingDomain {
       taskDataGeneration &+= 1
     }
+    if InboundReloadScope.refreshesReviewReads(domains) {
+      reviewReadGeneration &+= 1
+    }
   }
 }

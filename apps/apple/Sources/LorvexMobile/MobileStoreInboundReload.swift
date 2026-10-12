@@ -112,6 +112,7 @@ extension MobileStore {
     // to their first `.task(id:)` result.
     if domains.contains(.tasks) { invalidateTaskViewsAfterCanonicalReload() }
     if domains.contains(.habits) { invalidateHabitDetailViews() }
+    if InboundReloadScope.refreshesReviewReads(domains) { invalidateReviewReads() }
     // Re-seat the Today selection when a task surface reloaded, matching phase 1.
     if !domains.isDisjoint(with: [.today, .tasks]), selectedTaskID == nil {
       selectedTaskID = snapshot.today.tasks.first?.id

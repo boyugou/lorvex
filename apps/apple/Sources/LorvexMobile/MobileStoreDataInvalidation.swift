@@ -27,8 +27,13 @@ extension MobileStore {
     habitDetailRevision &+= 1
   }
 
+  func invalidateReviewReads() {
+    reviewReadRevision &+= 1
+  }
+
   func invalidateAllViewOwnedData() {
     invalidateTaskViewsAfterCanonicalReload()
     invalidateHabitDetailViews()
+    invalidateReviewReads()
   }
 }

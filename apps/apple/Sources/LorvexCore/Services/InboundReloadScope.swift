@@ -141,4 +141,14 @@ public enum InboundReloadScope {
   public static func republishesWidget(_ domains: Set<InboundReloadDomain>) -> Bool {
     !domains.isDisjoint(with: [.today, .tasks, .habits, .lists])
   }
+
+  /// Whether a selective reload of `domains` should make an open review page
+  /// re-run its own reads (the habits as they stood on the reviewed day, tomorrow's
+  /// agenda, the week ahead). Those reads follow keys built from published review
+  /// state, which a renamed habit or an edited event leaves equal, so the store
+  /// advances a counter in the key when habits, the calendar, or the reviews
+  /// themselves reloaded.
+  public static func refreshesReviewReads(_ domains: Set<InboundReloadDomain>) -> Bool {
+    !domains.isDisjoint(with: [.habits, .calendar, .reviews])
+  }
 }

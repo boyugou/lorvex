@@ -234,6 +234,12 @@ final class AppStore {
   /// task waits on, keys a re-read on it. Only those three paths write it.
   var taskDataGeneration: UInt64 = 0
 
+  /// Advances when an inbound sync reloaded habits, the calendar, or the
+  /// reviews, so an open review page re-runs its own reads
+  /// (``InboundReloadScope/refreshesReviewReads(_:)``). A full refresh already
+  /// advances ``taskDataGeneration``.
+  var reviewReadGeneration: UInt64 = 0
+
   /// The selected task's ID while a task it waits on is unfinished, so it
   /// cannot start; `nil` while it can, or before it has been read. Only
   /// ``refreshSelectedTaskStartGate()`` writes it.

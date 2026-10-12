@@ -9,13 +9,16 @@ extension MobileStore {
   /// ``loadTomorrowAgenda()``) follow; the page re-reads when it changes.
   var dayReviewReadKey: DayReviewReadKey {
     DayReviewReadKey(
-      date: selectedReviewDate, evidence: dayReviewEvidence, taskRevision: taskWorkspaceRevision)
+      date: selectedReviewDate, evidence: dayReviewEvidence, taskRevision: taskWorkspaceRevision,
+      inboundRevision: reviewReadRevision)
   }
 
   /// What the week review page's own reads (``loadWeekAheadAgenda()`` and
   /// ``loadWeekShape()``) follow; the page re-reads when it changes.
   var weekReviewReadKey: WeekReviewReadKey {
-    WeekReviewReadKey(review: snapshot.weeklyReview, taskRevision: taskWorkspaceRevision)
+    WeekReviewReadKey(
+      review: snapshot.weeklyReview, taskRevision: taskWorkspaceRevision,
+      inboundRevision: reviewReadRevision)
   }
 
   /// The active habits that count in `date`'s review

@@ -88,6 +88,7 @@ python3 -m py_compile \
   script/verify_mas_provisioning.py \
   script/verify_mcp_client_config.py \
   script/verify_mcp_tool_catalog.py \
+  script/verify_plugin_skills.py \
   script/verify_migration_ladder.py \
   script/verify_privacy_manifests.py \
   script/verify_public_safety.py \
@@ -143,6 +144,8 @@ python3 -m unittest discover -s script -p 'test_*.py'
 ./script/verify_cloudkit_sync_readiness.py
 ./script/verify_mcp_tool_catalog.py
 ./script/verify_mcp_tool_manifest.py
+# The plugin's skills name only tools, arguments, and values that exist.
+./script/verify_plugin_skills.py
 ./script/verify_localization_catalog.py
 ./script/verify_acknowledgments.py
 ./script/verify_privacy_manifests.py

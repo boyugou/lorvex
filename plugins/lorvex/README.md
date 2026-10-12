@@ -1,9 +1,9 @@
 # Lorvex for Claude Code
 
 This plugin connects Claude Code to Lorvex, the Apple-native task manager,
-and adds four skills for the workflows that span many tools: planning a day,
-capturing notes as tasks, the weekly review, and tidying the assistant's
-memory.
+and adds five skills for the workflows that span many tools: planning a day,
+capturing notes as tasks, closing the day with a review, the weekly review,
+and tidying the assistant's memory.
 
 ## Requirements
 
@@ -33,6 +33,7 @@ Lorvex tools are not listed twice.
 | MCP server `lorvex` | Every Lorvex tool: tasks, lists, habits, calendar, the Today page and its briefing, reviews, and memory. |
 | `/lorvex:plan-day` | Keeps a realistic set of tasks on today, explains why in a short briefing, and can time them around your meetings. |
 | `/lorvex:capture` | Turns pasted notes or a brain dump into tasks, and asks about anything vague. |
+| `/lorvex:daily-review` | Closes the day: what moved forward, what is still open, which habits were kept, a drafted review entry for you to correct, and the tasks you choose to move to tomorrow. |
 | `/lorvex:weekly-review` | Summarizes the week (wins, slipped work, stalled lists), suggests changes, and applies the ones you choose. |
 | `/lorvex:tidy-memory` | Reviews the notes the assistant keeps about you and proposes corrections. |
 

@@ -13,9 +13,9 @@ This is the best automation experience available. Lorvex remains a strong standa
 /plugin install lorvex@lorvex
 ```
 
-The plugin starts the MCP helper inside the installed app and adds four
-skills: `/lorvex:plan-day`, `/lorvex:capture`, `/lorvex:weekly-review`, and
-`/lorvex:tidy-memory`. Its README is
+The plugin starts the MCP helper inside the installed app and adds five
+skills: `/lorvex:plan-day`, `/lorvex:capture`, `/lorvex:daily-review`,
+`/lorvex:weekly-review`, and `/lorvex:tidy-memory`. Its README is
 [`plugins/lorvex/README.md`](../../../../plugins/lorvex/README.md). If you added
 Lorvex to Claude Code by hand earlier, remove that entry with
 `claude mcp remove lorvex` so the tools are not listed twice.

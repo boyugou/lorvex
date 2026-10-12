@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "lorvex",
-      "description": "Plan your day, capture tasks, run weekly reviews, and keep the assistant's notes tidy in Lorvex, the Apple-native task manager. Connects Claude Code to the MCP helper inside the installed Lorvex app.",
+      "description": "Plan your day, capture tasks, review the day and the week, and keep the assistant's notes tidy in Lorvex, the Apple-native task manager. Connects Claude Code to the MCP helper inside the installed Lorvex app.",
       "category": "productivity",
       "source": "./plugins/lorvex",
       "homepage": "https://lorvex.app"

@@ -18,8 +18,8 @@ with this document:
   such as Claude Code and Claude Desktop add it to the model's system prompt,
   so every connected assistant starts with it.
 - **Plugin skills.** The Claude Code plugin in `plugins/lorvex` adds skills
-  for the longer workflows: planning a day, capturing tasks, the weekly
-  review, and memory upkeep.
+  for the longer workflows: planning a day, capturing tasks, the daily and
+  weekly reviews, and memory upkeep.
 - **Tool descriptions.** Each tool's description carries its own contract
   (see [What this means for tool design](#what-this-means-for-tool-design)).
 

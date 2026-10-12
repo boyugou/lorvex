@@ -58,6 +58,7 @@ struct MobileCalendarEventDetailSheet: View {
 /// inside the row instead of squeezing a label beside it.
 struct MobileCalendarEventDetailContent: View {
   let event: CalendarTimelineEvent
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
@@ -147,11 +148,15 @@ struct MobileCalendarEventDetailContent: View {
     icon: String, label: String, @ViewBuilder content: () -> Content
   ) -> some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
-      Image(systemName: icon)
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(.secondary)
-        .frame(width: 22)
-        .accessibilityHidden(true)
+      // The label names the field, so the glyph is decoration: at an
+      // accessibility text size it goes, and the value gets the whole width.
+      if !dynamicTypeSize.isAccessibilitySize {
+        Image(systemName: icon)
+          .font(LorvexDesign.Typography.secondaryText)
+          .foregroundStyle(.secondary)
+          .frame(width: 22)
+          .accessibilityHidden(true)
+      }
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(verbatim: label)
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))

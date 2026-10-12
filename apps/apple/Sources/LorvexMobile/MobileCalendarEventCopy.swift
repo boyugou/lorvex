@@ -54,6 +54,12 @@ enum MobileCalendarEventCopy {
       table: "Localizable", bundle: MobileL10n.bundle)
   }
 
+  static var openInCalendar: String {
+    String(
+      localized: "calendar.event.open_in_calendar", defaultValue: "Open in Calendar",
+      table: "Localizable", bundle: MobileL10n.bundle)
+  }
+
   static var allDay: String {
     String(
       localized: "calendar.all_day_short", defaultValue: "All day", table: "Localizable",

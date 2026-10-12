@@ -83,6 +83,15 @@ struct CalendarEventShareTextTests {
     #expect(CalendarEventShare.text(for: change).contains("Repeats: Repeating event"))
   }
 
+  @Test("A mirrored event links to Apple Calendar at its start, and an unreadable day has no link")
+  func appleCalendarLink() throws {
+    let timed = event()
+    let url = try #require(timed.appleCalendarURL)
+    let start = CalendarEventTiming(event: timed, fallbackDay: Date()).start
+    #expect(url.absoluteString == "calshow:\(Int(start.timeIntervalSinceReferenceDate))")
+    #expect(event(start: "not-a-day").appleCalendarURL == nil)
+  }
+
   @Test("The When lines are the day, then the all-day words or the clock times")
   func whenLines() {
     let timed = event().whenLines(allDay: "All day")

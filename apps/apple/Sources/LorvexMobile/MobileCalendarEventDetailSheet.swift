@@ -92,7 +92,16 @@ struct MobileCalendarEventDetailContent: View {
           row(icon: "note.text", label: MobileCalendarEventCopy.notes) { valueText(notes) }
         }
         row(icon: "lock", label: MobileCalendarEventCopy.calendar) {
-          valueText(MobileCalendarEventCopy.systemCalendar)
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+            valueText(MobileCalendarEventCopy.systemCalendar)
+            if let calendarURL = event.appleCalendarURL {
+              Link(destination: calendarURL) {
+                Label(MobileCalendarEventCopy.openInCalendar, systemImage: "arrow.up.forward.app")
+              }
+              .font(LorvexDesign.Typography.secondaryText)
+              .accessibilityIdentifier("mobileCalendarEventDetail.openInCalendar")
+            }
+          }
         }
       }
       .lorvexCard()

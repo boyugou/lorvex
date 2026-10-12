@@ -3408,7 +3408,9 @@ your Lorvex tasks so you can see scheduling conflicts at a glance.
 Use the row buttons or context menu to edit or delete Lorvex-owned events.
 Imported EventKit events are read-only overlays: on the Mac they open in the
 inspector, and on iPhone and iPad a tap opens a read-only **Event** sheet with
-the event's time, place, repeat rule, attendees, link, and notes.
+the event's time, place, repeat rule, attendees, link, and notes, and an **Open in
+Calendar** link that opens Apple Calendar on the event's day, where it can be
+changed. The Mac inspector offers the same link for such an event.
 
 **Copy or share an event** as plain text. On the Mac, right-click the event (on
 the calendar, in search results, or on Today's schedule) or open its inspector's

@@ -69,6 +69,7 @@ struct MobileCalendarEventDetailTests {
       #expect(text.contains("MobileStoreCalendarEventSheet("), "\(file) presents the shared sheet")
       #expect(!text.contains("MobileStoreEditCalendarEventSheet("), "\(file) never opens the editor directly")
     }
+    #expect(try source("MobileCalendarEventDetailSheet.swift").contains("event.appleCalendarURL"))
     let sheet = try source("MobileStoreCalendarEventSheet.swift")
     #expect(sheet.contains("if event.editable {"))
     #expect(sheet.contains("MobileStoreEditCalendarEventSheet("))

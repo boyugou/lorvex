@@ -57,6 +57,13 @@ struct CalendarEventInspector: View {
             }
           }
           sourceRow
+          if !event.editable, let calendarURL = event.appleCalendarURL {
+            Link(destination: calendarURL) {
+              Label(openInCalendarTitle, systemImage: "arrow.up.forward.app")
+            }
+            .font(LorvexDesign.Typography.secondaryText)
+            .accessibilityIdentifier("calendar.event.inspector.openInCalendar")
+          }
         }
         .padding(LorvexDesign.Spacing.l)
       }
@@ -222,6 +229,11 @@ struct CalendarEventInspector: View {
         table: "Localizable", bundle: LorvexL10n.bundle))
   }
 
+  private var openInCalendarTitle: String {
+    String(
+      localized: "calendar.event.open_in_calendar", defaultValue: "Open in Calendar",
+      table: "Localizable", bundle: LorvexL10n.bundle)
+  }
   private var whenTitle: String {
     String(
       localized: "calendar.event.field.when", defaultValue: "When", table: "Localizable",

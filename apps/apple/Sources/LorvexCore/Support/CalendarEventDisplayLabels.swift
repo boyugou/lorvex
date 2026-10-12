@@ -51,4 +51,14 @@ extension CalendarTimelineEvent {
   /// Whether the event's detail has a Repeats row: it repeats, or it is a
   /// one-off change to a repeating series.
   public var hasRecurrenceRow: Bool { isRecurring || supportsScopedMutation }
+
+  /// A link that opens Apple Calendar on the day the event starts (`calshow:`
+  /// with the start as seconds since 2001-01-01 UTC). Lorvex shows an event a
+  /// device calendar owns but cannot change it; Calendar can. Nil when the
+  /// start day does not parse.
+  public var appleCalendarURL: URL? {
+    guard LorvexDateFormatters.ymd.date(from: startDate) != nil else { return nil }
+    let start = CalendarEventTiming(event: self, fallbackDay: Date()).start
+    return URL(string: "calshow:\(Int(start.timeIntervalSinceReferenceDate))")
+  }
 }

@@ -101,11 +101,66 @@ extension AppStore {
   func arrowKeyTaskNavigation(
     on surface: AppStoreBatchCancelSurface
   ) -> WorkspaceTaskArrowKeyNavigation {
-    WorkspaceTaskArrowKeyNavigation(
+    if surface == .today { return todayArrowKeyNavigation() }
+    return WorkspaceTaskArrowKeyNavigation(
       orderedTaskIDs: orderedTaskIDs(on: surface),
       selectedTaskID: selectedTaskID,
       selectOnly: { id in self.selectOnlyTask(id, on: surface) },
       extendSelection: { id in self.extendTaskSelection(on: surface, to: id) }
+    )
+  }
+
+  /// Today's arrow-key stops in the order the main column draws them: the
+  /// schedule's events and unfinished timed tasks in time order (an event the
+  /// schedule folds behind its "earlier" line is not drawn, so it is not a
+  /// stop), the tasks without a time, then what the Done section lists while
+  /// it is open. An event's stop is its calendar id, which never equals a task id.
+  func todayArrowKeyStops() -> (ids: [String], eventIDs: Set<String>) {
+    let content = todayColumnContent
+    let fold = LorvexTodayTimeline.earlierFold(content.schedule)
+    var eventIDs = Set<String>()
+    var ids = [String]()
+    for (index, row) in content.schedule.enumerated() {
+      switch row.kind {
+      case .task(let task) where task.status.isActionable:
+        ids.append(task.id)
+      case .event(let event) where !fold.contains(index):
+        ids.append(event.id)
+        eventIDs.insert(event.id)
+      default:
+        break
+      }
+    }
+    ids += content.untimedItems.map(\.task.id)
+    if !isTodayDoneCollapsed { ids += content.doneListTasks.map(\.id) }
+    var seen = Set<String>()
+    return (ids.filter { seen.insert($0).inserted }, eventIDs)
+  }
+
+  private func todayArrowKeyNavigation() -> WorkspaceTaskArrowKeyNavigation {
+    let stops = todayArrowKeyStops()
+    let eventID = selection == .today ? selectedCalendarEventID : nil
+    return WorkspaceTaskArrowKeyNavigation(
+      orderedTaskIDs: stops.ids,
+      selectedTaskID: selectedTaskID ?? eventID,
+      selectOnly: { id in
+        if stops.eventIDs.contains(id) {
+          guard let event = self.todayScheduleEvents.first(where: { $0.id == id }) else { return }
+          self.selectedTaskID = nil
+          self.selectCalendarEvent(event)
+        } else {
+          self.selectOnlyTask(id, on: .today)
+        }
+      },
+      extendSelection: { id in
+        // A range grows over tasks only; landing on an event, or growing from
+        // one, opens that row alone.
+        if stops.eventIDs.contains(id) || self.selectedTaskID == nil {
+          self.arrowKeyTaskNavigation(on: .today).selectOnly(id)
+        } else {
+          self.extendTaskSelection(on: .today, to: id)
+        }
+      }
     )
   }
 }

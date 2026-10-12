@@ -71,7 +71,9 @@ struct TodayScheduleSection: View {
         task: task, store: store, isBlocked: store.isBlocked(task),
         timeLabel: timeLabel(row, isRunning: isRunning),
         timeIsRunning: isRunning,
-        chips: items[task.id].map(TodayColumn.chips(for:)) ?? [])
+        chips: items[task.id].map(TodayColumn.chips(for:)) ?? []
+      )
+      .id(task.id)
     case .event(let event):
       TodayEventRow(
         event: event,
@@ -80,6 +82,8 @@ struct TodayScheduleSection: View {
         isSelected: store.selectedCalendarEventID == event.id,
         open: { store.toggleTodayEventSelection(event) }
       )
+      // The arrow keys scroll to a row by the id of the task or event it shows.
+      .id(event.id)
       .lorvexDeleteKey { eventActions?.requestDelete(event) }
       .contextMenu {
         if let eventActions {

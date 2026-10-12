@@ -26,18 +26,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   policy is `apps/apple/docs/release.md`, "GitHub Releases".
 
 - Open UI/UX work, each verified against the code but not yet done:
-  - iPhone habit rows and the habit detail's Complete Today button judge
-    "done" by today's count, while the Mac and the iPhone detail dial use the
-    period (`HabitPeriodProgress`), so a times-per-week habit that met its
-    week reads done on one surface and open on another. The iPhone rows need
-    the habit's recent completions loaded to agree.
   - The iPhone milestone-goal hint says "streak length" for a weekly habit;
     the Mac hint says weeks. It needs a new string in all thirty languages.
-  - Streak values read "12-day streak" on the Mac habit card and "12 days" in
-    the inspector and on the iPhone; Mac Lists cards omit the list's
-    description, which the iPhone Lists rows show; a habit counted several
-    times a day draws its ring as segments on some surfaces and as one arc
-    on others.
+  - Mac Lists cards omit the list's description, which the iPhone Lists rows
+    show; a habit counted several times a day draws its ring as segments on
+    some surfaces and as one arc on others.
   - In the Tasks table at the smallest Mac window with the inspector open,
     long translated text (Russian) overflows its column by about 20 pt.
   - Calendar events offer no Copy as Text or Share action.

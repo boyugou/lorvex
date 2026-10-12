@@ -205,7 +205,7 @@ public struct MobileStoreHabitsView: View {
                   .mobileNeutralSwipeStyle()
               }
               .contextMenu {
-                habitCompletionAction(habit)
+                habitCompletionMenuActions(habit)
                 habitSkipAction(habit)
                 habitEditAction(habit)
                 if !isFilteringHabits {

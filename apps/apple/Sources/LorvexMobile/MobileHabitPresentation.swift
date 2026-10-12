@@ -25,6 +25,34 @@ extension LorvexHabit {
       table: "Localizable", bundle: MobileL10n.bundle)
   }
 
+  // MARK: - Period basis
+
+  /// The Habits screens judge a habit by its period, as the Mac's cards do
+  /// (``HabitPeriodProgress``): today's check-ins for a daily habit or one
+  /// counted several times a day, this week's or this month's met days
+  /// otherwise. Today's strip keeps judging by the day.
+  var periodProgress: HabitPeriodProgress.Value { HabitPeriodProgress.current(habit: self) }
+
+  /// The period's completion fraction, clamped to `0...1`.
+  var periodProgressValue: Double {
+    let progress = periodProgress
+    guard progress.required > 0 else { return 0 }
+    return min(1, Double(progress.completed) / Double(progress.required))
+  }
+
+  /// Whether the period's plan is met.
+  var isCompleteForPeriod: Bool { periodProgress.isComplete }
+
+  /// What checking the habit in does on the Habits screens
+  /// (``LorvexHabitCheckIn`` on its period basis).
+  var periodCheckIn: LorvexHabitCheckIn { LorvexHabitCheckIn.action(for: self, basis: .period) }
+
+  /// Whether Complete Today is on offer: a check-in is still to be made.
+  var offersCompleteToday: Bool { periodCheckIn == .complete || periodCheckIn == .addOne }
+
+  /// Whether Reset Today is on offer: today holds a check-in to clear.
+  var offersResetToday: Bool { completionsToday > 0 }
+
   /// The habit's tile / ring / icon tint: its identity color
   /// (``LorvexHabitPalette/baseColor(for:)``), the same hue the Mac shows.
   var tileTint: Color {

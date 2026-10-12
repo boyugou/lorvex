@@ -8,6 +8,13 @@ import SwiftUI
 /// habit. Shared by the compact habit row, the regular/iPad catalog row, and
 /// Today's habit strip so all give the same completion moment.
 ///
+/// The ring judges the habit against `basis`: Today's strip against the day, the
+/// Habits screens against the habit's period, as the Mac's cards do, so a habit
+/// kept three times a week that met its week reads done in both places. On the
+/// period basis a habit whose period earlier days already met, and which holds no
+/// check-in today, has nothing to check in: the ring shows it done and a tap does
+/// nothing (``LorvexHabitCheckIn``).
+///
 /// A habit set aside for today draws as a skipped ring. Tapping it still checks
 /// the habit in, which lifts the skip: a day holds a check-in or a skip, and the
 /// check-in outranks it. Taking the skip back without checking in is the
@@ -19,6 +26,8 @@ struct MobileHabitCompletionRing: View {
   /// ring stands without the habit's icon tile beside it.
   var showsSymbol: Bool = false
   var size: CGFloat = 32
+  /// What the ring judges the habit against. Today's strip keeps the day.
+  var basis: LorvexHabitCheckIn.Basis = .day
   let complete: () async -> Void
   let reset: () async -> Void
   /// Drives the tap feedback: the ring springs up and settles back as the
@@ -28,13 +37,30 @@ struct MobileHabitCompletionRing: View {
   /// How far the tap target reaches past the ring, to make it 44pt across.
   private var tapOutset: CGFloat { max(0, (44 - size) / 2) }
 
+  private var fraction: Double {
+    basis == .period ? habit.periodProgressValue : habit.todayProgressValue
+  }
+
+  private var isComplete: Bool {
+    basis == .period ? habit.isCompleteForPeriod : habit.isCompleteToday
+  }
+
+  /// What a tap does. The day basis completes the habit, or resets it once the
+  /// day's count is met.
+  private var checkIn: LorvexHabitCheckIn {
+    switch basis {
+    case .period: habit.periodCheckIn
+    case .day: habit.isCompleteToday ? .uncomplete : .complete
+    }
+  }
+
   var body: some View {
     Button(action: trigger) {
       MobileProgressRing(
-        value: habit.todayProgressValue,
-        tint: habit.isCompleteToday ? LorvexDesign.Palette.done : habit.tileTint,
+        value: fraction,
+        tint: isComplete ? LorvexDesign.Palette.done : habit.tileTint,
         size: size,
-        isComplete: habit.isCompleteToday,
+        isComplete: isComplete,
         symbol: showsSymbol ? habit.tileSymbol : nil,
         isSkipped: habit.isSkipped
       )
@@ -48,22 +74,19 @@ struct MobileHabitCompletionRing: View {
     .padding(-tapOutset)
     .disabled(isMutating)
     .lorvexSensoryFeedback(.success, trigger: pulse) { _, now in now }
-    .accessibilityLabel(
-      habit.isCompleteToday
-        ? String(format: String(localized: "habits.reset.a11y", defaultValue: "Reset %@", table: "Localizable", bundle: MobileL10n.bundle), habit.name)
-        : String(format: String(localized: "habits.complete.a11y", defaultValue: "Complete %@", table: "Localizable", bundle: MobileL10n.bundle), habit.name))
-    .accessibilityValue(habit.isSkipped ? MobileHabitSkipCopy.skippedToday : habit.todayProgressText)
+    .accessibilityLabel(MobileHabitCheckInCopy.ringLabel(for: habit, action: checkIn))
+    .accessibilityValue(MobileHabitCheckInCopy.ringValue(for: habit, basis: basis))
     .accessibilityIdentifier("mobileHabits.completionRing.\(habit.id)")
   }
 
   private func trigger() {
-    guard !isMutating else { return }
-    let wasComplete = habit.isCompleteToday
+    let action = checkIn
+    guard !isMutating, action != .none else { return }
     lorvexAnimated(.spring(response: 0.34, dampingFraction: 0.5)) {
       pulse = true
     }
     Task {
-      if wasComplete {
+      if action == .uncomplete {
         await reset()
       } else {
         await complete()

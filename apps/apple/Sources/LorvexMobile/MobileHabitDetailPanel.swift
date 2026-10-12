@@ -155,35 +155,57 @@ struct MobileHabitDetailPanel: View {
     }
   }
 
-  /// Complete Today is the page's prominent button while the day is open, in
-  /// the done green that Complete wears on a task's detail and on a habit
-  /// row's swipe. Once the habit is done, Reset Today is an undo, so it steps
-  /// back to the bordered style beside Edit rather than leading the page.
+  /// Complete Today is the page's prominent button while a check-in is still to
+  /// be made, in the done green that Complete wears on a task's detail and on a
+  /// habit row's swipe. Once today holds a check-in, Reset Today is an undo, so
+  /// it steps back to the bordered style beside Edit rather than leading the
+  /// page. A habit kept once a week or a month whose period earlier days already
+  /// met has nothing to check in, as on the Mac: its standing stands in the
+  /// button's place (``LorvexHabitCheckIn``).
   @ViewBuilder
   private var completeAction: some View {
-    let button = Button {
-      Task {
-        if habit.isCompleteToday {
-          _ = await reset()
-        } else {
-          _ = await complete()
-        }
+    if habit.offersCompleteToday {
+      Button {
+        Task { _ = await complete() }
+      } label: {
+        Label(
+          String(localized: "habits.detail.complete", defaultValue: "Complete Today", table: "Localizable", bundle: MobileL10n.bundle),
+          systemImage: "checkmark")
       }
-    } label: {
-      Label(
-        habit.isCompleteToday
-        ? String(localized: "habits.detail.reset", defaultValue: "Reset Today", table: "Localizable", bundle: MobileL10n.bundle)
-        : String(localized: "habits.detail.complete", defaultValue: "Complete Today", table: "Localizable", bundle: MobileL10n.bundle),
-        systemImage: habit.isCompleteToday ? "arrow.counterclockwise" : "checkmark")
-    }
-    .controlSize(.large)
-    .disabled(isMutating)
-    .accessibilityIdentifier("mobileHabits.detail.complete")
-    if habit.isCompleteToday {
-      button.buttonStyle(.bordered)
+      .buttonStyle(.borderedProminent)
+      .tint(LorvexDesign.Palette.done)
+      .controlSize(.large)
+      .disabled(isMutating)
+      .accessibilityIdentifier("mobileHabits.detail.complete")
+    } else if habit.offersResetToday {
+      Button {
+        Task { _ = await reset() }
+      } label: {
+        Label(
+          String(localized: "habits.detail.reset", defaultValue: "Reset Today", table: "Localizable", bundle: MobileL10n.bundle),
+          systemImage: "arrow.counterclockwise")
+      }
+      .buttonStyle(.bordered)
+      .controlSize(.large)
+      .disabled(isMutating)
+      .accessibilityIdentifier("mobileHabits.detail.complete")
     } else {
-      button.buttonStyle(.borderedProminent).tint(LorvexDesign.Palette.done)
+      periodStanding
     }
+  }
+
+  /// "Done this week", in the done green with a check, where Complete Today
+  /// would otherwise sit. It is not a control: the period is met and today holds
+  /// no check-in to undo.
+  private var periodStanding: some View {
+    Label(
+      MobileHabitCheckInCopy.periodDone(HabitPeriodProgress.period(for: habit)),
+      systemImage: "checkmark.circle.fill"
+    )
+    .font(LorvexDesign.Typography.primaryEmphasis)
+    .foregroundStyle(LorvexDesign.Palette.done)
+    .padding(.vertical, LorvexDesign.Spacing.s)
+    .accessibilityIdentifier("mobileHabits.detail.standing")
   }
 
   /// Skip Today, or Undo Skip once today is set aside, as a quiet line under

@@ -6,7 +6,8 @@ import SwiftUI
 /// or, until then, an optional SF Symbol in `tint`. A ring that is skipped (a
 /// habit set aside for the day) draws its track as dots and carries the skip
 /// glyph in the secondary style, so the day reads as excused by shape and not
-/// by color alone.
+/// by color alone. Progress earlier days made toward a longer period still fills
+/// the arc over the dots.
 ///
 /// The track is the neutral tertiary style, not a faint wash of `tint`. The ring
 /// is a habit's check-in control, and while nothing is logged its track is the
@@ -37,6 +38,9 @@ struct MobileProgressRing: View {
       if isShownSkipped {
         LorvexDottedRing(dotDiameter: lineWidth)
           .fill(.tertiary)
+        if value > 0 {
+          LorvexProgressArc(fraction: value, style: tint, lineWidth: lineWidth)
+        }
       } else {
         Circle()
           .stroke(.tertiary, lineWidth: lineWidth)

@@ -99,6 +99,7 @@ struct MobileHabitRow: View {
       MobileHabitCompletionRing(
         habit: habit,
         isMutating: isMutating,
+        basis: .period,
         complete: { _ = await complete() },
         reset: { _ = await reset() }
       )
@@ -138,22 +139,26 @@ struct MobileHabitRow: View {
       .accessibilityIdentifier("mobileHabits.edit.\(habit.id)")
     }
     .contextMenu {
-      Button {
-        Task {
-          if habit.isCompleteToday {
-            _ = await reset()
-          } else {
-            _ = await complete()
-          }
+      if habit.offersCompleteToday {
+        Button {
+          Task { _ = await complete() }
+        } label: {
+          Label(
+            String(localized: "habits.detail.complete", defaultValue: "Complete Today", table: "Localizable", bundle: MobileL10n.bundle),
+            systemImage: "checkmark.circle")
         }
-      } label: {
-        Label(
-          habit.isCompleteToday
-            ? String(localized: "habits.detail.reset", defaultValue: "Reset Today", table: "Localizable", bundle: MobileL10n.bundle)
-            : String(localized: "habits.detail.complete", defaultValue: "Complete Today", table: "Localizable", bundle: MobileL10n.bundle),
-          systemImage: habit.isCompleteToday ? "arrow.counterclockwise" : "checkmark.circle")
+        .disabled(isMutating)
       }
-      .disabled(isMutating)
+      if habit.offersResetToday {
+        Button {
+          Task { _ = await reset() }
+        } label: {
+          Label(
+            String(localized: "habits.detail.reset", defaultValue: "Reset Today", table: "Localizable", bundle: MobileL10n.bundle),
+            systemImage: "arrow.counterclockwise")
+        }
+        .disabled(isMutating)
+      }
 
       skipButton
 

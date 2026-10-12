@@ -3268,6 +3268,15 @@ than normal after the task's title.
 - **Mobile Habit Creation:** Open **Habits** from its row on the **Tasks** tab,
   below the lists, then tap the **+** in its toolbar to create a core-backed
   daily habit with a cue and target count.
+- **Mobile Habit Check-In:** On the **Habits** screen a habit's ring shows where
+  it stands for its period, as on the Mac: today for a daily habit or one
+  counted several times a day, this week for a habit kept a number of times a
+  week or on chosen weekdays, this month for a monthly habit. Tap the ring to
+  check in, or to clear a check-in made today. When earlier days already met the
+  week or the month and today holds no check-in, the ring reads done and does
+  nothing, and the habit's own page says "Done this week" (or "this month") in
+  place of **Complete Today**, since another check-in would only over-log the
+  period. Touch and hold a row for **Complete Today** and **Reset Today**.
 - **Mobile Habit Skipping:** On the **Habits** screen, swipe a habit's row to
   the right, or touch and hold it, for **Skip Today** (**Undo Skip** once
   skipped). A habit's own page has the same command as a quiet line under

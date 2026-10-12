@@ -1001,6 +1001,8 @@ NON_COUNT_INTEGER_ARGUMENTS: dict[str, dict[int, str]] = {
     "habits.header.done.month": {1: _RATIO, 2: _RATIO},
     "habits.header.done.today": {1: _RATIO, 2: _RATIO},
     "habits.header.done.week": {1: _RATIO, 2: _RATIO},
+    "habits.period.count.month": {1: _RATIO, 2: _RATIO},
+    "habits.period.count.week": {1: _RATIO, 2: _RATIO},
     "habits.progress_today": {1: _RATIO, 2: _RATIO},
     "habits.reminders.hint.monthly": {1: _DAY_OF_MONTH},
     "habits.row.today_progress_a11y": {1: _RATIO, 2: _RATIO},

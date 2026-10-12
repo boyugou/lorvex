@@ -30,6 +30,7 @@ struct MobileHabitCatalogRow: View {
         MobileHabitCompletionRing(
           habit: habit,
           isMutating: isMutating,
+          basis: .period,
           complete: complete,
           reset: reset
         )
@@ -42,10 +43,10 @@ struct MobileHabitCatalogRow: View {
         MobileHabitSummary(habit: habit)
         Spacer(minLength: LorvexDesign.Spacing.s)
         MobileProgressRing(
-          value: habit.todayProgressValue,
-          tint: habit.isCompleteToday ? LorvexDesign.Palette.done : habit.tileTint,
+          value: habit.periodProgressValue,
+          tint: habit.isCompleteForPeriod ? LorvexDesign.Palette.done : habit.tileTint,
           size: 32,
-          isComplete: habit.isCompleteToday,
+          isComplete: habit.isCompleteForPeriod,
           isSkipped: habit.isSkipped
         )
         .accessibilityHidden(true)

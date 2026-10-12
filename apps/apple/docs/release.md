@@ -418,7 +418,22 @@ Check these at the start of a maintenance session. Dates are absolute.
 - **Dependencies.** Each quarter, review the pinned packages in the tracked
   `Package.resolved` files (`swift package update` in `apps/apple` and
   `apps/apple/core`), read what changed in anything that moved, run the full
-  suites, and commit the new pins.
+  suites, and commit the new pins. The Xcode project has its own lock,
+  `Config/XcodeGen/Package.resolved`: generate a fresh project
+  (`xcodegen --spec Config/XcodeGen/project.yml --project <dir> --project-root
+  apps/apple`), run `xcodebuild -resolvePackageDependencies -project
+  <dir>/LorvexAppleNative.xcodeproj -scheme LorvexMobileApp`, copy the
+  `core/Package.resolved` it rewrote over the Xcode lock, and `git checkout
+  core/Package.resolved`; then `script/ios_sim_build.sh` builds from the pinned
+  lock. Also read the security advisories of each package
+  (`gh api repos/<owner>/<repo>/security-advisories`) and whether the affected
+  code is linked into the shipped binaries (`strings` on the build). Last
+  review: 2026-10-12, which moved swift-nio from 2.100.0 to 2.104.0 (the
+  advisory GHSA-qcc5-f287-vgmq in `NIOWebSocket` is fixed in 2.101.0; no shipped
+  binary links that decoder), swift-markdown and swift-cmark to 0.9.0,
+  swift-collections to 1.7.2, swift-log to 1.16.1, swift-system to 1.8.1,
+  swift-atomics to 1.3.1, and eventsource to 1.5.1. GRDB stays on 6.29.3, the
+  last 6.x release; 7.x is a separate migration.
 - **Validation of record.** Hosted CI is paused (macOS minutes are not
   available), so `script/verify_swift.sh`, `script/verify_static_gates.sh`, and
   the release scripts are the gate before every push and release.

@@ -284,7 +284,13 @@ extension MobileStore {
     _ operation: () async throws -> TodaySnapshot
   ) async -> Bool {
     guard beginTaskMutation(id: taskID) else { return false }
-    defer { endTaskMutation(id: taskID) }
+    var isEnded = false
+    func endMutation() {
+      guard !isEnded else { return }
+      isEnded = true
+      endTaskMutation(id: taskID)
+    }
+    defer { endMutation() }
     let namedIDs = stableUniqueTaskIDs(
       [taskID, selectedTaskID].compactMap { $0 } + affectedIDs)
     let placementsBefore = taskPlacements(of: namedIDs)
@@ -311,6 +317,9 @@ extension MobileStore {
         ifPlacementsChangedFrom: placementsBefore, of: namedIDs)
       invalidateTaskViews()
       await reloadReviewEvidenceAfterTaskMutation()
+      // The write and the reads that show it are done; the publishes below
+      // reach the network and the OS, so the task's controls come back first.
+      endMutation()
       await publishMobileSyncSurfaces()
       await rescheduleReminders()
       await updateBadge()
@@ -328,7 +337,13 @@ extension MobileStore {
     _ operation: () async throws -> LorvexTask
   ) async -> Bool {
     guard beginTaskMutation(id: taskID) else { return false }
-    defer { endTaskMutation(id: taskID) }
+    var isEnded = false
+    func endMutation() {
+      guard !isEnded else { return }
+      isEnded = true
+      endTaskMutation(id: taskID)
+    }
+    defer { endMutation() }
     let namedIDs = stableUniqueTaskIDs([taskID, selectedTaskID].compactMap { $0 })
     let placementsBefore = taskPlacements(of: namedIDs)
     do {
@@ -339,6 +354,9 @@ extension MobileStore {
         ifPlacementsChangedFrom: placementsBefore, of: namedIDs)
       invalidateTaskViews()
       await reloadReviewEvidenceAfterTaskMutation()
+      // The write and the reads that show it are done; the publishes below
+      // reach the network and the OS, so the task's controls come back first.
+      endMutation()
       await publishMobileSyncSurfaces()
       await rescheduleReminders()
       await updateBadge()

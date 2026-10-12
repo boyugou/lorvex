@@ -48,8 +48,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     transition that is not complete or cancel) are not reachable from the UI.
   - A task repeating on the 29th or 30th skips February; clamping to the last
     day changes the stored rule shape and is a product decision.
-  - Busy flags still span local fan-out in `mutateHabitReminder`, iOS sheet
-    saves, and iOS `mutateTask`.
   - Sync convergence limits found by `SyncConvergenceSimulationTests`: a task
     hard-delete racing a concurrent edit when child edges arrive first; a tag
     delete cascading a newer live edge before a resurrecting upsert; alias

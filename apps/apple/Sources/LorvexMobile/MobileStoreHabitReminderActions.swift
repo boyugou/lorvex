@@ -59,6 +59,9 @@ extension MobileStore {
     do {
       try await operation()
       _ = await loadHabitDetail(id: habitID)
+      // The editor shows the result; re-planning the notifications reaches the
+      // OS, so the reminder controls come back first.
+      isMutatingHabitReminder = false
       await rescheduleReminders()
       errorMessage = nil
       return true

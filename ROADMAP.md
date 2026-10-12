@@ -63,7 +63,16 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     resurrects the task arrives; keeping such children parked leaves entries
     that never resolve when the task stays deleted, so 104 of 300 seeds then
     end with pending entries, and the change was backed out), and a `habit_completion` tombstone with a
-    different death version. The runs are not bit-for-bit repeatable (ids and
+    different death version (a note, not a divergence). Seeds 1030 and 1037 are
+    one shape: a parent's hard delete cascades its children on the replicas that
+    apply it, while a replica whose own newer upsert wins keeps them, and the
+    resurrecting upsert then reaches the others without them. A candidate fix:
+    when a parent's delete loses to a newer local upsert, re-enqueue the
+    surviving children at their stored versions through the full-resync
+    backfill path (`Outbox.enqueueAllLiveForFullResync` already does it per
+    entity), and keep the child that arrives before the resurrecting upsert
+    parked only while it is newer than the tombstone and the pending-entry
+    count stays bounded. The runs are not bit-for-bit repeatable (ids and
     clocks come from the wall clock), so a seed names a shape, not an exact run.
   - Mac performance: in the debug test build, completing a task awaits about
     40 ms at 100 tasks, 150 ms at 1000, and 430 ms at 3000

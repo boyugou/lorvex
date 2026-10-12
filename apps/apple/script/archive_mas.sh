@@ -36,11 +36,15 @@
 # real release packaging must not set that variable. See
 # require_schema_freeze_gate.sh.
 
-set -euo pipefail
+set -Eeuo pipefail
+# A step that fails silently (a pipeline ended by pipefail, say) would otherwise
+# leave nothing in the release log to say where.
+trap 'echo "archive_mas.sh: line $LINENO failed: $BASH_COMMAND" >&2' ERR
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/script/app_metadata.sh"
 source "$ROOT_DIR/script/require_schema_freeze_gate.sh"
+source "$ROOT_DIR/script/lib_bundle_checks.sh"
 
 APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
 PKG_PATH="${MAS_PKG_PATH:-"$ROOT_DIR/dist/$APP_NAME-macOS-MAS-$MARKETING_VERSION+$BUILD_VERSION.pkg"}"
@@ -180,7 +184,7 @@ package_mas() {
   # rejects such a package (90255) only after the build and the upload, so
   # fail here, before the package is built.
   local unreadable
-  unreadable="$(find "$APP_BUNDLE" -not -perm -004 -print | head -5)"
+  unreadable="$(bundle_unreadable_files "$APP_BUNDLE")"
   if [[ -n "$unreadable" ]]; then
     echo "the app bundle holds files other users cannot read (App Store Connect rejects it, 90255):" >&2
     echo "$unreadable" >&2
@@ -191,7 +195,7 @@ package_mas() {
   # com.apple.quarantine attribute (91109), and reports it only after processing
   # the upload, which fails the build with no way to repair it in place.
   local quarantined
-  quarantined="$(xattr -rl "$APP_BUNDLE" 2>/dev/null | grep 'com.apple.quarantine' | cut -d: -f1 | head -5)"
+  quarantined="$(bundle_quarantined_files "$APP_BUNDLE")"
   if [[ -n "$quarantined" ]]; then
     echo "the app bundle holds files with the com.apple.quarantine attribute (App Store Connect rejects it, 91109):" >&2
     echo "$quarantined" >&2

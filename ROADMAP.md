@@ -52,9 +52,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     hard-delete racing a concurrent edit when child edges arrive first; a tag
     delete cascading a newer live edge before a resurrecting upsert; alias
     deletes reordered before their redirects; no `habit_completion` fold.
-  - Mac performance: a task mutation awaits a six-stage publishing chain, and
-    each external database signal triggers a full refresh that re-indexes
-    Spotlight and the calendar window.
+  - Mac performance: completing a task awaits about 40 ms at 100 tasks, 150 ms
+    at 1000, and 430 ms at 3000 (`ZZMutationLatencyProbeTests`); the time is
+    the core's batch task enrichment (a JSON round trip per task), read once
+    for Today, once for the widget snapshot and the badge, and once more for the
+    Spotlight index. Each external database signal triggers a full refresh that
+    re-indexes Spotlight and the calendar window.
   - Mac keyboard: list cards show Edit and Delete only on hover.
   - Polish: Settings > Activity shows English changelog summaries; German
     Memory sheet titles truncate at 375 pt; the Urdu Today medium widget shows

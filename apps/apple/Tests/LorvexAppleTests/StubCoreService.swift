@@ -85,9 +85,10 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// read, so a test can observe store state while a task-list read (a loaded
   /// Tasks workspace reloading after a mutation) is in flight.
   var listTasksGate: (@Sendable () async -> Void)?
-  /// Optional async barrier invoked inside `loadWidgetStatsSource` before the
-  /// delegated read, so a test can observe store state while the badge's read
-  /// in the fan-out after a mutation is in flight.
+  /// Optional async barrier invoked inside `loadWidgetStatsSource` and
+  /// `loadWidgetSnapshotSource` before the delegated read, so a test can observe
+  /// store state while the fan-out's read of the actionable tasks (it serves the
+  /// badge and the widget snapshot) after a mutation is in flight.
   var widgetStatsGate: (@Sendable () async -> Void)?
   /// Titles of the tasks created through the single-create entry points, in
   /// the order the core received them.
@@ -149,7 +150,10 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
     try await preview.loadSearchIndexTasks()
   }
   func loadWidgetSnapshotSource(date: String?) async throws -> WidgetSnapshotSource {
-    try await preview.loadWidgetSnapshotSource(date: date)
+    // The fan-out's one read of the actionable tasks serves the badge and the
+    // widget snapshot, so the gate that marks it sits here as well.
+    await widgetStatsGate?()
+    return try await preview.loadWidgetSnapshotSource(date: date)
   }
   func batchCancelTasksInList(listID: LorvexList.ID, statuses: [String]?, cancelSeries: Bool)
     async throws -> [LorvexTask]

@@ -128,6 +128,13 @@ extension AppStore {
   }
 
   func publishWidgetSnapshot() async throws {
+    _ = try await publishWidgetSnapshotReturningSource()
+  }
+
+  /// Publishes the widget snapshot and returns the source it was built from,
+  /// so a caller that needs the same rows (the badge counts the source's
+  /// uncapped actionable tasks) reuses the read instead of repeating it.
+  private func publishWidgetSnapshotReturningSource() async throws -> WidgetSnapshotSource {
     // Widgets read only the App-Group sidecar. Capture every projected surface
     // (including uncapped stats and the storage generation) from one SQLite
     // transaction instead of mixing independently refreshed in-memory views.
@@ -136,6 +143,7 @@ extension AppStore {
     }
     let source = try await sourceCore.loadWidgetSnapshotSource(date: nil)
     lastPublishedWidgetSnapshot = try await widgetSnapshotPublisher.publish(source: source)
+    return source
   }
 
   /// Run local retention off the main actor, best-effort. A no-op for a
@@ -176,9 +184,15 @@ extension AppStore {
     taskDataGeneration &+= 1
     await runLocalRetentionMaintenance()
     async let reminders: Void = rescheduleReminders()
-    async let badge: Void = updateBadge()
-    _ = await (reminders, badge)
-    try? await publishWidgetSnapshot()
+    // The snapshot's source already holds every actionable task the badge
+    // counts, so one read serves both; a failed publish leaves the badge to
+    // read for itself.
+    if let tasks = try? await publishWidgetSnapshotReturningSource().stats?.actionableTasks {
+      await updateBadge(tasks: tasks)
+    } else {
+      await updateBadge()
+    }
+    _ = await reminders
     Task { await self.runCloudSyncCycle() }
   }
 }

@@ -373,12 +373,15 @@ Connect and the `Build N` commits already record each one, and a notarized DMG
 for every build would bury the ones people choose between.
 
 - One release per published DMG build: tag `v<version>+<build>`
-  (`v1.0.0+117`), title `Lorvex <version> (<build>)`, created with `--latest`,
+  (`v1.0.0+118`), title `Lorvex <version> (<build>)`, created with `--latest`,
   never a pre-release, never left as a draft. The marketing version belongs to
   the App Store's version train and does not move for a DMG; the build number
-  tells two DMGs of one version apart. Earlier releases stay, each the record
-  of what that build shipped. The first release, `v1.0.0` for build 59,
-  predates the build suffix.
+  tells two DMGs of one version apart.
+- The page keeps the newest published build of each marketing version, so
+  nobody downloads an outdated build of the version they want. When a newer
+  build of the same version is published, delete the older build's release with
+  `gh release delete <tag>` and keep its tag, which still names the commit it
+  was built from. The owner removed the first release (build 59) the same way.
 - The tag marks the commit the DMG was built from and never moves, so the
   source archive GitHub attaches to a release is the source of its DMG. New
   code that DMG users should get is a new release. Only repackaging the same

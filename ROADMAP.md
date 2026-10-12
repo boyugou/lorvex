@@ -18,6 +18,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   zone (`docs/decisions/cksyncengine-transport.md`). Still owed: two-device
   proof on TestFlight builds, including the iOS sync pass that runs inside a
   background task before the database suspends, and silent-push wakes.
+- Standing maintenance and its dates (TestFlight build expiry, certificates,
+  toolchain, dependencies): `apps/apple/docs/release.md`, "Standing
+  maintenance".
 - watchOS / Widgets design audits (need on-device).
 - Direct-download DMG: the only release on the releases page is 1.0.0 (59),
   58 builds and sixteen languages behind the current build. A new release

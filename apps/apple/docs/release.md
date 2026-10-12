@@ -394,3 +394,28 @@ for every build would bury the ones people choose between.
 - Cut a release at a milestone, not per TestFlight build: a new set of
   languages, a feature people asked for, or a fix DMG users need, on a build
   that has processed VALID in App Store Connect and passed the full suites.
+
+## Standing maintenance
+
+Check these at the start of a maintenance session. Dates are absolute.
+
+- **TestFlight builds expire 90 days after upload.** Builds 117 and 118 went up
+  on 2026-10-11, so they stop installing around 2027-01-09. Upload a fresh build
+  by 2026-12-25 (the steps above), even without a product change, while testers
+  still use TestFlight.
+- **Signing material.** The Apple Distribution and Mac installer certificates,
+  and every iOS and Mac App Store profile that embeds them, expire on
+  2027-07-23; the Developer ID certificates and profiles expire in 2031.
+  Renew the first set by 2027-07-01. `script/doctor.sh --release` lists the
+  expiry of the identities and profiles it checks.
+- **Toolchain.** Release with the newest Xcode 27.x that App Store Connect
+  accepts; Apple has raised the minimum SDK for uploads in the spring in recent
+  years. After an Xcode update, run `script/verify_swift.sh --core` and one
+  `validate` before the next release.
+- **Dependencies.** Each quarter, review the pinned packages in the tracked
+  `Package.resolved` files (`swift package update` in `apps/apple` and
+  `apps/apple/core`), read what changed in anything that moved, run the full
+  suites, and commit the new pins.
+- **Validation of record.** Hosted CI is paused (macOS minutes are not
+  available), so `script/verify_swift.sh`, `script/verify_static_gates.sh`, and
+  the release scripts are the gate before every push and release.

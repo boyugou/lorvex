@@ -329,5 +329,12 @@
       "undo_ai_change",
       "get_ai_changelog"
     ]
+  },
+  {
+    "request": "You moved my dentist appointment to the wrong day. Put it back the way it was.",
+    "accepted": [
+      "undo_ai_change",
+      "get_ai_changelog"
+    ]
   }
 ]

@@ -34,9 +34,11 @@ extension CoreBridgeClient {
         "summary": .string(entry.summary),
         "initiated_by": entry.initiatedBy.map(Value.string) ?? .null,
         "mcp_tool": entry.mcpTool.map(Value.string) ?? .null,
-        // An assistant's update to a task with a recorded before-and-after: what undo_ai_change takes.
+        // An assistant's update to a task or a calendar event with a recorded before-and-after:
+        // what undo_ai_change takes (it still refuses an event that repeats).
         "undoable": .bool(
-          entry.operation == "update" && entry.entityType == EntityName.task
+          entry.operation == "update"
+            && (entry.entityType == EntityName.task || entry.entityType == EntityName.calendarEvent)
             && entry.initiatedBy == "assistant" && entry.hasBefore && entry.hasAfter),
       ])
     }
@@ -53,11 +55,19 @@ extension CoreBridgeClient {
 
   func undoAIChange(changelogID: String) async throws -> Value {
     let result = try await service.undoAIChange(changelogID: changelogID)
-    return .object([
-      "task": Self.taskValue(from: result.task),
+    var value: [String: Value] = [
       "reverted": .array(result.reverted.map(Value.string)),
       "kept": .array(result.kept.map(Value.string)),
-    ])
+    ]
+    switch result.subject {
+    case .task(let task):
+      value["entity_type"] = .string("task")
+      value["task"] = Self.taskValue(from: task)
+    case .calendarEvent(let event):
+      value["entity_type"] = .string("calendar_event")
+      value["event"] = Self.calendarEventValue(from: event)
+    }
+    return .object(value)
   }
 
   func loadRecentLogs(

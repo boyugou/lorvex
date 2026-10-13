@@ -47,12 +47,13 @@ final class UndoAIChangeTests: XCTestCase {
 
     let result = try await service.undoAIChange(changelogID: id)
 
+    let restored = try XCTUnwrap(result.task)
     XCTAssertEqual(Set(result.reverted), ["title", "notes", "priority", "estimated_minutes", "tags"])
     XCTAssertTrue(result.kept.isEmpty)
-    XCTAssertEqual(result.task.title, "Write report")
-    XCTAssertEqual(result.task.notes, "Draft first")
-    XCTAssertNil(result.task.estimatedMinutes)
-    XCTAssertTrue(result.task.tags.isEmpty)
+    XCTAssertEqual(restored.title, "Write report")
+    XCTAssertEqual(restored.notes, "Draft first")
+    XCTAssertNil(restored.estimatedMinutes)
+    XCTAssertTrue(restored.tags.isEmpty)
     let stored = try await service.loadTask(id: task.id)
     XCTAssertEqual(stored.title, "Write report")
     XCTAssertEqual(try changelogCount(service), before + 1, "the undo is itself a logged change")
@@ -69,10 +70,11 @@ final class UndoAIChangeTests: XCTestCase {
 
     let result = try await service.undoAIChange(changelogID: id)
 
+    let restored = try XCTUnwrap(result.task)
     XCTAssertEqual(result.reverted, ["title"])
     XCTAssertEqual(result.kept, ["notes"])
-    XCTAssertEqual(result.task.title, "Write report")
-    XCTAssertEqual(result.task.notes, "My own notes", "a later edit is never overwritten")
+    XCTAssertEqual(restored.title, "Write report")
+    XCTAssertEqual(restored.notes, "My own notes", "a later edit is never overwritten")
   }
 
   func testUndoingTwiceChangesNothingTheSecondTime() async throws {
@@ -86,7 +88,7 @@ final class UndoAIChangeTests: XCTestCase {
     let second = try await service.undoAIChange(changelogID: id)
 
     XCTAssertTrue(second.reverted.isEmpty)
-    XCTAssertEqual(second.task.title, "Write report")
+    XCTAssertEqual(second.task?.title, "Write report")
     XCTAssertEqual(try changelogCount(service), afterFirst, "nothing was written")
   }
 
@@ -136,7 +138,7 @@ final class UndoAIChangeTests: XCTestCase {
       "00000000-0000-4000-8000-000000000003", operation: "update",
       before: "{\"_lorvex_truncated\":true}", after: "{\"title\":\"x\"}")
     let other = await refusal("00000000-0000-4000-8000-000000000001")
-    XCTAssertEqual(other?.contains("Only an update to a task"), true)
+    XCTAssertEqual(other?.contains("Only an update to a task or a calendar event"), true)
     let none = await refusal("00000000-0000-4000-8000-000000000002")
     XCTAssertEqual(none?.contains("no before-and-after"), true)
     let truncated = await refusal("00000000-0000-4000-8000-000000000003")
@@ -154,8 +156,9 @@ final class UndoAIChangeTests: XCTestCase {
 
     let result = try await service.undoAIChange(changelogID: id)
 
+    let restored = try XCTUnwrap(result.task)
     XCTAssertEqual(Set(result.reverted), ["tags", "depends_on"])
-    XCTAssertEqual(Set(result.task.tags), ["money", "home"])
-    XCTAssertTrue(result.task.dependsOn.isEmpty)
+    XCTAssertEqual(Set(restored.tags), ["money", "home"])
+    XCTAssertTrue(restored.dependsOn.isEmpty)
   }
 }

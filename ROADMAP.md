@@ -24,12 +24,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - watchOS / Widgets design audits (need on-device).
 
 - Undo an assistant's change: the tool shipped (`undo_ai_change`, 2026-10-13):
-  an assistant takes back its own update to a task from the `ai_changelog`
-  snapshots, restoring only the fields that still hold what that change set. Still
-  open: an in-app Undo on a Settings > Activity row (a new control needs strings
-  in every shipped language), rows of a batch (each batch row records the batch,
-  not one task's snapshot), and entities other than tasks (calendar events,
-  habits, lists). A task whose snapshot exceeds the 4000-byte log cap (long
+  an assistant takes back its own update to a task or a one-off calendar event
+  from the `ai_changelog` snapshots, restoring only the fields that still hold
+  what that change set. Still open: an in-app Undo on a Settings > Activity row
+  (a new control needs strings in every shipped language), rows of a batch (each
+  batch row records the batch, not one task's snapshot), repeating events and
+  series edits (their occurrence bookkeeping is not a field restore), and
+  habits and lists. A record whose snapshot exceeds the 4000-byte log cap (long
   notes) cannot be undone from the log alone.
 - Open UI/UX work, each verified against the code but not yet done:
   - Quick add misreads lines typed in decomposed Unicode in about fifteen

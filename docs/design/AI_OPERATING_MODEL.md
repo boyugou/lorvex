@@ -357,10 +357,11 @@ compare with reality.
 - `archive_task` moves a task to the Trash; `unarchive_task` restores it.
 - `permanent_delete_task` removes only a task that is already archived. Use
   it only for a task that should never have existed.
-- To take back an update you made to a task, find its entry in
-  `get_ai_changelog` (marked `undoable`) and call `undo_ai_change`. It restores
-  what that change moved and leaves any field edited since as it is, so it never
-  overwrites the user's own later edit.
+- To take back an update you made to a task or to a one-off calendar event,
+  find its entry in `get_ai_changelog` (marked `undoable`) and call
+  `undo_ai_change`. It restores what that change moved and leaves any field
+  edited since as it is, so it never overwrites the user's own later edit. An
+  event that repeats cannot be undone this way.
 
 ---
 

@@ -23,9 +23,10 @@ extension ToolRegistry {
     }
     let value = try await coreBridge.undoAIChange(changelogID: changelogID)
     let reverted = value.objectValue?["reverted"]?.arrayValue?.compactMap(\.stringValue) ?? []
+    let subject = value.objectValue?["entity_type"]?.stringValue == "calendar_event" ? "event" : "task"
     let text =
       reverted.isEmpty
-      ? "Nothing to undo: the task already differs from that change everywhere."
+      ? "Nothing to undo: the \(subject) already differs from that change everywhere."
       : "Undid the change: restored \(reverted.joined(separator: ", "))."
     return successResult(text: text, value: value)
   }

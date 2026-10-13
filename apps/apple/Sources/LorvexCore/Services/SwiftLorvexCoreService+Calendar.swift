@@ -162,7 +162,6 @@ extension SwiftLorvexCoreService {
       guard let before = try CalendarEventLoad.loadCalendarEventJSON(db, eventId: id) else {
         throw LorvexCoreError.notFound(entity: .calendarEvent, id: id)
       }
-      let existing = try Self.existingUpdateFields(beforeRow, db: db)
       let input = CalendarEventUpdateInput(
         id: id,
         title: title,
@@ -180,19 +179,31 @@ extension SwiftLorvexCoreService {
         eventType: try Self.patchEventType(eventType),
         personName: Self.patchString(personName),
         attendees: Self.patchAttendees(attendees))
-      let result = try CalendarEventUpdate.updateCalendarEvent(
-        db, hlc: hlc, input: input, before: before,
-        beforeRecurrence: beforeRow.recurrence, existing: existing)
-      try self.enqueueUpsert(
-        db, hlc: hlc, deviceId: deviceId, kind: .calendarEvent, entityId: result.eventId)
-      try self.writeChangelogRow(
-        db,
-        ChangelogEntry(
-          operation: "update", entityType: EntityName.calendarEvent, entityId: result.eventId,
-          summary: result.summary, before: result.before, after: result.event),
-        deviceId: deviceId)
-      return try SwiftLorvexCalendarDeserializers.event(result.event)
+      return try self.performCalendarEventUpdate(
+        db, hlc: hlc, deviceId: deviceId, input: input, beforeRow: beforeRow, before: before)
     }
+  }
+
+  /// Applies a prepared calendar update in the current write transaction: reconciles it with the
+  /// stored event, writes the row, queues its sync upsert, and logs the change. Shared by the
+  /// update itself and by an undo of one.
+  func performCalendarEventUpdate(
+    _ db: Database, hlc: HlcSession, deviceId: String, input: CalendarEventUpdateInput,
+    beforeRow: CalendarEventRow, before: JSONValue
+  ) throws -> CalendarTimelineEvent {
+    let existing = try Self.existingUpdateFields(beforeRow, db: db)
+    let result = try CalendarEventUpdate.updateCalendarEvent(
+      db, hlc: hlc, input: input, before: before,
+      beforeRecurrence: beforeRow.recurrence, existing: existing)
+    try self.enqueueUpsert(
+      db, hlc: hlc, deviceId: deviceId, kind: .calendarEvent, entityId: result.eventId)
+    try self.writeChangelogRow(
+      db,
+      ChangelogEntry(
+        operation: "update", entityType: EntityName.calendarEvent, entityId: result.eventId,
+        summary: result.summary, before: result.before, after: result.event),
+      deviceId: deviceId)
+    return try SwiftLorvexCalendarDeserializers.event(result.event)
   }
 
   @discardableResult

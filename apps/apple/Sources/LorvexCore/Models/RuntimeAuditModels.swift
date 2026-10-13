@@ -55,19 +55,44 @@ public struct AIChangelogEntry: Identifiable, Equatable, Sendable {
   }
 }
 
-/// What undoing an assistant's update to a task did: the task as it is now, the fields that went
-/// back to what they were before the change, and the fields left as they are because they changed
-/// again after it (a person's or another assistant's later edit is never overwritten).
+/// What undoing an assistant's update to a task or a one-off calendar event did: the item as it is
+/// now, the fields that went back to what they were before the change, and the fields left as they
+/// are because they changed again after it (a person's or another assistant's later edit is never
+/// overwritten).
 public struct UndoAIChangeResult: Equatable, Sendable {
-  public var task: LorvexTask
+  /// The item the change was about, as it is now.
+  public enum Subject: Equatable, Sendable {
+    case task(LorvexTask)
+    case calendarEvent(CalendarTimelineEvent)
+  }
+
+  public var subject: Subject
   /// Wire names of the fields restored to their earlier value.
   public var reverted: [String]
   /// Wire names of the fields the change touched that hold something else now.
   public var kept: [String]
 
-  public init(task: LorvexTask, reverted: [String], kept: [String]) {
-    self.task = task
+  public init(subject: Subject, reverted: [String], kept: [String]) {
+    self.subject = subject
     self.reverted = reverted
     self.kept = kept
+  }
+
+  public init(task: LorvexTask, reverted: [String], kept: [String]) {
+    self.init(subject: .task(task), reverted: reverted, kept: kept)
+  }
+
+  public init(event: CalendarTimelineEvent, reverted: [String], kept: [String]) {
+    self.init(subject: .calendarEvent(event), reverted: reverted, kept: kept)
+  }
+
+  public var task: LorvexTask? {
+    if case .task(let task) = subject { return task }
+    return nil
+  }
+
+  public var event: CalendarTimelineEvent? {
+    if case .calendarEvent(let event) = subject { return event }
+    return nil
   }
 }

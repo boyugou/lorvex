@@ -253,7 +253,13 @@ enum SpawnSuccessor {
         else {
           break
         }
-        if !exclusionSet.contains(candidate) {
+        // The next occurrence is never the one being completed: finishing the
+        // occurrence just spawned, on the day it was spawned, measures the same
+        // interval from the same day and would name that occurrence's own date,
+        // and with it its own occurrence key. Another interval on. (An earlier
+        // date is fine: a task completed ahead of its due date spawns the next
+        // one a full interval from the completion day, which can precede it.)
+        if !exclusionSet.contains(candidate), candidate != cadenceAnchor {
           found = candidate
           break
         }

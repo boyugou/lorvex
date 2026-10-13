@@ -730,6 +730,21 @@ struct ZZMCPToolFuzzProbe {
       let before = await changelog()
       let label = describe(tool.name, arguments)
       try? label.write(toFile: lastCallPath, atomically: false, encoding: .utf8)
+      // MCPFUZZ_TRACE=<file> appends every call as a {tool, arguments} line, so a finding's
+      // call sequence can be replayed (one line per call; a reseed starts a new store).
+      if let tracePath = ProcessInfo.processInfo.environment["MCPFUZZ_TRACE"],
+        let data = try? JSONEncoder().encode(Value.object(arguments)),
+        let line = String(data: data, encoding: .utf8)
+      {
+        let entry = "{\"tool\":\"\(tool.name)\",\"arguments\":\(line)}\n"
+        if let handle = FileHandle(forWritingAtPath: tracePath) {
+          handle.seekToEndOfFile()
+          handle.write(Data(entry.utf8))
+          try? handle.close()
+        } else {
+          FileManager.default.createFile(atPath: tracePath, contents: Data(entry.utf8))
+        }
+      }
       let started = clock.now
       let result: CallTool.Result
       do {

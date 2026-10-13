@@ -40,8 +40,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     lines where a combining accent glued onto a keyword's last letter
     ("tomorroẅ") still reads as the keyword and leaves the mark in the title.
     "[pl,de] 15h" reads as 900 minutes; Vietnamese "3 giờ 15
-    phút" reads as 195 minutes; the Romanian reader drops English "in 15 min";
-    (a parenthesized phrase left "( )" in the title in every language; the title cleanup now removes the pair).
+    phút" reads as 195 minutes; the Romanian reader drops English "in 15 min". (A parenthesized phrase used to
+    leave "( )" in the title in every language; the title cleanup now removes
+    the pair.)
   - Batch reopen is all-or-nothing. Every lifecycle refusal a person can reach
     is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
     core's English (a start on an already open task, a finished-to-finished

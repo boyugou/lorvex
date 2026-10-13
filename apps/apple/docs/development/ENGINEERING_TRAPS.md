@@ -335,6 +335,17 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   updates, so schema and SQL-function changes must work with an older helper on
   the same database. Register SQL functions on connections, never inside a
   schema object an older helper would have to evaluate.
+- A query that joins a table to a long `IN (?, ?, …)` list can have SQLite
+  drive from the wrong table and probe once per listed id: the blocked-task
+  lookup took 440 ms for 3,000 listed tasks that had no dependencies at all.
+  Put the long list on the table it filters and test the other table with
+  `EXISTS`, then read `EXPLAIN QUERY PLAN` on a store with thousands of rows
+  (`BlockedTaskIDsScaleTests`). Do not parse thousands of day keys with a
+  `DateFormatter` either: `LorvexDateFormatters.utcMidnight(ofDayKey:)` is the
+  direct parse.
+- A debug build reads about seven times slower than a release build in the
+  database layer (unoptimized GRDB row decoding), so profile and report
+  latency from a release build of the core, not from the test run.
 
 ## Data-flow facts
 

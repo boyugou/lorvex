@@ -24,7 +24,7 @@ public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
   ) throws -> SpawnedRecurrenceSuccessor? {
     guard
       let decision = try SpawnSuccessor.computeNextDueDate(
-        db, snapshot: snapshot, now: now)
+        db, snapshot: snapshot, now: now, parentTaskId: taskId.asString)
     else {
       return nil
     }
@@ -216,7 +216,7 @@ enum SpawnSuccessor {
   /// successor UUID, so this computation never hides an existing row that a
   /// re-completion must revive.
   static func computeNextDueDate(
-    _ db: Database, snapshot: LifecycleTaskSnapshot, now: String
+    _ db: Database, snapshot: LifecycleTaskSnapshot, now: String, parentTaskId: String
   ) throws -> NextDueDecision? {
     guard let rule = snapshot.recurrence else { return nil }
     guard let cadenceAnchor = snapshot.canonicalOccurrenceDate else { return nil }
@@ -259,7 +259,15 @@ enum SpawnSuccessor {
         // and with it its own occurrence key. Another interval on. (An earlier
         // date is fine: a task completed ahead of its due date spawns the next
         // one a full interval from the completion day, which can precede it.)
-        if !exclusionSet.contains(candidate), candidate != cadenceAnchor {
+        //
+        // Nor an occurrence another task of the series already holds: a task
+        // completed ahead of time can measure back to a date an earlier
+        // occurrence kept its key for, and the series' unique occurrence key
+        // would refuse the new row.
+        if !exclusionSet.contains(candidate), candidate != cadenceAnchor,
+          try Self.occurrenceKeyIsFree(
+            db, groupId: snapshot.recurrenceGroupId, parentId: parentTaskId, date: candidate)
+        {
           found = candidate
           break
         }
@@ -302,6 +310,22 @@ enum SpawnSuccessor {
     return NextDueDecision(
       nextDueDate: resolvedNextDueDate,
       spawnedRecurrence: spawnedRecurrence)
+  }
+
+  /// Whether no task other than the parent's own successor holds the occurrence
+  /// key of `date` in the series.
+  private static func occurrenceKeyIsFree(
+    _ db: Database, groupId: String?, parentId: String, date: String
+  ) throws -> Bool {
+    guard let groupId,
+      let key = Recurrence.generateInstanceKey(
+        recurrenceGroupID: groupId, canonicalOccurrenceDate: date)
+    else { return true }
+    let successorId = TaskRecurrenceSuccessorID.make(
+      parentTaskId: parentId, recurrenceGroupId: groupId)
+    let owner = try String.fetchOne(
+      db, sql: "SELECT id FROM tasks WHERE recurrence_instance_key = ?1", arguments: [key])
+    return owner == nil || owner == successorId
   }
 
   /// Resolves today's date in the configured timezone: missing preference

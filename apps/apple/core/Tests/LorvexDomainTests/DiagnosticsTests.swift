@@ -47,7 +47,7 @@ final class DiagnosticsTests: XCTestCase {
 
   func testRedactsEmailAddresses() {
     let out = Diagnostics.redactDiagnosticText(
-      "login failed for alice@example.com retrying with bob+tag@mail.example.co.uk")
+      "login failed for alice@example.com retrying with bob+tag@mail.example.co.uk")  // public-safety: allow (made-up address; example.co.uk is not a reserved domain)
     XCTAssertFalse(out.contains("alice@"))
     XCTAssertFalse(out.contains("bob+tag@"))
     XCTAssertEqual(out.components(separatedBy: "[REDACTED_EMAIL]").count - 1, 2)

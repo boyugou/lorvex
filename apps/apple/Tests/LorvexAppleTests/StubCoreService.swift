@@ -120,6 +120,9 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   var loadListsCallCount = 0
   var loadHabitsCallCount = 0
   var loadMemoryCallCount = 0
+  /// When set, `loadMemory` runs it first, so a test can change store state while a
+  /// memory save is still in flight.
+  var loadMemoryGate: (@Sendable () async -> Void)?
   var loadCalendarTimelineCallCount = 0
   var loadRuntimeDiagnosticsCallCount = 0
   var loadSyncStatusCallCount = 0

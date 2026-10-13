@@ -362,9 +362,9 @@ extension TaskRepo {
     // -------------------------------------------------------------------
 
     /// `(tagJoin, whereExtra)` for the FTS-counted / FTS-only paths. The
-    /// caller seeds `args` with the FTS query as `?1` first. The FTS path
-    /// uses a JOIN form for the tag filter (it feeds the FROM clause), while
-    /// the trigram/LIKE paths use the EXISTS form.
+    /// caller seeds `args` with the FTS query as `?1` first. The tag filter is
+    /// the EXISTS form every search path uses: a JOIN on `tag_id IN (a, b)` would
+    /// return a task that carries both tags once per tag, and count it twice.
     static func buildFtsFilterScaffolding(
       pred: SearchPredicate, args: inout [any DatabaseValueConvertible]
     ) -> (tagJoin: String, whereExtra: String) {
@@ -373,13 +373,8 @@ extension TaskRepo {
       applyStatusFilter(pred, &conditions, &args)
       applyListFilter(pred, &conditions, &args)
 
-      var tagJoin = ""
-      if let tags = pred.tagFilter, !tags.isEmpty {
-        let ph = Sql.sqlInPlaceholders(tags.count, args.count)
-        conditions.append("tt.tag_id IN (\(ph))")
-        for tag in tags { args.append(tag) }
-        tagJoin = "JOIN task_tags tt ON t.id = tt.task_id"
-      }
+      applyTagFilterExists(pred, &conditions, &args)
+      let tagJoin = ""
 
       let whereExtra = conditions.isEmpty ? "" : " AND \(conditions.joined(separator: " AND "))"
       return (tagJoin, whereExtra)

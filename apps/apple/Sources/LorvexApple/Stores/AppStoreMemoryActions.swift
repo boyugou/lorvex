@@ -77,6 +77,13 @@ extension AppStore {
     guard canSaveMemoryDraft else { return false }
     memoryStorage.isSavingMemory = true
     defer { memoryStorage.isSavingMemory = false }
+    // What this save submits: the composer is reset afterwards only when it still
+    // holds it, so text typed or an entry opened while the save was in flight is
+    // not wiped along with it.
+    let submitted = (
+      key: memoryStorage.memoryKeyDraft, content: memoryStorage.memoryContentDraft,
+      editing: memoryStorage.memoryEditingKey
+    )
     do {
       let originalKey = memoryStorage.memoryEditingKey
       // Editing an entry under a new key is a rename, not a second entry. Route it
@@ -95,7 +102,12 @@ extension AppStore {
         memoryStorage.memory = reloaded
       }
       feedbackProvider.playFeedback(.contentSaved)
-      clearMemoryDraft()
+      if memoryStorage.memoryKeyDraft == submitted.key,
+        memoryStorage.memoryContentDraft == submitted.content,
+        memoryStorage.memoryEditingKey == submitted.editing
+      {
+        clearMemoryDraft()
+      }
       errorMessage = nil
       return true
     } catch {

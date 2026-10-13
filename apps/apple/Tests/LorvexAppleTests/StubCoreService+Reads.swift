@@ -103,6 +103,7 @@ extension StubCoreService {
   }
   func loadMemory() async throws -> MemorySnapshot {
     loadMemoryCallCount += 1
+    await loadMemoryGate?()
     return try await preview.loadMemory()
   }
   func loadRuntimeDiagnostics() async throws -> RuntimeDiagnosticsSnapshot {

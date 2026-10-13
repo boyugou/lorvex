@@ -42,3 +42,31 @@ final class CompletionAnchoredSuccessorTests: XCTestCase {
     XCTAssertGreaterThan(firstDue, today)
   }
 }
+
+/// An earlier occurrence keeps its occurrence key after it is completed, so a
+/// daily completion-anchored repeat finished ahead of time and again the same day
+/// can measure back to a date that key still names.
+final class CompletionAnchoredEarlierKeyTests: XCTestCase {
+  func testCompletingTwoOccurrencesInOneDayNeverReusesAnEarlierOccurrenceKey() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let task = try await service.createTask(title: "Stretch", notes: "")
+    _ = try await service.setTaskRecurrence(
+      taskID: task.id, rule: TaskRecurrenceRule(freq: .daily, interval: 1, anchor: .completion))
+
+    // Each completion spawns the next occurrence; five in a row, all the same day.
+    var currentID = task.id
+    for _ in 0..<5 {
+      _ = try await service.completeTask(id: currentID)
+      let nextID = try service.read { db in
+        try String.fetchOne(
+          db, sql: "SELECT id FROM tasks WHERE title = 'Stretch' AND status = 'open'")
+      }
+      currentID = try XCTUnwrap(nextID)
+    }
+    let keys = try service.read { db in
+      try String.fetchAll(
+        db, sql: "SELECT recurrence_instance_key FROM tasks WHERE recurrence_instance_key IS NOT NULL")
+    }
+    XCTAssertEqual(Set(keys).count, keys.count, "every occurrence has its own key")
+  }
+}

@@ -33,7 +33,7 @@ CONTENT_RULES = [
 # Reserved for documentation and tests (RFC 2606, RFC 6761); they name no one.
 RESERVED_DOMAIN = re.compile(r"@(?:[A-Za-z0-9-]+\.)*(?:example\.(?:com|org|net)|[A-Za-z0-9-]+\.(?:example|test|invalid|localhost))$")
 PATH_RULES = [
-    ("credential file", re.compile(r"(^|/)secrets/|\.(p8|p12|mobileprovision|provisionprofile|cer)$|(^|/)\.env$")),
+    ("credential file", re.compile(r"(^|/)secrets/|\.(p8|p12|pem|key|mobileprovision|provisionprofile|cer)$|(^|/)\.env$|(^|/)id_(rsa|ed25519|ecdsa)$")),
 ]
 
 
@@ -50,6 +50,18 @@ def is_placeholder(rule: str, text: str) -> bool:
     if rule == "app-specific password":
         return set(text) <= {"x", "-"}
     return False
+
+
+def line_findings(line: str) -> list[tuple[str, str]]:
+    """Every non-placeholder match on `line`, as (rule name, matched text). Every
+    match counts: a placeholder earlier on the line must not hide a real one
+    after it."""
+    found: list[tuple[str, str]] = []
+    for name, rule in CONTENT_RULES:
+        for match in rule.finditer(line):
+            if not is_placeholder(name, match.group(0)):
+                found.append((name, match.group(0)))
+    return found
 
 
 def tracked_files(root: pathlib.Path) -> list[str]:
@@ -76,12 +88,8 @@ def main() -> int:
         for number, line in enumerate(text.splitlines(), start=1):
             if ALLOW_MARKER in line:
                 continue
-            for name, rule in CONTENT_RULES:
-                match = rule.search(line)
-                if match and is_placeholder(name, match.group(0)):
-                    continue
-                if match:
-                    failures.append(f"{rel}:{number}: {name}: {match.group(0)[:60]}")
+            for name, text_found in line_findings(line):
+                failures.append(f"{rel}:{number}: {name}: {text_found[:60]}")
     if failures:
         print("verify_public_safety: tracked files hold content that must not be published:", file=sys.stderr)
         for failure in failures:

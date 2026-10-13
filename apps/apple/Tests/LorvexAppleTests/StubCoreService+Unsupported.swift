@@ -347,7 +347,7 @@ extension StubCoreService {
     throw unsupportedStubCoreOperation()
   }
   func upsertMemory(key: String, content: String) async throws -> MemoryEntry {
-    throw unsupportedStubCoreOperation()
+    try await preview.upsertMemory(key: key, content: content)
   }
   func deleteMemory(key: String) async throws -> Bool { try await preview.deleteMemory(key: key) }
 

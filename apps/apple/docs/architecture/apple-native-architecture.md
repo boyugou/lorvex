@@ -328,7 +328,11 @@ review summaries via `LorvexMarkdownUI` / `MarkdownNoteView`. Human-edited text
 (task notes, daily/weekly reviews, sticky notes, and the capture / list / habit
 fields) is plain text through the shared `LorvexPlainTextEditor` (an `NSTextView`
 wrapper). A markdown *editing* surface was deliberately dropped: plain text
-proved sufficient and avoided the editor's caret/commit bugs.
+proved sufficient and avoided the editor's caret/commit bugs. The rendered text
+comes from assistants and imports as well as the user, so a link in it opens
+only a web page, a mail draft, a phone call, or the app (`http`, `https`,
+`mailto`, `tel`, `lorvex`); a link to anything else (`file:`, `smb:`, `ssh:`,
+`shortcuts:`) shows as its text, and an image is never fetched.
 
 ## Data Flow
 

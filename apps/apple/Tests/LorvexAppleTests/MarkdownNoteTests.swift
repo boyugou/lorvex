@@ -156,6 +156,28 @@ func inlineMarkdownPreservesLinkURL() {
     #expect(s.runs.contains { $0.link?.absoluteString == "https://lorvex.app/x" })
 }
 
+/// A note may come from an assistant or an import, so a tap on a link in it reaches a web page, a
+/// mail draft, a phone call, or the app, and nothing else the system could open.
+@Test
+func inlineMarkdownLinksOpenOnlyTheWebMailPhoneAndTheApp() {
+    for destination in [
+        "https://lorvex.app/x", "http://example.com", "mailto:a@example.com", "tel:+15550100",
+        "lorvex://today", "HTTPS://EXAMPLE.COM",
+    ] {
+        let s = MarkdownInline.attributedString("[go](\(destination))")
+        #expect(s.runs.contains { $0.link != nil }, "\(destination) should stay a link")
+    }
+    for destination in [
+        "file:///Applications/Utilities/Terminal.app", "smb://host/share", "ssh://host",
+        "shortcuts://run-shortcut?name=Wipe", "javascript:alert(1)", "x-apple.systempreferences:",
+        "itms-services://?action=download-manifest&url=https://x", "notascheme", "//host/path",
+    ] {
+        let s = MarkdownInline.attributedString("[go](\(destination)) after")
+        #expect(s.runs.allSatisfy { $0.link == nil }, "\(destination) should show as text")
+        #expect(String(s.characters) == "go after")
+    }
+}
+
 @Test
 func inlineMarkdownPlainTextHasNoIntents() {
     let s = MarkdownInline.attributedString("just plain words")

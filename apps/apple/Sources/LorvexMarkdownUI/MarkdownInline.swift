@@ -46,13 +46,26 @@ enum MarkdownInline {
         case let strike as Strikethrough:
             descend(strike, into: &out, intent: intent.union(.strikethrough), link: link)
         case let anchor as Markdown.Link:
-            let destination = anchor.destination.flatMap(URL.init(string:))
-            descend(anchor, into: &out, intent: intent, link: destination ?? link)
+            descend(anchor, into: &out, intent: intent, link: openableLink(anchor.destination) ?? link)
         default:
             // Block containers (Document, Paragraph) and any unhandled inline:
             // render their children with the current context.
             descend(markup, into: &out, intent: intent, link: link)
         }
+    }
+
+    /// The schemes a link in a note may open: a web page, a mail draft, a phone call, or the app
+    /// itself. Text an assistant or an import wrote can name anything the system opens, such as
+    /// a file or a network share (`file:`, `smb:`), a terminal session (`ssh:`), or an
+    /// automation (`shortcuts:`), so a tap would do more than the reader expects. A link to
+    /// anything else shows as its text.
+    private static let openableSchemes: Set<String> = ["http", "https", "mailto", "tel", "lorvex"]
+
+    private static func openableLink(_ destination: String?) -> URL? {
+        guard let destination, let url = URL(string: destination),
+            let scheme = url.scheme?.lowercased(), openableSchemes.contains(scheme)
+        else { return nil }
+        return url
     }
 
     private static func descend(

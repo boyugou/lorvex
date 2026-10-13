@@ -440,7 +440,7 @@ public enum LorvexCaptureParser {
     return (widened, replacement)
   }
 
-  /// Collapses the gaps removed phrases leave behind: repeated spaces, commas
+  /// Collapses the gaps removed phrases leave behind: empty brackets, repeated spaces, commas
   /// with nothing between them, and separators stranded at either end ("Call
   /// the caterer ,", "：整理报销", "اتصل بأمي ،", "मीटिंग ।", "رپورٹ بھیجیں ۔"). The
   /// Arabic comma and semicolon count as separators like the others, and the
@@ -449,7 +449,12 @@ public enum LorvexCaptureParser {
   /// Connecting words ("on", "by", "for") are consumed with the phrase they
   /// introduce, so a title's own words are never trimmed.
   private static func cleanTitle(_ text: String) -> String {
-    var title = text.replacingOccurrences(of: #"\s*[,，](\s*[,，])+"#, with: ",", options: .regularExpression)
+    // A removed phrase that stood alone in brackets leaves the pair with a gap
+    // inside ("Call mom ( )"). A pair with nothing inside, as in "main()", was
+    // typed that way and stays.
+    var title = text.replacingOccurrences(
+      of: #"[(（\[【]\s+[)）\]】]"#, with: "", options: .regularExpression)
+    title = title.replacingOccurrences(of: #"\s*[,，](\s*[,，])+"#, with: ",", options: .regularExpression)
     title = title.replacingOccurrences(of: #"\s*،(\s*[،,，])+"#, with: "،", options: .regularExpression)
     title = title.replacingOccurrences(of: #"\s+([,，،।۔])"#, with: "$1", options: .regularExpression)
     title = title.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)

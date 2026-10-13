@@ -40,6 +40,18 @@ extension ToolRegistry {
       return Self.errorResult(code: "validation", message: error.message, toolName: "update_calendar_event")
     }
 
+    // An update that names no field changes nothing, so it is refused rather
+    // than reported as an update and logged as one.
+    let fields: [Any?] = [
+      title, startDate, endDate, startTime, endTime, allDay, timezone, location, description, url,
+      color, eventType, personName,
+    ]
+    if fields.allSatisfy({ $0 == nil }), attendees == .unset, recurrence == .unset {
+      return Self.errorResult(
+        code: "validation", message: "At least one field to update is required.",
+        toolName: "update_calendar_event")
+    }
+
     let value: Value
     do {
       value = try await updateCalendarEventPayload(

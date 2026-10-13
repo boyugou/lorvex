@@ -102,11 +102,17 @@ extension CoreBridgeClient {
     ])
   }
 
-  /// One `{id, reason}` entry for a batch tool's `skipped` array. `id` is the
-  /// row's best available handle — its `original_id`, else its title, else an
-  /// index reference — so a caller can match the failure back to the input.
+  /// One `{id, reason}` entry for a batch create tool's `skipped` array. `id` is
+  /// the row's best available handle — its `original_id`, else its title, else an
+  /// index reference — so a caller can match the failure back to the input. Both
+  /// strings carry text the caller wrote (a title, an invalid value the reason
+  /// quotes back), and neither key is in ``SecurityFencing/userContentKeys``, so
+  /// they are fenced here, as every other error text is.
   static func batchSkip(id: String, reason: String) -> Value {
-    .object(["id": .string(id), "reason": .string(reason)])
+    .object([
+      "id": .string(SecurityFencing.fence(id)),
+      "reason": .string(SecurityFencing.fence(reason)),
+    ])
   }
 
   private static func adviceValue(from item: TaskIntakeAdviceItem) -> Value {

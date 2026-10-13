@@ -8,6 +8,13 @@ extension ToolRegistry {
     case .value(let value): id = value
     case .error(let result): return result
     }
+    // An update that names no field changes nothing, so it is refused rather
+    // than reported as an update and logged as one.
+    if arguments.keys.allSatisfy({ $0 == "id" || $0 == "idempotency_key" }) {
+      return Self.errorResult(
+        code: "validation", message: "At least one field to update is required.",
+        toolName: "update_task")
+    }
     // `title` is optional: an absent key keeps the task's current title (the
     // bridge falls back to the loaded task), while an explicitly supplied but
     // empty/whitespace title is a validation error rather than a silent wipe.

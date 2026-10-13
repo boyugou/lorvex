@@ -11,6 +11,61 @@ import Testing
 @Suite("MCP no-op honesty")
 struct MCPNoOpHonestyTests {
 
+  @Test("update_calendar_event refuses an update that names no field and logs nothing")
+  func updateCalendarEventWithNoFieldIsRefused() async throws {
+    let (registry, _, cleanup) = mcpOnDiskRegistry()
+    defer { cleanup() }
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_calendar_event",
+      arguments: [
+        "title": .string("Update me"), "start_date": .string("2026-06-01"), "all_day": .bool(true),
+      ])
+    let eventID = try #require(created.structuredContent?.objectValue?["event_id"]?.stringValue)
+    func changelogCount() async throws -> Int {
+      let log = try await mcpRegistryCall(registry, tool: "get_ai_changelog", arguments: [:])
+      return log.structuredContent?.objectValue?["entries"]?.arrayValue?.count ?? -1
+    }
+    let before = try await changelogCount()
+
+    let empty = try await mcpRegistryCall(
+      registry, tool: "update_calendar_event", arguments: ["event_id": .string(eventID)])
+    #expect(empty.isError == true)
+    #expect(empty.structuredContent?.objectValue?["code"]?.stringValue == "validation")
+    #expect(try await changelogCount() == before, "a refused update writes no changelog row")
+
+    let real = try await mcpRegistryCall(
+      registry, tool: "update_calendar_event",
+      arguments: ["event_id": .string(eventID), "location": .string("Studio")])
+    #expect(real.isError != true)
+    #expect(try await changelogCount() == before + 1)
+  }
+
+  @Test("update_task refuses an update that names no field and logs nothing")
+  func updateTaskWithNoFieldIsRefused() async throws {
+    let (registry, _, cleanup) = mcpOnDiskRegistry()
+    defer { cleanup() }
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_task", arguments: ["title": .string("Update me")])
+    let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+    func changelogCount() async throws -> Int {
+      let log = try await mcpRegistryCall(registry, tool: "get_ai_changelog", arguments: [:])
+      return log.structuredContent?.objectValue?["entries"]?.arrayValue?.count ?? -1
+    }
+    let before = try await changelogCount()
+
+    let empty = try await mcpRegistryCall(
+      registry, tool: "update_task", arguments: ["id": .string(taskID)])
+    #expect(empty.isError == true)
+    #expect(empty.structuredContent?.objectValue?["code"]?.stringValue == "validation")
+    #expect(try await changelogCount() == before)
+
+    let real = try await mcpRegistryCall(
+      registry, tool: "update_task",
+      arguments: ["id": .string(taskID), "notes": .string("Now with notes")])
+    #expect(real.isError != true)
+    #expect(try await changelogCount() == before + 1)
+  }
+
   @Test("delete_calendar_event reports the real outcome and carries previous")
   func deleteCalendarEventHonesty() async throws {
     let (registry, _, cleanup) = mcpOnDiskRegistry()

@@ -430,6 +430,7 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
       opened = try performOpen(resolution: resolution)
     }
     openedStore = opened
+    DatabaseSuspension.suspendConnectionOpenedWhileSuspended()
     return opened
   }
 
@@ -576,6 +577,13 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
         }
       }
       openLock.unlock()
+
+      // The shared cutover lock is a `flock` on a file in the App Group
+      // container. A suspended store takes no lock the system could suspend the
+      // process on (`0xdead10cc`), so this does not take it either: the work is
+      // refused as the suspended connection would refuse it, and retried after
+      // `DatabaseSuspension.resume()`.
+      if DatabaseSuspension.isSuspended { throw DatabaseSuspension.suspendedError }
 
       do {
         return try ManagedStorageGeneration.withSharedCutoverLock(

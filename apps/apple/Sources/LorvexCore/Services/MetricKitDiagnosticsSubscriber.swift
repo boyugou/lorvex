@@ -113,9 +113,13 @@
       let log = Self.log
       Task.detached {
         do {
-          try await service.appendDiagnosticLog(
-            source: record.source, level: record.level,
-            message: record.message, details: record.details)
+          // The payload can arrive while the app is backgrounded, when the store
+          // refuses locks; the bracket takes it back for this write only.
+          try await DatabaseSuspension.withBackgroundAccess {
+            try await service.appendDiagnosticLog(
+              source: record.source, level: record.level,
+              message: record.message, details: record.details)
+          }
         } catch {
           log.error(
             """

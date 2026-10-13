@@ -33,15 +33,53 @@ import Synchronization
 /// suspended; ``withBackgroundAccess(_:)`` is how such work takes the store
 /// back.
 public enum DatabaseSuspension {
+  /// Whether the last call was ``suspend()``. The notifications reach only the
+  /// connections open when they are posted, so this is what tells a connection
+  /// opened later, and the cutover lease, that the process is on its way to being
+  /// suspended.
+  private static let suspended = Mutex<Bool>(false)
+
+  /// Test-only isolation hook: a value bound here is what ``isSuspended`` reports
+  /// for the work running inside the binding, so a test can see the suspended
+  /// store without touching the process-wide state concurrent tests share.
+  /// Product code never binds it.
+  @TaskLocal static var suspendedOverride: Bool?
+
+  /// Whether the store is suspended: ``suspend()`` was the last call.
+  public static var isSuspended: Bool {
+    suspendedOverride ?? suspended.withLock { $0 }
+  }
+
   /// Stop the managed store from acquiring new database locks. Idempotent.
   public static func suspend() {
+    suspended.withLock { $0 = true }
     NotificationCenter.default.post(name: Database.suspendNotification, object: nil)
   }
 
   /// Let the managed store acquire database locks again. Idempotent, and
   /// required before database work that follows a ``suspend()``.
   public static func resume() {
+    suspended.withLock { $0 = false }
     NotificationCenter.default.post(name: Database.resumeNotification, object: nil)
+  }
+
+  /// Suspends the connection a store has just opened when the process is
+  /// already suspended. A connection starts resumed, so one opened by a
+  /// background launch (a push, a task, a watch message) after ``suspend()`` would
+  /// otherwise take locks the system may suspend the process on.
+  static func suspendConnectionOpenedWhileSuspended() {
+    if suspended.withLock({ $0 }) {
+      NotificationCenter.default.post(name: Database.suspendNotification, object: nil)
+    }
+  }
+
+  /// The error database work meets, without taking any lock, while the store is
+  /// suspended. It is the one a suspended connection raises, so the sync
+  /// pipeline already treats it as transient and retries it for free.
+  static var suspendedError: DatabaseError {
+    DatabaseError(
+      resultCode: .SQLITE_ABORT,
+      message: "Database access is suspended while the app is in the background.")
   }
 
   /// How a host takes the store back for the length of a piece of background

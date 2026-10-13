@@ -104,6 +104,14 @@ import LorvexSystemIntents
       if let item = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem {
         LorvexShortcutHandoff.pendingTypeIdentifier = item.type
       }
+      // A launch the system makes in the background (a push, a background task, a
+      // watch message) never reaches the scene-phase change that suspends the
+      // store, and a connection opened later starts out able to take locks the
+      // system can suspend the process on. Suspend now; the handlers that do
+      // database work take the store back for their own length.
+      if application.applicationState == .background {
+        DatabaseSuspension.suspend()
+      }
       return true
     }
 

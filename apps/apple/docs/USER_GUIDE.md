@@ -177,12 +177,15 @@ characters you typed.
 | Day | today, tonight, tomorrow, Friday, this Friday, next Friday, next week, weekend, in 3 days | 今天, 明天, 后天, 大后天, 周三 / 星期三 / 礼拜三, 这周三, 下周三, 下周, 周末, 3天后 |
 | Date | Oct 5, October 5th, 5 Oct, 2026-10-05 | 10月5日, 10月5号, 5号 |
 | Date range | May 3-5, May 3 to 5, May 3 through 5, May 30 - June 2, 3-5 May, from May 3 to May 5, between May 3 and May 5 | 5月3日到5日, 5月3日至5日, 5月3日-5日, 5月3日到5月5日, 5月30日到6月2日, 从5月3日到5月5日, 3号到5号 |
-| Due day | by Friday, due tomorrow, by Oct 5 | 周五前, 明天之前, 10月5日前 |
+| Due day | by Friday, by next Friday, due tomorrow, by Oct 5 | 周五前, 明天之前, 10月5日前 |
 | Time | 3pm, 3:30 pm, at 15:30, noon, at midnight; 3-4pm, 11am to 1pm, 15:00–16:30 | 下午3点, 晚上8点半, 晚上12点, 三点一刻, 9点20分, 15:30; 下午3点到5点, 下午3-5点 |
 | Repeat | every day, every weekday, every other week, every 3 days, every Monday, every Mon and Thu, every month, every year; daily, weekly, monthly, yearly at the end | 每天, 每隔一天, 每3天, 每周, 每两周, 每周一, 每周一三五, 每个工作日, 每月, 每月5号, 每年 |
 | Length | 20 min, 1.5h, 20m, 1h30m, half an hour | 30分钟, 2小时, 2个钟头, 半小时, 半个钟头, 一个半小时 |
 | Priority | !, !!, !!!, p1–p3, high priority, low priority, urgent (at the end, or "Urgent:" at the start) | 紧急 |
 | List or tag | #listname (a list when the name matches one, a tag otherwise) | #清单名 |
+
+A phrase written alone in brackets ("Call mom (tomorrow)") leaves the title
+without the brackets; brackets typed empty ("Fix main()") stay.
 
 A weekday's short form ("sat", "wed") counts only when it is capitalized or
 follows on, for, this, next, or by, and a capitalized weekday in the middle of

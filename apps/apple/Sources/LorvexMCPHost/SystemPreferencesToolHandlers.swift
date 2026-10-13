@@ -32,6 +32,16 @@ extension ToolRegistry {
           "Unknown preference key '\(key)'. set_preference only accepts known configuration keys.",
         toolName: "set_preference")
     }
+    // The user's own privacy and audit settings: an assistant that could turn off the log of
+    // what it did, or put task notes on the lock screen, would not be accountable to the user.
+    guard !PreferenceKeys.isUserOnlyPreference(key) else {
+      return Self.errorResult(
+        code: "validation",
+        message:
+          "The preference '\(key)' is the user's to change, in Lorvex Settings; an assistant can "
+          + "read it but not set it.",
+        toolName: "set_preference")
+    }
     guard let value = arguments["value"]?.stringValue else {
       return Self.errorResult(
         code: "validation", message: "value is required.", toolName: "set_preference")
@@ -84,6 +94,14 @@ extension ToolRegistry {
         code: "validation",
         message:
           "Unknown preference key '\(key)'. delete_preference only accepts known configuration keys.",
+        toolName: "delete_preference")
+    }
+    guard !PreferenceKeys.isUserOnlyPreference(key) else {
+      return Self.errorResult(
+        code: "validation",
+        message:
+          "The preference '\(key)' is the user's to change, in Lorvex Settings; an assistant can "
+          + "read it but not delete it.",
         toolName: "delete_preference")
     }
     let receipt = try await coreBridge.mcpMutations.deletePreferenceForMcp(key: key)

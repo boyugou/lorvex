@@ -32,7 +32,7 @@ extension SystemPreferencesToolCatalog {
   static let setPreferenceTool = Tool(
     name: "set_preference",
     title: "Set Preference",
-    description: "Set or update a Lorvex preference. Only known configuration keys are accepted; unknown keys are rejected. The value is stored as a JSON string — pass booleans, numbers, and objects as their JSON representation. Common writable keys: working_hours (JSON object with start/end HH:MM), timezone (IANA name e.g. America/New_York), default_list_id, ai_changelog_retention_policy (how long the AI activity log is kept: the string \"maximum\" to retain up to 10,000 entries, the string \"off\" to stop recording and clear existing entries, or a positive integer number of days). Local-only keys (app settings, UI toggles) are filtered from sync. Returns the upserted preference.",
+    description: "Set or update a Lorvex preference. Only known configuration keys are accepted; unknown keys are rejected. The value is stored as a JSON string — pass booleans, numbers, and objects as their JSON representation. Common writable keys: working_hours (JSON object with start/end HH:MM), timezone (IANA name e.g. America/New_York), default_list_id. The user's own privacy settings, ai_changelog_retention_policy (how long the AI activity log is kept) and notification_show_task_notes, can be read here but are changed only in Lorvex Settings. Local-only keys (app settings, UI toggles) are filtered from sync. Returns the upserted preference.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

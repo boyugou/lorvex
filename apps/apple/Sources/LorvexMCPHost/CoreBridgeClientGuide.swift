@@ -143,7 +143,7 @@ extension CoreBridgeClient {
         ])
     case "preferences":
       return (
-        "\(configuredPreferenceCount) preference key(s) configured. Preferences cover working_hours, timezone, default_list_id, and ai_changelog_retention_policy.",
+        "\(configuredPreferenceCount) preference key(s) configured. Preferences cover working_hours, timezone, and default_list_id; the user's privacy settings (ai_changelog_retention_policy, notification_show_task_notes) are read-only here.",
         [
           "Read with get_all_preferences or get_preference.",
           "Change with set_preference (values are JSON-encoded strings).",

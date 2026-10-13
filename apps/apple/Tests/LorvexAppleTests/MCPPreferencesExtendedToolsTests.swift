@@ -102,6 +102,40 @@ struct MCPPreferencesExtendedToolsTests {
     #expect(deleteResult.isError == true)
   }
 
+  /// The user's audit and privacy settings: an assistant that could turn off the log of what it
+  /// did, or put a task's notes on the lock screen, would not be accountable to the user.
+  @Test("MCP cannot change the audit log's retention or the lock-screen notes setting")
+  func mcpCannotChangeTheUsersAuditAndPrivacySettings() async throws {
+    let registry = try mcpInMemoryRegistry()
+    for (key, value) in [
+      (PreferenceKeys.prefAiChangelogRetentionPolicy, "off"),
+      (PreferenceKeys.prefAiChangelogRetentionPolicy, "7"),
+      (PreferenceKeys.prefNotificationShowTaskNotes, "true"),
+    ] {
+      let setResult = try await planningCall(
+        registry, tool: "set_preference",
+        arguments: ["key": .string(key), "value": .string(value)])
+      expectMCPStructuredError(setResult, code: "validation", tool: "set_preference")
+      #expect(mcpTextContent(setResult).contains("the user's to change"))
+      let deleteResult = try await planningCall(
+        registry, tool: "delete_preference", arguments: ["key": .string(key)])
+      expectMCPStructuredError(deleteResult, code: "validation", tool: "delete_preference")
+    }
+
+    // Reading them still works, and the log was never switched off.
+    let read = try await planningCall(
+      registry, tool: "get_preference",
+      arguments: ["key": .string(PreferenceKeys.prefAiChangelogRetentionPolicy)])
+    #expect(read.isError != true)
+    #expect(read.structuredContent?.objectValue?["value"]?.stringValue != "off")
+
+    // The ordinary keys an assistant sets while it works are unaffected.
+    let ordinary = try await planningCall(
+      registry, tool: "set_preference",
+      arguments: ["key": .string("default_list_id"), "value": .string("inbox")])
+    #expect(ordinary.isError != true)
+  }
+
   @Test("set_preference rejects registry-only keys with no shipping consumer")
   func setPreferenceRejectsRegistryOnlyKeys() async throws {
     // These were removed from PreferenceKeys.allKnownPreferenceKeys because

@@ -100,4 +100,19 @@ final class PreferenceKeysTests: XCTestCase {
         "'\(key)' should have been removed from allKnownPreferenceKeys")
     }
   }
+
+  /// The user's audit and privacy settings are real, known keys that an assistant may read but
+  /// does not write over MCP. The calendar visibility mode is not a known preference at all.
+  func testUserOnlyPreferencesAreKnownKeysAnAssistantDoesNotWrite() {
+    XCTAssertEqual(
+      Set(PreferenceKeys.userOnlyPreferenceKeys),
+      ["ai_changelog_retention_policy", "notification_show_task_notes"])
+    for key in PreferenceKeys.userOnlyPreferenceKeys {
+      XCTAssertTrue(PreferenceKeys.isKnownPreferenceKey(key), key)
+      XCTAssertTrue(PreferenceKeys.isUserOnlyPreference(key), key)
+    }
+    XCTAssertFalse(PreferenceKeys.isUserOnlyPreference("working_hours"))
+    XCTAssertFalse(PreferenceKeys.isUserOnlyPreference("default_list_id"))
+    XCTAssertFalse(PreferenceKeys.isKnownPreferenceKey(PreferenceKeys.devCalendarAiAccessMode))
+  }
 }

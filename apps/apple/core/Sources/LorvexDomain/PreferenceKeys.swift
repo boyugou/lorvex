@@ -26,8 +26,8 @@ public enum PreferenceKeys {
   /// store — suppress new local audit writes and purge all existing rows). See
   /// ``ChangelogRetentionPolicy/parse(_:)`` for the tolerant decoding. It is
   /// exposed through the normal preference product API, but is never stored as
-  /// a `preferences` row or transported as a `.preference` entity. The
-  /// account-scoped audit-retention metadata is its sole durable sync authority.
+  /// a `preferences` row or transported as a `.preference` entity: the audit
+  /// trail is device-local, and so is its policy, kept in `device_state`.
   public static let prefAiChangelogRetentionPolicy = "ai_changelog_retention_policy"
   public static let prefLanguage = "language"
   public static let prefTheme = "theme"
@@ -77,6 +77,22 @@ public enum PreferenceKeys {
   /// `preferences` entity stream.
   public static func isControlPlanePreference(_ key: String) -> Bool {
     key == prefAiChangelogRetentionPolicy
+  }
+
+  /// Preferences only the user changes, in the app's Settings. An assistant reads them but
+  /// does not write them over MCP: it must not be able to turn off the log of what it did
+  /// (`ai_changelog_retention_policy`), or to put a task's notes on the lock screen
+  /// (`notification_show_task_notes`). The calendar visibility mode is outside the MCP
+  /// allowlist altogether, for the same reason.
+  public static let userOnlyPreferenceKeys: [String] = [
+    prefAiChangelogRetentionPolicy,
+    prefNotificationShowTaskNotes,
+  ]
+
+  /// Returns `true` if only the user changes `key`: an assistant's `set_preference` for it is
+  /// refused.
+  public static func isUserOnlyPreference(_ key: String) -> Bool {
+    userOnlyPreferenceKeys.contains(key)
   }
 
   /// Returns `true` when a preference key must never be represented as a

@@ -1,5 +1,6 @@
 import Foundation
 import LorvexCore
+import LorvexDomain
 import Testing
 
 // Persistent probe. Mutates the production-shaped v1 backup fixture, as a damaged or
@@ -13,6 +14,11 @@ import Testing
 //
 // The document about to be imported is written to `lastInputPath` first, so a trap that ends
 // the process leaves the offending file behind. Findings print as `IMPORTFUZZSUMMARY`.
+//
+// After a restore the store is exported again, and no text in it may hold a codepoint the write
+// boundary strips (bidi controls, zero-width characters, line separators): a restore path that
+// writes rows directly, bypassing the validators, would leave such text behind. A finding prints
+// as `IMPORTFUZZUNSANITIZED`.
 
 private let scratch =
   ProcessInfo.processInfo.environment["LORVEX_SCRATCH_DIR"]
@@ -202,6 +208,22 @@ private func damaged(_ data: Data, rng: inout SplitMix64) -> Data {
   return Data(bytes)
 }
 
+/// The first string anywhere in `value` that holds a codepoint the sanitizer strips.
+private func firstUnsanitizedString(in value: Any) -> String? {
+  switch value {
+  case let text as String:
+    return UnicodeHygiene.containsStrippedCodepoint(text) ? text : nil
+  case let array as [Any]:
+    for item in array { if let hit = firstUnsanitizedString(in: item) { return hit } }
+    return nil
+  case let dictionary as [String: Any]:
+    for (_, item) in dictionary { if let hit = firstUnsanitizedString(in: item) { return hit } }
+    return nil
+  default:
+    return nil
+  }
+}
+
 @Suite("Import mutation fuzz probe", .serialized)
 struct ZZImportMutationFuzzProbeTests {
   @Test(
@@ -218,6 +240,7 @@ struct ZZImportMutationFuzzProbeTests {
     var refused = 0
     var restored = 0
     var slow: [String] = []
+    var unsanitized: [String] = []
     for round in 0..<rounds {
       let document: Data
       if round % 4 == 3 {
@@ -233,6 +256,14 @@ struct ZZImportMutationFuzzProbeTests {
         let service = try makeInMemoryCore()
         _ = await LorvexDataImporter.apply(plan: plan, decoded: decoded, using: service)
         restored += 1
+        if let exported = try? await service.exportData(entities: [], format: "json"),
+          let tree = try? JSONSerialization.jsonObject(with: Data(exported.utf8)),
+          let hit = firstUnsanitizedString(in: tree)
+        {
+          let scalars = hit.unicodeScalars.prefix(40).map { String(format: "U+%04X", $0.value) }
+          unsanitized.append("round \(round): \(scalars.joined(separator: " "))")
+          print("IMPORTFUZZUNSANITIZED seed=\(seed) round=\(round) \(scalars.joined(separator: " "))")
+        }
       } catch {
         refused += 1
       }
@@ -241,5 +272,6 @@ struct ZZImportMutationFuzzProbeTests {
     }
     print("IMPORTFUZZSUMMARY seed=\(seed) rounds=\(rounds) refused=\(refused) planned=\(restored) slow=\(slow)")
     #expect(slow.isEmpty, "imports that took over five seconds: \(slow)")
+    #expect(unsanitized.isEmpty, "restored text that holds stripped codepoints: \(unsanitized.prefix(5))")
   }
 }

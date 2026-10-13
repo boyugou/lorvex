@@ -441,6 +441,17 @@ Check these at the start of a maintenance session. Dates are absolute.
   lines are gone and the behavior under the shared App Group store is the same.
   The whole app and core suites pass, and the iOS and watchOS simulator builds
   resolve 7.11.1. Watch the next TestFlight build for database lock errors.
+- **Crash reports.** A tester who taps Share on TestFlight's "Did Lorvex crash?"
+  prompt creates a crash submission whose log App Store Connect keeps; it is the
+  only crash log a TestFlight build has. `script/testflight_crashes.py <dir>`
+  lists them and saves each log (the variable names `ASC_KEY_ID`,
+  `ASC_ISSUER_ID`, and `ASC_KEY_PATH` come from `secrets/apple-developer.env`).
+  Read the exception and termination lines first: an unfamiliar class is the
+  most urgent finding. On 2026-10-12 it showed that a crash with no app open
+  was `0xdead10cc` on build 115, a background launch whose refresh held a
+  database lock as the process was suspended; builds 129 and later refuse
+  database work while the process is suspended
+  (`docs/development/ENGINEERING_TRAPS.md`).
 - **Validation of record.** Hosted CI is paused (macOS minutes are not
   available), so `script/verify_swift.sh`, `script/verify_static_gates.sh`, and
   the release scripts are the gate before every push and release.

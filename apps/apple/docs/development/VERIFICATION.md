@@ -77,6 +77,7 @@ throwaway probe `ZZ<Topic>Tests.swift` and delete it afterward; never overwrite
 | `ZZMobileEntityWalkProbeTests` | iOS habits, lists, memory, events, review | `ENTITY_SEED` (required), `ENTITY_STEPS`, `ENTITY_TRACE`, `ENTITY_COVERAGE`, `ENTITY_SABOTAGE=archived\|detail`, `ENTITY_LOOPBACK` |
 | `ZZAppEntityWalkProbeTests` | Mac entities, Reviews, calendar, planning | the same with the prefix `AENTITY_` |
 | `ZZCaptureParserFuzzProbeTests` | quick-add parser in every language, from mutated test lines | `FUZZ_RUN=1` (required), `FUZZ_SEED`, `FUZZ_PER_LANG`, `FUZZ_STRICT`, `FUZZ_NFD`, `FUZZ_SHOW` with `FUZZ_INPUT` and `FUZZ_LANG` |
+| `ZZImportMutationFuzzProbeTests` | the backup importer, from the golden v1 fixture with fields deleted, retyped, hostile, or truncated; an import may refuse or restore in part but must not trap or take over 5 s | `IMPORTFUZZ_RUN=1` (required), `IMPORTFUZZ_SEED`, `IMPORTFUZZ_ROUNDS` |
 | `ZZMutationLatencyProbeTests` | the awaited time of a Mac task completion with N tasks in the store | `PERF_N=<task count>` (required) |
 | `ZZMCPToolFuzzProbeTests` | every MCP tool with schema-generated hostile arguments | `MCPFUZZ_RUN=1` (required), `MCPFUZZ_SEED`, `MCPFUZZ_ROUNDS`, `MCPFUZZ_ONLY=a,b`, `MCPFUZZ_SHOW` with `MCPFUZZ_SHOW_FILE`; modes `MCPFUZZ_HOSTS=1`, `MCPFUZZ_RECUR=1`, `MCPFUZZ_PARITY=1`, `MCPFUZZ_HABITS=1` |
 | `ZZMarkdownDepthProbeTests` | deeply nested markdown | `PROBE_KIND=quote\|dash\|ordered\|emph\|quotedash\|spawn`, `PROBE_N` |
@@ -114,6 +115,18 @@ Notes:
   `LORVEX_SYNC_SIM_FIRST_SEED`. Long soaks fail a few seeds on the known limits
   listed in `ROADMAP.md`. `core/Tests/LorvexSyncTests/ApplyEdgeAliasConvergenceTests.swift`
   checks edge alias folding over permutations.
+- **MCP tool choice.** `script/mcp_tool_choice_eval.py` measures whether an
+  assistant that sees only the tool catalog picks the right tool. `prepare`
+  starts the SwiftPM-built host on a disposable database and writes the server
+  instructions, the catalog as a client reads it, and 50 user requests
+  (`script/mcp_tool_choice_scenarios.json`, each with its accepted tools); a
+  fresh sub-agent that may read only those files answers with the calls it would
+  make; `check` scores the answers and validates every proposed call's
+  arguments against the tool's input schema. On 2026-10-13 Haiku 5.5 and Sonnet
+  5.5 each got an accepted tool for all 50 requests (after widening one
+  scenario to the two equivalent ways to skip one occurrence) with no schema
+  violation in 185 calls. Re-run it after adding or rewording a tool; a doubt
+  the assistant names is two descriptions to tell apart.
 - **Committed sweeps.** `MCPResponseFencingSweepTests`,
   `MCPExtremeIntegerArgumentTests`, `BackupWholeStoreRoundTripTests` (every
   table is declared backed up or local, and a restore is lossless apart from

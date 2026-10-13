@@ -1,0 +1,319 @@
+[
+  {
+    "request": "Add a task: call the dentist tomorrow morning, high priority.",
+    "accepted": [
+      "create_task"
+    ]
+  },
+  {
+    "request": "I finished the quarterly report.",
+    "accepted": [
+      "complete_task"
+    ]
+  },
+  {
+    "request": "Push the gym task to tomorrow.",
+    "accepted": [
+      "defer_task"
+    ]
+  },
+  {
+    "request": "Move all my overdue tasks to Friday.",
+    "accepted": [
+      "batch_defer_tasks",
+      "batch_update_tasks"
+    ]
+  },
+  {
+    "request": "What's on my plate today?",
+    "accepted": [
+      "get_overview",
+      "list_tasks"
+    ]
+  },
+  {
+    "request": "Plan my day for me.",
+    "accepted": [
+      "get_overview",
+      "get_calendar_timeline",
+      "batch_update_tasks",
+      "set_daily_briefing"
+    ]
+  },
+  {
+    "request": "Make 'water the plants' repeat every 2 weeks.",
+    "accepted": [
+      "set_task_recurrence"
+    ]
+  },
+  {
+    "request": "Stop repeating the newsletter task.",
+    "accepted": [
+      "remove_task_recurrence"
+    ]
+  },
+  {
+    "request": "Skip just next week's occurrence of the weekly report task.",
+    "accepted": [
+      "add_task_recurrence_exception"
+    ]
+  },
+  {
+    "request": "Remind me 30 minutes before the dentist task is due.",
+    "accepted": [
+      "add_task_reminder",
+      "set_task_reminders"
+    ]
+  },
+  {
+    "request": "I read today (reading habit).",
+    "accepted": [
+      "complete_habit"
+    ]
+  },
+  {
+    "request": "I forgot to log yesterday's run, mark my running habit done for yesterday.",
+    "accepted": [
+      "complete_habit",
+      "adjust_habit_completion"
+    ]
+  },
+  {
+    "request": "Skip my meditation habit today, I'm sick.",
+    "accepted": [
+      "skip_habit"
+    ]
+  },
+  {
+    "request": "Create a habit: stretch three times a week.",
+    "accepted": [
+      "create_habit"
+    ]
+  },
+  {
+    "request": "Put lunch with Sam on Thursday at 12:30 for an hour on my calendar.",
+    "accepted": [
+      "create_calendar_event"
+    ]
+  },
+  {
+    "request": "Cancel just this Tuesday's standup, not the whole series.",
+    "accepted": [
+      "delete_scoped_calendar_event",
+      "add_calendar_event_exception"
+    ]
+  },
+  {
+    "request": "Move the standup series to start at 9:30 from next week on.",
+    "accepted": [
+      "edit_scoped_calendar_event"
+    ]
+  },
+  {
+    "request": "What meetings do I have this week?",
+    "accepted": [
+      "get_calendar_timeline"
+    ]
+  },
+  {
+    "request": "Find anything about the Berlin trip.",
+    "accepted": [
+      "search_tasks",
+      "search_calendar_events"
+    ]
+  },
+  {
+    "request": "Tag all my finance tasks with #money.",
+    "accepted": [
+      "batch_update_tasks",
+      "update_task"
+    ]
+  },
+  {
+    "request": "Rename the tag 'work' to 'office'.",
+    "accepted": [
+      "rename_tag"
+    ]
+  },
+  {
+    "request": "Merge my 'ml' tag into 'machine-learning'.",
+    "accepted": [
+      "merge_tags"
+    ]
+  },
+  {
+    "request": "Archive the Old Project list.",
+    "accepted": [
+      "archive_list"
+    ]
+  },
+  {
+    "request": "Create a list called Home Renovation.",
+    "accepted": [
+      "create_list"
+    ]
+  },
+  {
+    "request": "The taxes task can't start until the 'gather documents' task is done.",
+    "accepted": [
+      "update_task"
+    ]
+  },
+  {
+    "request": "Add a checklist to the packing task: passport, charger, tickets.",
+    "accepted": [
+      "add_task_checklist_item"
+    ]
+  },
+  {
+    "request": "Park the 'learn Rust' task for someday.",
+    "accepted": [
+      "set_task_someday"
+    ]
+  },
+  {
+    "request": "Hide the garden task until next month, I don't want to see it until then.",
+    "accepted": [
+      "pause_task",
+      "update_task"
+    ]
+  },
+  {
+    "request": "Cancel the conference registration task, I'm not going.",
+    "accepted": [
+      "cancel_task"
+    ]
+  },
+  {
+    "request": "I changed my mind, reopen the budget task.",
+    "accepted": [
+      "reopen_task"
+    ]
+  },
+  {
+    "request": "Delete that duplicate 'buy milk' task for good.",
+    "accepted": [
+      "permanent_delete_task",
+      "cancel_task",
+      "archive_task"
+    ]
+  },
+  {
+    "request": "Remember that I prefer deep work in the mornings.",
+    "accepted": [
+      "write_memory"
+    ]
+  },
+  {
+    "request": "What do you remember about me?",
+    "accepted": [
+      "read_memory"
+    ]
+  },
+  {
+    "request": "Write a short briefing for today: focus on the launch.",
+    "accepted": [
+      "set_daily_briefing"
+    ]
+  },
+  {
+    "request": "Let's do my weekly review.",
+    "accepted": [
+      "get_weekly_brief"
+    ]
+  },
+  {
+    "request": "Log my day: mood 4, energy 3; I shipped the beta, blocked on legal.",
+    "accepted": [
+      "add_daily_review"
+    ]
+  },
+  {
+    "request": "Fix yesterday's review, my mood was actually 5.",
+    "accepted": [
+      "amend_daily_review"
+    ]
+  },
+  {
+    "request": "How is my sync doing?",
+    "accepted": [
+      "get_sync_status"
+    ]
+  },
+  {
+    "request": "Export all my data.",
+    "accepted": [
+      "export_data"
+    ]
+  },
+  {
+    "request": "Export my calendar as an ICS file.",
+    "accepted": [
+      "export_calendar_ics"
+    ]
+  },
+  {
+    "request": "Which tasks did I keep postponing this week, and why?",
+    "accepted": [
+      "get_deferred_tasks",
+      "get_weekly_brief"
+    ]
+  },
+  {
+    "request": "Which tasks are linked to my 3pm meeting?",
+    "accepted": [
+      "get_linked_tasks_for_event",
+      "search_calendar_events"
+    ]
+  },
+  {
+    "request": "Set my working hours to 9 to 5.",
+    "accepted": [
+      "set_preference"
+    ]
+  },
+  {
+    "request": "What did you change in my tasks in the last hour?",
+    "accepted": [
+      "get_ai_changelog"
+    ]
+  },
+  {
+    "request": "Put the exercise habit first in my habit list.",
+    "accepted": [
+      "reorder_habits"
+    ]
+  },
+  {
+    "request": "Give me a time-blocked schedule for today.",
+    "accepted": [
+      "propose_daily_schedule"
+    ]
+  },
+  {
+    "request": "Break the 'launch' task into steps.",
+    "accepted": [
+      "add_task_checklist_item",
+      "batch_create_tasks"
+    ]
+  },
+  {
+    "request": "Add three tasks: buy milk, call mom, book flights.",
+    "accepted": [
+      "batch_create_tasks"
+    ]
+  },
+  {
+    "request": "Which of my tasks are blocked by other tasks?",
+    "accepted": [
+      "get_dependency_graph",
+      "list_tasks"
+    ]
+  },
+  {
+    "request": "Complete these five tasks: [paste of titles].",
+    "accepted": [
+      "batch_complete_tasks"
+    ]
+  }
+]

@@ -186,6 +186,7 @@ extension MobileStore {
     lists = nil
     habits = nil
     habitDetailsByID = [:]
+    latestHabitDetailRead = [:]
     archivedHabits = []
     archivedHabitsAreLoaded = false
     archivedLists = []

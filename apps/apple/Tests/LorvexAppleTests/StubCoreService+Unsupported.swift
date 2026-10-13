@@ -241,7 +241,9 @@ extension StubCoreService {
   func getHabitCompletions(id: LorvexHabit.ID, from: String?, to: String?, limit: Int) async throws
     -> HabitCompletionsSnapshot
   {
-    try await preview.getHabitCompletions(id: id, from: from, to: to, limit: limit)
+    let snapshot = try await preview.getHabitCompletions(id: id, from: from, to: to, limit: limit)
+    await getHabitCompletionsGate?()
+    return snapshot
   }
   func getHabitStats(id: LorvexHabit.ID) async throws -> HabitStats {
     try await preview.getHabitStats(id: id)

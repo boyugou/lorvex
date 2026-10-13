@@ -65,6 +65,12 @@ public final class MobileStore {
   public internal(set) var habits: HabitCatalogSnapshot?
   public internal(set) var selectedHabitID: LorvexHabit.ID?
   public internal(set) var habitDetailsByID: [LorvexHabit.ID: HabitDetail] = [:]
+  /// The number of the latest detail read started for each habit, from a counter that never
+  /// repeats. A read adopts its result only while it is still the latest one for its habit, so a
+  /// read that began before a write cannot replace the detail a later read already loaded, and
+  /// clearing the loaded surfaces drops the reads still in flight.
+  @ObservationIgnored var latestHabitDetailRead: [LorvexHabit.ID: Int] = [:]
+  @ObservationIgnored var habitDetailReadSerial = 0
   /// Archived habits for the Habits screen's restore section, loaded when that
   /// screen appears and refreshed after an archive, restore, or delete.
   public internal(set) var archivedHabits: [LorvexHabit] = []

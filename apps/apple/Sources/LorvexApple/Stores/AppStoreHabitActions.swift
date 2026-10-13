@@ -300,8 +300,24 @@ extension AppStore {
   /// covered. No-ops the cache on error and surfaces the message.
   func loadHabitDetail(id: LorvexHabit.ID) async {
     await perform {
-      habitsStorage.detailsByHabitID[id] = try await readHabitDetail(id: id)
+      let readNumber = startHabitDetailRead(id: id)
+      let detail = try await readHabitDetail(id: id)
+      adoptHabitDetail(detail, id: id, readNumber: readNumber)
     }
+  }
+
+  /// Numbers a detail read of `id`. Only the latest read of a habit adopts its result
+  /// (``adoptHabitDetail(_:id:readNumber:)``), so a read that began before a write cannot
+  /// replace the detail a later read already loaded.
+  private func startHabitDetailRead(id: LorvexHabit.ID) -> Int {
+    habitsStorage.detailReadSerial += 1
+    habitsStorage.latestDetailRead[id] = habitsStorage.detailReadSerial
+    return habitsStorage.detailReadSerial
+  }
+
+  private func adoptHabitDetail(_ detail: HabitDetail, id: LorvexHabit.ID, readNumber: Int) {
+    guard habitsStorage.latestDetailRead[id] == readNumber else { return }
+    habitsStorage.detailsByHabitID[id] = detail
   }
 
   private func readHabitDetail(id: LorvexHabit.ID) async throws -> HabitDetail {
@@ -327,10 +343,11 @@ extension AppStore {
   /// Quiet: a habit that no longer exists, or a failed read, keeps what is shown.
   func reloadSelectedHabitDetailIfLoaded() async {
     guard let id = selectedHabitID, habitsStorage.detailsByHabitID[id] != nil,
-      habits?.habits.contains(where: { $0.id == id }) == true,
-      let detail = try? await readHabitDetail(id: id)
+      habits?.habits.contains(where: { $0.id == id }) == true
     else { return }
-    habitsStorage.detailsByHabitID[id] = detail
+    let readNumber = startHabitDetailRead(id: id)
+    guard let detail = try? await readHabitDetail(id: id) else { return }
+    adoptHabitDetail(detail, id: id, readNumber: readNumber)
   }
 
   /// Closes the habit inspector once the loaded catalog no longer holds its habit

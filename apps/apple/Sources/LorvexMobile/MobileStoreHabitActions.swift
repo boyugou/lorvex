@@ -379,17 +379,22 @@ extension MobileStore {
 
   @discardableResult
   public func loadHabitDetail(id: LorvexHabit.ID) async -> Bool {
+    habitDetailReadSerial += 1
+    let readNumber = habitDetailReadSerial
+    latestHabitDetailRead[id] = readNumber
     do {
       let to = logicalTodayString
       let from = habitDetailStartDateString(endingAt: to)
       async let completions = core.getHabitCompletions(id: id, from: from, to: to, limit: 400)
       async let stats = core.getHabitStats(id: id)
       async let policies = core.getHabitReminderPolicies(id: id)
-      habitDetailsByID[id] = HabitDetail(
+      let detail = HabitDetail(
         completions: try await completions,
         stats: try await stats,
         reminderPolicies: try await policies
       )
+      // A later read for this habit started while this one ran, so it holds newer data.
+      if latestHabitDetailRead[id] == readNumber { habitDetailsByID[id] = detail }
       errorMessage = nil
       return true
     } catch {

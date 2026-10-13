@@ -114,6 +114,10 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// on or the user typed (the caller observes the data as of entry, then
   /// suspends).
   var loadDailyReviewGate: (@Sendable () async -> Void)?
+  /// Optional async barrier invoked inside `getHabitCompletions` AFTER the rows have been
+  /// read, so a test can model a habit-detail read that returns what the store held before a
+  /// later write.
+  var getHabitCompletionsGate: (@Sendable () async -> Void)?
   /// When set, `getDueHabitReminderOccurrences` throws this, modelling a
   /// transient habit occurrence-read failure during a reminder reschedule.
   var dueHabitReminderOccurrencesError: LorvexCoreError?

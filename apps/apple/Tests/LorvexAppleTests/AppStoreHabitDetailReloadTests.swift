@@ -115,3 +115,35 @@ func appStoreHabitsReloadFromAPeerKeepsTheInspectorOnAHabitThatRemains() async t
 
   #expect(store.selectedHabitID == habit.id)
 }
+
+/// A detail read that began before a check-in returns after the read that followed it. The older
+/// read holds what the inspector showed before the check-in, so it must not replace the newer one.
+@MainActor
+@Test
+func appStoreHabitDetailKeepsTheNewestReadWhenAnOlderOneFinishesLast() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let habit = try await preview.createHabit(
+    name: "Stretch", cue: nil, icon: nil, color: nil, targetCount: 1, cadence: .daily,
+    milestoneTarget: nil)
+  let store = AppStore(core: core)
+  await store.refresh()
+  await store.loadHabitDetail(id: habit.id)
+  #expect(store.habitDetail(for: habit.id)?.stats.totalCompletions == 0)
+
+  let gate = ReviewGate()
+  core.getHabitCompletionsGate = { await gate.hold() }
+  let older = Task { await store.loadHabitDetail(id: habit.id) }
+  await gate.waitUntilHeld()
+  core.getHabitCompletionsGate = nil
+
+  _ = try await preview.completeHabit(id: habit.id, date: store.logicalTodayDateString)
+  await store.loadHabitDetail(id: habit.id)
+  #expect(store.habitDetail(for: habit.id)?.completions.completions.count == 1)
+
+  await gate.release()
+  await older.value
+
+  #expect(store.habitDetail(for: habit.id)?.completions.completions.count == 1)
+  #expect(store.habitDetail(for: habit.id)?.stats.totalCompletions == 1)
+}

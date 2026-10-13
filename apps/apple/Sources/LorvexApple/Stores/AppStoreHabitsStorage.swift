@@ -40,6 +40,12 @@ struct AppStoreHabitsStorage {
   /// not this draft.
   var draftHabitReminderTimes: [String] = []
   var detailsByHabitID: [LorvexHabit.ID: AppStore.HabitDetail] = [:]
+  /// The number of the latest detail read started for each habit, from a counter that never
+  /// repeats. A read adopts its result only while it is still the latest one for its habit, so a
+  /// read that began before a write cannot replace the detail a later read already loaded, and
+  /// a reset drops the reads still in flight.
+  var latestDetailRead: [LorvexHabit.ID: Int] = [:]
+  var detailReadSerial = 0
   /// Real per-habit stats (streak, rate, recent completions) for the cards —
   /// loaded from the core so cards never show estimated/fabricated values.
   var habitStatsByID: [LorvexHabit.ID: HabitStats] = [:]
@@ -63,6 +69,7 @@ struct AppStoreHabitsStorage {
     draftHabitColor = nil
     draftHabitReminderTimes = []
     detailsByHabitID = [:]
+    latestDetailRead = [:]
     habitStatsByID = [:]
     habitNameFocusRequest = nil
   }

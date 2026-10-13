@@ -3,7 +3,12 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/script/app_metadata.sh"
+source "$ROOT_DIR/script/lib_real_data_guard.sh"
 cd "$ROOT_DIR"
+
+# The gate builds, launches, and packages the app against the managed store: never on a Mac that
+# holds real Lorvex data (script/verify_static_gates.sh runs the static tier there).
+refuse_on_machine_with_lorvex_data verify_all.sh || exit 78
 
 # The only process this gate ever launches is $APP_NAME, via
 # `build_and_run.sh --verify`'s smoke launch below; $APP_PRODUCT_NAME and

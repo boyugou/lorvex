@@ -120,8 +120,10 @@ architecture change and requires an explicit ownership design first.
 ```
 
 `./script/verify_all.sh` is the maintainers' full gate before a release (see
-"Verification Gate" below); it builds, packages, and launches the app, so do not
-run it on a Mac that holds real Lorvex data.
+"Verification Gate" below); it builds, packages, and launches the app, so it
+refuses to start on a Mac that has Lorvex installed or its App Group container
+(`LORVEX_ALLOW_RUN_WITH_REAL_DATA=1` overrides, for a Mac that holds nothing
+worth keeping).
 
 ### Local packaging
 

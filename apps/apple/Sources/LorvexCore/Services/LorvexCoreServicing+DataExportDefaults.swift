@@ -114,15 +114,12 @@ extension LorvexDataExportServicing {
 
 /// Explicit in-memory v1 resource bounds. The exporter verifies the matching
 /// table count inside the same read transaction and FAILS when a category is
-/// larger, rather than silently truncating at these limits. The raw calendar
-/// range covers the SQLite date domain in full (`loadCalendarEventsForDataExport`
-/// pages through it), so a full export never misses an event outside some
-/// narrower window.
+/// larger, rather than silently truncating at these limits. Calendar events are
+/// read page by page with no date window, so a full export never misses an
+/// event outside some narrower range.
 enum LorvexDataExportWindow {
   static let taskPageSize = 500
   static let calendarPageSize: UInt32 = 500
   static let reviewHistoryLimit = 100_000
   static let habitCompletionLimit = 1_000_000
-  static let rawCalendarFrom = "0001-01-01"
-  static let rawCalendarTo = "9999-12-31"
 }

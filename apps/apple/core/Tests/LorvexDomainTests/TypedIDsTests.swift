@@ -52,8 +52,7 @@ final class TypedIDsTests: XCTestCase {
     }
   }
 
-  func testEventTagChecklistParseUUID() {
-    XCTAssertEqual(try EventId.parse(validV7).get().asString, validV7)
+  func testTagChecklistParseUUID() {
     XCTAssertEqual(try TagId.parse(validV7).get().asString, validV7)
     XCTAssertEqual(try ChecklistItemId.parse(validV7).get().asString, validV7)
   }

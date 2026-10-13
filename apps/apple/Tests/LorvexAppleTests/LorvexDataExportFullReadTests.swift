@@ -161,31 +161,6 @@ func everyCategoryRawValueDrivesItsOwnSection() async throws {
   }
 }
 
-/// The export's calendar read must span the full SQLite date domain rather
-/// than any clock-derived window: a window anchored on "now" can silently
-/// drop events outside it, which is exactly what a full backup must never do.
-@Test
-func dataExportCalendarWindowSpansFullDateDomain() throws {
-  let source = try String(
-    contentsOf: packageRoot()
-      .appending(path: "Sources/LorvexCore/Services/LorvexCoreServicing+DataExportDefaults.swift"),
-    encoding: .utf8
-  )
-
-  #expect(source.contains("rawCalendarFrom = \"0001-01-01\""))
-  #expect(source.contains("rawCalendarTo = \"9999-12-31\""))
-  #expect(!source.contains("date(byAdding: .year"))
-  #expect(!source.contains("?? Date()"))
-}
-
-private func packageRoot() -> URL {
-  var url = URL(fileURLWithPath: #filePath)
-  while url.lastPathComponent != "apps" {
-    url.deleteLastPathComponent()
-  }
-  return url.appending(path: "apple")
-}
-
 /// The export carries each task's children — checklist rows (ordered, with
 /// completion state) and reminder timestamps — not just the flat columns.
 /// Without them a "backup" restores bare tasks.
@@ -213,4 +188,24 @@ func exportCarriesChecklistAndReminders() async throws {
   #expect(exported.checklist?.map(\.text) == ["first step", "second step"])
   #expect(exported.checklist?.map(\.completed) == [true, false])
   #expect(exported.reminders?.map(\.reminderAt) == ["2026-07-01T08:00:00.000Z"])
+}
+
+/// The export's calendar read has no date window: a window anchored on "now"
+/// would silently drop events outside it, which a full backup must never do.
+@Test
+func dataExportIncludesCalendarEventsFarOutsideAnyClockWindow() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let days = ["1971-03-04", "2098-12-31"]
+  for day in days {
+    _ = try await core.createCalendarEvent(
+      title: "Event \(day)", startDate: day, endDate: nil, startTime: "09:00", endTime: "10:00",
+      allDay: false, location: nil, notes: nil, recurrence: nil, timezone: "America/Los_Angeles",
+      url: nil, color: nil, eventType: nil, personName: nil, attendees: nil)
+  }
+
+  let exported = try await core.loadCalendarEventsForDataExport()
+
+  for day in days {
+    #expect(exported.contains { $0.startDate == day }, "the export dropped the event on \(day)")
+  }
 }

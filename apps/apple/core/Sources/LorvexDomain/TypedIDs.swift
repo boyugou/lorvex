@@ -92,12 +92,6 @@ public struct ListId: TypedEntityID {
   }
 }
 
-public struct EventId: TypedEntityID {
-  public static let fieldLabel = "event_id"
-  public let rawValue: String
-  public init(trusted value: String) { self.rawValue = value }
-}
-
 public struct TagId: TypedEntityID {
   public static let fieldLabel = "tag_id"
   public let rawValue: String

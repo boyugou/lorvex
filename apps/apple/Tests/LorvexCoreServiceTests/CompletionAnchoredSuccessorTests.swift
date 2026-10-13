@@ -70,3 +70,53 @@ final class CompletionAnchoredEarlierKeyTests: XCTestCase {
     XCTAssertEqual(Set(keys).count, keys.count, "every occurrence has its own key")
   }
 }
+
+/// A repeat pinned to a day (of the month, the year, or the week), moved to
+/// another day, repeats on the new day from then on.
+final class RepeatRescheduleTests: XCTestCase {
+  /// Pins `rule` to `from`, moves the due date to `to`, completes, and returns the
+  /// next occurrence's due date.
+  private func nextDue(rule: TaskRecurrenceRule, from: String, to: String) async throws -> String {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let task = try await service.createTask(title: "Pinned", notes: "")
+    func date(_ key: String) throws -> Date {
+      try XCTUnwrap(LorvexDateFormatters.ymd.date(from: key))
+    }
+    func setDue(_ key: String) async throws {
+      _ = try await service.updateTask(
+        id: task.id, title: "Pinned", notes: "", priority: task.priority, estimatedMinutes: nil,
+        dueDate: try date(key), plannedDate: nil, availableFrom: nil, tags: [], dependsOn: [])
+    }
+    try await setDue(from)
+    _ = try await service.setTaskRecurrence(taskID: task.id, rule: rule)
+    try await setDue(to)
+    _ = try await service.completeTask(id: task.id)
+    return try XCTUnwrap(
+      try service.read { db in
+        try String.fetchOne(
+          db, sql: "SELECT due_date FROM tasks WHERE title = 'Pinned' AND status = 'open'")
+      })
+  }
+
+  func testMonthlyDayRuleFollowsTheNewDay() async throws {
+    let next = try await nextDue(
+      rule: TaskRecurrenceRule(freq: .monthly, interval: 1, byMonthDay: [6]),
+      from: "2031-03-06", to: "2031-03-15")
+    XCTAssertEqual(next, "2031-04-15")
+  }
+
+  func testWeeklyDayRuleFollowsTheNewWeekday() async throws {
+    // 2031-03-03 is a Monday, 2031-03-06 a Thursday.
+    let next = try await nextDue(
+      rule: TaskRecurrenceRule(freq: .weekly, interval: 1, byDay: ["MO"]),
+      from: "2031-03-03", to: "2031-03-06")
+    XCTAssertEqual(next, "2031-03-13")
+  }
+
+  func testYearlyRuleFollowsTheNewDate() async throws {
+    let next = try await nextDue(
+      rule: TaskRecurrenceRule(freq: .yearly, interval: 1, byMonth: [3], byMonthDay: [6]),
+      from: "2031-03-06", to: "2031-05-20")
+    XCTAssertEqual(next, "2032-05-20")
+  }
+}

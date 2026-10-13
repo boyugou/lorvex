@@ -218,6 +218,13 @@ extension RecurrenceConfig {
     {
       setClauses.append("canonical_occurrence_date = ?")
       args.append(rescheduledDue)
+      // The rule's own pinned day moves with it, unless this call replaces the rule.
+      if case .unset = recurrencePatch, let rule = old.recurrence,
+        let moved = RecurrenceReanchor.rule(rule, movedTo: rescheduledDue)
+      {
+        setClauses.append("recurrence = ?")
+        args.append(moved)
+      }
       // A generated occurrence names its slot in the series by its instance
       // key, which the schema ties to the occurrence date, so the key moves
       // with the date.

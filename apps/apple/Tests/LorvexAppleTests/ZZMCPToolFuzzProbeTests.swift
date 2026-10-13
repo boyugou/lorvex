@@ -1241,9 +1241,12 @@ struct ZZMCPToolFuzzProbe {
         let result = try? await mcpRegistryCall(
           registry, tool: "get_ai_changelog", arguments: ["limit": .int(200)])
       else { return [] }
+      // The device-local audit rows the outbox writes itself (`sync.*`, such as a coalesced
+      // delete that never left the device) are not the call's own mutation row.
       return Set(
         (result.structuredContent?.objectValue?["entries"]?.arrayValue ?? []).compactMap {
-          $0.objectValue?["id"]?.stringValue
+          guard $0.objectValue?["operation"]?.stringValue?.hasPrefix("sync.") != true else { return nil }
+          return $0.objectValue?["id"]?.stringValue
         })
     }
 

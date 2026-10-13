@@ -96,6 +96,31 @@ final class AiChangelogQueryTests: XCTestCase {
     XCTAssertEqual(entries.map(\.id), ["newer", "older"])
   }
 
+  func testTheSyncLayersLocalAuditRowsAreNotAssistantActivity() throws {
+    let store = try TestSupport.freshStore()
+    try store.writer.write { db in
+      try self.insertEntry(
+        db,
+        self.aiUpdate(
+          id: "assistant", timestamp: "2026-01-01T00:00:00.000000Z",
+          entityType: "task", entityId: "task-1", operation: "update"))
+      try self.insertEntry(
+        db,
+        TestEntry(
+          id: "sync-audit", timestamp: "2026-01-02T00:00:00.000000Z",
+          operation: "sync.outbox.coalesced_delete_dropped", entityType: "task_tag",
+          entityId: "task-1", entityIds: nil, initiatedBy: "sync"))
+    }
+    let entries = try store.writer.read { db in
+      try AiChangelogQueryRepo.listAiChangelog(db, query: AiChangelogQuery(limit: 10))
+    }
+    XCTAssertEqual(entries.map(\.id), ["assistant"])
+    let stored = try store.writer.read { db in
+      try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE initiated_by = 'sync'")
+    }
+    XCTAssertEqual(stored, 1, "the audit row is kept, only the assistant-facing list omits it")
+  }
+
   func testFiltersByExactEntityIdArrayMember() throws {
     let store = try TestSupport.freshStore()
     try store.writer.write { db in
@@ -305,12 +330,12 @@ final class AiChangelogQueryTests: XCTestCase {
   func testRendersBareTablePredicate() {
     XCTAssertEqual(
       AiChangelogActorFilter.assistantActorFilterSql(),
-      "(initiated_by IS NULL OR initiated_by NOT IN ('human', 'system', 'user', 'manual'))")
+      "(initiated_by IS NULL OR initiated_by NOT IN ('human', 'system', 'user', 'manual', 'sync'))")
   }
 
   func testRendersAliasedPredicate() {
     XCTAssertEqual(
       AiChangelogActorFilter.assistantActorFilterSql(forAlias: "ac"),
-      "(ac.initiated_by IS NULL OR ac.initiated_by NOT IN ('human', 'system', 'user', 'manual'))")
+      "(ac.initiated_by IS NULL OR ac.initiated_by NOT IN ('human', 'system', 'user', 'manual', 'sync'))")
   }
 }

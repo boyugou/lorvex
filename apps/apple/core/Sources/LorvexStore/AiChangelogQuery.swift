@@ -55,10 +55,12 @@ public struct AiChangelogEntry: Sendable, Equatable {
 /// Shared SQL fragments for AI changelog actor filtering.
 ///
 /// `ai_changelog` is the assistant activity surface. Human/user/system/manual
-/// rows can exist from imports or diagnostics; assistant-facing reads
-/// and retention all agree on the same filter so the row sets stay aligned.
+/// rows can exist from imports or diagnostics, and the sync layer writes its own
+/// device-local audit rows (`sync`, e.g. an outbox delete a later upsert replaced);
+/// none of those is something an assistant did, so assistant-facing reads leave
+/// them out. The rows stay in the table for forensics.
 public enum AiChangelogActorFilter {
-  static let nonAssistantActorsSql = "'human', 'system', 'user', 'manual'"
+  static let nonAssistantActorsSql = "'human', 'system', 'user', 'manual', 'sync'"
 
   /// Predicate for bare-table queries.
   public static func assistantActorFilterSql() -> String {

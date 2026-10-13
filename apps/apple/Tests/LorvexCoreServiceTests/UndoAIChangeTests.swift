@@ -221,4 +221,27 @@ final class UndoAIChangeTests: XCTestCase {
     XCTAssertEqual(ymd(result.task?.plannedDate), "2026-11-10")
     XCTAssertEqual(result.task?.plannedTime, 600..<630, "the time the move cleared comes back")
   }
+
+  /// Taking a tag off a task and putting it back before the first push replaces a queued outbox
+  /// delete, which the sync layer notes in the changelog for forensics. That note is not
+  /// something an assistant did, so the assistant-facing list and the Activity panel omit it.
+  func testASyncAuditRowFromATagToggleIsNotListedAsAssistantActivity() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let task = try await service.createTask(title: "File taxes", notes: "")
+    try await assistantUpdate(service, TaskUpdateDraft(id: task.id, tags: ["money", "home"]))
+    try await assistantUpdate(service, TaskUpdateDraft(id: task.id, tags: ["money"]))
+    try await assistantUpdate(service, TaskUpdateDraft(id: task.id, tags: ["money", "home"]))
+    let audits = try service.read { db in
+      try Int.fetchOne(
+        db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE operation LIKE 'sync.%'") ?? 0
+    }
+    XCTAssertGreaterThan(audits, 0, "the toggle should have left a sync audit row")
+
+    let listed = try await service.loadAIChangelog(
+      limit: 50, offset: 0, entityType: nil, operation: nil, entityID: nil, since: nil)
+
+    XCTAssertTrue(listed.entries.allSatisfy { !$0.operation.hasPrefix("sync.") })
+    XCTAssertTrue(listed.entries.allSatisfy { $0.initiatedBy != "sync" })
+    XCTAssertEqual(listed.entries.filter { $0.operation == "update" }.count, 3)
+  }
 }

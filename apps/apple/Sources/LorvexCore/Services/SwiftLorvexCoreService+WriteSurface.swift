@@ -365,7 +365,7 @@ extension SwiftLorvexCoreService {
   /// plain strings, not a closed enum — a new provenance is a new constant.
   ///
   /// `user` is one of the human/non-assistant actors recognized by
-  /// ``AiChangelogActorFilter`` (`human` / `system` / `user` / `manual`), so a
+  /// ``AiChangelogActorFilter`` (`human` / `system` / `user` / `manual` / `sync`), so a
   /// row stamped `user` is excluded from assistant-facing changelog reads;
   /// `assistant` and `import` fall outside that set and read as AI-originated.
   /// `unattributed` is a fail-closed sentinel, not a real actor: it too falls

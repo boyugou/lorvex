@@ -213,13 +213,27 @@ extension SwiftLorvexCoreService {
     }()
     var syncEffects = TaskUpdateSyncEffects()
     var depChangedIds: [String] = []
-    try TaskUpdate.applySingleUpdateInSavepoint(
-      db, hlc: hlc, update: input, beforeStatus: beforeStatus,
-      now: SyncTimestampFormat.syncTimestampNow(),
-      syncEffects: &syncEffects, depChangedIds: &depChangedIds)
-    try TaskUpdate.revalidateDependencyCycles(
-      db, depChangedIds: depChangedIds, errorContext: "update_task")
-    let updatedTask = try TaskResponse.loadEnrichedTaskJSON(db, taskId: typedId)
+    // The update runs in a savepoint that is undone when it left the task as it
+    // was (every supplied value was already the task's own): no new version, sync
+    // upsert, or changelog row for a change that did not happen.
+    let updatedTask: JSONValue
+    do {
+      updatedTask = try StoreTransactions.withSavepoint(db, "task_update_effect") { db in
+        try TaskUpdate.applySingleUpdateInSavepoint(
+          db, hlc: hlc, update: input, beforeStatus: beforeStatus,
+          now: SyncTimestampFormat.syncTimestampNow(),
+          syncEffects: &syncEffects, depChangedIds: &depChangedIds)
+        try TaskUpdate.revalidateDependencyCycles(
+          db, depChangedIds: depChangedIds, errorContext: "update_task")
+        let after = try TaskResponse.loadEnrichedTaskJSON(db, taskId: typedId)
+        if Self.taskJSONWithoutStamp(after) == Self.taskJSONWithoutStamp(beforeTask) {
+          throw TaskUpdateLeftTaskAsItWas()
+        }
+        return after
+      }
+    } catch is TaskUpdateLeftTaskAsItWas {
+      return try SwiftLorvexTaskDeserializers.task(beforeTask)
+    }
     let afterSyncPayload = try OutboxEnqueue.readEntityPayloadSnapshot(
       db, entityType: EntityName.task, entityId: input.id)
     let registerIntent = try TaskRegisterIntent.authoredRegisters(
@@ -236,6 +250,18 @@ extension SwiftLorvexCoreService {
         before: beforeTask, after: updatedTask),
       deviceId: deviceId)
     return try SwiftLorvexTaskDeserializers.task(updatedTask)
+  }
+
+  /// Thrown inside the update's savepoint to undo an update that changed nothing.
+  private struct TaskUpdateLeftTaskAsItWas: Error {}
+
+  /// A task's enriched JSON without the stamp every write moves, so two
+  /// readings of the same task compare equal.
+  private static func taskJSONWithoutStamp(_ task: JSONValue) -> JSONValue {
+    guard case .object(var object) = task else { return task }
+    object["updated_at"] = nil
+    object["version"] = nil
+    return .object(object)
   }
 
   // MARK: - Permanent delete

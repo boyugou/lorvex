@@ -37,7 +37,10 @@ The same per-entity DTOs render into two containers:
 
 A `format: "csv"` export renders the same entities as multi-section CSV and
 carries **no** manifest; it is a convenience view, not a re-import target for the
-single-file JSON path.
+single-file JSON path. A cell that starts like a spreadsheet formula (`=`, `+`,
+`-`, `@`, a tab, or a carriage return) gets a leading apostrophe, so a
+spreadsheet shows text an assistant or an import supplied as text instead of
+running it.
 
 Producer: `LorvexDataExporter`
 (`apps/apple/Sources/LorvexCore/Support/LorvexDataExporter.swift`). JSON is

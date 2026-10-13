@@ -3838,6 +3838,8 @@ receipts or the source device as this device's runtime identity; a single-file
 JSON provenance header may still describe which Apple device produced it. If the
 target already contains tasks or the native graph's list/tag roots were not
 selected, import safely uses the portable merge instead. CSV is portable only.
+A CSV cell that starts with `=`, `+`, `-`, or `@` is written with a leading
+apostrophe, so a spreadsheet shows it as text and never runs it as a formula.
 
 Import is non-destructive, not an authoritative iCloud rollback. With iCloud
 sync turned on, Lorvex first runs one sync pass so the import compares

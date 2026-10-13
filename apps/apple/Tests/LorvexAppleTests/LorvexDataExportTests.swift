@@ -261,6 +261,38 @@ func csvEscapeSeesADelimiterFollowedByACombiningMark() {
   #expect(LorvexDataExporter.csvEscape("\"\u{301}") == "\"\"\"\u{301}\"")
 }
 
+/// A spreadsheet reads a cell that starts with `=`, `+`, `-`, `@`, a tab, or a carriage return as a
+/// formula, so text an assistant or an import supplied could run one when the export is opened.
+/// Such a cell is exported as text, with a leading apostrophe; everything else is unchanged.
+@Test
+func csvEscapeDefusesAFieldThatStartsLikeAFormula() {
+  #expect(LorvexDataExporter.csvEscape("=1+1") == "'=1+1")
+  #expect(LorvexDataExporter.csvEscape("+1 555 0100") == "'+1 555 0100")
+  #expect(LorvexDataExporter.csvEscape("-2") == "'-2")
+  #expect(LorvexDataExporter.csvEscape("@SUM(A1:A9)") == "'@SUM(A1:A9)")
+  #expect(LorvexDataExporter.csvEscape("\t=1") == "'\t=1")
+  #expect(LorvexDataExporter.csvEscape("\r=1") == "\"'\r=1\"")
+  #expect(
+    LorvexDataExporter.csvEscape("=HYPERLINK(\"http://x\",\"go\")")
+      == "\"'=HYPERLINK(\"\"http://x\"\",\"\"go\"\")\"")
+}
+
+@Test
+func csvEscapeLeavesOrdinaryFieldsAlone() {
+  for field in ["", "a=b", "x+y", "2026-10-13", "09:00", "#FF8800", "P1", "FREQ=DAILY", "a-b", " =1"] {
+    #expect(LorvexDataExporter.csvEscape(field) == field)
+  }
+}
+
+@Test
+func exportCSVDefusesAFormulaTitle() throws {
+  let task = makeExportTask(title: "=HYPERLINK(\"http://x\")")
+  let payload = LorvexDataExportPayload(tasks: [task])
+  let csv = try LorvexDataExporter.render(payload: payload, format: .csv)
+  #expect(csv.contains("\"'=HYPERLINK(\"\"http://x\"\")\""))
+  #expect(!csv.contains(",=HYPERLINK"))
+}
+
 @Test
 func exportCSVEscapesTaskTitleWithComma() throws {
   let task = makeExportTask(title: "Buy milk, eggs")

@@ -67,7 +67,19 @@ public enum UnicodeHygiene {
   /// boundary accepting free text authored by a human or model. Preserves
   /// tab/LF/CR for multi-line bodies. Idempotent.
   public static func sanitizeUserText(_ input: String) -> String {
-    String(keptScalars(input)).precomposedStringWithCanonicalMapping
+    var text = String(keptScalars(input)).precomposedStringWithCanonicalMapping
+    // Normalization reorders combining marks, which can move a mark between a virama and the
+    // joiner that was kept beside it, so the joiner no longer belongs in the text as
+    // normalized. Judge again until nothing changes, which is what makes a second pass a
+    // no-op. Only a joiner or a tag character can still be stripped (a pass removes the
+    // rest), so text without one is done, and every pass that changes anything removes a
+    // scalar, so the loop ends; the bound is only a guard.
+    for _ in 0..<32 where text.unicodeScalars.contains(where: { isJoiner($0) || isTagCharacter($0) }) {
+      let next = String(keptScalars(text)).precomposedStringWithCanonicalMapping
+      if next == text { break }
+      text = next
+    }
+    return text
   }
 
   /// Sanitize user-supplied text for a field that draws on one line, such as a

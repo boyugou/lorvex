@@ -130,6 +130,24 @@ final class UnicodeHygieneTests: XCTestCase {
     XCTAssertEqual(sanitize("hello\u{2028}world\u{2029}!"), "helloworld!")
   }
 
+  /// Normalization reorders combining marks. A joiner kept beside a virama as written can end up
+  /// beside a mark instead, where it does nothing, so a second pass would strip it; the text
+  /// is judged again after normalizing, which keeps the pass idempotent.
+  func testAJoinerLeftBesideAMarkByNormalizationIsStrippedInOnePass() {
+    let tibetan = "\u{0F40}\u{0F74}\u{094D}\u{200C}"
+    XCTAssertEqual(sanitize(sanitize(tibetan)), sanitize(tibetan))
+    XCTAssertEqual(sanitize(tibetan), "\u{0F40}\u{094D}\u{0F74}")
+    let dotBelow = "x\u{0323}\u{094D}\u{200D}"
+    XCTAssertEqual(sanitize(dotBelow), "x\u{094D}\u{0323}")
+    XCTAssertEqual(oneLine(dotBelow), oneLine(oneLine(dotBelow)))
+  }
+
+  /// A conjunct typed in order keeps its joiner: the virama still sits beside it.
+  func testAJoinerBesideAViramaThatNormalizationLeavesAloneIsKept() {
+    XCTAssertEqual(sanitize("क\u{094D}\u{200D}ष"), "क\u{094D}\u{200D}ष")
+    XCTAssertEqual(sanitize("क\u{093C}\u{094D}\u{200C}ष"), "क\u{093C}\u{094D}\u{200C}ष")
+  }
+
   func testPreservesCJK() { XCTAssertEqual(sanitize("工作清单 — 今天"), "工作清单 — 今天") }
   func testPreservesEmoji() { XCTAssertEqual(sanitize("🎯 Daily focus 🚀"), "🎯 Daily focus 🚀") }
   func testPreservesRTLLetters() { XCTAssertEqual(sanitize("مرحبا"), "مرحبا") }

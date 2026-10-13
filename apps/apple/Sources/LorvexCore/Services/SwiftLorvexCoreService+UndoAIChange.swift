@@ -253,13 +253,12 @@ extension SwiftLorvexCoreService {
     UndoableField(name: "due_date", keys: ["due_date"]) { before, input in
       input.dueDate = textPatch(before, "due_date")
     },
-    UndoableField(name: "planned_date", keys: ["planned_date"]) { before, input in
-      input.plannedDate = textPatch(before, "planned_date")
-    },
     UndoableField(
-      name: "planned_time", keys: ["planned_start_time", "planned_end_time"]
+      name: "planned_date", keys: ["planned_date", "planned_start_time", "planned_end_time"]
     ) { before, input in
-      // The two ends are one value: both go back together, or both are cleared.
+      // The day and its times are one value: a time belongs to its day, and moving the day
+      // clears the time, so all three go back together, or none does.
+      input.plannedDate = textPatch(before, "planned_date")
       input.plannedStartTime = textPatch(before, "planned_start_time")
       input.plannedEndTime = textPatch(before, "planned_end_time")
     },

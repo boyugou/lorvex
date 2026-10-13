@@ -30,6 +30,16 @@ final class UndoAIChangeTests: XCTestCase {
       })
   }
 
+  /// A planned or due day as the store keeps it, a calendar day at midnight UTC, written
+  /// `YYYY-MM-DD`.
+  private func ymd(_ date: Date?) -> String? {
+    guard let date else { return nil }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "UTC")!
+    let parts = calendar.dateComponents([.year, .month, .day], from: date)
+    return String(format: "%04d-%02d-%02d", parts.year!, parts.month!, parts.day!)
+  }
+
   private func changelogCount(_ service: SwiftLorvexCoreService) throws -> Int {
     try service.read { db in try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog") ?? -1 }
   }
@@ -160,5 +170,55 @@ final class UndoAIChangeTests: XCTestCase {
     XCTAssertEqual(Set(result.reverted), ["tags", "depends_on"])
     XCTAssertEqual(Set(restored.tags), ["money", "home"])
     XCTAssertTrue(restored.dependsOn.isEmpty)
+  }
+
+  /// The planned day and its times are one value: moving the day clears the time, so a time
+  /// edited since keeps the day with it, and a day cleared since leaves the whole slot alone
+  /// (restoring only the time would be refused for want of a day).
+  func testThePlannedDayAndItsTimesGoBackOrStayTogether() async throws {
+    let day = { (number: Int) in
+      Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: number, hour: 12))!
+    }
+    let service = try SwiftLorvexCoreService.inMemory()
+    let task = try await service.createTask(title: "Plan trip", notes: "")
+    _ = try await service.updateTask(
+      TaskUpdateDraft(id: task.id, plannedDate: .set(day(10)), plannedTime: .set(600..<630)))
+    try await assistantUpdate(
+      service,
+      TaskUpdateDraft(id: task.id, plannedDate: .set(day(12)), plannedTime: .set(540..<570)))
+    let id = try latestUpdateID(service, task: task.id)
+
+    // A person moves the time afterwards: the day stays with it.
+    _ = try await service.updateTask(TaskUpdateDraft(id: task.id, plannedTime: .set(480..<540)))
+    let edited = try await service.undoAIChange(changelogID: id)
+    XCTAssertTrue(edited.reverted.isEmpty)
+    XCTAssertEqual(edited.kept, ["planned_date"])
+    XCTAssertEqual(edited.task?.plannedTime, 480..<540)
+    XCTAssertEqual(ymd(edited.task?.plannedDate), "2026-11-12")
+
+    // A person clears the day instead: nothing is restored, and nothing is refused.
+    _ = try await service.updateTask(TaskUpdateDraft(id: task.id, plannedDate: .clear))
+    let cleared = try await service.undoAIChange(changelogID: id)
+    XCTAssertTrue(cleared.reverted.isEmpty)
+    XCTAssertNil(cleared.task?.plannedDate)
+    XCTAssertNil(cleared.task?.plannedTime)
+  }
+
+  func testAnUntouchedPlannedSlotGoesBackWhole() async throws {
+    let day = { (number: Int) in
+      Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: number, hour: 12))!
+    }
+    let service = try SwiftLorvexCoreService.inMemory()
+    let task = try await service.createTask(title: "Plan trip", notes: "")
+    _ = try await service.updateTask(
+      TaskUpdateDraft(id: task.id, plannedDate: .set(day(10)), plannedTime: .set(600..<630)))
+    try await assistantUpdate(service, TaskUpdateDraft(id: task.id, plannedDate: .set(day(12))))
+    let id = try latestUpdateID(service, task: task.id)
+
+    let result = try await service.undoAIChange(changelogID: id)
+
+    XCTAssertEqual(result.reverted, ["planned_date"])
+    XCTAssertEqual(ymd(result.task?.plannedDate), "2026-11-10")
+    XCTAssertEqual(result.task?.plannedTime, 600..<630, "the time the move cleared comes back")
   }
 }

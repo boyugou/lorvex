@@ -23,6 +23,18 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   maintenance".
 - watchOS / Widgets design audits (need on-device).
 
+- Candidate, not started: undo an assistant's change. Tenet 9 of the design
+  philosophy says correcting an assistant must cost as little as creating, and
+  `ai_changelog` already keeps `before_json` and `after_json` for update
+  operations (each capped at 4000 bytes, or a truncation sentinel, so a task with
+  long notes cannot be reverted from the log alone; creates and deletes carry no
+  snapshot). A safe shape: an Undo on an Activity row that restores only the
+  fields that still equal that row's `after` (a field someone changed since stays
+  as it is) through the ordinary update path, so the revert is itself an
+  attributed, synced change, and the same operation as an MCP tool for the
+  assistant that made the mistake. Open questions: what a row of a batch undoes
+  (one entity or all), and whether the control belongs in Settings > Activity or
+  on the task itself.
 - Open UI/UX work, each verified against the code but not yet done:
   - Quick add misreads lines typed in decomposed Unicode in about fifteen
     languages (`ZZCaptureParserFuzzProbeTests`, `FUZZ_NFD`). Low priority in

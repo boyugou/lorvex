@@ -46,8 +46,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
     core's English (a start on an already open task, a finished-to-finished
     transition that is not complete or cancel) are not reachable from the UI.
-  - A task repeating on the 29th or 30th skips February; clamping to the last
-    day changes the stored rule shape and is a product decision.
+  - A task repeating on the 29th or 30th skips the months that lack that day,
+    as RFC 5545 says (`CalendarRecurrence.injectBymonthday`); only an anchor
+    that is its month's last day becomes `BYMONTHDAY=-1` and follows month
+    ends. Clamping the 29th and 30th would need a multi-day `BYMONTHDAY` with
+    `BYSETPOS` that the repeat summary cannot word plainly, so it stays as is
+    unless a simpler stored shape is found.
   - Sync convergence limits found by `SyncConvergenceSimulationTests`: a task
     hard-delete racing a concurrent edit when child edges arrive first; a tag
     delete cascading a newer live edge before a resurrecting upsert; alias

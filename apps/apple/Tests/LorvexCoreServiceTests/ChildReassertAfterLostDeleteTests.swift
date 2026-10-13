@@ -62,4 +62,32 @@ final class ChildReassertAfterLostDeleteTests: XCTestCase {
       XCTAssertGreaterThan(item.version, try Hlc.parse(localVersion), "at a version above its stored one")
     }
   }
+
+  func testLosingHabitDeleteReassertsItsCompletionsAtANewVersion() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let habit = try await service.createHabit(
+      name: "Read", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "daily"), milestoneTarget: nil)
+    let day = LorvexDateFormatters.ymd.string(from: Date())
+    _ = try await service.completeHabit(id: habit.id, date: day)
+    // Empty the outbox so only the re-emission shows.
+    let queued = try service.pendingOutbound()
+    try service.markOutboundSynced(outboxIds: queued.map(\.outboxId))
+    let completionKey = "\(habit.id):\(day)"
+
+    // A delete older than every local row loses to them.
+    let oldDelete = "1711234569000_0000_dec0000300000003"
+    let delete = SyncEnvelope(
+      entityType: .habit, entityId: habit.id, operation: .delete,
+      version: try Hlc.parse(oldDelete),
+      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
+      payload: "{\"version\":\"\(oldDelete)\"}", deviceId: "device-remote")
+    let report = try service.applyInbound([delete], undecodable: 0)
+
+    XCTAssertEqual(report.skipped, 1, "the older delete loses to the local habit")
+    let pending = try service.pendingOutbound().map(\.envelope)
+    XCTAssertNotNil(
+      pending.first { $0.entityType == .habitCompletion && $0.entityId == completionKey },
+      "the completion is re-emitted for peers that cascaded it away")
+  }
 }

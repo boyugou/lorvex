@@ -70,7 +70,15 @@ public enum CalendarNormalization {
     let title = try input.title.map(normalizeCalendarTitle)
     if let v = input.startDate { try validateDate(v, field: "start_date") }
     let startTime = try normalizeTimePatch(input.startTime, field: "start_time")
-    let endDate = try normalizeDatePatch(input.endDate, field: "end_date")
+    var endDate = try normalizeDatePatch(input.endDate, field: "end_date")
+    // A single-day event stays a single day when its start moves: an end date that equals
+    // the start follows it, however the row stores it. A multi-day event keeps its end date
+    // unless the caller moves that too, and a start moved past it is refused below.
+    if case .unset = endDate, let newStart = input.startDate, newStart != existing.startDate,
+      (existing.storedEndDate ?? existing.endDate) == existing.startDate
+    {
+      endDate = .set(newStart)
+    }
     let endTime = try normalizeTimePatch(input.endTime, field: "end_time")
     let description = try normalizeTextPatch(
       input.description, field: "description", max: ValidationLimits.maxBodyLength,

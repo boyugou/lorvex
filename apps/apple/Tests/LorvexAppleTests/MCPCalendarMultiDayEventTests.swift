@@ -80,4 +80,30 @@ struct MCPCalendarMultiDayEventTests {
     #expect(object["all_day"]?.boolValue == false)
     #expect(object["start_time"]?.stringValue == "09:31")
   }
+
+  @Test("moving the start of a single-day event whose end date equals its start keeps it a single day")
+  func movingASingleDayEventKeepsItSingleDay() async throws {
+    let registry = try mcpInMemoryRegistry()
+    for (title, extra) in [
+      ("Timed", ["start_time": Value.string("00:55")]),
+      ("All day", ["all_day": Value.bool(true)]),
+    ] {
+      var arguments: [String: Value] = [
+        "title": .string(title), "start_date": .string("2026-09-18"),
+        "end_date": .string("2026-09-18"),
+      ]
+      for (key, value) in extra { arguments[key] = value }
+      let created = try await mcpRegistryCall(
+        registry, tool: "create_calendar_event", arguments: arguments)
+      let id = try #require(created.structuredContent?.objectValue?["event_id"]?.stringValue)
+
+      let moved = try await mcpRegistryCall(
+        registry, tool: "update_calendar_event",
+        arguments: ["event_id": .string(id), "start_date": .string("2026-11-05")])
+
+      #expect(moved.isError != true, "\(title): \(mcpTextContent(moved))")
+      #expect(moved.structuredContent?.objectValue?["start_date"]?.stringValue == "2026-11-05")
+      #expect(!mcpTextContent(moved).contains("SQLite"))
+    }
+  }
 }

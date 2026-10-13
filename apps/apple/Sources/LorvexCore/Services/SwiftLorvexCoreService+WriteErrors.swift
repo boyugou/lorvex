@@ -1,3 +1,4 @@
+import GRDB
 import LorvexDomain
 import LorvexStore
 import LorvexSync
@@ -9,7 +10,9 @@ extension SwiftLorvexCoreService {
   /// validation error (the per-field byte budgets make this unreachable for
   /// budget-covered entities, so reaching it means a budget gap — surface it
   /// honestly rather than as an internal canonicalization string); everything
-  /// else is preserved.
+  /// else is preserved, except a constraint the stored data's own rules raised: it surfaces as a
+  /// typed validation error that says so, never as SQLite's text, which names the schema and
+  /// tells a caller nothing it can act on (the raw description goes to the private log).
   ///
   /// Classification is by the core's typed error cases, never by sniffing the
   /// human-readable message text: an empty title is the typed
@@ -28,6 +31,15 @@ extension SwiftLorvexCoreService {
     if case ValidationError.empty("title") = error {
       return LorvexCoreError.emptyTitle
     }
+    if let databaseError = error as? DatabaseError, databaseError.resultCode == .SQLITE_CONSTRAINT {
+      Self.log.error(
+        "write refused by a stored-data rule: \(String(describing: databaseError), privacy: .private)")
+      return LorvexCoreError.validation(
+        field: LorvexCoreError.storedDataRuleField,
+        message: "The change was refused because it would break a rule on the stored data, and "
+          + "nothing was changed. Check the values that were sent; if they look right, this is a "
+          + "bug in Lorvex.")
+    }
     if case EnqueueError.canonicalization(.payloadTooLarge(let sizeBytes)) = error {
       return LorvexCoreError.validation(
         field: LorvexCoreError.syncPayloadField,
@@ -45,4 +57,8 @@ extension LorvexCoreError {
   /// itself (``UserFacingError/Reason/recordTooLongToSync``), while the MCP
   /// envelope keeps the English sentence with its sizes.
   static let syncPayloadField = "sync_payload"
+
+  /// The `field` of the validation error a write raises when a constraint of the stored data
+  /// itself refused it (a CHECK, NOT NULL, UNIQUE, or foreign-key rule).
+  static let storedDataRuleField = "stored_data"
 }

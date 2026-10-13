@@ -162,14 +162,7 @@ extension SwiftLorvexCoreService {
       guard let before = try CalendarEventLoad.loadCalendarEventJSON(db, eventId: id) else {
         throw LorvexCoreError.notFound(entity: .calendarEvent, id: id)
       }
-      let existing = CalendarUpdateExisting(
-        startDate: beforeRow.startDate.asString,
-        startTime: beforeRow.startTime?.asString,
-        endDate: beforeRow.endDate?.asString,
-        endTime: beforeRow.endTime?.asString,
-        allDay: beforeRow.allDay,
-        timezone: beforeRow.timezone,
-        recurrence: beforeRow.recurrence)
+      let existing = try Self.existingUpdateFields(beforeRow, db: db)
       let input = CalendarEventUpdateInput(
         id: id,
         title: title,

@@ -138,6 +138,11 @@ public struct CalendarUpdateExisting: Sendable, Equatable {
   public var startDate: String
   public var startTime: String?
   public var endDate: String?
+  /// The `end_date` column as stored, when it can differ from ``endDate``: the typed row folds an
+  /// explicit end date equal to the start into "no end date" for a timed event without an end
+  /// time, while the column keeps it. A move of the start has to see the column. `nil` means
+  /// ``endDate`` is the column.
+  public var storedEndDate: String?
   public var endTime: String?
   public var allDay: Bool
   public var timezone: String?
@@ -149,12 +154,13 @@ public struct CalendarUpdateExisting: Sendable, Equatable {
 
   public init(
     startDate: String, startTime: String? = nil, endDate: String? = nil,
-    endTime: String? = nil, allDay: Bool, timezone: String? = nil,
-    recurrence: String? = nil
+    storedEndDate: String? = nil, endTime: String? = nil, allDay: Bool,
+    timezone: String? = nil, recurrence: String? = nil
   ) {
     self.startDate = startDate
     self.startTime = startTime
     self.endDate = endDate
+    self.storedEndDate = storedEndDate
     self.endTime = endTime
     self.allDay = allDay
     self.timezone = timezone

@@ -183,11 +183,19 @@ extension SwiftLorvexCoreService {
     return (segment, ownership)
   }
 
-  private static func existingUpdateFields(_ row: CalendarEventRow) -> CalendarUpdateExisting {
+  /// The fields an update is reconciled against: the typed row, plus the `end_date` column as
+  /// stored. The typed row folds an explicit end date equal to the start into "no end date" for a
+  /// timed event without an end time, while the column keeps it, and a move of the start has to
+  /// see the column (``CalendarUpdateExisting/storedEndDate``).
+  static func existingUpdateFields(
+    _ row: CalendarEventRow, db: Database
+  ) throws -> CalendarUpdateExisting {
     CalendarUpdateExisting(
       startDate: row.startDate.asString,
       startTime: row.startTime?.asString,
       endDate: row.endDate?.asString,
+      storedEndDate: try String.fetchOne(
+        db, sql: "SELECT end_date FROM calendar_events WHERE id = ?", arguments: [row.id]),
       endTime: row.endTime?.asString,
       allDay: row.allDay,
       timezone: row.timezone,
@@ -265,7 +273,7 @@ extension SwiftLorvexCoreService {
       }
       let result = try CalendarEventUpdate.updateCalendarEvent(
         db, hlc: hlc, input: input, before: before,
-        beforeRecurrence: nil, existing: Self.existingUpdateFields(existing))
+        beforeRecurrence: nil, existing: try Self.existingUpdateFields(existing, db: db))
       event = result.event
     } else {
       before = nil
@@ -399,7 +407,7 @@ extension SwiftLorvexCoreService {
     let result = try CalendarEventUpdate.updateCalendarEvent(
       db, hlc: hlc, input: input, before: before,
       beforeRecurrence: master.recurrence,
-      existing: Self.existingUpdateFields(master))
+      existing: try Self.existingUpdateFields(master, db: db))
     try enqueueUpsert(
       db, hlc: hlc, deviceId: deviceId, kind: .calendarEvent,
       entityId: result.eventId)
@@ -548,7 +556,7 @@ extension SwiftLorvexCoreService {
         let updated = try CalendarEventUpdate.updateCalendarEvent(
           db, hlc: hlc, input: update, before: existingJSON,
           beforeRecurrence: existing.recurrence,
-          existing: Self.existingUpdateFields(existing))
+          existing: try Self.existingUpdateFields(existing, db: db))
         event = updated.event
         _ = try self.sweepSeriesDecisions(
           db, hlc: hlc, deviceId: deviceId, seriesId: cutover.id, scope: .all)

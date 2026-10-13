@@ -783,6 +783,15 @@ struct ZZMCPToolFuzzProbe {
             signature = " [\(head) constraint failed\(tail)]"
           }
           findings.add("raw-internals \(needle) \(tool.name)\(signature)", "\(label) -> \(text.prefix(240))")
+          // The record the call addressed, from the export taken just before it.
+          if let id = arguments["event_id"]?.stringValue ?? arguments["id"]?.stringValue,
+            let state = beforeState, let at = state.range(of: id)
+          {
+            let from = state.index(at.lowerBound, offsetBy: -700, limitedBy: state.startIndex) ?? state.startIndex
+            let to = state.index(at.upperBound, offsetBy: 700, limitedBy: state.endIndex) ?? state.endIndex
+            let context = state[from..<to].replacingOccurrences(of: "\n", with: " ")
+            print("RAWCONTEXT \(tool.name) \(id): \(context)")
+          }
           break
         }
       }

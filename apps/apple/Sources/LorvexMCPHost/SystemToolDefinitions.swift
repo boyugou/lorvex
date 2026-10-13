@@ -41,5 +41,8 @@ enum SystemToolDefinitions {
     .write(107, SystemPreferencesToolCatalog.completeSetupTool) {
       try await $0.completeSetupResult(arguments: $1)
     },
+    .write(116, SystemContextToolCatalog.undoAIChangeTool) {
+      try await $0.undoAIChangeResult(arguments: $1)
+    },
   ]
 }

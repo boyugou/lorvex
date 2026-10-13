@@ -54,3 +54,20 @@ public struct AIChangelogEntry: Identifiable, Equatable, Sendable {
     self.entityTitle = entityTitle
   }
 }
+
+/// What undoing an assistant's update to a task did: the task as it is now, the fields that went
+/// back to what they were before the change, and the fields left as they are because they changed
+/// again after it (a person's or another assistant's later edit is never overwritten).
+public struct UndoAIChangeResult: Equatable, Sendable {
+  public var task: LorvexTask
+  /// Wire names of the fields restored to their earlier value.
+  public var reverted: [String]
+  /// Wire names of the fields the change touched that hold something else now.
+  public var kept: [String]
+
+  public init(task: LorvexTask, reverted: [String], kept: [String]) {
+    self.task = task
+    self.reverted = reverted
+    self.kept = kept
+  }
+}

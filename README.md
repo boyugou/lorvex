@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](apps/apple)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20iOS%20·%20iPadOS%20·%20watchOS-black?style=flat-square&logo=apple&logoColor=white)](apps/apple)
-[![MCP](https://img.shields.io/badge/MCP-116%20tools-6B57D2?style=flat-square)](apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
+[![MCP](https://img.shields.io/badge/MCP-117%20tools-6B57D2?style=flat-square)](apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
 
 [Website](https://lorvex.app) · [Download for Mac](https://github.com/boyugou/lorvex/releases/latest) · [Getting started](#getting-started) · [MCP setup](#connect-an-ai-assistant) · [Documentation](#documentation) · [Privacy](PRIVACY.md)
 
@@ -40,7 +40,7 @@ Lorvex is a task, calendar, and habit planner built **MCP-first**: the primary
 write interface is a [Model Context Protocol](https://modelcontextprotocol.io)
 server, so any MCP-capable AI assistant (Claude, or anything else that speaks
 MCP) can manage your tasks, plan your days, schedule your calendar, and track
-your habits through 116 typed tools. The native apps are calm, fast read
+your habits through 117 typed tools. The native apps are calm, fast read
 surfaces with the human actions that matter — complete, defer, review — not a
 form-filling UI.
 
@@ -64,7 +64,7 @@ form-filling UI.
 ```
 ┌──────────────┐   MCP (stdio)   ┌───────────────┐        ┌──────────────────┐
 │ AI assistant │ ◄─────────────► │ LorvexMCPHost │ ◄────► │  Pure-Swift core │
-│  (Claude, …) │    116 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
+│  (Claude, …) │    117 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
 └──────────────┘                 └───────────────┘        └────────┬─────────┘
                                                                    │ encrypted
 ┌──────────────┐   read / act    ┌───────────────────────┐         │ envelopes

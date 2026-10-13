@@ -348,6 +348,9 @@ extension StubCoreService {
   func exportCalendarICS(from: String?, to: String?) async throws -> String {
     throw unsupportedStubCoreOperation()
   }
+  func undoAIChange(changelogID: String) async throws -> UndoAIChangeResult {
+    try await preview.undoAIChange(changelogID: changelogID)
+  }
   func upsertMemory(key: String, content: String) async throws -> MemoryEntry {
     try await preview.upsertMemory(key: key, content: content)
   }

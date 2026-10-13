@@ -1221,6 +1221,16 @@
       "id"
     ]
   },
+  "undo_ai_change": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "changelog_id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "changelog_id"
+    ]
+  },
   "unlink_task_from_event": {
     "advertises_idempotency_key": true,
     "properties": {

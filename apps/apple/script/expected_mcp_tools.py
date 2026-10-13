@@ -109,6 +109,7 @@ EXPECTED_MCP_TOOLS = {
     "pause_task",
     "toggle_task_checklist_item",
     "uncomplete_habit",
+    "undo_ai_change",
     "unskip_habit",
     "unlink_task_from_event",
     "unlink_task_from_provider_event",

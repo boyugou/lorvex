@@ -27,6 +27,14 @@ public protocol LorvexSystemServicing: Sendable {
     since: String?
   ) async throws -> AIChangelogSnapshot
 
+  /// Undoes an update to a task that the change log (`loadAIChangelog`) recorded, restoring
+  /// each field that change moved to its earlier value, but only where the field still holds
+  /// what the change set: a field edited since is left alone and reported as kept. The
+  /// restore goes through the ordinary update, so it is attributed, synced, and logged like any
+  /// other. Only an `update` of a task with a recorded before and after can be undone, and a
+  /// record too large to be kept whole cannot.
+  func undoAIChange(changelogID: String) async throws -> UndoAIChangeResult
+
   /// Merged, newest-first diagnostic log stream across `error_logs`,
   /// `ai_changelog`, and `sync_outbox`, with optional source/level/since
   /// filters and offset/limit pagination. When `redact` is true, summaries and

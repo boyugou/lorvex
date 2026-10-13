@@ -424,6 +424,15 @@ struct MCPResponseFencingSweepTests {
     let task = Value.string(data.task)
     let blocked = Value.string(data.blocked)
 
+    // Undoing the rewrite of the task's text brings the earlier text back, fenced.
+    let changes = try await call("get_ai_changelog", ["entity_id": task, "operation": "update"])?
+      .objectValue
+    if let entry = changes?["entries"]?.arrayValue?.compactMap(\.objectValue)
+      .first(where: { $0["undoable"]?.boolValue == true })?["id"]?.stringValue
+    {
+      _ = try await call("undo_ai_change", ["changelog_id": .string(entry)])
+    }
+
     // Reminders come first: ending a task clears its pending ones.
     _ = try await call(
       "set_task_reminders",

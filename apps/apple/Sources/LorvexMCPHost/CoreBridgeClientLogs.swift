@@ -34,6 +34,10 @@ extension CoreBridgeClient {
         "summary": .string(entry.summary),
         "initiated_by": entry.initiatedBy.map(Value.string) ?? .null,
         "mcp_tool": entry.mcpTool.map(Value.string) ?? .null,
+        // An assistant's update to a task with a recorded before-and-after: what undo_ai_change takes.
+        "undoable": .bool(
+          entry.operation == "update" && entry.entityType == EntityName.task
+            && entry.initiatedBy == "assistant" && entry.hasBefore && entry.hasAfter),
       ])
     }
     // The changelog snapshot is an offset-paged stream with no precomputed
@@ -45,6 +49,15 @@ extension CoreBridgeClient {
       domain: ["entries": .array(entries)],
       totalMatching: total, returned: entries.count, limit: limit ?? 50,
       offset: resolvedOffset, nextOffset: changelog.nextOffset, truncated: changelog.truncated)
+  }
+
+  func undoAIChange(changelogID: String) async throws -> Value {
+    let result = try await service.undoAIChange(changelogID: changelogID)
+    return .object([
+      "task": Self.taskValue(from: result.task),
+      "reverted": .array(result.reverted.map(Value.string)),
+      "kept": .array(result.kept.map(Value.string)),
+    ])
   }
 
   func loadRecentLogs(

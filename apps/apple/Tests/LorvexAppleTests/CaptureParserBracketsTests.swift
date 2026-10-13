@@ -37,3 +37,28 @@ struct CaptureParserBracketsTests {
     #expect(parse("Fix main()", "en").title == "Fix main()")
   }
 }
+
+/// The English due phrase reads "this" and "next" and takes its "by" with it.
+@Suite("Capture parser English due")
+struct CaptureParserEnglishDueTests {
+  private func parse(_ text: String) -> LorvexCaptureParse {
+    LorvexCaptureParser.parse(
+      text, lists: [], todayWeekday: 3, today: "2026-09-22", languages: ["en"])
+  }
+
+  @Test("By next Monday is a due day that takes its by with it")
+  func dueWithNext() {
+    let next = parse("Ship the release by next Monday (urgent)")
+    #expect(next.title == "Ship the release (urgent)")
+    #expect(next.dueDayOffset == 13)
+    #expect(next.plannedDayOffset == nil)
+
+    let plain = parse("Email Sam by Friday")
+    #expect(plain.title == "Email Sam")
+    #expect(plain.dueDayOffset == 3)
+
+    let thisWeek = parse("Finish slides due this Friday")
+    #expect(thisWeek.title == "Finish slides")
+    #expect(thisWeek.dueDayOffset == 3)
+  }
+}

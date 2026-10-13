@@ -61,7 +61,11 @@ extension LorvexCaptureVocabulary {
         Rule(pattern: englishTimePattern, read: englishTime),
       ],
       repeats: [Rule(pattern: englishRepeatPattern, read: englishRepeat)],
-      due: [Rule(pattern: #"\#(latinStart)(?:by|due)\s+(\#(englishDayPattern))\#(latinEnd)"#, read: englishDue)],
+      due: [
+        Rule(
+          pattern: #"\#(latinStart)(?:by|due)\s+(?:(this|next)\s+)?(\#(englishDayPattern))\#(latinEnd)"#,
+          read: englishDue)
+      ],
       when: [
         Rule(pattern: #"\#(latinStart)(?:(on|for|this|next)\s+)?(\#(englishDayPattern))\#(latinEnd)"#, read: englishWhen)
       ])
@@ -252,10 +256,20 @@ extension LorvexCaptureVocabulary {
 
   // MARK: - Days
 
+  /// Groups: 1 the lead word (this, next), 2 the day. "by next monday" reads as
+  /// "next monday" does, as a due day.
   private static func englishDue(_ match: Match) -> Day? {
-    match.group(1)
-      .flatMap { englishDayOffset($0, todayWeekday: match.todayWeekday, today: match.today) }
-      .map { Day(offset: $0) }
+    guard let word = match.group(2),
+      var offset = englishDayOffset(word, todayWeekday: match.todayWeekday, today: match.today)
+    else { return nil }
+    if let weekday = englishWeekdayIndex(word) {
+      switch match.group(1)?.lowercased() {
+      case "this": offset = weekdayDelta(weekday, todayWeekday: match.todayWeekday)
+      case "next" where offset < 7: offset += 7
+      default: break
+      }
+    }
+    return Day(offset: offset)
   }
 
   /// Groups: 1 the lead word (on, for, this, next), 2 the day.

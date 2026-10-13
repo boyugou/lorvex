@@ -242,6 +242,16 @@ extension SwiftLorvexCoreService {
       notes, field: "ai_notes", max: ValidationLimits.maxAiNotesLength,
       escapedBudget: PayloadByteBudget.aiNotesEscapedBytes)
     return try withWrite { db, hlc, deviceId in
+      // The notes the list already has: no version, sync upsert, or changelog
+      // row for a change that did not happen.
+      guard let existing = try ListRepo.getList(db, id: ListId(trusted: id)) else {
+        throw LorvexCoreError.notFound(entity: .list, id: id)
+      }
+      if existing.aiNotes == normalized {
+        let counts = try Self.listCounts(db, id: id)
+        return SwiftLorvexListDeserializers.list(
+          existing, openCount: counts.open, totalCount: counts.total)
+      }
       let version = hlc.nextVersionString()
       let now = SyncTimestampFormat.syncTimestampNow()
       try ListRepo.updateListPatched(

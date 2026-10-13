@@ -248,3 +248,30 @@ func mobileStoreReviewShowsTheLoadingStateWhileAnotherDayLoads() async throws {
   #expect(!store.isLoadingDailyReviewDraft)
   #expect(store.selectedReviewDate == yesterday)
 }
+
+/// A day switch writes the unsaved text first. When that write fails the review
+/// stays on its day with the text in the editor, instead of the next day's load
+/// replacing text that was never saved; the switch goes through once it works.
+@MainActor
+@Test
+func mobileStoreReviewStaysOnItsDayWhenTheWriteBeforeASwitchFails() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = MobileStore(core: core)
+  await store.refresh()
+  await store.loadDailyReviewDraft()
+  let today = store.selectedReviewDate
+  let yesterday = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: -1))
+
+  store.dailyReviewDraft.summary = "Worth keeping"
+  core.upsertDailyReviewError = .unsupportedOperation("the store is busy")
+  await store.selectReviewDay(yesterday)
+
+  #expect(store.selectedReviewDate == today)
+  #expect(store.dailyReviewDraft.summary == "Worth keeping")
+
+  core.upsertDailyReviewError = nil
+  await store.selectReviewDay(yesterday)
+
+  #expect(store.selectedReviewDate == yesterday)
+  #expect(try await core.loadDailyReview(date: today)?.summary == "Worth keeping")
+}

@@ -553,3 +553,29 @@ func appStoreCompletingAnOverdueTaskOnReviewDropsItFromTheWeek() async throws {
 
   #expect(store.weeklyReview?.overdueTasks.isEmpty == true)
 }
+
+/// A day switch writes the unsaved text first. When that write fails the editor
+/// stays on its day with the text in it, instead of the next day's load replacing
+/// text that was never saved; the switch goes through once the write works.
+@MainActor
+@Test
+func appStoreDailyReviewStaysOnItsDayWhenTheWriteBeforeASwitchFails() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+  let today = store.dailyReviewEditorDate
+  let yesterday = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: -1))
+
+  store.dailyReviewSummaryDraft = "Worth keeping"
+  core.upsertDailyReviewError = .unsupportedOperation("the store is busy")
+  await store.selectReviewDay(yesterday)
+
+  #expect(store.selectedReviewDate != yesterday)
+  #expect(store.dailyReviewSummaryDraft == "Worth keeping")
+
+  core.upsertDailyReviewError = nil
+  await store.selectReviewDay(yesterday)
+
+  #expect(store.selectedReviewDate == yesterday)
+  #expect(try await core.loadDailyReview(date: today)?.summary == "Worth keeping")
+}

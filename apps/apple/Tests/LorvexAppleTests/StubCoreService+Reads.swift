@@ -97,6 +97,7 @@ extension StubCoreService {
     blockers: String?, learnings: String?
   ) async throws -> DailyReviewEntry {
     await upsertDailyReviewGate?()
+    if let upsertDailyReviewError { throw upsertDailyReviewError }
     return try await preview.upsertDailyReviewPreservingLinks(
       date: date, summary: summary, mood: mood, energyLevel: energyLevel,
       wins: wins, blockers: blockers, learnings: learnings)

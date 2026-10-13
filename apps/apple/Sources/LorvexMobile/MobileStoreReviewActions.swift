@@ -76,10 +76,12 @@ extension MobileStore {
   }
 
   public func selectReviewDay(_ date: String) async {
-    // Flush best-effort, never blocking navigation on it: a body-only edit
-    // (mood / energy / wins / blockers / learnings with no summary) is a valid,
-    // savable review, so it must not trap the user on the current day.
-    await flushDailyReviewDraftIfNeeded()
+    // A body-only edit (mood / energy / wins / blockers / learnings with no
+    // summary) is a valid, savable review, so it never holds the user on the
+    // current day. A write that fails does: the review stays on its day with the
+    // text intact and the error shown, instead of the next day's load replacing
+    // text that was never saved.
+    guard await flushDailyReviewDraftIfNeeded() else { return }
     selectedReviewDate = date
     await loadDailyReviewDraft()
   }
@@ -227,12 +229,15 @@ extension MobileStore {
   /// whether a summary was written — the core accepts a summary-less review, so a
   /// body-only edit (mood / energy / wins / blockers / learnings) must not be
   /// lost when the editor switches day or view. Best-effort and non-blocking:
-  /// only an editable day is written, and callers never gate navigation on it.
-  public func flushDailyReviewDraftIfNeeded() async {
+  /// only an editable day is written, and nothing waits on it except a day
+  /// switch, which stays put when the write fails. Returns false only for a write
+  /// that failed, so text that is still unsaved is never discarded by moving on.
+  @discardableResult
+  public func flushDailyReviewDraftIfNeeded() async -> Bool {
     guard !dailyReviewDraftMatchesLoaded, selectedReviewDayIsEditable,
       !isSavingReview, !isLoadingDailyReviewDraft
-    else { return }
-    _ = await commitDailyReviewDraft(playsFeedback: false)
+    else { return true }
+    return await commitDailyReviewDraft(playsFeedback: false)
   }
 
   /// Writes the drafts that save on their own, as the app leaves the foreground.

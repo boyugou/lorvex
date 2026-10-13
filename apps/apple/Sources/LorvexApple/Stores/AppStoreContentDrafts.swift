@@ -30,14 +30,17 @@ extension AppStore {
   /// Anchor the daily editor to a past day inside the write window and load
   /// that day's entry into the drafts. No-op for dates the core would reject.
   /// Flushes the current day's unsaved edits first so switching days never
-  /// silently drops them.
-  func beginEditingDailyReview(date: String) async {
-    guard dailyReviewIsEditable(date: date) else { return }
-    await flushDailyReviewDraftIfNeeded()
+  /// silently drops them; when that write fails the editor stays on its day with
+  /// the text intact and the error shown.
+  @discardableResult
+  func beginEditingDailyReview(date: String) async -> Bool {
+    guard dailyReviewIsEditable(date: date) else { return false }
+    guard await settleDailyReviewDraftBeforeMoving() else { return false }
     let today = logicalTodayDateString
     dailyReviewEditingDate = date == today ? nil : date
     selectedReviewDate = date
     await reloadDailyReviewForEditor()
+    return true
   }
 
   /// Return the editor to today's entry, flushing the current day's unsaved
@@ -55,9 +58,9 @@ extension AppStore {
   /// evidence is reloaded for the right-hand panel.
   func selectReviewDay(_ date: String) async {
     if dailyReviewIsEditable(date: date) {
-      await beginEditingDailyReview(date: date)
+      guard await beginEditingDailyReview(date: date) else { return }
     } else {
-      await flushDailyReviewDraftIfNeeded()
+      guard await settleDailyReviewDraftBeforeMoving() else { return }
       dailyReviewEditingDate = nil
       selectedReviewDate = date
       await reloadDailyReviewForEditor()
@@ -142,6 +145,14 @@ extension AppStore {
   func flushDailyReviewDraftIfNeeded() async {
     guard !dailyReviewDraftMatchesLoaded else { return }
     await saveDailyReviewDraft()
+  }
+
+  /// Writes the editor's unsaved edits before it moves to another day. False when
+  /// they are still unsaved afterwards, because the write failed: the editor then
+  /// stays on its day instead of reloading over text that was never saved.
+  private func settleDailyReviewDraftBeforeMoving() async -> Bool {
+    await flushDailyReviewDraftIfNeeded()
+    return dailyReviewDraftMatchesLoaded
   }
 
   /// Writes a review typed on the day that is ending to that day, before the

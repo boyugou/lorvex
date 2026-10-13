@@ -106,6 +106,9 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// before the delegated write, so a test can hold a daily-review save
   /// mid-write.
   var upsertDailyReviewGate: (@Sendable () async -> Void)?
+  /// When set, `upsertDailyReviewPreservingLinks` throws this after the gate, modelling
+  /// a daily-review write the store refuses.
+  var upsertDailyReviewError: LorvexCoreError?
   /// Optional async barrier invoked inside `loadDailyReview` AFTER the entry has
   /// been read, so a test can model a read that completes after the editor moved
   /// on or the user typed (the caller observes the data as of entry, then

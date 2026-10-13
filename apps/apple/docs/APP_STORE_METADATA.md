@@ -11,7 +11,7 @@ MCP-hosted task/calendar/habit/memory planner; it is local-first with optional
 iCloud (CloudKit private database) sync; it contains no embedded AI model and
 no analytics, tracking, ads, or accounts; public support routes through
 `https://lorvex.app/support/` (no public email).
-See `../../PRIVACY.md`, `docs/vision/DESIGN_PHILOSOPHY.md`, and
+See `../../../PRIVACY.md`, `docs/vision/DESIGN_PHILOSOPHY.md`, and
 `docs/reference/FEATURES.md`.
 
 Companion release materials: `APP_STORE_PRIVACY_ANSWERS.md` (the exact App

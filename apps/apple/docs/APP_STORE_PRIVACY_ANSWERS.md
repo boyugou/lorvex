@@ -2,7 +2,7 @@
 
 The exact answers to enter in the App Store Connect **App Privacy** questionnaire
 (the public "nutrition label") for Lorvex 1.0. This is the operational form of
-the privacy posture; the narrative policy is `../../PRIVACY.md`, and the
+the privacy posture; the narrative policy is `../../../PRIVACY.md`, and the
 account-only submission steps are listed in `DISTRIBUTION.md`. Keep this sheet
 and the policy consistent.
 
@@ -71,13 +71,13 @@ Collected."**
   is not developer "collection."
 - **Apple OS / TestFlight channels** (system analytics sharing; TestFlight's
   automatic crash sharing) are Apple-operated and user/Apple-controlled, not
-  Lorvex data collection. They are disclosed in `../../PRIVACY.md` for honesty
+  Lorvex data collection. They are disclosed in `../../../PRIVACY.md` for honesty
   but are not answers on Lorvex's nutrition label.
 
 ## What would flip these answers (re-check every release)
 
 Any of the following would make **"Data Not Collected"** false and require
-re-answering the questionnaire (and updating `../../PRIVACY.md` and the
+re-answering the questionnaire (and updating `../../../PRIVACY.md` and the
 manifests):
 
 - Adding a crash/analytics/telemetry SDK or any first-party diagnostic **upload**.
@@ -91,6 +91,6 @@ manifests):
 
 Do not infer the questionnaire answers from `PrivacyInfo.xcprivacy` alone.
 Generate Xcode's privacy report from the exact signed archive, diff it against
-these answers and against `../../PRIVACY.md`, and save it with the release
+these answers and against `../../../PRIVACY.md`, and save it with the release
 evidence. Final submission of these answers is an owner account action in App
 Store Connect.

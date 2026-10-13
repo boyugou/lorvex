@@ -569,10 +569,10 @@ a full App Store distribution flow:
 
 ### TestFlight upload automation
 
-There is no script for uploading an IPA to TestFlight. The `archive_ios.sh`
-output message describes the `xcrun altool` command. A dedicated
-`upload_testflight.sh` could wrap `xcrun altool`, Transporter automation, or
-the App Store Connect API for fully automated CI delivery. Do not use
+`script/release_testflight.sh` archives, signs, validates, and uploads both
+store channels (the iOS app with its watch app, and the Mac App Store package),
+then polls App Store Connect until each build finishes processing; its modes and
+the build-number bump are described in `docs/release.md`. Do not use
 `xcrun notarytool` for IPA uploads; notarization is the Developer ID macOS
 distribution path, not the TestFlight/App Store Connect path.
 

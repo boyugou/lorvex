@@ -43,6 +43,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     phút" reads as 195 minutes; the Romanian reader drops English "in 15 min". (A parenthesized phrase used to
     leave "( )" in the title in every language; the title cleanup now removes
     the pair.)
+  - The device's day, not the planner's: when Settings > Time Zone differs from
+    the device's, the task editors' Today and Tomorrow chips
+    (`LorvexTaskFieldChoices.quickDays`) and the today highlight on the
+    calendar grids and week strips (`isDateInToday`) follow the device's clock,
+    while the Today page follows the planner's logical day. They agree for
+    nearly everyone, and differ only for someone who pinned the planner to
+    another zone, in the hours where the two zones' dates differ.
   - Batch reopen is all-or-nothing. Every lifecycle refusal a person can reach
     is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
     core's English (a start on an already open task, a finished-to-finished

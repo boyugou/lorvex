@@ -114,9 +114,14 @@ architecture change and requires an explicit ownership design first.
 # Build the macOS app and run a quick smoke check
 ./script/build_and_run.sh --verify
 
-# Full verification gate (required before committing substantial changes)
-./script/verify_all.sh
+# Every static gate (Python verifiers, script tests, schema embed check): no
+# build, no launch, never reads Lorvex data. Run it before each push.
+./script/verify_static_gates.sh
 ```
+
+`./script/verify_all.sh` is the maintainers' full gate before a release (see
+"Verification Gate" below); it builds, packages, and launches the app, so do not
+run it on a Mac that holds real Lorvex data.
 
 ### Local packaging
 
@@ -198,42 +203,60 @@ leaves the tool invisible to the host.
 
 ### 1. Define the tool schema in a catalog file
 
-Add a static `ToolDefinition` entry in the appropriate `*ToolCatalog.swift`
-file, or create a new `<Domain>ToolCatalog.swift` if the tool belongs to a new
-domain:
+Add a `static let` `Tool` to the domain's catalog extension
+(`<Domain>ToolCatalog` in a `*ToolCatalog.swift` file; create one if the tool
+belongs to a new domain). A write tool lists `IdempotencyKeySchema.property`
+among its properties, and every tool states its annotations:
 
 ```swift
 // Sources/LorvexMCPHost/MyDomainToolCatalog.swift
-enum MyDomainToolCatalog {
-    static let myNewTool = Tool(
-        name: "my_domain_new_tool",
-        description: "One-sentence description of what the tool does and returns.",
-        inputSchema: .object(
-            properties: [
-                "task_id": .string(description: "The task identifier.")
-            ],
-            required: ["task_id"]
-        )
+import MCP
+
+extension MyDomainToolCatalog {
+  static let myNewTool = Tool(
+    name: "my_domain_new_tool",
+    title: "My New Tool",
+    description: "One-sentence description of what the tool does and returns.",
+    inputSchema: .object([
+      "type": .string("object"),
+      "properties": .object([
+        IdempotencyKeySchema.propertyName: IdempotencyKeySchema.property,
+        "task_id": .object([
+          "type": .string("string"),
+          "description": .string("The task identifier."),
+        ]),
+      ]),
+      "required": .array([.string("task_id")]),
+    ]),
+    annotations: .init(
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false
     )
+  )
 }
 ```
 
 ### 2. Implement the handler
 
-Add the handler function in the matching `*ToolHandlers.swift` file:
+Add the handler to `ToolRegistry` in the matching `*ToolHandlers.swift` file. It
+refuses a missing required argument with `Self.errorResult`, reads optional
+ones through `StrictScalarArguments` (a wrong-typed value throws instead of
+becoming the default), calls the core through `coreBridge`, and returns the
+complete updated object through `successResult`, never a bare success flag:
 
 ```swift
 // Sources/LorvexMCPHost/MyDomainToolHandlers.swift
-func handleMyNewTool(
-    arguments: [String: Value],
-    service: any LorvexCoreServicing
-) async throws -> [TextContent] {
-    guard let taskId = arguments["task_id"]?.stringValue else {
-        throw MCPError.invalidParams("task_id is required")
+extension ToolRegistry {
+  func myNewToolResult(arguments: [String: Value]) async throws -> CallTool.Result {
+    guard let taskID = arguments["task_id"]?.stringValue, !taskID.isEmpty else {
+      return Self.errorResult(
+        code: "validation", message: "A task_id is required.", toolName: "my_domain_new_tool")
     }
-    let result = try await service.myNewOperation(taskId: taskId)
-    // Always return the complete updated object, not a success flag.
-    return [TextContent(text: result.jsonEncoded())]
+    let value = try await coreBridge.myNewOperation(taskID: taskID)
+    return successResult(text: "Did the thing to \(taskID)", value: value)
+  }
 }
 ```
 
@@ -251,9 +274,13 @@ input; declaring the `enum` in the schema is the validation:
 
 ```swift
 // Sources/LorvexMCPHost/MyDomainToolDefinitions.swift
-.write(120, MyDomainToolCatalog.myNewTool) {
-    try await $0.handleMyNewTool(arguments: $1)
-},
+enum MyDomainToolDefinitions {
+  static let all: [ToolDefinition] = [
+    .write(120, MyDomainToolCatalog.myNewTool) {
+      try await $0.myNewToolResult(arguments: $1)
+    },
+  ]
+}
 ```
 
 Do not add a second listing entry, dispatch switch, idempotency allowlist, or
@@ -269,17 +296,18 @@ complete until the catalog verifier and stdio smoke both see it.
 
 ### Tests
 
-Add a test in `Tests/LorvexAppleTests/` (or the nearest domain test file)
-using the real in-memory core as the fixture:
+Add a test in `Tests/LorvexAppleTests/` (or the nearest domain test file) that
+calls the tool through the registry over the real in-memory core, the way an
+assistant does:
 
 ```swift
 @Test func myNewToolReturnsTask() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let result = try await handleMyNewTool(
-        arguments: ["task_id": .string(LorvexPreviewSeedID.agendaTask)],
-        service: service
-    )
-    #expect(result.first?.text.contains(LorvexPreviewSeedID.agendaTask) == true)
+  let registry = try await mcpSeededRegistry()
+  let result = try await mcpRegistryCall(
+    registry, tool: "my_domain_new_tool",
+    arguments: ["task_id": .string(LorvexPreviewSeedID.agendaTask)])
+  #expect(result.isError != true)
+  #expect(result.structuredContent?.objectValue?["id"]?.stringValue == LorvexPreviewSeedID.agendaTask)
 }
 ```
 
@@ -389,18 +417,23 @@ than relying on output values alone.
 ### Running Tests
 
 ```bash
-swift test
+# One suite or test while iterating
+./script/verify_swift.sh --filter MobileHabitTests
+
+# Everything, once per batch of changes (add --core when `core/` changed)
+./script/verify_swift.sh
 ```
 
-All tests must pass before committing. The full gate (`verify_all.sh`) also
-runs tests as part of its sequence.
+All tests must pass before committing. Use `verify_swift.sh` rather than a plain
+`swift test`: it compiles the string catalogs first, and without that step about
+thirty localization tests fail on Xcode 26.x.
 
 ---
 
 ## Verification Gate
 
-`./script/verify_all.sh` is the required pre-commit gate for substantial
-changes. It runs:
+`./script/verify_all.sh` is the maintainers' full gate, run before a release and
+when a change touches packaging, metadata, or entitlements. It runs:
 
 1. `swift build` — all SwiftPM targets
 2. `swift test` — all test targets
@@ -452,7 +485,7 @@ mounted-to-installed content identity, exact executable launch, PlugInKit
 registration, stale-DMG refusal, and required runtime evidence without invoking
 the credentialed or destructive production command.
 
-**Run the full gate before any commit that touches:**
+**Ask a maintainer to run the full gate for a change that touches:**
 - `Package.swift`
 - Entitlement files
 - `Config/` or `script/`
@@ -460,7 +493,8 @@ the credentialed or destructive production command.
 - `LorvexCore` public protocol surface
 - `LorvexSystemIntents` or App Intent/Shortcuts behavior
 
-For incremental UI or test changes, `swift build && swift test` is sufficient.
+For every change, `./script/verify_swift.sh` (with `--filter` while iterating)
+and `./script/verify_static_gates.sh` are the bar.
 
 ---
 

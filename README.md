@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](apps/apple)
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20iOS%20·%20iPadOS%20·%20watchOS-black?style=flat-square&logo=apple&logoColor=white)](apps/apple)
-[![MCP](https://img.shields.io/badge/MCP-114%20tools-6B57D2?style=flat-square)](apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
+[![MCP](https://img.shields.io/badge/MCP-116%20tools-6B57D2?style=flat-square)](apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
 
 [Website](https://lorvex.app) · [Download for Mac](https://github.com/boyugou/lorvex/releases/latest) · [Getting started](#getting-started) · [MCP setup](#connect-an-ai-assistant) · [Documentation](#documentation) · [Privacy](PRIVACY.md)
 
@@ -34,7 +34,9 @@ form-filling UI.
 - **No embedded AI, no tracking.** Lorvex ships no model, no analytics, no
   ads. Intelligence comes from *your* assistant, connected on *your* terms.
 - **Native everywhere.** macOS, iPhone, iPad, Apple Watch, widgets,
-  Shortcuts, Spotlight, and two-way EventKit calendar integration.
+  Shortcuts, Spotlight, and your system calendars through EventKit (events
+  you create on the Mac are written back to Apple Calendar; iPhone and iPad
+  read it).
 - **Thirty languages.** The apps, widgets, and Shortcuts follow your system
   language, from Arabic to Vietnamese, right-to-left scripts included.
 

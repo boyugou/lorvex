@@ -394,9 +394,11 @@ for every build would bury the ones people choose between.
 - The notes, in English, keep the shape of the existing release: install
   steps, the Mac and macOS requirement, what changed since the previous
   release, the language count, and the SHA-256 the download must print.
-- Cut a release at a milestone, not per TestFlight build: a new set of
-  languages, a feature people asked for, or a fix DMG users need, on a build
-  that has processed VALID in App Store Connect and passed the full suites.
+- Keep the page current: cut a release after each batch of changes DMG users
+  would notice (a crash or data fix, a feature people asked for, a new set of
+  languages), not per TestFlight build, and never leave the page more than a
+  few builds behind the newest VALID one. Package a build that has processed
+  VALID in App Store Connect and passed the full suites.
 
 ## Standing maintenance
 

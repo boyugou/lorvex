@@ -54,8 +54,7 @@ Sources/
 │   ├── App/                # Entry point, AppDelegate
 │   ├── Stores/             # AppStore + extensions (one concern per file)
 │   ├── Views/              # SwiftUI views (one workspace/component per file)
-│   ├── Support/            # Commands, menus, routing, scheduling
-│   └── Intents/            # App Intents
+│   └── Support/            # Commands, menus, routing, scheduling
 ├── LorvexMobile/           # iOS/iPadOS surface (reuses LorvexCore)
 ├── LorvexMobileApp/        # iOS @main entry
 ├── LorvexMCPHost/          # MCP stdio server (LorvexMCPHost executable)

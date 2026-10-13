@@ -104,7 +104,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     probe (`ZZMutationLatencyProbeTests`) reads about 7 times slower than
     release, mostly unoptimized GRDB row decoding.
   - Mac keyboard: list cards show Edit and Delete only on hover.
-  - Polish: Settings > Activity shows English changelog summaries; German
+  - Polish: Settings > Diagnostics and the activity log show English changelog summaries; German
     Memory sheet titles truncated at 375 pt (rechecked 2026-10-12 at 402 pt:
     "Neuer Gedächtniseintrag" wraps to two lines in the title bar's three-step
     fit, so only a 375 pt device could still show it; none is installed here); the Urdu Today medium widget shows

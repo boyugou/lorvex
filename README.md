@@ -21,7 +21,7 @@ Lorvex is a task, calendar, and habit planner built **MCP-first**: the primary
 write interface is a [Model Context Protocol](https://modelcontextprotocol.io)
 server, so any MCP-capable AI assistant (Claude, or anything else that speaks
 MCP) can manage your tasks, plan your days, schedule your calendar, and track
-your habits through 114 typed tools. The native apps are calm, fast read
+your habits through 116 typed tools. The native apps are calm, fast read
 surfaces with the human actions that matter — complete, defer, review — not a
 form-filling UI.
 
@@ -43,7 +43,7 @@ form-filling UI.
 ```
 ┌──────────────┐   MCP (stdio)   ┌───────────────┐        ┌──────────────────┐
 │ AI assistant │ ◄─────────────► │ LorvexMCPHost │ ◄────► │  Pure-Swift core │
-│  (Claude, …) │    114 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
+│  (Claude, …) │    116 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
 └──────────────┘                 └───────────────┘        └────────┬─────────┘
                                                                    │ encrypted
 ┌──────────────┐   read / act    ┌───────────────────────┐         │ envelopes
@@ -151,7 +151,7 @@ Full client-by-client instructions (Claude Desktop, Claude Code, and others):
 
 ## Status
 
-Pre-release. The Apple app is feature-complete and in App Store review, and a
+Pre-release. The Apple app is feature-complete and in TestFlight, and a
 notarized Mac build is on the
 [releases page](https://github.com/boyugou/lorvex/releases/latest); the data,
 schema, sync, and backup contracts are finalized and gated by

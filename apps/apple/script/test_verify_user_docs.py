@@ -20,6 +20,11 @@ from verify_user_docs import (
 from expected_mcp_tools import EXPECTED_MCP_TOOLS
 
 
+def failures_other_than_missing_tools(text: str) -> list[str]:
+    """The tool-doc failures a test is about, leaving out the completeness check on small tables."""
+    return [failure for failure in mcp_tool_doc_failures(text) if "does not name tool(s)" not in failure]
+
+
 class VerifyUserDocsTests(unittest.TestCase):
     @staticmethod
     def mcp_count_documents(count: int) -> dict:
@@ -129,7 +134,7 @@ class VerifyUserDocsTests(unittest.TestCase):
         """
 
         self.assertEqual(
-            mcp_tool_doc_failures(text),
+            failures_other_than_missing_tools(text),
             [
                 "USER_GUIDE MCP tool catalog documents unknown tool(s): ['task_create']",
                 "USER_GUIDE MCP tool catalog still uses legacy tool name(s): ['task_create']",
@@ -150,7 +155,7 @@ class VerifyUserDocsTests(unittest.TestCase):
         """
 
         self.assertEqual(
-            mcp_tool_doc_failures(text),
+            failures_other_than_missing_tools(text),
             [
                 "USER_GUIDE MCP integration section still uses legacy tool name(s): "
                 "['task_create', 'weekly_brief']"
@@ -167,9 +172,32 @@ class VerifyUserDocsTests(unittest.TestCase):
         """
 
         self.assertEqual(
-            mcp_tool_doc_failures(text),
+            failures_other_than_missing_tools(text),
             [],
         )
+
+    def test_mcp_tool_doc_failures_requires_every_tool_to_be_named(self) -> None:
+        partial = """
+        ### Tool Catalog
+
+        | Domain | Tools |
+        |---|---|
+        | **Tasks** | `create_task`, `update_task` |
+        """
+        failures = mcp_tool_doc_failures(partial)
+        self.assertEqual(len(failures), 1)
+        self.assertIn("does not name tool(s)", failures[0])
+        self.assertIn("undo_ai_change", failures[0])
+
+        everything = ", ".join(f"`{name}`" for name in sorted(EXPECTED_MCP_TOOLS))
+        complete = f"""
+        ### Tool Catalog
+
+        | Domain | Tools |
+        |---|---|
+        | **All** | {everything} |
+        """
+        self.assertEqual(mcp_tool_doc_failures(complete), [])
 
     def test_claude_guide_contract_tracks_model_agnostic_and_apple_only_policy(self) -> None:
         self.assertIn(CLAUDE_GUIDE, CHECKS)

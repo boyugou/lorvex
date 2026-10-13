@@ -3670,26 +3670,26 @@ The Lorvex database is the persistent state.
 
 The MCP host exposes tools across these domains:
 
-| Domain | Example tools |
+| Domain | Tools |
 |---|---|
 | **System / Overview** | `get_overview`, `get_setup_status`, `get_session_context`, `get_sync_status` |
-| **Tasks** | `create_task`, `update_task`, `get_task`, `list_tasks`, `search_tasks`, `complete_task`, `cancel_task`, `reopen_task`, `defer_task`, `move_task_to_list`, `append_to_task_body`, `get_deferred_tasks` |
-| **Batch tasks** | `batch_create_tasks`, `batch_update_tasks`, `batch_defer_tasks`, `batch_complete_tasks`, `batch_reopen_tasks`, `batch_move_tasks` |
+| **Tasks** | `create_task`, `update_task`, `get_task`, `list_tasks`, `search_tasks`, `complete_task`, `cancel_task`, `reopen_task`, `defer_task`, `move_task_to_list`, `append_to_task_body`, `get_deferred_tasks`, `archive_task`, `unarchive_task`, `permanent_delete_task`, `set_task_someday` |
+| **Batch tasks** | `batch_create_tasks`, `batch_update_tasks`, `batch_defer_tasks`, `batch_complete_tasks`, `batch_reopen_tasks`, `batch_move_tasks`, `batch_cancel_tasks`, `batch_cancel_tasks_in_list` |
 | **Day planning** | `start_task`, `pause_task`, `propose_daily_schedule`, `save_daily_schedule`, `get_daily_schedule`, `set_daily_briefing` |
-| **Lists & tags** | `create_list`, `update_list`, `delete_list`, `archive_list`, `unarchive_list`, `get_lists`, `get_list`, `get_list_health_snapshot`, `list_all_tags`, `rename_tag` |
+| **Lists & tags** | `create_list`, `update_list`, `delete_list`, `archive_list`, `unarchive_list`, `get_lists`, `get_list`, `get_list_health_snapshot`, `reorder_lists`, `list_all_tags`, `rename_tag`, `merge_tags`, `delete_tag` |
 | **Calendar** | `create_calendar_event`, `update_calendar_event`, `delete_calendar_event`, `get_calendar_timeline`, `search_calendar_events`, `batch_create_calendar_events`, `edit_scoped_calendar_event`, `delete_scoped_calendar_event`, `export_calendar_ics`, `add_calendar_event_exception`, `remove_calendar_event_exception`, `link_task_to_event`, `unlink_task_from_event`, `link_task_to_provider_event`, `unlink_task_from_provider_event`, `get_linked_events_for_task`, `get_linked_tasks_for_event` |
 | **ICS export** | `export_calendar_ics` |
-| **Habits** | `create_habit`, `update_habit`, `delete_habit`, `complete_habit`, `uncomplete_habit`, `skip_habit`, `unskip_habit`, `batch_complete_habits`, `get_habits`, `get_habit_completions`, `get_habit_stats`, `get_habit_reminder_policies`, `upsert_habit_reminder_policy` |
+| **Habits** | `create_habit`, `update_habit`, `delete_habit`, `complete_habit`, `uncomplete_habit`, `skip_habit`, `unskip_habit`, `batch_complete_habits`, `get_habits`, `get_habit_completions`, `get_habit_stats`, `get_habit_reminder_policies`, `upsert_habit_reminder_policy`, `delete_habit_reminder_policy`, `adjust_habit_completion`, `reorder_habits` |
 | **Reviews** | `get_daily_review`, `add_daily_review`, `amend_daily_review`, `get_weekly_brief`, `get_review_history` |
-| **Memory** | `read_memory`, `write_memory`, `delete_memory` |
+| **Memory** | `read_memory`, `write_memory`, `rename_memory`, `delete_memory` |
 | **Checklists** | `add_task_checklist_item`, `update_task_checklist_item`, `toggle_task_checklist_item`, `reorder_task_checklist_items`, `remove_task_checklist_item` |
 | **Recurrence** | `set_task_recurrence`, `remove_task_recurrence`, `add_task_recurrence_exception`, `remove_task_recurrence_exception` |
 | **Reminders** | `add_task_reminder`, `set_task_reminders`, `remove_task_reminder`, `get_due_task_reminders`, `get_upcoming_task_reminders` |
 | **AI context** | `set_task_ai_notes`, `set_list_ai_notes` |
 | **Dependencies** | `get_dependency_graph`, `get_upcoming_tasks` |
 | **Data export** | `export_data` |
-| **Preferences** | `get_all_preferences`, `get_preference`, `set_preference`, `complete_setup` |
-| **Audit / logs** | `get_ai_changelog`, `get_recent_logs` |
+| **Preferences** | `get_all_preferences`, `get_preference`, `set_preference`, `delete_preference`, `complete_setup` |
+| **Audit / logs** | `get_ai_changelog`, `get_recent_logs`, `undo_ai_change` |
 | **Guidance** | `get_guide` |
 
 Every write tool returns the complete updated object. The AI always sees the

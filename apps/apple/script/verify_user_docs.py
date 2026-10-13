@@ -307,6 +307,10 @@ def mcp_tool_doc_failures(text: str) -> list[str]:
     unknown = sorted(tools - EXPECTED_MCP_TOOLS)
     if unknown:
         failures.append(f"USER_GUIDE MCP tool catalog documents unknown tool(s): {unknown}")
+    if tools:
+        missing = sorted(EXPECTED_MCP_TOOLS - tools)
+        if missing:
+            failures.append(f"USER_GUIDE MCP tool catalog does not name tool(s): {missing}")
     legacy = sorted(tools & LEGACY_MCP_TOOL_NAMES)
     if legacy:
         failures.append(f"USER_GUIDE MCP tool catalog still uses legacy tool name(s): {legacy}")

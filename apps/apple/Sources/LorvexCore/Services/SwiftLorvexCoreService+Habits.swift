@@ -282,12 +282,30 @@ extension SwiftLorvexCoreService {
         setClauses.append("milestone_target = ?")
         args.append(Int64(value))
       }
-      guard !setClauses.isEmpty else {
-        guard let row = try Self.habitColumnRow(db, id: id) else {
-          throw LorvexCoreError.notFound(entity: .habit, id: id)
+      // Nothing to write when no field was supplied, or when every supplied value
+      // is the one the habit already has: no new version, no sync upsert, and no
+      // changelog row for a change that did not happen.
+      if let row = try Self.habitColumnRow(db, id: id) {
+        let columnsUnchanged = zip(setClauses, args).allSatisfy { clause, value in
+          let column = String(clause.dropLast(" = ?".count))
+          // `lookup_key` is the name's own derivation, compared through `name`.
+          if column == "lookup_key" { return true }
+          // A column the row does not carry cannot be shown unchanged.
+          guard row.hasColumn(column) else { return false }
+          return (row[column] as DatabaseValue) == (value?.databaseValue ?? .null)
         }
-        let today = try WorkflowTimezone.todayYmdForConn(db)
-        return try Self.mapHabitRow(db, row: row, date: today)
+        var weekdaysUnchanged = true
+        if let frequency = validated.frequency {
+          let current = Set(try Self.loadHabitWeekdayInts(db, habitId: id))
+          let requested = Set((frequency.toFields().weekdays ?? []).map { Int($0.rawValue) })
+          weekdaysUnchanged = current == requested
+        }
+        if columnsUnchanged && weekdaysUnchanged {
+          let today = try WorkflowTimezone.todayYmdForConn(db)
+          return try Self.mapHabitRow(db, row: row, date: today)
+        }
+      } else if setClauses.isEmpty {
+        throw LorvexCoreError.notFound(entity: .habit, id: id)
       }
 
       let version = hlc.nextVersionString()

@@ -33,11 +33,30 @@ import Synchronization
 /// suspended; ``withBackgroundAccess(_:)`` is how such work takes the store
 /// back.
 public enum DatabaseSuspension {
-  /// Whether the last call was ``suspend()``. The notifications reach only the
-  /// connections open when they are posted, so this is what tells a connection
-  /// opened later, and the cutover lease, that the process is on its way to being
-  /// suspended.
-  private static let suspended = Mutex<Bool>(false)
+  /// The suspended flag and how a change of it reaches the open connections.
+  /// There is one for the process; a test binds its own (``stateOverride``) so it
+  /// can exercise ``suspend()`` and ``resume()`` without flagging the connections
+  /// of the tests running beside it.
+  final class State: Sendable {
+    /// Whether the last call was ``suspend()``. The notifications reach only the
+    /// connections open when they are posted, so this is what tells a connection
+    /// opened later, and the cutover lease, that the process is on its way to being
+    /// suspended.
+    let suspended = Mutex<Bool>(false)
+    let post: @Sendable (Notification.Name) -> Void
+
+    init(post: @escaping @Sendable (Notification.Name) -> Void) { self.post = post }
+  }
+
+  private static let processState = State { name in
+    NotificationCenter.default.post(name: name, object: nil)
+  }
+
+  /// Test-only isolation hook: a state bound here replaces the process-wide one for
+  /// the work running inside the binding. Product code never binds it.
+  @TaskLocal static var stateOverride: State?
+
+  private static var state: State { stateOverride ?? processState }
 
   /// Test-only isolation hook: a value bound here is what ``isSuspended`` reports
   /// for the work running inside the binding, so a test can see the suspended
@@ -47,20 +66,22 @@ public enum DatabaseSuspension {
 
   /// Whether the store is suspended: ``suspend()`` was the last call.
   public static var isSuspended: Bool {
-    suspendedOverride ?? suspended.withLock { $0 }
+    suspendedOverride ?? state.suspended.withLock { $0 }
   }
 
   /// Stop the managed store from acquiring new database locks. Idempotent.
   public static func suspend() {
-    suspended.withLock { $0 = true }
-    NotificationCenter.default.post(name: Database.suspendNotification, object: nil)
+    let state = state
+    state.suspended.withLock { $0 = true }
+    state.post(Database.suspendNotification)
   }
 
   /// Let the managed store acquire database locks again. Idempotent, and
   /// required before database work that follows a ``suspend()``.
   public static func resume() {
-    suspended.withLock { $0 = false }
-    NotificationCenter.default.post(name: Database.resumeNotification, object: nil)
+    let state = state
+    state.suspended.withLock { $0 = false }
+    state.post(Database.resumeNotification)
   }
 
   /// Suspends the connection a store has just opened when the process is
@@ -68,8 +89,9 @@ public enum DatabaseSuspension {
   /// background launch (a push, a task, a watch message) after ``suspend()`` would
   /// otherwise take locks the system may suspend the process on.
   static func suspendConnectionOpenedWhileSuspended() {
-    if suspended.withLock({ $0 }) {
-      NotificationCenter.default.post(name: Database.suspendNotification, object: nil)
+    let state = state
+    if state.suspended.withLock({ $0 }) {
+      state.post(Database.suspendNotification)
     }
   }
 

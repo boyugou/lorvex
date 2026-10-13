@@ -2,6 +2,7 @@ import Foundation
 import GRDB
 import LorvexRuntime
 import LorvexStore
+import Synchronization
 import Testing
 
 @testable import LorvexCore
@@ -45,12 +46,22 @@ struct DatabaseSuspensionLeaseTests {
   }
 
   @Test
-  func suspendAndResumeTrackTheProcessState() {
-    // Nothing else in the process posts these, so the real flag is safe here.
-    #expect(!DatabaseSuspension.isSuspended)
-    DatabaseSuspension.suspend()
-    #expect(DatabaseSuspension.isSuspended)
-    DatabaseSuspension.resume()
-    #expect(!DatabaseSuspension.isSuspended)
+  func suspendAndResumeTrackTheirOwnState() {
+    // A state of its own: the real one is shared with every test running beside
+    // this one, and a posted notification flags every connection they hold open.
+    let posted = Mutex<[Notification.Name]>([])
+    let state = DatabaseSuspension.State { name in posted.withLock { $0.append(name) } }
+    DatabaseSuspension.$stateOverride.withValue(state) {
+      #expect(!DatabaseSuspension.isSuspended)
+      DatabaseSuspension.suspend()
+      #expect(DatabaseSuspension.isSuspended)
+      DatabaseSuspension.suspendConnectionOpenedWhileSuspended()
+      DatabaseSuspension.resume()
+      #expect(!DatabaseSuspension.isSuspended)
+      DatabaseSuspension.suspendConnectionOpenedWhileSuspended()
+    }
+    #expect(
+      posted.withLock { $0 }
+        == [Database.suspendNotification, Database.suspendNotification, Database.resumeNotification])
   }
 }

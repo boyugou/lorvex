@@ -84,7 +84,10 @@ public struct LorvexMobileStoreRootView: View {
       // Start the app-lifetime CloudKit observers (push refresh + account
       // change) once. The store outlives this view, so they keep running.
       store.startLifetimeObserversIfNeeded()
-      if store.snapshot.today == .empty {
+      // A launch the system makes in the background (a push, a background task)
+      // builds this view too. Its database work is refused while the process is
+      // suspended, and the scene turning active refreshes once the user is here.
+      if store.snapshot.today == .empty, !DatabaseSuspension.isSuspended {
         await store.refresh()
       }
     }

@@ -96,15 +96,28 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   blocked. Test these races with the gates on `StubCoreService`
   (`upsertDailyReviewGate`, `loadDailyReviewGate`, `updateTaskGate`); a
   `Task.yield()` passes alone and fails in the full run.
-- **Bracket background database work on iOS.** When the app is suspended,
-  `Database.suspendNotification` flags every open GRDB connection, and a
-  suspended queue throws `SQLITE_ABORT` on writes. App Intents and notification
-  actions that run in a backgrounded process wrap their work in
+- **Bracket background database work on iOS.** The system ends a process with
+  `0xdead10cc` when it suspends it while it holds a lock on a file in the App
+  Group container, and the database is such a file. So a process that is
+  suspended, or launched in the background, takes no database lock:
+  `DatabaseSuspension` keeps a process-wide flag besides the per-connection one
+  (a connection opened after `suspend()` starts suspended, and the cutover
+  lease, a `flock`, is refused before it is taken), and a suspended queue
+  throws `SQLITE_ABORT`. The cold-launch refresh in the root view skips itself
+  while suspended; the scene turning active resumes and refreshes. App Intents
+  and notification actions that run in a backgrounded process wrap their work in
   `DatabaseSuspension.withBackgroundAccess(_:)` and report success only after
-  the bracket ends. Never post the real suspend notification in a test. At
-  backgrounding, `BackgroundSyncFlush.flushThenSuspend(store:)` writes autosave
-  drafts and runs a CloudKit pass; a new self-saving draft must be added to
-  that flush.
+  the bracket ends. At backgrounding, `BackgroundSyncFlush.flushThenSuspend(store:)`
+  writes autosave drafts and runs a CloudKit pass; a new self-saving draft must
+  be added to that flush. The first confirmed case (build 115, 2026-10-12) was a
+  background launch whose root view refreshed and published the widget snapshot
+  inside a write transaction when the process was suspended; read a report with
+  `script/testflight_crashes.py`.
+- **Never touch the process-wide suspension state in a test.** Tests run in
+  parallel in one process, and a real `suspend()` flags every connection the
+  others hold open, which fails their writes with `SQLITE_ABORT` and can hang the
+  run. Bind a state of your own (`DatabaseSuspension.$stateOverride`) to test
+  `suspend()` and `resume()`, and `$suspendedOverride` to see a suspended store.
 - **Keep view identity stable across reloads.** A reload that clears a cache a
   view's identity depends on rebuilds the view and drops its `@State`,
   including presented sheets. The symptom is several `onAppear` calls within a

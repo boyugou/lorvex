@@ -1,0 +1,66 @@
+name: Bug report
+description: Something in Lorvex does not work the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Please leave your own tasks, notes, and calendar details out of the report: describe what happened with made-up examples.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The shortest list of steps that shows it. If it happens only sometimes, say how often.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where it happens
+      multiple: true
+      options:
+        - Mac
+        - iPhone
+        - iPad
+        - Apple Watch
+        - Widgets or Shortcuts
+        - The MCP server (an AI assistant's tool call)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version and build
+      description: "On the Mac: Lorvex, then About Lorvex. On iPhone and iPad: the TestFlight or App Store page. For example: 1.0.0 (130)."
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed it
+      options:
+        - App Store
+        - TestFlight
+        - Direct download (DMG from the Releases page)
+        - Built from source
+  - type: input
+    id: system
+    attributes:
+      label: Device and system version
+      description: "For example: iPhone 17 Pro, iOS 26.3, or MacBook Pro, macOS 26.2."
+  - type: textarea
+    id: assistant
+    attributes:
+      label: Assistant and tool call
+      description: If an AI assistant was involved, which one, which tool it called, and what it passed (made-up values are fine).
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: "On the Mac, Settings, then Diagnostics, then Copy Diagnostics. Read it first and remove anything private. A crash report from TestFlight's Share button also helps."
+      render: text

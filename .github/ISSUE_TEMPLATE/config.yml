@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask for help or send feedback
+    url: https://lorvex.app/support/
+    about: Support and contact options for Lorvex.
+  - name: Report a security problem privately
+    url: https://github.com/boyugou/lorvex/security/advisories/new
+    about: A flaw that exposes your data or bypasses the assistant-text fencing. Please do not open a public issue for it.

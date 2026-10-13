@@ -1,0 +1,35 @@
+name: Idea or feature request
+description: Something Lorvex could do, or do better.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lorvex is built so an assistant does the typing and the apps stay calm: the [design philosophy](https://github.com/boyugou/lorvex/blob/main/docs/vision/DESIGN_PHILOSOPHY.md) explains what it leaves out on purpose. Describing the problem you have helps more than describing a screen.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The situation, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like instead?
+      description: Optional. A rough idea is enough.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Mac app
+        - iPhone and iPad app
+        - Apple Watch
+        - Widgets, Siri, or Shortcuts
+        - The MCP server and its tools
+        - Quick add and languages
+        - Calendar
+        - Habits
+        - Something else

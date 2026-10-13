@@ -100,7 +100,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     the parent stays deleted). The `chaos` transport, which reorders even one device's own emissions and
     so is harsher than CloudKit, diverges on 37 of 200 seeds from 3000, 31 of them
     on `task_tag` edges (a deleted alias source's edges cascading before its
-    redirect arrives), and leaves no pending entries. The runs are not bit-for-bit repeatable (ids and
+    redirect arrives), and leaves no pending entries. A soak of 100 seeds from 5000 on the log transport (2026-10-13) diverged on 4,
+    all in the child-edge classes above. It also flagged two seeds as
+    "undecodable envelopes": that was the cycle-break tiebreak dropping a
+    dependency edge on purpose (two replicas each added an edge that together
+    close a cycle; the loser is dropped everywhere), which the harness now
+    recognizes and names. The runs are not bit-for-bit repeatable (ids and
     clocks come from the wall clock), so a seed names a shape, not an exact run.
   - Mac performance, measured in a release build of the core
     (2026-10-12, in-memory store, no dependencies): completing a task takes

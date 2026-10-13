@@ -382,7 +382,25 @@ private final class SimulationRun {
               + " remapped=\(report.remapped) drained=\(report.drainReplayed)]")
         }
         if report.undecodable != 0 {
-          unexpected.append("\(replicas[index].name) reported undecodable envelopes")
+          // A dropped envelope fails the wire validation; say how, from the replica's own log.
+          let reasons =
+            (try? replicas[index].service.read { db in
+              try String.fetchAll(
+                db,
+                sql: """
+                  SELECT message FROM error_logs
+                  WHERE source = 'sync.apply.inbound_invalid' ORDER BY id DESC LIMIT 3
+                  """)
+            }) ?? []
+          // Two replicas that each add a dependency edge can close a cycle between them; the
+          // incoming edge that loses the cycle-break tiebreak is dropped on purpose, and every
+          // replica drops the same one. Any other wire-validation failure is a bug.
+          let cycleBreaks = reasons.filter { $0.contains("lost the cycle-break tiebreak") }
+          if cycleBreaks.count < reasons.count || reasons.isEmpty {
+            unexpected.append(
+              "\(replicas[index].name) reported undecodable envelopes: "
+                + "\(reasons.joined(separator: " | "))")
+          }
         }
       } catch {
         unexpected.append("applyInbound to \(replicas[index].name) failed: \(error)")

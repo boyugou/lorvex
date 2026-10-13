@@ -118,15 +118,17 @@ Notes:
 - **MCP tool choice.** `script/mcp_tool_choice_eval.py` measures whether an
   assistant that sees only the tool catalog picks the right tool. `prepare`
   starts the SwiftPM-built host on a disposable database and writes the server
-  instructions, the catalog as a client reads it, and 50 user requests
+  instructions, the catalog as a client reads it, and 52 user requests
   (`script/mcp_tool_choice_scenarios.json`, each with its accepted tools); a
   fresh sub-agent that may read only those files answers with the calls it would
   make; `check` scores the answers and validates every proposed call's
   arguments against the tool's input schema. On 2026-10-13 Haiku 5.5 and Sonnet
   5.5 each got an accepted tool for all 50 requests (after widening one
   scenario to the two equivalent ways to skip one occurrence) with no schema
-  violation in 185 calls. Re-run it after adding or rewording a tool; a doubt
-  the assistant names is two descriptions to tell apart.
+  violation in 185 calls; after `undo_ai_change` was added, Haiku 5.5 chose it,
+  after a lookup, for both "take back" requests added to the 52. Re-run it after
+  adding or rewording a tool; a doubt the assistant names is two descriptions to
+  tell apart.
 - **Committed sweeps.** `MCPResponseFencingSweepTests`,
   `MCPExtremeIntegerArgumentTests`, `BackupWholeStoreRoundTripTests` (every
   table is declared backed up or local, and a restore is lossless apart from

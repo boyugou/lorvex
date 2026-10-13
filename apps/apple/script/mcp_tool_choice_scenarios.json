@@ -311,9 +311,23 @@
     ]
   },
   {
-    "request": "Complete these five tasks: [paste of titles].",
+    "request": "Mark these five tasks done: file taxes, call mom, book flights, buy milk, send the invoice.",
     "accepted": [
       "batch_complete_tasks"
+    ]
+  },
+  {
+    "request": "Take back the change you just made to the quarterly report task.",
+    "accepted": [
+      "undo_ai_change",
+      "get_ai_changelog"
+    ]
+  },
+  {
+    "request": "Actually, put that task's due date back the way it was before you moved it.",
+    "accepted": [
+      "undo_ai_change",
+      "get_ai_changelog"
     ]
   }
 ]

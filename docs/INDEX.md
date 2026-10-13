@@ -25,7 +25,7 @@ Behavioral contracts and product philosophy for the Apple app.
 - [`design/AI_OPERATING_MODEL.md`](design/AI_OPERATING_MODEL.md) — Assistant operating model: how guidance reaches an assistant (server instructions, plugin skills, tool descriptions), the chief-of-staff model, operational patterns, and session protocol.
 - [`design/CALENDAR_BEHAVIOR.md`](design/CALENDAR_BEHAVIOR.md) — Three-family calendar ownership model (tasks / canonical events / provider mirrors) and interaction rules.
 - [`design/SORT_KEYS.md`](design/SORT_KEYS.md) — Canonical task sort key (`priority_effective ASC, due_date ASC NULLS LAST, id ASC`) and allowed per-view deviations.
-- [`design/SYNC_APPLY_SEMANTICS.md`](design/SYNC_APPLY_SEMANTICS.md) — Sync apply pipeline, HLC conflict resolution, LWW rules, idempotency, and ai_changelog semantics.
+- [`design/SYNC_APPLY_SEMANTICS.md`](design/SYNC_APPLY_SEMANTICS.md) — Sync apply pipeline, HLC conflict resolution, LWW rules, idempotency, and why ai_changelog stays device-local.
 - [`design/SCHEMA_OPTIMALITY.md`](design/SCHEMA_OPTIMALITY.md) — The two-regime schema invariant behind the post-launch schema-freeze gate.
 - [`design/EXPORT_IMPORT_PARITY.md`](design/EXPORT_IMPORT_PARITY.md) — The version-1 data export/import contract behind Settings → Data: portable category documents, the Apple-native task-graph member, JSON and ZIP containers, and retained per-version decoders.
 

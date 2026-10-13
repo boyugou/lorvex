@@ -110645,371 +110645,373 @@
       }
     },
     "settings.activity.retention.footer.off": {
+      "comment": "Footer under the AI activity log retention picker while Off is selected: Off stops recording and clears the entries on this device (the log never leaves the device).",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يؤدي الإيقاف إلى التوقف عن التسجيل ومسح الإدخالات الموجودة على جميع أجهزتك."
+            "value": "يؤدي الإيقاف إلى التوقف عن التسجيل ومسح الإدخالات الموجودة على هذا الجهاز."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "বন্ধ করলে রেকর্ড করা থেমে যায় এবং আপনার সব ডিভাইস থেকে বিদ্যমান এন্ট্রি মুছে যায়।"
+            "value": "বন্ধ করলে রেকর্ড করা থেমে যায় এবং এই ডিভাইস থেকে বিদ্যমান এন্ট্রি মুছে যায়।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "„Aus“ beendet die Aufzeichnung und löscht vorhandene Einträge auf allen deinen Geräten."
+            "value": "„Aus“ beendet die Aufzeichnung und löscht vorhandene Einträge auf diesem Gerät."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Η επιλογή «Ανενεργό» διακόπτει την καταγραφή και διαγράφει τις υπάρχουσες καταχωρίσεις σε όλες τις συσκευές σας."
+            "value": "Η επιλογή «Ανενεργό» διακόπτει την καταγραφή και διαγράφει τις υπάρχουσες καταχωρίσεις σε αυτή τη συσκευή."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Off stops recording and clears existing entries on all your devices."
+            "value": "Off stops recording and clears the entries on this device."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Con Desactivado, se deja de registrar y se borran las entradas existentes en todos tus dispositivos."
+            "value": "Con Desactivado, se deja de registrar y se borran las entradas existentes en este dispositivo."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "با خاموش‌کردن، ثبت متوقف می‌شود و موارد موجود در همه دستگاه‌های شما پاک می‌شوند."
+            "value": "با خاموش‌کردن، ثبت متوقف می‌شود و موارد موجود در این دستگاه پاک می‌شوند."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Désactivé : l’enregistrement s’arrête et les entrées existantes sont effacées sur tous vos appareils."
+            "value": "Désactivé : l’enregistrement s’arrête et les entrées existantes sont effacées sur cet appareil."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "כיבוי עוצר את ההקלטה ומוחק את הרשומות הקיימות בכל המכשירים שלך."
+            "value": "כיבוי עוצר את ההקלטה ומוחק את הרשומות הקיימות במכשיר הזה."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "बंद करने पर रिकॉर्डिंग रुक जाती है और आपके सभी डिवाइस से मौजूदा एंट्री हट जाती हैं।"
+            "value": "बंद करने पर रिकॉर्डिंग रुक जाती है और इस डिवाइस से मौजूदा एंट्री हट जाती हैं।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mati menghentikan perekaman dan menghapus entri yang ada di semua perangkat."
+            "value": "Mati menghentikan perekaman dan menghapus entri yang ada di perangkat ini."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disattivato: interrompe la registrazione e cancella le voci esistenti su tutti i tuoi dispositivi."
+            "value": "Disattivato: interrompe la registrazione e cancella le voci esistenti su questo dispositivo."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "オフにすると記録が停止され、すべてのデバイスで既存の項目が消去されます。"
+            "value": "オフにすると記録が停止され、このデバイスで既存の項目が消去されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "끄면 기록이 중단되고 모든 기기의 기존 항목이 지워집니다."
+            "value": "끄면 기록이 중단되고 이 기기의 기존 항목이 지워집니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "ऑफ केल्यास नोंद करणे थांबते आणि तुमच्या सर्व डिव्हाइसवरील विद्यमान नोंदी क्लिअर होतात."
+            "value": "ऑफ केल्यास नोंद करणे थांबते आणि या डिव्हाइसवरील विद्यमान नोंदी क्लिअर होतात."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tak Aktif menghentikan rakaman dan mengosongkan entri sedia ada pada semua peranti anda."
+            "value": "Tak Aktif menghentikan rakaman dan mengosongkan entri sedia ada pada peranti ini."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "‘Uit’ stopt met opnemen en wist bestaande vermeldingen op al je apparaten."
+            "value": "‘Uit’ stopt met opnemen en wist bestaande vermeldingen op dit apparaat."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opcja „Wył.” wstrzymuje zapisywanie i usuwa istniejące wpisy na wszystkich twoich urządzeniach."
+            "value": "Opcja „Wył.” wstrzymuje zapisywanie i usuwa istniejące wpisy na tym urządzeniu."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desativado: interrompe a gravação e apaga as entradas existentes em todos os seus dispositivos."
+            "value": "Desativado: interrompe a gravação e apaga as entradas existentes neste dispositivo."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opțiunea „Dezactivat” oprește scrierea în jurnal și șterge înregistrările existente de pe toate dispozitivele."
+            "value": "Opțiunea „Dezactivat” oprește scrierea în jurnal și șterge înregistrările existente de pe acest dispozitiv."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Если выбрать «Выкл.», запись прекращается, а существующие записи на всех ваших устройствах удаляются."
+            "value": "Если выбрать «Выкл.», запись прекращается, а существующие записи на этом устройстве удаляются."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "ஆஃப் செய்தால் பதிவு செய்வது நின்றுவிடும், உங்கள் எல்லாச் சாதனங்களிலும் உள்ள பதிவுகள் அழிக்கப்படும்."
+            "value": "ஆஃப் செய்தால் பதிவு செய்வது நின்றுவிடும், இந்தச் சாதனத்தில் உள்ள பதிவுகள் அழிக்கப்படும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "ఆఫ్ చేస్తే రికార్డ్ చేయడం ఆగిపోతుంది, మీ అన్ని డివైజ్‌లలో ఉన్న నమోదులు క్లియర్ అవుతాయి."
+            "value": "ఆఫ్ చేస్తే రికార్డ్ చేయడం ఆగిపోతుంది, ఈ డివైజ్‌లో ఉన్న నమోదులు క్లియర్ అవుతాయి."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เมื่อเลือก “ปิด” จะหยุดบันทึกและล้างรายการที่มีอยู่ในอุปกรณ์ทั้งหมดของคุณ"
+            "value": "เมื่อเลือก “ปิด” จะหยุดบันทึกและล้างรายการที่มีอยู่ในอุปกรณ์นี้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kapalı seçeneği kaydı durdurur ve tüm aygıtlarınızdaki mevcut girdileri siler."
+            "value": "Kapalı seçeneği kaydı durdurur ve bu aygıttaki mevcut girdileri siler."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Якщо вибрати «Вимк.», запис припиняється, а наявні записи на всіх ваших пристроях видаляються."
+            "value": "Якщо вибрати «Вимк.», запис припиняється, а наявні записи на цьому пристрої видаляються."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "بند کرنے سے ریکارڈنگ رک جاتی ہے اور آپ کی تمام ڈیوائسز پر موجودہ اندراجات صاف ہو جاتے ہیں۔"
+            "value": "بند کرنے سے ریکارڈنگ رک جاتی ہے اور اس ڈیوائس پر موجودہ اندراجات صاف ہو جاتے ہیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tắt sẽ dừng ghi và xóa các mục hiện có trên tất cả thiết bị của bạn."
+            "value": "Tắt sẽ dừng ghi và xóa các mục hiện có trên thiết bị này."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "关闭后将停止记录，并清除你所有设备上的现有条目。"
+            "value": "关闭后将停止记录，并清除这台设备上的现有条目。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "關閉後會停止記錄，並清除你所有裝置上的現有項目。"
+            "value": "關閉後會停止記錄，並清除這台裝置上的現有項目。"
           }
         }
       }
     },
     "settings.activity.retention.footer": {
+      "comment": "Footer under the AI activity log retention picker: older entries are trimmed over time, and Off stops recording and clears the entries on this device (the log never leaves the device).",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تُقتطع الإدخالات الأقدم عند المزامنة. يؤدي الإيقاف إلى التوقف عن التسجيل ومسح الإدخالات الموجودة على جميع أجهزتك."
+            "value": "تُقتطع الإدخالات الأقدم مع مرور الوقت. يؤدي الإيقاف إلى التوقف عن التسجيل ومسح الإدخالات الموجودة على هذا الجهاز."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "সিঙ্কের সময় পুরোনো এন্ট্রি ছেঁটে ফেলা হয়। বন্ধ করলে রেকর্ড করা থেমে যায় এবং আপনার সব ডিভাইস থেকে বিদ্যমান এন্ট্রি মুছে যায়।"
+            "value": "সময়ের সাথে সাথে পুরোনো এন্ট্রি ছেঁটে ফেলা হয়। বন্ধ করলে রেকর্ড করা থেমে যায় এবং এই ডিভাইস থেকে বিদ্যমান এন্ট্রি মুছে যায়।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ältere Einträge werden bei der Synchronisierung bereinigt. „Aus“ beendet die Aufzeichnung und löscht vorhandene Einträge auf allen deinen Geräten."
+            "value": "Ältere Einträge werden mit der Zeit bereinigt. „Aus“ beendet die Aufzeichnung und löscht vorhandene Einträge auf diesem Gerät."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Οι παλαιότερες καταχωρίσεις περικόπτονται κατά τον συγχρονισμό. Η επιλογή «Ανενεργό» διακόπτει την καταγραφή και διαγράφει τις υπάρχουσες καταχωρίσεις σε όλες τις συσκευές σας."
+            "value": "Οι παλαιότερες καταχωρίσεις περικόπτονται με την πάροδο του χρόνου. Η επιλογή «Ανενεργό» διακόπτει την καταγραφή και διαγράφει τις υπάρχουσες καταχωρίσεις σε αυτή τη συσκευή."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Older entries are trimmed on sync. Off stops recording and clears existing entries on all your devices."
+            "value": "Older entries are trimmed over time. Off stops recording and clears the entries on this device."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las entradas más antiguas se eliminan al sincronizar. Con Desactivado, se deja de registrar y se borran las entradas existentes en todos tus dispositivos."
+            "value": "Las entradas más antiguas se eliminan con el tiempo. Con Desactivado, se deja de registrar y se borran las entradas existentes en este dispositivo."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "موارد قدیمی‌تر هنگام همگام‌سازی حذف می‌شوند. با خاموش‌کردن، ثبت متوقف می‌شود و موارد موجود در همه دستگاه‌های شما پاک می‌شوند."
+            "value": "موارد قدیمی‌تر با گذشت زمان حذف می‌شوند. با خاموش‌کردن، ثبت متوقف می‌شود و موارد موجود در این دستگاه پاک می‌شوند."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les entrées plus anciennes sont supprimées lors de la synchronisation. Désactivé : l’enregistrement s’arrête et les entrées existantes sont effacées sur tous vos appareils."
+            "value": "Les entrées plus anciennes sont supprimées au fil du temps. Désactivé : l’enregistrement s’arrête et les entrées existantes sont effacées sur cet appareil."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "רשומות ישנות יותר נגזמות בעת סנכרון. כיבוי עוצר את ההקלטה ומוחק את הרשומות הקיימות בכל המכשירים שלך."
+            "value": "רשומות ישנות יותר נגזמות עם הזמן. כיבוי עוצר את ההקלטה ומוחק את הרשומות הקיימות במכשיר הזה."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "सिंक होने पर पुरानी एंट्री हटा दी जाती हैं। बंद करने पर रिकॉर्डिंग रुक जाती है और आपके सभी डिवाइस से मौजूदा एंट्री हट जाती हैं।"
+            "value": "समय के साथ पुरानी एंट्री हटा दी जाती हैं। बंद करने पर रिकॉर्डिंग रुक जाती है और इस डिवाइस से मौजूदा एंट्री हट जाती हैं।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entri lama dipangkas saat penyelarasan. Mati menghentikan perekaman dan menghapus entri yang ada di semua perangkat."
+            "value": "Entri lama dipangkas seiring waktu. Mati menghentikan perekaman dan menghapus entri yang ada di perangkat ini."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le voci meno recenti vengono rimosse durante la sincronizzazione. Disattivato: interrompe la registrazione e cancella le voci esistenti su tutti i tuoi dispositivi."
+            "value": "Le voci meno recenti vengono rimosse nel tempo. Disattivato: interrompe la registrazione e cancella le voci esistenti su questo dispositivo."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "古い項目は同期時に整理されます。オフにすると記録が停止され、すべてのデバイスで既存の項目が消去されます。"
+            "value": "古い項目は時間の経過とともに整理されます。オフにすると記録が停止され、このデバイスで既存の項目が消去されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "오래된 항목은 동기화할 때 정리됩니다. 끄면 기록이 중단되고 모든 기기의 기존 항목이 지워집니다."
+            "value": "오래된 항목은 시간이 지나면서 정리됩니다. 끄면 기록이 중단되고 이 기기의 기존 항목이 지워집니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "सिंकदरम्यान जुन्या नोंदी कमी केल्या जातात. ऑफ केल्यास नोंद करणे थांबते आणि तुमच्या सर्व डिव्हाइसवरील विद्यमान नोंदी क्लिअर होतात."
+            "value": "कालांतराने जुन्या नोंदी कमी केल्या जातात. ऑफ केल्यास नोंद करणे थांबते आणि या डिव्हाइसवरील विद्यमान नोंदी क्लिअर होतात."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entri lama dipangkas semasa penyelarasan. Tak Aktif menghentikan rakaman dan mengosongkan entri sedia ada pada semua peranti anda."
+            "value": "Entri lama dipangkas secara beransur-ansur. Tak Aktif menghentikan rakaman dan mengosongkan entri sedia ada pada peranti ini."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oudere vermeldingen worden bij het synchroniseren opgeschoond. ‘Uit’ stopt met opnemen en wist bestaande vermeldingen op al je apparaten."
+            "value": "Oudere vermeldingen worden na verloop van tijd opgeschoond. ‘Uit’ stopt met opnemen en wist bestaande vermeldingen op dit apparaat."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Starsze wpisy są usuwane podczas synchronizacji. Opcja „Wył.” wstrzymuje zapisywanie i usuwa istniejące wpisy na wszystkich twoich urządzeniach."
+            "value": "Starsze wpisy są z czasem usuwane. Opcja „Wył.” wstrzymuje zapisywanie i usuwa istniejące wpisy na tym urządzeniu."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As entradas mais antigas são removidas na sincronização. Desativado: interrompe a gravação e apaga as entradas existentes em todos os seus dispositivos."
+            "value": "As entradas mais antigas são removidas com o tempo. Desativado: interrompe a gravação e apaga as entradas existentes neste dispositivo."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Înregistrările mai vechi sunt eliminate la sincronizare. Opțiunea „Dezactivat” oprește scrierea în jurnal și șterge înregistrările existente de pe toate dispozitivele."
+            "value": "Înregistrările mai vechi sunt eliminate în timp. Opțiunea „Dezactivat” oprește scrierea în jurnal și șterge înregistrările existente de pe acest dispozitiv."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Старые записи удаляются при синхронизации. Если выбрать «Выкл.», запись прекращается, а существующие записи на всех ваших устройствах удаляются."
+            "value": "Старые записи со временем удаляются. Если выбрать «Выкл.», запись прекращается, а существующие записи на этом устройстве удаляются."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "பழைய பதிவுகள் ஒத்திசைவின்போது ட்ரிம் செய்யப்படும். ஆஃப் செய்தால் பதிவு செய்வது நின்றுவிடும், உங்கள் எல்லாச் சாதனங்களிலும் உள்ள பதிவுகள் அழிக்கப்படும்."
+            "value": "பழைய பதிவுகள் காலப்போக்கில் ட்ரிம் செய்யப்படும். ஆஃப் செய்தால் பதிவு செய்வது நின்றுவிடும், இந்தச் சாதனத்தில் உள்ள பதிவுகள் அழிக்கப்படும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "పాత నమోదులు సింక్ సమయంలో ట్రిమ్ చేయబడతాయి. ఆఫ్ చేస్తే రికార్డ్ చేయడం ఆగిపోతుంది, మీ అన్ని డివైజ్‌లలో ఉన్న నమోదులు క్లియర్ అవుతాయి."
+            "value": "పాత నమోదులు కాలక్రమేణా ట్రిమ్ చేయబడతాయి. ఆఫ్ చేస్తే రికార్డ్ చేయడం ఆగిపోతుంది, ఈ డివైజ్‌లో ఉన్న నమోదులు క్లియర్ అవుతాయి."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "รายการเก่าจะถูกตัดออกเมื่อเชื่อมข้อมูล เมื่อเลือก “ปิด” จะหยุดบันทึกและล้างรายการที่มีอยู่ในอุปกรณ์ทั้งหมดของคุณ"
+            "value": "รายการเก่าจะถูกตัดออกตามกาลเวลา เมื่อเลือก “ปิด” จะหยุดบันทึกและล้างรายการที่มีอยู่ในอุปกรณ์นี้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eşzamanlama sırasında eski girdiler kırpılır. Kapalı seçeneği kaydı durdurur ve tüm aygıtlarınızdaki mevcut girdileri siler."
+            "value": "Zamanla eski girdiler kırpılır. Kapalı seçeneği kaydı durdurur ve bu aygıttaki mevcut girdileri siler."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Старіші записи видаляються під час синхронізації. Якщо вибрати «Вимк.», запис припиняється, а наявні записи на всіх ваших пристроях видаляються."
+            "value": "Старіші записи з часом видаляються. Якщо вибрати «Вимк.», запис припиняється, а наявні записи на цьому пристрої видаляються."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "پرانے اندراجات سنک کے دوران کم کر دیے جاتے ہیں۔ بند کرنے سے ریکارڈنگ رک جاتی ہے اور آپ کی تمام ڈیوائسز پر موجودہ اندراجات صاف ہو جاتے ہیں۔"
+            "value": "پرانے اندراجات وقت کے ساتھ کم کر دیے جاتے ہیں۔ بند کرنے سے ریکارڈنگ رک جاتی ہے اور اس ڈیوائس پر موجودہ اندراجات صاف ہو جاتے ہیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Các mục cũ hơn sẽ được lược bớt khi đồng bộ hóa. Tắt sẽ dừng ghi và xóa các mục hiện có trên tất cả thiết bị của bạn."
+            "value": "Các mục cũ hơn sẽ được lược bớt theo thời gian. Tắt sẽ dừng ghi và xóa các mục hiện có trên thiết bị này."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "较早的条目会在同步时清理。关闭后将停止记录，并清除你所有设备上的现有条目。"
+            "value": "较早的条目会随时间清理。关闭后将停止记录，并清除这台设备上的现有条目。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "較舊的項目會在同步時被修剪。關閉後會停止記錄，並清除你所有裝置上的現有項目。"
+            "value": "較舊的項目會隨時間被修剪。關閉後會停止記錄，並清除這台裝置上的現有項目。"
           }
         }
       }

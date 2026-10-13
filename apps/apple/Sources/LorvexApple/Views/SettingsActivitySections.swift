@@ -75,11 +75,11 @@ private struct SettingsActivityFeed<Rows: View, Empty: View>: View {
 /// the top of the group it governs leaves it in place however far the
 /// unfolded log runs.
 ///
-/// The retention picker writes the account-scoped virtual
-/// `ai_changelog_retention_policy` preference (``ChangelogRetentionPolicy``),
-/// the same value an assistant sets via `set_preference`: the sync sweep trims
-/// older entries, and "Off" stops recording and purges existing entries on
-/// every synced device.
+/// The retention picker writes the virtual `ai_changelog_retention_policy`
+/// preference (``ChangelogRetentionPolicy``). The log never leaves the device, so
+/// the policy is this device's: older entries are trimmed over time, and "Off"
+/// stops recording and purges the entries here. An assistant can read the
+/// policy but not change it; only the user does, in this picker.
 struct SettingsChangelogSection: View {
   @Bindable var store: AppStore
 
@@ -161,14 +161,14 @@ struct SettingsChangelogSection: View {
     if case .off = ChangelogRetentionPolicy.parse(selection) {
       return String(
         localized: "settings.activity.retention.footer.off",
-        defaultValue: "Off stops recording and clears existing entries on all your devices.",
+        defaultValue: "Off stops recording and clears the entries on this device.",
         table: "Localizable",
         bundle: LorvexL10n.bundle)
     }
     return String(
       localized: "settings.activity.retention.footer",
       defaultValue:
-        "Older entries are trimmed on sync. Off stops recording and clears existing entries on all your devices.",
+        "Older entries are trimmed over time. Off stops recording and clears the entries on this device.",
       table: "Localizable",
       bundle: LorvexL10n.bundle)
   }

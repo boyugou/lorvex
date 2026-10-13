@@ -63,13 +63,13 @@ struct MobileStoreSettingsChangelogRetentionSection: View {
     if case .off = ChangelogRetentionPolicy.parse(selection) {
       return String(
         localized: "settings.activity.retention.footer.off",
-        defaultValue: "Off stops recording and clears existing entries on all your devices.",
+        defaultValue: "Off stops recording and clears the entries on this device.",
         table: "Localizable", bundle: MobileL10n.bundle)
     }
     return String(
       localized: "settings.activity.retention.footer",
       defaultValue:
-        "Older entries are trimmed on sync. Off stops recording and clears existing entries on all your devices.",
+        "Older entries are trimmed over time. Off stops recording and clears the entries on this device.",
       table: "Localizable", bundle: MobileL10n.bundle)
   }
 

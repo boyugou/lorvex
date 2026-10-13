@@ -147,7 +147,7 @@ are in [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
 - [`../../docs/design/AI_OPERATING_MODEL.md`](../../docs/design/AI_OPERATING_MODEL.md) — the "Chief of Staff" mental model and MCP operational patterns
 - [`../../docs/design/CALENDAR_BEHAVIOR.md`](../../docs/design/CALENDAR_BEHAVIOR.md) — three-family ownership model (tasks / canonical events / provider mirrors)
 - [`../../docs/design/SORT_KEYS.md`](../../docs/design/SORT_KEYS.md) — canonical task sort key and allowed per-view deviations
-- [`../../docs/design/SYNC_APPLY_SEMANTICS.md`](../../docs/design/SYNC_APPLY_SEMANTICS.md) — CloudKit sync apply pipeline, HLC conflict resolution, ai_changelog union semantics, idempotency cache
+- [`../../docs/design/SYNC_APPLY_SEMANTICS.md`](../../docs/design/SYNC_APPLY_SEMANTICS.md) — CloudKit sync apply pipeline, HLC conflict resolution, the device-local ai_changelog, idempotency cache
 
 **Reference**
 - [`docs/reference/FEATURES.md`](docs/reference/FEATURES.md) — feature status catalogue (`[SHIPPED]` / `[PARTIAL]` / `[PLANNED]`) with MCP tool catalog

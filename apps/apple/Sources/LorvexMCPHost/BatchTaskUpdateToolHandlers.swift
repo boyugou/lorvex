@@ -17,6 +17,10 @@ extension ToolRegistry {
     }
 
     let structured = try await batchUpdateTasksPayload(updates: updates)
-    return successResult(text: "Updated \(updates.count) tasks.", value: structured)
+    let applied = structured.objectValue?["count"]?.intValue ?? updates.count
+    let skipped = structured.objectValue?["skipped"]?.arrayValue?.count ?? 0
+    let text =
+      skipped == 0 ? "Updated \(applied) tasks." : "Updated \(applied) tasks; skipped \(skipped)."
+    return successResult(text: text, value: structured)
   }
 }

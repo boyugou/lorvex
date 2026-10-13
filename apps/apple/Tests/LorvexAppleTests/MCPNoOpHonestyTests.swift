@@ -66,6 +66,48 @@ struct MCPNoOpHonestyTests {
     #expect(try await changelogCount() == before + 1)
   }
 
+  @Test("batch_update_tasks skips an entry that names no field, refuses a batch of only those, and logs nothing for them")
+  func batchUpdateTasksWithNoFieldIsSkipped() async throws {
+    let (registry, _, cleanup) = mcpOnDiskRegistry()
+    defer { cleanup() }
+    var ids: [String] = []
+    for title in ["First", "Second"] {
+      let created = try await mcpRegistryCall(
+        registry, tool: "create_task", arguments: ["title": .string(title)])
+      ids.append(try #require(created.structuredContent?.objectValue?["id"]?.stringValue))
+    }
+    func changelogCount() async throws -> Int {
+      let log = try await mcpRegistryCall(registry, tool: "get_ai_changelog", arguments: [:])
+      return log.structuredContent?.objectValue?["entries"]?.arrayValue?.count ?? -1
+    }
+    let before = try await changelogCount()
+
+    // Only entries that name no field: refused, like update_task.
+    let empty = try await mcpRegistryCall(
+      registry, tool: "batch_update_tasks",
+      arguments: ["updates": .array([.object(["id": .string(ids[0])])])])
+    #expect(empty.isError == true)
+    #expect(empty.structuredContent?.objectValue?["code"]?.stringValue == "validation")
+    #expect(try await changelogCount() == before)
+
+    // One real entry and one empty one: the empty one is skipped with its reason.
+    let mixed = try await mcpRegistryCall(
+      registry, tool: "batch_update_tasks",
+      arguments: [
+        "updates": .array([
+          .object(["id": .string(ids[0])]),
+          .object(["id": .string(ids[1]), "notes": .string("Now with notes")]),
+        ])
+      ])
+    #expect(mixed.isError != true)
+    let object = try #require(mixed.structuredContent?.objectValue)
+    #expect(object["count"]?.intValue == 1)
+    let skipped = try #require(object["skipped"]?.arrayValue)
+    #expect(skipped.count == 1)
+    #expect(mcpTextContent(mixed).contains("skipped 1"))
+    #expect(try await changelogCount() == before + 1)
+  }
+
   @Test("delete_calendar_event reports the real outcome and carries previous")
   func deleteCalendarEventHonesty() async throws {
     let (registry, _, cleanup) = mcpOnDiskRegistry()

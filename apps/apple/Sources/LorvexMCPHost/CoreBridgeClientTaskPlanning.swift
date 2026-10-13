@@ -128,7 +128,24 @@ extension CoreBridgeClient {
   }
 
   func batchUpdateTasks(updates: [Value]) async throws -> Value {
-    let drafts: [TaskUpdateDraft] = try updates.map { update in
+    // An entry that names no field has nothing to update: it is skipped with its reason, as
+    // `update_task` refuses the same call, and a batch of nothing else is refused outright.
+    var skipped: [Value] = []
+    var fieldedUpdates: [Value] = []
+    for update in updates {
+      let object = update.objectValue ?? [:]
+      if let id = object["id"]?.stringValue, !id.isEmpty, object.keys.allSatisfy({ $0 == "id" }) {
+        skipped.append(
+          Self.batchSkip(id: id, reason: "Nothing to update: this entry names no field."))
+      } else {
+        fieldedUpdates.append(update)
+      }
+    }
+    if fieldedUpdates.isEmpty {
+      throw LorvexCoreError.validation(
+        field: "updates", message: "At least one entry must name a field to update.")
+    }
+    let drafts: [TaskUpdateDraft] = try fieldedUpdates.map { update in
       let object = update.objectValue ?? [:]
       guard let id = object["id"]?.stringValue, !id.isEmpty else {
         throw LorvexCoreError.unsupportedOperation("Every update requires an id.")
@@ -153,12 +170,12 @@ extension CoreBridgeClient {
     try StrictArgumentArray.requireUnique(drafts.map(\.id), field: "updates.id")
     let updated = try await service.batchUpdateTasks(drafts)
     // Partial-success shape shared with the sibling batch tools: `results` holds
-    // the patched task objects, `count` their number, `skipped` per-item
-    // failures (empty today; reserved so future per-item failures stay additive).
+    // the patched task objects, `count` their number, `skipped` the entries that
+    // were not applied, each with its reason.
     return .object([
       "results": Self.taskValues(from: updated),
       "count": .int(updated.count),
-      "skipped": .array([]),
+      "skipped": .array(skipped),
     ])
   }
 

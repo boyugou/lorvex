@@ -1,4 +1,5 @@
 import Foundation
+import GRDB
 import LorvexCore
 import LorvexDomain
 import LorvexStore
@@ -351,5 +352,34 @@ struct MCPEnvelopeContractTests {
     let batchUpdatePriority = try #require(
       itemProperties(of: "batch_update_tasks", arrayField: "updates")["priority"]?.objectValue)
     #expect(batchUpdatePriority["enum"]?.arrayValue == [.int(1), .int(2), .int(3)])
+  }
+
+  // MARK: - Error wording for clients
+
+  @Test("only Lorvex's and the MCP SDK's own errors are worded for a client; others become a plain sentence")
+  func errorMessagesNameNoInternals() {
+    // Lorvex's own errors keep their wording.
+    #expect(
+      ToolRegistry.errorMessage(for: LorvexCoreError.validation(field: "x", message: "Pick a day."))
+        == "Pick a day.")
+    #expect(ToolRegistry.errorMessage(for: ValidationError.message("bad")).contains("bad"))
+
+    // A database error describes its SQL and files; a system error its domain and paths.
+    let home = "/" + "Users" + "/someone"
+    let database = DatabaseError(
+      resultCode: .SQLITE_BUSY, message: "database is locked at \(home)/Library/db.sqlite")
+    let databaseMessage = ToolRegistry.errorMessage(for: database)
+    #expect(databaseMessage.contains("database could not complete the request"))
+    #expect(!databaseMessage.contains(home))
+    #expect(!databaseMessage.contains("SQLite"))
+
+    let decoding = DecodingError.dataCorrupted(
+      .init(codingPath: [], debugDescription: "bad bytes in \(home)/secret.json"))
+    let decodingMessage = ToolRegistry.errorMessage(for: decoding)
+    #expect(decodingMessage == "The request failed unexpectedly.")
+    #expect(!decodingMessage.contains(home))
+    let cocoa = NSError(
+      domain: NSCocoaErrorDomain, code: 260, userInfo: [NSFilePathErrorKey: "\(home)/a.txt"])
+    #expect(ToolRegistry.errorMessage(for: cocoa) == "The request failed unexpectedly.")
   }
 }

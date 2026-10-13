@@ -86,6 +86,7 @@ public enum TaskBatchUpdate {
     var syncEffects = BatchUpdateSyncEffects()
     var updatedIds: [String] = []
     updatedIds.reserveCapacity(updates.count)
+    var unchangedIds: [String] = []
     var depChangedIds: [String] = []
 
     for update in updates {
@@ -102,16 +103,36 @@ public enum TaskBatchUpdate {
         throw StoreError.invariant(
           "batch_update_tasks before-task: missing string field `status`")
       }
-      try TaskUpdate.applySingleUpdateInSavepoint(
-        db,
-        hlc: hlc,
-        update: update,
-        beforeStatus: beforeStatus,
-        now: now,
-        syncEffects: &syncEffects,
-        depChangedIds: &depChangedIds,
-        recurrenceHandler: recurrenceHandler)
-      updatedIds.append(update.id)
+      // Each row runs in a savepoint that is undone when it left its task as it was (every
+      // supplied value was already the task's own, or the entry named no field): no new
+      // version, sync upsert, or changelog row for a change that did not happen. The
+      // accumulators are put back with it.
+      let effectsBefore = syncEffects
+      let dependencyChangesBefore = depChangedIds
+      do {
+        try StoreTransactions.withSavepoint(db, "batch_task_update_effect") { db in
+          let taskId = TaskId(trusted: update.id)
+          let beforeNow = try TaskResponse.loadEnrichedTaskJSON(db, taskId: taskId)
+          try TaskUpdate.applySingleUpdateInSavepoint(
+            db,
+            hlc: hlc,
+            update: update,
+            beforeStatus: beforeStatus,
+            now: now,
+            syncEffects: &syncEffects,
+            depChangedIds: &depChangedIds,
+            recurrenceHandler: recurrenceHandler)
+          let after = try TaskResponse.loadEnrichedTaskJSON(db, taskId: taskId)
+          if Self.withoutUpdateStamp(after) == Self.withoutUpdateStamp(beforeNow) {
+            throw BatchRowLeftTaskAsItWas()
+          }
+        }
+        updatedIds.append(update.id)
+      } catch is BatchRowLeftTaskAsItWas {
+        syncEffects = effectsBefore
+        depChangedIds = dependencyChangesBefore
+        unchangedIds.append(update.id)
+      }
     }
     try TaskUpdate.revalidateDependencyCycles(
       db, depChangedIds: depChangedIds,
@@ -127,6 +148,7 @@ public enum TaskBatchUpdate {
 
     return BatchUpdateTasksResult(
       updatedIds: updatedIds,
+      unchangedIds: unchangedIds,
       beforeTasks: beforeTasks,
       updatedTasks: updatedTasks,
       payload: payload,
@@ -157,8 +179,21 @@ public enum TaskBatchUpdate {
     }
   }
 
+  /// Thrown inside a row's savepoint to undo an update that changed nothing.
+  private struct BatchRowLeftTaskAsItWas: Error {}
+
+  /// A task's enriched JSON without the stamp (`updated_at` and `version`) every write moves, so
+  /// two readings of the same task compare equal.
+  private static func withoutUpdateStamp(_ task: JSONValue) -> JSONValue {
+    guard case .object(var object) = task else { return task }
+    object["updated_at"] = nil
+    object["version"] = nil
+    return .object(object)
+  }
+
   /// One-line audit summary.
   static func buildSummary(updatedTasks: [JSONValue]) throws -> String {
+    if updatedTasks.isEmpty { return "No task needed updating" }
     var titles: [String] = []
     titles.reserveCapacity(updatedTasks.count)
     for task in updatedTasks {
@@ -192,7 +227,10 @@ public struct BatchUpdateTasksInput: Sendable {
 
 /// Result envelope of ``TaskBatchUpdate/batchUpdateTasks``.
 public struct BatchUpdateTasksResult: Sendable {
+  /// The rows the batch changed, in request order.
   public let updatedIds: [String]
+  /// The rows whose update left them as they were; nothing was written for them.
+  public let unchangedIds: [String]
   public let beforeTasks: [JSONValue]
   public let updatedTasks: [JSONValue]
   public let payload: JSONValue

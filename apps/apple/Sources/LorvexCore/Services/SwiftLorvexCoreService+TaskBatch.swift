@@ -369,23 +369,28 @@ extension SwiftLorvexCoreService {
       }
       let result = try TaskBatchUpdate.batchUpdateTasksInTransaction(
         db, hlc: hlc, input: BatchUpdateTasksInput(updates: updates))
-      var registerIntents: [String: TaskRegisterIntent] = [:]
-      for (id, before) in beforeSyncPayloads {
-        let after = try OutboxEnqueue.readEntityPayloadSnapshot(
-          db, entityType: EntityName.task, entityId: id)
-        registerIntents[id] = try TaskRegisterIntent.authoredRegisters(
-          between: before, and: after)
+      // Every requested task comes back in request order; a row whose update left it as it
+      // was wrote nothing, and a batch that changed nothing leaves no sync or changelog row.
+      if !result.updatedIds.isEmpty {
+        var registerIntents: [String: TaskRegisterIntent] = [:]
+        for (id, before) in beforeSyncPayloads {
+          let after = try OutboxEnqueue.readEntityPayloadSnapshot(
+            db, entityType: EntityName.task, entityId: id)
+          registerIntents[id] = try TaskRegisterIntent.authoredRegisters(
+            between: before, and: after)
+        }
+        try self.flushTaskUpdateEffects(
+          db, hlc: hlc, deviceId: deviceId, effects: result.syncEffects,
+          primaryRegisterIntents: registerIntents)
+        try self.writeChangelogRow(
+          db,
+          ChangelogEntry(
+            operation: "batch_update", entityId: result.updatedIds.first,
+            entityIds: result.updatedIds, summary: result.summary),
+          deviceId: deviceId)
       }
-      try self.flushTaskUpdateEffects(
-        db, hlc: hlc, deviceId: deviceId, effects: result.syncEffects,
-        primaryRegisterIntents: registerIntents)
-      try self.writeChangelogRow(
-        db,
-        ChangelogEntry(
-          operation: "batch_update", entityId: result.updatedIds.first,
-          entityIds: result.updatedIds, summary: result.summary),
-        deviceId: deviceId)
-      return try SwiftLorvexTaskDeserializers.tasks(result.updatedTasks)
+      return try SwiftLorvexTaskDeserializers.tasks(
+        TaskResponse.loadEnrichedTasksJSON(db, taskIds: updates.map(\.id)))
     }
   }
 

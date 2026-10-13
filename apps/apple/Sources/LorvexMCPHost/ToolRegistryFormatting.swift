@@ -5,6 +5,7 @@ import LorvexStore
 import LorvexSync
 import LorvexWorkflow
 import MCP
+import OSLog
 
 extension ToolRegistry {
   /// Resolves an optional date selector against the same database snapshot the
@@ -113,6 +114,19 @@ extension ToolRegistry {
   /// string for a plain `Error` that is only `CustomStringConvertible`, so route
   /// through `errorDescription` / `description` first.
   static func errorMessage(for error: Error) -> String {
+    // Only the errors Lorvex and the MCP SDK raise word themselves for a client. A database or
+    // system error describes its SQL, its files, and its internals, which tell an assistant
+    // nothing it can act on, so it becomes a plain sentence and its text goes to the private log.
+    guard isErrorWordedForClients(error) else {
+      let typeName = String(reflecting: type(of: error))
+      log.error(
+        "tool error not worded for clients: \(typeName, privacy: .public) \(String(describing: error), privacy: .private)")
+      if typeName.hasPrefix("GRDB.") {
+        return "The Lorvex database could not complete the request, usually because another "
+          + "process is using it. Try again in a moment."
+      }
+      return "The request failed unexpectedly."
+    }
     if let localized = error as? LocalizedError, let description = localized.errorDescription {
       return description
     }
@@ -121,6 +135,15 @@ extension ToolRegistry {
     // `localizedDescription` yields for a plain `Error`.
     return String(describing: error)
   }
+
+  /// Whether `error` is one of the types whose description is written for a reader: Lorvex's own
+  /// (every module name starts with `Lorvex`) and the MCP SDK's.
+  static func isErrorWordedForClients(_ error: Error) -> Bool {
+    let typeName = String(reflecting: type(of: error))
+    return typeName.hasPrefix("Lorvex") || typeName.hasPrefix("MCP.")
+  }
+
+  private static let log = Logger(subsystem: "com.lorvex.apple", category: "mcp")
 
   /// `result` with a closing text note naming the arguments the call sent that its
   /// tool's schema does not declare. A handler ignores such an argument, so

@@ -94,6 +94,7 @@ extension CoreBridgeClient {
           "Break work down with add_task_checklist_item; set deadlines with add_task_reminder.",
           "Change status with complete_task / cancel_task / reopen_task / defer_task; mark active work with start_task and clear it with pause_task.",
           "Surface load with get_upcoming_tasks, get_deferred_tasks, and search_tasks.",
+          "To take back an update you made, find it in get_ai_changelog (undoable) and call undo_ai_change; a field the user edited since stays.",
         ])
     case "planning":
       let day =

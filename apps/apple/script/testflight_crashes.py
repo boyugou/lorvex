@@ -86,21 +86,29 @@ def main() -> int:
         return 1
     app_id = body["data"][0]["id"]
 
-    query = urllib.parse.urlencode({"limit": 50, "sort": "-createdDate"})
+    query = urllib.parse.urlencode(
+        {"limit": 50, "sort": "-createdDate", "include": "build", "fields[builds]": "version"}
+    )
     status, body = get(f"/v1/apps/{app_id}/betaFeedbackCrashSubmissions?{query}")
     if status != 200:
         print(f"crash submissions: HTTP {status}")
         return 1
     submissions = body.get("data", [])
+    build_numbers = {
+        included["id"]: included["attributes"].get("version")
+        for included in body.get("included", [])
+        if included.get("type") == "builds"
+    }
     print(f"{len(submissions)} crash submission(s)")
     os.makedirs(out_dir, exist_ok=True)
 
     for item in submissions:
         attrs = item["attributes"]
         created = str(attrs.get("createdDate"))[:19]
+        build_id = ((item.get("relationships") or {}).get("build") or {}).get("data") or {}
         print(
-            f"\n- {created}  {attrs.get('deviceModel')}  iOS/macOS {attrs.get('osVersion')}"
-            f"  {attrs.get('appPlatform')}  uptime {(attrs.get('appUptimeInMilliseconds') or 0) // 1000}s"
+            f"\n- {created}  build {build_numbers.get(build_id.get('id'), '?')}"
+            f"  {attrs.get('deviceModel')}  OS {attrs.get('osVersion')}  {attrs.get('appPlatform')}"
         )
         if attrs.get("comment"):
             print("  comment:", attrs["comment"][:300])

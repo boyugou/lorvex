@@ -13,6 +13,25 @@
 
 [Website](https://lorvex.app) · [Download for Mac](https://github.com/boyugou/lorvex/releases/latest) · [Getting started](#getting-started) · [MCP setup](#connect-an-ai-assistant) · [Documentation](#documentation) · [Privacy](PRIVACY.md)
 
+<br>
+
+<img src="docs/images/mac-today.png" alt="Lorvex on the Mac: Today, with the briefing the user's assistant wrote, the day's schedule, and its tasks" width="880">
+
+<br><br>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/images/iphone-today.png" alt="Lorvex on iPhone: Today with the assistant's briefing, a schedule strip, tasks, and habit rings" width="250"></td>
+    <td align="center" width="33%"><img src="docs/images/iphone-quick-add.png" alt="Lorvex on iPhone: quick add turning a typed line into a task with a day, a length, a deadline, a priority, and a list" width="250"></td>
+    <td align="center" width="33%"><img src="docs/images/iphone-calendar.png" alt="Lorvex on iPhone: the week view with events and the day's tasks on one timeline" width="250"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Today, with the briefing your assistant wrote</sub></td>
+    <td align="center"><sub>Quick add: one line, and its details fill in</sub></td>
+    <td align="center"><sub>The week, events and tasks on one timeline</sub></td>
+  </tr>
+</table>
+
 </div>
 
 ---

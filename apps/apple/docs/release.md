@@ -394,6 +394,14 @@ for every build would bury the ones people choose between.
 - The notes, in English, keep the shape of the existing release: install
   steps, the Mac and macOS requirement, what changed since the previous
   release, the language count, and the SHA-256 the download must print.
+- `script/github_release.py` does the mechanical part. `notes <build>` prints a
+  skeleton of the notes with the DMG's SHA-256 and the `Build <build>` commit
+  filled in and a marked place for what changed. `publish <build> notes.md`
+  checks the DMG (its checksum file, Gatekeeper's notarization verdict, its
+  staple), refuses notes that still hold the marker or miss the checksum or the
+  commit, renames the two assets, creates the release at the build's commit with
+  `--latest`, and deletes the older builds' pages of that marketing version.
+  `--dry-run` runs every check and changes nothing.
 - Keep the page current: cut a release after each batch of changes DMG users
   would notice (a crash or data fix, a feature people asked for, a new set of
   languages), not per TestFlight build, and never leave the page more than a

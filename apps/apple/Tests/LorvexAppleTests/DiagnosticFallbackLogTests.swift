@@ -31,6 +31,25 @@ struct DiagnosticFallbackLogTests {
     #expect(Set(entries.map(\.id)).count == entries.count)
   }
 
+  /// The file is read into the same diagnostics rows as `error_logs`, so what it keeps goes through
+  /// the same redaction, and it stays out of device backups.
+  @Test func redactsWhatItKeepsAndStaysOutOfBackups() throws {
+    let (log, directory) = makeLog()
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let home = "/" + "Users" + "/someone"
+    log.append(
+      source: "ios.store.open", message: "open failed for <someone@example.org>",
+      details: "UserInfo={NSFilePath=\(home)/Library/db.sqlite}")
+
+    let entry = try #require(log.recentEntries().first)
+    #expect(!entry.summary.contains("someone"))
+    #expect(!(entry.details ?? "").contains("someone"))
+    #expect((entry.details ?? "").contains("NSFilePath=[~]/Library/db.sqlite"))
+    let file = try #require(log.fileURL)
+    let values = try file.resourceValues(forKeys: [.isExcludedFromBackupKey])
+    #expect(values.isExcludedFromBackup == true)
+  }
+
   @Test func aDisabledLogRecordsNothing() {
     let log = DiagnosticFallbackLog(fileURL: nil)
     log.append(source: "s", message: "m", details: nil)

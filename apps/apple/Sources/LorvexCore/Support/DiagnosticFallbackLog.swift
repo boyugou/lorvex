@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 /// A small diagnostics file beside the database, for failures the database
 /// itself cannot record.
@@ -44,10 +45,12 @@ public struct DiagnosticFallbackLog: Sendable {
   public func append(source: String, message: String, details: String?, at date: Date = Date()) {
     guard let fileURL else { return }
     var entries = load()
+    // The same redaction `error_logs` gets: this file is read into the same diagnostics rows.
     entries.append(
       Entry(
         timestamp: LorvexDateFormatters.iso8601Fractional.string(from: date),
-        source: source, message: message, details: details))
+        source: source, message: Diagnostics.redactDiagnosticText(message),
+        details: details.map(Diagnostics.redactDiagnosticText)))
     if entries.count > Self.maximumEntries {
       entries.removeFirst(entries.count - Self.maximumEntries)
     }
@@ -55,6 +58,11 @@ public struct DiagnosticFallbackLog: Sendable {
     try? FileManager.default.createDirectory(
       at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
     try? data.write(to: fileURL, options: .atomic)
+    // Technical failure text is not something to carry into a device backup.
+    var excluded = URLResourceValues()
+    excluded.isExcludedFromBackup = true
+    var excludedURL = fileURL
+    try? excludedURL.setResourceValues(excluded)
   }
 
   /// The recorded failures as diagnostics rows, newest first. Each row is an

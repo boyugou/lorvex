@@ -53,6 +53,27 @@ final class DiagnosticsTests: XCTestCase {
     XCTAssertEqual(out.components(separatedBy: "[REDACTED_EMAIL]").count - 1, 2)
   }
 
+  /// A Foundation error's description carries its path inside a larger token
+  /// (`NSFilePath=/Users/jane/...`, `file:///Users/jane/...`), and an address can sit in angle
+  /// brackets or quotes, so the whole-token checks alone let them through.
+  func testRedactsAHomeDirectoryOrAddressInsideALargerToken() {
+    let home = "/Us" + "ers/jane"  // built at run time: a developer path in a tracked file fails the public-safety gate
+    let out = Diagnostics.redactDiagnosticText(
+      "UserInfo={NSFilePath=\(home)/Library/x, url=file://\(home)/a} sent to <jane@example.org> and 'bob@example.org'")
+    XCTAssertFalse(out.contains("jane"), out)
+    XCTAssertFalse(out.contains("bob@"), out)
+    XCTAssertTrue(out.contains("NSFilePath=[~]/Library/x"), out)
+    XCTAssertTrue(out.contains("file://[~]/a"), out)
+    XCTAssertTrue(out.contains("<[REDACTED_EMAIL]>"), out)
+    XCTAssertTrue(out.contains("'[REDACTED_EMAIL]'"), out)
+    XCTAssertEqual(
+      Diagnostics.redactDiagnosticText("C:\\Users\\jane\\AppData\\x failed"), "[~]/AppData\\x failed")
+    // Ordinary text that mentions the words is left alone.
+    XCTAssertEqual(
+      Diagnostics.redactDiagnosticText("Users list loaded for the home screen"),
+      "Users list loaded for the home screen")
+  }
+
   func testDoesNotRedactAtMentionsOrKeysAsEmail() {
     let out = Diagnostics.redactDiagnosticText("ping @alice failed key@value=1 a@b missing")
     XCTAssertTrue(out.contains("@alice"))

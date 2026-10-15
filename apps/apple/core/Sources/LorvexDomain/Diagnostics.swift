@@ -131,9 +131,28 @@ public enum Diagnostics {
         continue
       }
       pushSep()
-      out.append(token)
+      out.append(redactEmbedded(token))
     }
     return out
+  }
+
+  /// A home directory or an address inside a token that does not start with it:
+  /// `file:///Users/jane/x`, `NSFilePath=/Users/jane/x`, `<jane@example.com>`,
+  /// `'jane@example.com'`. The whole-token checks above miss these, and a Foundation error's
+  /// description carries its path in exactly such a place.
+  static func redactEmbedded(_ token: String) -> String {
+    var result = token
+    if result.contains("Users") || result.contains("/home/") {
+      result = result.replacingOccurrences(
+        of: #"(?:/Users/|/home/|[A-Za-z]:[\\/]Users[\\/])[^/\\\s"'<>:;,)\]]+"#, with: "[~]",
+        options: .regularExpression)
+    }
+    if result.contains("@") {
+      result = result.replacingOccurrences(
+        of: #"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}"#,
+        with: "[REDACTED_EMAIL]", options: .regularExpression)
+    }
+    return result
   }
 
   /// Distinctive prefixes of vendor API keys / tokens that must never persist in

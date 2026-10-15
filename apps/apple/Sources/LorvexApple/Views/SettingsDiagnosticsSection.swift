@@ -1,5 +1,6 @@
 import AppKit
 import LorvexCore
+import LorvexDomain
 import SwiftUI
 
 // MARK: - Diagnostics tab: setup, Apple surfaces, activity, and about
@@ -282,7 +283,8 @@ extension SettingsView {
           + " (pending \(sync.pendingCount), failed \(sync.failedCount))"
       )
       if let lastError = sync.lastError, !lastError.isEmpty {
-        lines.append("Sync error: \(lastError)")
+        // The text is pasted into a bug report, so it goes through the same redaction as the log.
+        lines.append("Sync error: \(Diagnostics.redactDiagnosticText(lastError))")
       }
     } else {
       lines.append("Diagnostics: not loaded")
@@ -291,7 +293,7 @@ extension SettingsView {
     let surfaces = store.appleSurfaceDiagnostics
     func line(_ label: String, _ status: AppleSurfaceDiagnostics.Status) -> String {
       guard let detail = status.detail, !detail.isEmpty else { return "\(label): \(status.value)" }
-      return "\(label): \(status.value) (\(detail))"
+      return "\(label): \(status.value) (\(Diagnostics.redactDiagnosticText(detail)))"
     }
     lines.append(line("Spotlight", surfaces.spotlight))
     lines.append(line("Task Reminders", surfaces.taskReminders))

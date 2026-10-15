@@ -127,13 +127,25 @@ extension ToolRegistry {
       }
       return "The request failed unexpectedly."
     }
+    let message: String
     if let localized = error as? LocalizedError, let description = localized.errorDescription {
-      return description
+      message = description
+    } else {
+      // `String(describing:)` surfaces a `CustomStringConvertible` domain type's
+      // own wording rather than the generic Cocoa string that
+      // `localizedDescription` yields for a plain `Error`.
+      message = String(describing: error)
     }
-    // `String(describing:)` surfaces a `CustomStringConvertible` domain type's
-    // own wording rather than the generic Cocoa string that
-    // `localizedDescription` yields for a plain `Error`.
-    return String(describing: error)
+    // A Lorvex error can wrap a database error and print it (`sqlite error: SQLite error 13 ...
+    // while executing <sql>`): that is a database's text all the same.
+    if message.contains("SQLite error") || message.contains("sqlite error")
+      || message.contains("while executing")
+    {
+      log.error("tool error wrapped database text: \(message, privacy: .private)")
+      return "The Lorvex database could not complete the request, usually because another "
+        + "process is using it. Try again in a moment."
+    }
+    return message
   }
 
   /// Whether `error` is one of the types whose description is written for a reader: Lorvex's own

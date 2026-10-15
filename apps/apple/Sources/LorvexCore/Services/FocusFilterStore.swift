@@ -43,7 +43,7 @@ public actor FocusFilterStore {
       return .inactive(storageGeneration: currentStorageGeneration())
     } catch {
       Self.log.error(
-        "Focus filter state at \(self.stateURL.path, privacy: .private) is unreadable: \(String(describing: error), privacy: .public)")
+        "Focus filter state at \(self.stateURL.path, privacy: .private) is unreadable: \(String(describing: error), privacy: .private)")
       throw FocusFilterStoreError.corruptState(stateURL.path)
     }
     do {
@@ -63,7 +63,7 @@ public actor FocusFilterStore {
         storageGeneration: persisted.storageGeneration)
     } catch {
       Self.log.error(
-        "Focus filter state at \(self.stateURL.path, privacy: .private) is unreadable: \(String(describing: error), privacy: .public)")
+        "Focus filter state at \(self.stateURL.path, privacy: .private) is unreadable: \(String(describing: error), privacy: .private)")
       if let error = error as? FocusFilterStoreError { throw error }
       throw FocusFilterStoreError.corruptState(stateURL.path)
     }

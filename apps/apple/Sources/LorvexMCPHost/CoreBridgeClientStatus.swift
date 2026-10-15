@@ -1,4 +1,5 @@
 import LorvexCore
+import LorvexDomain
 import MCP
 
 extension CoreBridgeClient {
@@ -10,7 +11,8 @@ extension CoreBridgeClient {
     let oldestPendingAt: Value = sync.oldestPendingAt.map(Value.string) ?? .null
     let newestPendingAt: Value = sync.newestPendingAt.map(Value.string) ?? .null
     let lastSyncedAt: Value = sync.lastSyncedAt.map(Value.string) ?? .null
-    let lastError: Value = sync.lastError.map(Value.string) ?? .null
+    let lastError: Value =
+      sync.lastError.map { Value.string(Diagnostics.redactDiagnosticText($0)) } ?? .null
     let deviceID: Value = sync.deviceID.map(Value.string) ?? .null
     return .object([
       "sync_backend_kind_raw": .null,

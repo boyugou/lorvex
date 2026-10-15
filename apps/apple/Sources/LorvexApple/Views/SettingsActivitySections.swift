@@ -147,7 +147,7 @@ struct SettingsChangelogSection: View {
   }
 
   /// Preset options plus the current stored policy when it is a custom day count
-  /// (an assistant can set any positive N via `set_preference`), so the picker
+  /// (set before an assistant lost the right to change it, or restored from elsewhere), so the picker
   /// always has a tag matching the selection and never silently rewrites it.
   private var options: [ChangelogRetentionPolicy] {
     var result = Self.presets

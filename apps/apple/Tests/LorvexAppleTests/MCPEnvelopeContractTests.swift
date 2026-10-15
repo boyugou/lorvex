@@ -373,6 +373,12 @@ struct MCPEnvelopeContractTests {
     #expect(!databaseMessage.contains(home))
     #expect(!databaseMessage.contains("SQLite"))
 
+    // A Lorvex error that wraps a database error prints its SQL; that is database text too.
+    let wrapped = ToolRegistry.errorMessage(for: EnqueueError.sqlite(database))
+    #expect(wrapped.contains("database could not complete the request"))
+    #expect(!wrapped.contains("SQLite"))
+    #expect(!wrapped.contains(home))
+
     let decoding = DecodingError.dataCorrupted(
       .init(codingPath: [], debugDescription: "bad bytes in \(home)/secret.json"))
     let decodingMessage = ToolRegistry.errorMessage(for: decoding)

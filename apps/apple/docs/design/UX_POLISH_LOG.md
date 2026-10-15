@@ -65,14 +65,13 @@ screen and animate the native indicator. The first-load skeleton is shaped like
 the surface it stands in for, so the layout does not jump when real content
 arrives.
 
-### A batch action is offered only when the core would accept it
+### A batch action is offered only when it can run
 
-Lists can be batch-deleted only when every selected list is empty, because the
-core rejects deleting a list that still holds tasks. Memory's batch delete
-enables only when every selected entry is AI-owned, and the store repeats that
-guard before calling the core, so the human-memory boundary holds even if UI
-state is stale. An action that opens a destructive confirmation and then fails
-is worse than an action that is visibly unavailable.
+The batch bars on Tasks, Habits, and Memory disable their Delete while nothing
+is selected or a batch is still running, so there is no destructive
+confirmation to open for an empty or doubled request. An action that opens a
+destructive confirmation and then fails is worse than an action that is
+visibly unavailable.
 
 ### Reversible removal is one tap; erasing history always asks
 

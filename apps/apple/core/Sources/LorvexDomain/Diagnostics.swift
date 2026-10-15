@@ -137,8 +137,7 @@ public enum Diagnostics {
   }
 
   /// A home directory or an address inside a token that does not start with it:
-  /// `file:///Users/jane/x`, `NSFilePath=/Users/jane/x`, `<jane@example.com>`,
-  /// `'jane@example.com'`. The whole-token checks above miss these, and a Foundation error's
+  /// `file://<home>/x`, `NSFilePath=<home>/x`, `<name@host>`, `'name@host'`. The whole-token checks above miss these, and a Foundation error's
   /// description carries its path in exactly such a place.
   static func redactEmbedded(_ token: String) -> String {
     var result = token

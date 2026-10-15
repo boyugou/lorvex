@@ -54,7 +54,7 @@ final class DiagnosticsTests: XCTestCase {
   }
 
   /// A Foundation error's description carries its path inside a larger token
-  /// (`NSFilePath=/Users/jane/...`, `file:///Users/jane/...`), and an address can sit in angle
+  /// (`NSFilePath=<home>/...`, `file://<home>/...`), and an address can sit in angle
   /// brackets or quotes, so the whole-token checks alone let them through.
   func testRedactsAHomeDirectoryOrAddressInsideALargerToken() {
     let home = "/Us" + "ers/jane"  // built at run time: a developer path in a tracked file fails the public-safety gate

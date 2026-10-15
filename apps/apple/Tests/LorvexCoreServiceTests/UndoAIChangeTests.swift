@@ -69,6 +69,28 @@ final class UndoAIChangeTests: XCTestCase {
     XCTAssertEqual(try changelogCount(service), before + 1, "the undo is itself a logged change")
   }
 
+  /// The restore is an ordinary logged update, but the log says what it was, so a reader of the
+  /// activity log does not take it for a second change.
+  func testTheLogSaysTheUpdateTookAChangeBack() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let task = try await service.createTask(title: "Write report", notes: "")
+    try await assistantUpdate(service, TaskUpdateDraft(id: task.id, title: "Write the Q3 report"))
+    let id = try latestUpdateID(service, task: task.id)
+
+    _ = try await service.undoAIChange(changelogID: id)
+
+    let summary = try service.read { db in
+      try String.fetchOne(
+        db,
+        sql: """
+          SELECT summary FROM ai_changelog
+          WHERE entity_id = ? AND operation = 'update' ORDER BY timestamp DESC, id DESC LIMIT 1
+          """,
+        arguments: [task.id])
+    }
+    XCTAssertEqual(summary, "Took back an earlier change to task 'Write report'")
+  }
+
   func testAFieldEditedSinceIsKeptAndTheRestIsPutBack() async throws {
     let service = try SwiftLorvexCoreService.inMemory()
     let task = try await service.createTask(title: "Write report", notes: "Draft first")

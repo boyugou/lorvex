@@ -121,6 +121,26 @@ final class UndoAICalendarEventChangeTests: XCTestCase {
     XCTAssertEqual(stored?["location"] as String?, "Clinic")
   }
 
+  func testTheLogSaysTheUpdateTookAChangeBack() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let event = try await create(service)
+    try await assistantEdit(service, event.id, title: "Dentist (moved)")
+    let id = try latestUpdateID(service, event: event.id)
+
+    _ = try await service.undoAIChange(changelogID: id)
+
+    let summary = try service.read { db in
+      try String.fetchOne(
+        db,
+        sql: """
+          SELECT summary FROM ai_changelog
+          WHERE entity_id = ? AND operation = 'update' ORDER BY timestamp DESC, id DESC LIMIT 1
+          """,
+        arguments: [event.id])
+    }
+    XCTAssertEqual(summary, "Took back an earlier change to calendar event 'Dentist'")
+  }
+
   func testAFieldEditedSinceIsKeptAndTheRestIsPutBack() async throws {
     let service = try SwiftLorvexCoreService.inMemory()
     let event = try await create(service)

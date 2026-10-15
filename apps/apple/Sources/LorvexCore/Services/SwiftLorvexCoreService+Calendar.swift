@@ -189,7 +189,8 @@ extension SwiftLorvexCoreService {
   /// update itself and by an undo of one.
   func performCalendarEventUpdate(
     _ db: Database, hlc: HlcSession, deviceId: String, input: CalendarEventUpdateInput,
-    beforeRow: CalendarEventRow, before: JSONValue
+    beforeRow: CalendarEventRow, before: JSONValue,
+    summary: ((_ title: String) -> String)? = nil
   ) throws -> CalendarTimelineEvent {
     let existing = try Self.existingUpdateFields(beforeRow, db: db)
     let result = try CalendarEventUpdate.updateCalendarEvent(
@@ -201,9 +202,15 @@ extension SwiftLorvexCoreService {
       db,
       ChangelogEntry(
         operation: "update", entityType: EntityName.calendarEvent, entityId: result.eventId,
-        summary: result.summary, before: result.before, after: result.event),
+        summary: Self.eventTitle(result.event).flatMap { summary?($0) } ?? result.summary,
+        before: result.before, after: result.event),
       deviceId: deviceId)
     return try SwiftLorvexCalendarDeserializers.event(result.event)
+  }
+
+  private static func eventTitle(_ event: JSONValue) -> String? {
+    if case .object(let fields) = event, case .string(let title)? = fields["title"] { return title }
+    return nil
   }
 
   @discardableResult

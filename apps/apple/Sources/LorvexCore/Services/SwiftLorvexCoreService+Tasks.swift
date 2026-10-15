@@ -199,7 +199,8 @@ extension SwiftLorvexCoreService {
   /// store a title or a note exactly as given (bidi controls, zero-width
   /// characters, and line breaks in a title included).
   func performTaskUpdate(
-    _ db: Database, hlc: HlcSession, deviceId: String, input rawInput: TaskUpdateInput
+    _ db: Database, hlc: HlcSession, deviceId: String, input rawInput: TaskUpdateInput,
+    summary: ((_ title: String) -> String)? = nil
   ) throws -> LorvexTask {
     var input = rawInput
     TaskUpdateSanitize.sanitizeInput(&input)
@@ -246,7 +247,8 @@ extension SwiftLorvexCoreService {
       db,
       ChangelogEntry(
         operation: "update", entityId: input.id,
-        summary: "Updated task '\(TaskResponse.taskTitle(updatedTask))'",
+        summary: summary?(TaskResponse.taskTitle(updatedTask))
+          ?? "Updated task '\(TaskResponse.taskTitle(updatedTask))'",
         before: beforeTask, after: updatedTask),
       deviceId: deviceId)
     return try SwiftLorvexTaskDeserializers.task(updatedTask)

@@ -36,7 +36,9 @@ extension SwiftLorvexCoreService {
       return UndoAIChangeResult(
         task: try SwiftLorvexTaskDeserializers.task(current), reverted: [], kept: kept)
     }
-    let restored = try self.performTaskUpdate(db, hlc: hlc, deviceId: deviceId, input: input)
+    let restored = try self.performTaskUpdate(
+      db, hlc: hlc, deviceId: deviceId, input: input,
+      summary: { "Took back an earlier change to task '\($0)'" })
     return UndoAIChangeResult(task: restored, reverted: reverted, kept: kept)
   }
 
@@ -67,7 +69,8 @@ extension SwiftLorvexCoreService {
         event: SwiftLorvexCalendarDeserializers.event(row), reverted: [], kept: kept)
     }
     let restored = try self.performCalendarEventUpdate(
-      db, hlc: hlc, deviceId: deviceId, input: input, beforeRow: row, before: current)
+      db, hlc: hlc, deviceId: deviceId, input: input, beforeRow: row, before: current,
+      summary: { "Took back an earlier change to calendar event '\($0)'" })
     return UndoAIChangeResult(event: restored, reverted: reverted, kept: kept)
   }
 

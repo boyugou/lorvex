@@ -7,7 +7,7 @@ extension TaskToolCatalog {
     name: "get_dependency_graph",
     title: "Get Dependency Graph",
     description:
-      "Return the task dependency graph showing blocking relationships. By default only includes active tasks (open/someday). Use task_id to center on a specific task's neighbourhood, list_id to scope to a list. Returns nodes, edges, roots (no deps), blocked (unmet deps), and leaf_blockers (block others but are not themselves blocked — actionable first).",
+      "Return the task dependency graph showing blocking relationships. By default only includes active tasks (open/someday). Use task_id to center on a specific task's neighbourhood, list_id to keep the links that touch a list (a task from another list appears when it is linked to one in this list). Returns nodes, edges, roots (no deps), blocked (unmet deps), and leaf_blockers (block others but are not themselves blocked — actionable first).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -86,7 +86,7 @@ extension TaskToolCatalog {
     name: "get_due_task_reminders",
     title: "Get Due Task Reminders",
     description:
-      "Return task reminders that are currently due (reminder_at <= now). Only includes reminders for open tasks that haven't been dismissed or cancelled. Returns {reminders} plus the shared pagination envelope; page with limit/offset following next_offset while truncated is true.",
+      "Return task reminders that are currently due (reminder_at <= now). Only includes reminders for open or in-progress tasks that have not been dismissed or cancelled, and skips reminders the app has already marked delivered. Returns {reminders} plus the shared pagination envelope; page with limit/offset following next_offset while truncated is true.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -112,7 +112,7 @@ extension TaskToolCatalog {
     name: "get_upcoming_task_reminders",
     title: "Get Upcoming Task Reminders",
     description:
-      "Return task reminders due within the next N hours (default 24h, max 168h). Only includes reminders for open tasks that haven't been dismissed or cancelled. Returns {reminders} plus the shared pagination envelope; page with limit/offset following next_offset while truncated is true.",
+      "Return task reminders due within the next N hours (default 24h, max 168h). Only includes reminders for open or in-progress tasks that have not been dismissed or cancelled, and skips reminders the app has already marked delivered. Returns {reminders} plus the shared pagination envelope; page with limit/offset following next_offset while truncated is true.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

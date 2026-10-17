@@ -5,7 +5,7 @@ extension SystemContextToolCatalog {
     name: "get_ai_changelog",
     title: "Get AI Changelog",
     description:
-      "Read assistant-authored Lorvex audit entries with optional entity, operation, cursor, and pagination filters. For a merged diagnostic stream including errors and the sync outbox, use get_recent_logs.",
+      "Read Lorvex audit entries: assistant writes, plus imports and unattributed rows (initiated_by says which), with optional entity, operation, since, and pagination filters. An unrecognized entity_type returns no entries rather than an error. For a merged diagnostic stream including errors and the sync outbox, use get_recent_logs.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

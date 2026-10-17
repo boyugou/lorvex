@@ -7,7 +7,7 @@ extension SystemPreferencesToolCatalog {
     name: "get_all_preferences",
     title: "Get All Preferences",
     description:
-      "Returns all configured Lorvex preferences as a key-to-value map. Useful at session start.",
+      "Returns {preferences}: every configured Lorvex preference as a key-to-value map. Useful at session start.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([:]),
@@ -48,7 +48,7 @@ extension SystemPreferencesToolCatalog {
   static let deletePreferenceTool = Tool(
     name: "delete_preference",
     title: "Delete Preference",
-    description: "Remove a deletable preference key from the store, returning it to its system default on next read. The synced timezone is the required cross-device calendar-day authority and cannot be deleted; replace it with set_preference instead. Local-only preferences are cleared locally; other synced keys emit a sync tombstone. Returns {key, deleted: true, previous} where previous is the value that was removed (null if the key was unset).",
+    description: "Remove a deletable preference key from the store, returning it to its system default on next read. The synced timezone is the required cross-device calendar-day authority and cannot be deleted; replace it with set_preference instead. Local-only preferences are cleared locally; other synced keys emit a sync tombstone. Returns {key, deleted, previous}: deleted is true when a value was removed, and previous is that value (null if the key was not set).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

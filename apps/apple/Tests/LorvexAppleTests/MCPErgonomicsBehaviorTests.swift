@@ -123,6 +123,12 @@ struct MCPErgonomicsBehaviorTests {
       fixture.registry, tool: "set_daily_briefing",
       arguments: ["briefing": .string("Start with the draft.")])
     #expect(briefing.structuredContent?.objectValue?["date"]?.stringValue == today)
+
+    // An omitted briefing key is refused, so it cannot clear the briefing just written.
+    let omitted = try await mcpRegistryCall(fixture.registry, tool: "set_daily_briefing")
+    expectMCPStructuredError(omitted, code: "validation", tool: "set_daily_briefing")
+    let kept = try await mcpRegistryCall(fixture.registry, tool: "get_daily_schedule")
+    #expect(kept.isError != true)
   }
 
   // MARK: - G1: checklist at create

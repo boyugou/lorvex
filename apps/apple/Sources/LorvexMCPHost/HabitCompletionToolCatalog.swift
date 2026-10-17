@@ -31,7 +31,7 @@ extension ListHabitToolCatalog {
   static let batchCompleteHabitTool = Tool(
     name: "batch_complete_habits",
     title: "Batch Complete Habits",
-    description: "Record one completion for each of the listed habits on the same date. Use at end of day or during a session check-in when the user has done multiple habits. Requires both habit_ids and date. Returns {results, count, date, skipped} where results is the full updated habit object for each completed id and skipped is [{id, reason}] for ids that were not found.",
+    description: "Record one completion for each of the listed habits on the same date. Use at end of day or during a session check-in when the user has done multiple habits. Requires both habit_ids and date. Returns {results, count, date, skipped} where results is the full updated habit object for each completed id and skipped is [{id, reason}] for each id that was not completed.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -59,7 +59,7 @@ extension ListHabitToolCatalog {
   static let adjustHabitCompletionTool = Tool(
     name: "adjust_habit_completion",
     title: "Adjust Habit Completion",
-    description: "Increment or decrement the completion count for an accumulative habit (target_count > 1) on a date (defaults to today). Positive delta adds completions, negative removes them; the resulting count is clamped to [0, target_count]. For binary (target_count = 1) habits prefer complete_habit / uncomplete_habit. Returns the full updated habit, including completions_today reflecting the new count and reached_milestone (the milestone a positive adjust just crossed, or null).",
+    description: "Increment or decrement the completion count for an accumulative habit (target_count > 1) on a date (defaults to today). Positive delta adds completions, negative removes them; the resulting count is clamped to [0, target_count]. A delta of 0 toggles the day: a day at target is cleared, and any other day is filled to target_count. For binary (target_count = 1) habits prefer complete_habit / uncomplete_habit. Returns the full updated habit, including completions_today reflecting the new count and reached_milestone (the milestone a positive adjust just crossed, or null).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

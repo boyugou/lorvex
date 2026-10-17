@@ -155,7 +155,7 @@ extension ListHabitToolCatalog {
   static let reorderHabitsTool = Tool(
     name: "reorder_habits",
     title: "Reorder Habits",
-    description: "Set the manual display order of the active habits board. Supply the active habit ids in the desired order; each listed habit's position is rewritten to its index, so the order converges across devices as an ordinary synced field. Ids omitted from the array keep their current position and ids that no longer resolve are skipped. This never creates, deletes, or archives a habit — use create_habit / delete_habit / update_habit for that. Optionally pass a date to project the returned completion counts for a different day. Returns the full refreshed habits board in the new order.",
+    description: "Set the manual display order of the active habits board. Supply the active habit ids in the desired order; each listed habit's position is rewritten to its index, so the order converges across devices as an ordinary synced field. Supply every active habit id exactly once; a missing, unknown, or repeated id rejects the call and changes nothing. This never creates, deletes, or archives a habit — use create_habit / delete_habit / update_habit for that. Optionally pass a date to project the returned completion counts for a different day. Returns the full refreshed habits board in the new order.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

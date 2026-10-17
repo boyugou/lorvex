@@ -68,7 +68,7 @@ extension TaskToolCatalog {
   static let deferredTasksTool = Tool(
     name: "get_deferred_tasks",
     title: "Get Deferred Tasks",
-    description: "Return open tasks that have been deferred at least once, ordered by priority then due date. Use during weekly review to surface tasks that have been repeatedly pushed, which often need breaking down, delegating, or deliberately parking. Default task rows are compact; use shape=full, fields, or include to request heavier detail.",
+    description: "Return open or in-progress tasks that have been deferred at least once, most-deferred first, then by id. Use during weekly review to surface tasks that have been repeatedly pushed, which often need breaking down, delegating, or deliberately parking. Default task rows are compact; use shape=full, fields, or include to request heavier detail.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

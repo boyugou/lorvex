@@ -137,7 +137,7 @@ enum CalendarToolCatalog {
   static let batchCreateEventsTool = Tool(
     name: "batch_create_calendar_events",
     title: "Batch Create Calendar Events",
-    description: "Create multiple Lorvex calendar events in one call. Each event uses the same fields as create_calendar_event (including original_id for id-preserving re-create). Use when importing a schedule, creating a series of related meetings, or setting up a week's worth of time blocks. Validates and creates each event independently: a bad event is reported and the rest still land. Returns {results, count, skipped} where results is the full created event object for each event and skipped is per-item failures as [{id, reason}].",
+    description: "Create multiple Lorvex calendar events in one call. Each event uses the same fields as create_calendar_event (including original_id for id-preserving re-create). Use when importing a schedule, creating a series of related meetings, or setting up a week's worth of time blocks. Validates and creates each event independently: a bad event is reported and the rest still land, except that a repeated original_id in one call refuses the whole call and creates nothing. Returns {results, count, skipped} where results is the full created event object for each event and skipped is per-item failures as [{id, reason}].",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

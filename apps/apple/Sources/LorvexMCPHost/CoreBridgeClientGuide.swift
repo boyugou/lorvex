@@ -91,14 +91,14 @@ extension CoreBridgeClient {
         "Tasks carry priority, planned_date with an optional time on that day (planned_start_time, planned_end_time), tags, dependencies, a checklist, reminders, and recurrence. Status transitions go through complete/cancel/reopen/defer and start/pause — never update_task. start_task marks work in_progress (an actionable state that surfaces wherever open does); pause_task clears it.",
         [
           "Capture with create_task / batch_create_tasks; enrich fields with update_task.",
-          "Break work down with add_task_checklist_item; set deadlines with add_task_reminder.",
+          "Break work down with add_task_checklist_item; set deadlines with update_task (due_date); add_task_reminder schedules a notification.",
           "Change status with complete_task / cancel_task / reopen_task / defer_task; mark active work with start_task and clear it with pause_task.",
           "Surface load with get_upcoming_tasks, get_deferred_tasks, and search_tasks.",
           "To take back an update you made, find it in get_ai_changelog (undoable) and call undo_ai_change; a field the user edited since stays.",
         ])
     case "planning":
       let day =
-        "Today lists every task that is overdue, on the day, or started, started tasks first; "
+        "Today lists every task that is overdue (its due date is before today), due or planned today or earlier, or started, started tasks first; "
         + "planned_date, when set, decides a task's day, otherwise due_date does."
       let arrange =
         "Put work on a day with update_task or batch_update_tasks (planned_date); move what no "
@@ -151,7 +151,7 @@ extension CoreBridgeClient {
         ])
     case "data_and_export":
       return (
-        "Export the workspace as JSON or CSV, or the calendar as ICS, for backup or migration.",
+        "Export the workspace as JSON or CSV, or the calendar as ICS. The export is a portable copy, not a full backup; Settings → Data → Export makes one.",
         [
           "Export entities with export_data (json or csv; scope with the entities list).",
           "Export the calendar with export_calendar_ics.",

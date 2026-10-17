@@ -24,7 +24,7 @@ extension TaskMutationToolCatalog {
         ]),
         "list_id": .object([
           "type": .string("string"),
-          "description": .string("Optional destination list id. Defaults to inbox."),
+          "description": .string("Optional destination list id. Defaults to the default_list_id preference, which is inbox until the user changes it."),
         ]),
         "priority": .object([
           "type": .string("integer"),

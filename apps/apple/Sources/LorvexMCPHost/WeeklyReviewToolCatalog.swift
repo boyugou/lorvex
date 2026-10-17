@@ -4,7 +4,7 @@ extension ReviewToolCatalog {
   static let weeklyReviewBriefTool = Tool(
     name: "get_weekly_brief",
     title: "Get Weekly Brief",
-    description: "Read a pre-populated weekly review brief. Use at the start of a weekly review session to orient the assistant before engaging the user. Each list section is bounded by its limit parameter. Returns {window {label, days}, completed_this_week, stalled_lists (lists with no recent completions), frequently_deferred, overdue_count, someday_items, created_this_week, estimate_summary, section_meta} where section_meta carries per-section limit/total_matching/returned/truncated counts.",
+    description: "Read a pre-populated weekly review brief. Use at the start of a weekly review session to orient the assistant before engaging the user. Each list section is bounded by its limit parameter. Returns {window {label, days}, completed_this_week, stalled_lists (active lists with open tasks, none of them updated in the window), frequently_deferred, overdue_count, someday_items, created_this_week, estimate_summary, section_meta} where section_meta carries per-section limit/total_matching/returned/truncated counts.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -32,7 +32,7 @@ extension ReviewToolCatalog {
   static let reviewHistoryTool = Tool(
     name: "get_review_history",
     title: "Get Review History",
-    description: "Return daily review entries across a date window, newest first. Use to look at what the user wrote in past daily reviews, or to check whether a review was already created for a specific day. Returns paginated daily review objects with date, summary, wins, blockers, learnings, and linked task/list ids.",
+    description: "Return daily review entries across a date window, newest first. Use to look at what the user wrote in past daily reviews, or to check whether a review was already created for a specific day. Returns daily review objects, newest first, with date, summary, wins, blockers, learnings, and linked task/list ids. There is no offset: narrow from and to to reach older reviews.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

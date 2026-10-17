@@ -4,7 +4,7 @@ enum ReviewToolCatalog {
   static let dailyReviewTool = Tool(
     name: "get_daily_review",
     title: "Get Daily Review",
-    description: "Read a daily review entry for a date (defaults to today). Returns the summary, mood/energy ratings, wins, blockers, learnings, and linked task/list ids. Returns null if no review exists for that date — use add_daily_review to create one.",
+    description: "Read a daily review entry for a date (defaults to today). Returns the summary, mood/energy ratings, wins, blockers, learnings, and linked task/list ids. Returns {date, review}, with review null when no review exists for that date — use add_daily_review to create one.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -21,7 +21,7 @@ enum ReviewToolCatalog {
   static let amendDailyReviewTool = Tool(
     name: "amend_daily_review",
     title: "Amend Daily Review",
-    description: "Patch individual fields of an existing Lorvex daily review. Only provided fields are updated; omitted fields are left unchanged. Returns the updated review.",
+    description: "Patch individual fields of an existing Lorvex daily review. Only provided fields are updated; omitted fields are left unchanged, and a null text field counts as omitted (add_daily_review replaces the whole review and can clear one). Returns the updated review.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

@@ -27,7 +27,7 @@ extension TaskMutationToolCatalog {
   static let cancelTaskTool = Tool(
     name: "cancel_task",
     title: "Cancel Task",
-    description: "Soft-delete a task (status=cancelled). For recurring tasks, cancels this occurrence and spawns the next one — the series continues. Prefer cancel_task over update_task for status transitions. Returns the updated task.",
+    description: "Soft-delete a task (status=cancelled). For recurring tasks, cancels this occurrence and spawns the next one — the series continues. It also removes the task's dependency links in both directions; reopen_task does not restore them. Prefer cancel_task over update_task for status transitions. Returns the updated task.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -50,7 +50,7 @@ extension TaskMutationToolCatalog {
   static let reopenTaskTool = Tool(
     name: "reopen_task",
     title: "Reopen Task",
-    description: "Reopen a completed, cancelled, or someday task (set back to open status). A completed task keeps its planned_date, planned time, and defer_count, so undoing a completion puts it back where it was; a cancelled or someday task starts fresh, with its planned_date, planned time, last_deferred_at, and defer_count cleared. For completed recurring tasks, also cancels any auto-spawned successor to prevent duplicates. Returns the full updated task object.",
+    description: "Reopen a completed, cancelled, or someday task (set back to open status). An open task is unchanged, and an in-progress task is un-started, as with pause_task. A completed task keeps its planned_date, planned time, and defer_count, so undoing a completion puts it back where it was; a cancelled or someday task starts fresh, with its planned_date, planned time, last_deferred_at, and defer_count cleared. For completed recurring tasks, also cancels the successor it spawned; the reopen is refused when that successor has since been finished or has later occurrences. Cancelled reminders stay cancelled. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -73,7 +73,7 @@ extension TaskMutationToolCatalog {
   static let startTaskTool = Tool(
     name: "start_task",
     title: "Start Task",
-    description: "Mark a task as in progress (status=in_progress) — the 'started' marker that surfaces it in the Today \"In Progress\" section. Use it when the user resumes or begins active work; pause_task removes the marker. Only an open task can be started (reopen a completed/cancelled/someday task first); calling it on an already-started task is a no-op. Starting a task whose dependencies are unfinished is rejected, naming the blockers. in_progress surfaces everywhere open does; it does not stop reminders or advance recurrence. There is no started_at column — to answer \"how long has this been in progress\", read the timestamp of the most recent 'start' transition in get_ai_changelog. Returns the full updated task object.",
+    description: "Mark a task as in progress (status=in_progress) — the 'started' marker that marks it as started, so Today lists it ahead of the day's other untimed tasks, with a Started badge. Use it when the user resumes or begins active work; pause_task removes the marker. Only an open task can be started (reopen a completed/cancelled/someday task first); calling it on an already-started task is a no-op. Starting a task whose dependencies are unfinished is rejected, naming the blockers. in_progress surfaces everywhere open does; it does not stop reminders or advance recurrence. There is no started_at column — to answer \"how long has this been in progress\", read the timestamp of the most recent 'start' transition in get_ai_changelog, which holds only assistant writes, so a start made in the app does not appear there. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -119,7 +119,7 @@ extension TaskMutationToolCatalog {
   static let deferTaskTool = Tool(
     name: "defer_task",
     title: "Defer Task",
-    description: "Push a task's planned work day to a future date (until_date), leaving status open. Reschedules the planned work day and records the push; to merely hide a task until a date without rescheduling, set available_from instead (that does not count as a deferral). Increments defer_count and, when structured_reason is supplied, records it in the task's last_defer_reason field for pattern tracking. Any free-text reason is persisted onto this defer's changelog entry (read it back via get_task's read-only defer_history), not into ai_notes. Returns the full updated task object, including defer_count, last_defer_reason, and a defer_note echoing the free-text reason.",
+    description: "Push a task's planned work day to a future date (until_date), leaving status open. Sets the planned work day to until_date, clears the planned time, moves pending reminders by the same number of days, and records the push; to merely hide a task until a date without rescheduling, set available_from instead (that does not count as a deferral). Increments defer_count and, when structured_reason is supplied, records it in the task's last_defer_reason field for pattern tracking. Any free-text reason is persisted onto this defer's changelog entry (read it back via get_task's read-only defer_history), not into ai_notes. Returns the full updated task object, including defer_count, last_defer_reason, and a defer_note echoing the free-text reason.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -183,7 +183,7 @@ extension TaskMutationToolCatalog {
   static let permanentDeleteTaskTool = Tool(
     name: "permanent_delete_task",
     title: "Permanent Delete Task",
-    description: "Hard-delete a task and all its child rows (reminders, checklist items, tags, dependencies) from the database, emitting a sync tombstone so the deletion propagates to other devices. This is irreversible — unlike cancel_task which sets status=cancelled and preserves the record. Fails unless the task has already been archived with archive_task: this two-step guard ensures a single call can never destroy live data, so archive first, then permanent-delete. Use only when the task should never have existed or must be removed from audit history. Returns {deleted, id, previous} where previous is the removed task object (null on a no-op).",
+    description: "Hard-delete a task and all its child rows (reminders, checklist items, tags, dependencies) from the database, emitting a sync tombstone so the deletion propagates to other devices. It does not erase the task's existing activity-log entries; the deletion's own entry keeps the task's last state (up to 4,000 bytes) until audit retention prunes it. This is irreversible — unlike cancel_task which sets status=cancelled and preserves the record. Fails unless the task has already been archived with archive_task: this two-step guard ensures a single call can never destroy live data, so archive first, then permanent-delete. Use only when the task should never have existed or must be removed from audit history. Returns {deleted, id, previous} where previous is the removed task object (null on a no-op).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

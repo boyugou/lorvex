@@ -29,13 +29,13 @@ extension DayPlanningToolCatalog {
         "working_hours_start": .object([
           "type": .string("string"),
           "description": .string(
-            "Start of the working window for this suggestion, HH:MM (24-hour). Defaults to the user's working hours (09:00 when unset)."
+            "Start of the working window for this suggestion, HH:MM (24-hour). Defaults to the user's working hours (the stored working_hours, or 08:00 when unset)."
           ),
         ]),
         "working_hours_end": .object([
           "type": .string("string"),
           "description": .string(
-            "End of the working window for this suggestion, HH:MM (24-hour). Defaults to the user's working hours (18:00 when unset)."
+            "End of the working window for this suggestion, HH:MM (24-hour). Defaults to the user's working hours (the stored working_hours, or 23:00 when unset)."
           ),
         ]),
         "include_calendar_events": .object([

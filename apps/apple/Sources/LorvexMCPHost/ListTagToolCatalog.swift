@@ -134,7 +134,7 @@ extension ListHabitToolCatalog {
   static let getListHealthSnapshotTool = Tool(
     name: "get_list_health_snapshot",
     title: "Get List Health Snapshot",
-    description: "Return task health metrics per list: open count, overdue count, and due-today count. Use during weekly review to identify stalled or overloaded lists at a glance, or before reorganizing tasks to understand which lists need attention. Returns an array sorted by open count descending.",
+    description: "Return task health metrics per list: open count, overdue count, and due-today count. Use during weekly review to identify stalled or overloaded lists at a glance, or before reorganizing tasks to understand which lists need attention. Returns {date, total_lists, lists}, with lists sorted by open count descending.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([:]),
@@ -145,7 +145,7 @@ extension ListHabitToolCatalog {
   static let reorderListsTool = Tool(
     name: "reorder_lists",
     title: "Reorder Lists",
-    description: "Set the manual display order of the active lists catalog. Supply the active list ids in the desired order; each listed list's position is rewritten to its index, so the order converges across devices as an ordinary synced field. Ids omitted from the array keep their current position and ids that no longer resolve are skipped. This never creates, deletes, or archives a list — use create_list / delete_list / archive_list for that. Returns the full refreshed lists catalog in the new order.",
+    description: "Set the manual display order of the active lists catalog. Supply the active list ids in the desired order; each listed list's position is rewritten to its index, so the order converges across devices as an ordinary synced field. Supply every active list id exactly once; a missing, unknown, or repeated id rejects the call and changes nothing. This never creates, deletes, or archives a list — use create_list / delete_list / archive_list for that. Returns the full refreshed lists catalog in the new order.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

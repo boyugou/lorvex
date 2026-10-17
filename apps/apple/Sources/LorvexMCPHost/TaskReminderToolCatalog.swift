@@ -28,7 +28,7 @@ enum TaskReminderToolCatalog {
   static let removeReminderTool = Tool(
     name: "remove_task_reminder",
     title: "Remove Task Reminder",
-    description: "Remove a specific reminder from a task. Requires both task_id and the reminder's own id (from the reminders array in get_task or list_tasks). Also cancels the scheduled notification. Returns the full updated task.",
+    description: "Remove a specific reminder from a task. Requires both task_id and the reminder's own id (from the reminders array in get_task or list_tasks). Also cancels the scheduled notification on the app's next scheduling pass. A reminder_id that is not one of this task's reminders is ignored, and the task is returned unchanged. Returns the full updated task.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

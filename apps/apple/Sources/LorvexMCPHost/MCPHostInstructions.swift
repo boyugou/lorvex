@@ -32,7 +32,7 @@ enum MCPHostInstructions {
     verb, pass the user's own words as raw_input, and set estimated_minutes only when you are \
     fairly sure. Record reasoning that is not obvious with set_task_ai_notes.
     - Priority expresses importance. due_date and planned_date carry the timing.
-    - Planning a day: Today lists every task that is overdue, on the day, or started (status \
+    - Planning a day: Today lists every task that is overdue (its due date is before today), due or planned today or earlier, or started (status \
     in_progress), started tasks first. planned_date, when set, decides a task's day; otherwise \
     due_date does. Put work on a day with update_task or batch_update_tasks, keep the day \
     realistic against the free time in get_calendar_timeline, and move what no longer fits with \

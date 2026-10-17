@@ -34,9 +34,10 @@ extension SwiftLorvexCoreService {
           operation: SyncNaming.opUpsert,
           entityType: EntityName.task,
           entityId: taskID,
-          // Provider mirrors and links are strictly device-local. The audit row
-          // itself syncs, so its cloud projection must not include a provider
-          // scope, external event key, title, or any other EventKit detail.
+          // Provider mirrors and links are strictly device-local, and so is the
+          // audit row that records this change (`ai_changelog` never syncs). The
+          // summary still names no provider scope, external event key, title, or
+          // other EventKit detail, because the log is readable by assistants.
           summary: "Changed a device-local calendar link for task \(taskID)."
         ),
         deviceId: deviceId

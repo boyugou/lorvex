@@ -93,6 +93,9 @@ enum SecurityFencing {
   /// `timezone`) must round-trip verbatim and are never fenced (Rule 6).
   static let freeTextPreferenceKeys: Set<String> = [
     "setup_summary",
+    // Stored as a string the user or an assistant can set to anything, and read back into the
+    // assistant's context, so it is fenced like the summary.
+    "setup_state",
   ]
 
   /// Fences a single preference value for a read-tool response.

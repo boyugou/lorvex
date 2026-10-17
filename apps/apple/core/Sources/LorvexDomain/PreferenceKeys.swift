@@ -72,9 +72,8 @@ public enum PreferenceKeys {
     localOnlyPreferenceKeys.contains(key)
   }
 
-  /// Returns `true` for a preference-shaped product setting whose durable
-  /// authority lives in a dedicated sync control plane rather than the ordinary
-  /// `preferences` entity stream.
+  /// Returns `true` for a preference-shaped product setting that is not an ordinary synced
+  /// `preferences` row. Its value is device-local (`device_state`), so it never crosses sync.
   public static func isControlPlanePreference(_ key: String) -> Bool {
     key == prefAiChangelogRetentionPolicy
   }
@@ -95,9 +94,8 @@ public enum PreferenceKeys {
     userOnlyPreferenceKeys.contains(key)
   }
 
-  /// Returns `true` when a preference key must never be represented as a
-  /// `.preference` envelope. Device-local preferences stay on one device;
-  /// control-plane preferences use their dedicated account-scoped metadata.
+  /// Returns `true` when a preference key must never be represented as a `.preference` envelope.
+  /// Device-local preferences and the device-local control-plane setting stay on one device.
   public static func isExcludedFromPreferenceEntitySync(_ key: String) -> Bool {
     isLocalOnlyPreference(key) || isControlPlanePreference(key)
   }

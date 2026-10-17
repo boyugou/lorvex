@@ -205,6 +205,18 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
   }
 }
 
+extension CalendarTimelineEvent {
+  /// The event's link as a URL a tap may open: a web page, a mail draft, or a phone call. A synced
+  /// or subscribed calendar can carry any scheme (`file:`, `smb:`, `shortcuts:`), and a tap would
+  /// hand that to the system, so any other link is shown as text.
+  public var openableURL: URL? {
+    guard let text = url, let link = URL(string: text),
+      ["http", "https", "mailto", "tel"].contains(link.scheme?.lowercased() ?? "")
+    else { return nil }
+    return link
+  }
+}
+
 /// Patch fields for a scoped calendar event edit. All fields are optional —
 /// omitted fields preserve the original value.
 public struct ScopedCalendarEventUpdates: Sendable {

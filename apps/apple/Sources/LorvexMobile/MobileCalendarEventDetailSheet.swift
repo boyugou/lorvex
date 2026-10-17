@@ -82,7 +82,7 @@ struct MobileCalendarEventDetailContent: View {
             }
           }
         }
-        if let urlString = nonBlank(event.url), let url = URL(string: urlString) {
+        if let url = event.openableURL, let urlString = nonBlank(event.url) {
           row(icon: "link", label: MobileCalendarEventCopy.url) {
             Link(urlString, destination: url)
               .font(LorvexDesign.Typography.primaryText)

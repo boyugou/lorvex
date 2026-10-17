@@ -51,7 +51,7 @@ struct CalendarEventInspector: View {
               }
             }
           }
-          if let urlString = event.url, let url = URL(string: urlString) {
+          if let url = event.openableURL, let urlString = event.url {
             detailRow(icon: "link", title: urlTitle) {
               Link(urlString, destination: url).font(LorvexDesign.Typography.primaryText)
             }

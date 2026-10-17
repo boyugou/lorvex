@@ -208,7 +208,7 @@ struct LorvexWatchStoreMutationForwardingTests {
       store.error?.localizedDescription
         == String(
           localized: "watch.error.forwarder_required",
-          defaultValue: "Open Lorvex on iPhone or Mac to apply this action.",
+          defaultValue: "Open Lorvex on iPhone to apply this action.",
           table: "Localizable",
           bundle: WatchL10n.bundle))
   }
@@ -226,7 +226,7 @@ struct LorvexWatchStoreMutationForwardingTests {
       store.error?.localizedDescription
         == String(
           localized: "watch.error.capture_forwarder_required",
-          defaultValue: "Open Lorvex on iPhone or Mac to capture new tasks.",
+          defaultValue: "Open Lorvex on iPhone to capture new tasks.",
           table: "Localizable",
           bundle: WatchL10n.bundle))
   }

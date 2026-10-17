@@ -48,7 +48,7 @@ private struct PermanentDeleteDialogModifier: ViewModifier {
     } message: { _ in
       Text(LocalizedStringResource(
         "task.permanent_delete.message",
-        defaultValue: "This task and all its checklist items, reminders, and links are removed for good. This can’t be undone.",
+        defaultValue: "The task and its checklist items, reminders, and links are deleted and can’t be restored. A copy of its last state stays in the activity log until retention removes it, and iCloud keeps an encrypted copy until you delete Lorvex’s iCloud data.",
         table: "Localizable",
         bundle: LorvexL10n.bundle))
     }

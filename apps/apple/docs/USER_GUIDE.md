@@ -4108,20 +4108,15 @@ permission:
 
 ### watchOS complication shows stale data
 
-The complication reads a snapshot file from the shared App Group container. If
-the data is stale:
+The complication reads the Watch's own copy of the day, which the paired iPhone
+sends over WatchConnectivity and the Watch stores in its own container. If the
+data is stale:
 
-1. Open the Lorvex app on iPhone or Mac and let it refresh (pull to refresh or
-   use **Task → Refresh (⌘R)**). The app writes a fresh snapshot to the shared
-   container on every refresh.
-2. On the watch, force-quit the Lorvex app and reopen it; this triggers a fresh
-   read from the container.
-3. If the complication is still stale, check that the App Group entitlement
-   (`group.com.lorvex.apple`) is configured in your build and that both the iOS
-   app and the watch app share the same App Group ID. The current default build
-   uses a no-op publisher when the App Group is not set up; complications in
-   that configuration always show placeholder data.
-4. Background complication refresh requires a WatchConnectivity session between
-   the watch and phone. The phone forwards snapshots to the watch over WCSession
-   and the watch forwards its mutations back; complication timelines reload from
-   the pushed snapshots.
+1. Open the Lorvex app on the paired iPhone and let it refresh (pull to refresh).
+   The iPhone sends the Watch a fresh copy after it refreshes.
+2. On the watch, force-quit the Lorvex app and reopen it; this reloads the
+   stored copy.
+3. Check that the iPhone and the Watch are paired and reachable. Background
+   complication refresh needs a WatchConnectivity session between them: the
+   iPhone pushes the copy to the Watch, and the Watch forwards its changes back.
+   Complication timelines reload from the pushed copy.

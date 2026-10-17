@@ -6103,373 +6103,373 @@
       }
     },
     "watch.error.capture_forwarder_required": {
-      "comment": "Error shown if a watch capture action reaches a read-only snapshot backend without an iPhone/Mac mutation forwarder",
+      "comment": "Watch error when a capture cannot be forwarded: open Lorvex on iPhone to capture new tasks.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "افتح Lorvex على iPhone أو Mac لإضافة مهام جديدة."
+            "value": "افتح Lorvex على iPhone لإضافة مهام جديدة."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "নতুন টাস্ক যোগ করতে iPhone বা Mac-এ Lorvex খুলুন।"
+            "value": "নতুন টাস্ক যোগ করতে iPhone-এ Lorvex খুলুন।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffne Lorvex auf dem iPhone oder Mac, um neue Aufgaben zu erfassen."
+            "value": "Öffne Lorvex auf dem iPhone, um neue Aufgaben zu erfassen."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ανοίξτε το Lorvex στο iPhone ή στο Mac για να προσθέσετε νέες εργασίες."
+            "value": "Ανοίξτε το Lorvex στο iPhone για να προσθέσετε νέες εργασίες."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Lorvex on iPhone or Mac to capture new tasks."
+            "value": "Open Lorvex on iPhone to capture new tasks."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre Lorvex en el iPhone o el Mac para añadir tareas nuevas."
+            "value": "Abre Lorvex en el iPhone para añadir tareas nuevas."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "برای افزودن کارهای جدید، Lorvex را در iPhone یا Mac باز کنید."
+            "value": "برای افزودن کارهای جدید، Lorvex را در iPhone باز کنید."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrez Lorvex sur l’iPhone ou le Mac pour ajouter de nouvelles tâches."
+            "value": "Ouvrez Lorvex sur l’iPhone pour ajouter de nouvelles tâches."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "כדי להוסיף משימות חדשות, יש לפתוח את Lorvex ב-iPhone או ב-Mac."
+            "value": "כדי להוסיף משימות חדשות, יש לפתוח את Lorvex ב-iPhone."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "नए कार्य जोड़ने के लिए iPhone या Mac पर Lorvex खोलें।"
+            "value": "नए कार्य जोड़ने के लिए iPhone पर Lorvex खोलें।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buka Lorvex di iPhone atau Mac untuk mencatat tugas baru."
+            "value": "Buka Lorvex di iPhone untuk mencatat tugas baru."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri Lorvex su iPhone o Mac per aggiungere nuove attività."
+            "value": "Apri Lorvex su iPhone per aggiungere nuove attività."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新しいタスクを追加するには、iPhoneまたはMacでLorvexを開いてください。"
+            "value": "新しいタスクを追加するには、iPhoneでLorvexを開いてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "새 할 일을 추가하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
+            "value": "새 할 일을 추가하려면 iPhone에서 Lorvex를 여세요."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "नवीन कार्ये जोडण्यासाठी iPhone किंवा Mac वर Lorvex उघडा."
+            "value": "नवीन कार्ये जोडण्यासाठी iPhone वर Lorvex उघडा."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buka Lorvex pada iPhone atau Mac untuk mencatat tugas baharu."
+            "value": "Buka Lorvex pada iPhone untuk mencatat tugas baharu."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Lorvex op iPhone of Mac om nieuwe taken vast te leggen."
+            "value": "Open Lorvex op iPhone om nieuwe taken vast te leggen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otwórz Lorvex na iPhonie lub Macu, aby dodawać nowe zadania."
+            "value": "Otwórz Lorvex na iPhonie, aby dodawać nowe zadania."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abra o Lorvex no iPhone ou no Mac para adicionar novas tarefas."
+            "value": "Abra o Lorvex no iPhone para adicionar novas tarefas."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deschideți Lorvex pe iPhone sau Mac pentru a adăuga sarcini noi."
+            "value": "Deschideți Lorvex pe iPhone pentru a adăuga sarcini noi."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Откройте Lorvex на iPhone или Mac, чтобы добавлять новые задачи."
+            "value": "Откройте Lorvex на iPhone, чтобы добавлять новые задачи."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "புதிய பணிகளைச் சேர்க்க iPhone அல்லது Macஇல் Lorvexஐத் திறக்கவும்."
+            "value": "புதிய பணிகளைச் சேர்க்க iPhoneஇல் Lorvexஐத் திறக்கவும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "కొత్త టాస్క్‌లను జోడించడానికి iPhone లేదా Macలో Lorvexను తెరవండి."
+            "value": "కొత్త టాస్క్‌లను జోడించడానికి iPhoneలో Lorvexను తెరవండి."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เปิด Lorvex บน iPhone หรือ Mac เพื่อจดงานใหม่"
+            "value": "เปิด Lorvex บน iPhone เพื่อจดงานใหม่"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni görev eklemek için Lorvex’i iPhone veya Mac’te açın."
+            "value": "Yeni görev eklemek için Lorvex’i iPhone’da açın."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Відкрийте Lorvex на iPhone або Mac, щоб додавати нові завдання."
+            "value": "Відкрийте Lorvex на iPhone, щоб додавати нові завдання."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "نئے کام شامل کرنے کے لیے iPhone یا Mac پر Lorvex کھولیں۔"
+            "value": "نئے کام شامل کرنے کے لیے iPhone پر Lorvex کھولیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hãy mở Lorvex trên iPhone hoặc Mac để ghi nhanh nhiệm vụ mới."
+            "value": "Hãy mở Lorvex trên iPhone để ghi nhanh nhiệm vụ mới."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iPhone 或 Mac 上打开 Lorvex 以添加新任务。"
+            "value": "在 iPhone 上打开 Lorvex 以添加新任务。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "請在 iPhone 或 Mac 上開啟 Lorvex 以新增任務。"
+            "value": "請在 iPhone 上開啟 Lorvex 以新增任務。"
           }
         }
       }
     },
     "watch.error.forwarder_required": {
-      "comment": "Error shown if a watch mutation action reaches a read-only snapshot backend without an iPhone/Mac mutation forwarder",
+      "comment": "Watch error when an action cannot be forwarded: open Lorvex on iPhone to apply the action.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "افتح Lorvex على iPhone أو Mac لتطبيق هذا الإجراء."
+            "value": "افتح Lorvex على iPhone لتطبيق هذا الإجراء."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এই অ্যাকশন প্রয়োগ করতে iPhone বা Mac-এ Lorvex খুলুন।"
+            "value": "এই অ্যাকশন প্রয়োগ করতে iPhone-এ Lorvex খুলুন।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffne Lorvex auf dem iPhone oder Mac, um diese Aktion anzuwenden."
+            "value": "Öffne Lorvex auf dem iPhone, um diese Aktion anzuwenden."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ανοίξτε το Lorvex στο iPhone ή στο Mac για να εφαρμόσετε αυτή την ενέργεια."
+            "value": "Ανοίξτε το Lorvex στο iPhone για να εφαρμόσετε αυτή την ενέργεια."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Lorvex on iPhone or Mac to apply this action."
+            "value": "Open Lorvex on iPhone to apply this action."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre Lorvex en el iPhone o el Mac para aplicar esta acción."
+            "value": "Abre Lorvex en el iPhone para aplicar esta acción."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "برای اعمال این اقدام، Lorvex را در iPhone یا Mac باز کنید."
+            "value": "برای اعمال این اقدام، Lorvex را در iPhone باز کنید."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrez Lorvex sur l’iPhone ou le Mac pour appliquer cette action."
+            "value": "Ouvrez Lorvex sur l’iPhone pour appliquer cette action."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "כדי להחיל את הפעולה הזו, יש לפתוח את Lorvex ב-iPhone או ב-Mac."
+            "value": "כדי להחיל את הפעולה הזו, יש לפתוח את Lorvex ב-iPhone."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "यह कार्रवाई लागू करने के लिए iPhone या Mac पर Lorvex खोलें।"
+            "value": "यह कार्रवाई लागू करने के लिए iPhone पर Lorvex खोलें।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buka Lorvex di iPhone atau Mac untuk menerapkan tindakan ini."
+            "value": "Buka Lorvex di iPhone untuk menerapkan tindakan ini."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri Lorvex su iPhone o Mac per applicare questa azione."
+            "value": "Apri Lorvex su iPhone per applicare questa azione."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "この操作を適用するには、iPhoneまたはMacでLorvexを開いてください。"
+            "value": "この操作を適用するには、iPhoneでLorvexを開いてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 동작을 적용하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
+            "value": "이 동작을 적용하려면 iPhone에서 Lorvex를 여세요."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "ही कृती लागू करण्यासाठी iPhone किंवा Mac वर Lorvex उघडा."
+            "value": "ही कृती लागू करण्यासाठी iPhone वर Lorvex उघडा."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buka Lorvex pada iPhone atau Mac untuk menerapkan tindakan ini."
+            "value": "Buka Lorvex pada iPhone untuk menerapkan tindakan ini."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Lorvex op iPhone of Mac om deze actie toe te passen."
+            "value": "Open Lorvex op iPhone om deze actie toe te passen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otwórz Lorvex na iPhonie lub Macu, aby zastosować tę akcję."
+            "value": "Otwórz Lorvex na iPhonie, aby zastosować tę akcję."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abra o Lorvex no iPhone ou no Mac para aplicar esta ação."
+            "value": "Abra o Lorvex no iPhone para aplicar esta ação."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deschideți Lorvex pe iPhone sau Mac pentru a aplica această acțiune."
+            "value": "Deschideți Lorvex pe iPhone pentru a aplica această acțiune."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Откройте Lorvex на iPhone или Mac, чтобы применить это действие."
+            "value": "Откройте Lorvex на iPhone, чтобы применить это действие."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "இந்தச் செயலைச் செயல்படுத்த iPhone அல்லது Macஇல் Lorvexஐத் திறக்கவும்."
+            "value": "இந்தச் செயலைச் செயல்படுத்த iPhoneஇல் Lorvexஐத் திறக்கவும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "ఈ చర్యను వర్తింపజేయడానికి iPhone లేదా Macలో Lorvexను తెరవండి."
+            "value": "ఈ చర్యను వర్తింపజేయడానికి iPhoneలో Lorvexను తెరవండి."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เปิด Lorvex บน iPhone หรือ Mac เพื่อใช้การดำเนินการนี้"
+            "value": "เปิด Lorvex บน iPhone เพื่อใช้การดำเนินการนี้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu eylemi uygulamak için Lorvex’i iPhone veya Mac’te açın."
+            "value": "Bu eylemi uygulamak için Lorvex’i iPhone’da açın."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Відкрийте Lorvex на iPhone або Mac, щоб застосувати цю дію."
+            "value": "Відкрийте Lorvex на iPhone, щоб застосувати цю дію."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "اس اقدام کو لاگو کرنے کے لیے iPhone یا Mac پر Lorvex کھولیں۔"
+            "value": "اس اقدام کو لاگو کرنے کے لیے iPhone پر Lorvex کھولیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hãy mở Lorvex trên iPhone hoặc Mac để áp dụng thao tác này."
+            "value": "Hãy mở Lorvex trên iPhone để áp dụng thao tác này."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iPhone 或 Mac 上打开 Lorvex 以应用此操作。"
+            "value": "在 iPhone 上打开 Lorvex 以应用此操作。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "請在 iPhone 或 Mac 上開啟 Lorvex 以套用此操作。"
+            "value": "請在 iPhone 上開啟 Lorvex 以套用此操作。"
           }
         }
       }
@@ -10191,187 +10191,187 @@
       }
     },
     "watch.unavailable.capture": {
-      "comment": "Reason shown when watch task capture cannot run from a read-only snapshot backend",
+      "comment": "Watch message when capture needs the paired iPhone: open Lorvex on iPhone to capture new tasks.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "افتح Lorvex على iPhone أو Mac لإضافة مهام جديدة."
+            "value": "افتح Lorvex على iPhone لإضافة مهام جديدة."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "নতুন টাস্ক যোগ করতে iPhone বা Mac-এ Lorvex খুলুন।"
+            "value": "নতুন টাস্ক যোগ করতে iPhone-এ Lorvex খুলুন।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffne Lorvex auf dem iPhone oder Mac, um neue Aufgaben zu erfassen."
+            "value": "Öffne Lorvex auf dem iPhone, um neue Aufgaben zu erfassen."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ανοίξτε το Lorvex στο iPhone ή στο Mac για να προσθέσετε νέες εργασίες."
+            "value": "Ανοίξτε το Lorvex στο iPhone για να προσθέσετε νέες εργασίες."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Lorvex on iPhone or Mac to capture new tasks."
+            "value": "Open Lorvex on iPhone to capture new tasks."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre Lorvex en el iPhone o el Mac para añadir tareas nuevas."
+            "value": "Abre Lorvex en el iPhone para añadir tareas nuevas."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "برای افزودن کارهای جدید، Lorvex را در iPhone یا Mac باز کنید."
+            "value": "برای افزودن کارهای جدید، Lorvex را در iPhone باز کنید."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrez Lorvex sur l’iPhone ou le Mac pour ajouter de nouvelles tâches."
+            "value": "Ouvrez Lorvex sur l’iPhone pour ajouter de nouvelles tâches."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "כדי להוסיף משימות חדשות, יש לפתוח את Lorvex ב-iPhone או ב-Mac."
+            "value": "כדי להוסיף משימות חדשות, יש לפתוח את Lorvex ב-iPhone."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "नए कार्य जोड़ने के लिए iPhone या Mac पर Lorvex खोलें।"
+            "value": "नए कार्य जोड़ने के लिए iPhone पर Lorvex खोलें।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buka Lorvex di iPhone atau Mac untuk mencatat tugas baru."
+            "value": "Buka Lorvex di iPhone untuk mencatat tugas baru."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri Lorvex su iPhone o Mac per aggiungere nuove attività."
+            "value": "Apri Lorvex su iPhone per aggiungere nuove attività."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新しいタスクを追加するには、iPhoneまたはMacでLorvexを開いてください。"
+            "value": "新しいタスクを追加するには、iPhoneでLorvexを開いてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "새 할 일을 추가하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
+            "value": "새 할 일을 추가하려면 iPhone에서 Lorvex를 여세요."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "नवीन कार्ये जोडण्यासाठी iPhone किंवा Mac वर Lorvex उघडा."
+            "value": "नवीन कार्ये जोडण्यासाठी iPhone वर Lorvex उघडा."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buka Lorvex pada iPhone atau Mac untuk mencatat tugas baharu."
+            "value": "Buka Lorvex pada iPhone untuk mencatat tugas baharu."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Lorvex op iPhone of Mac om nieuwe taken vast te leggen."
+            "value": "Open Lorvex op iPhone om nieuwe taken vast te leggen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otwórz Lorvex na iPhonie lub Macu, aby dodawać nowe zadania."
+            "value": "Otwórz Lorvex na iPhonie, aby dodawać nowe zadania."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abra o Lorvex no iPhone ou no Mac para adicionar novas tarefas."
+            "value": "Abra o Lorvex no iPhone para adicionar novas tarefas."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deschideți Lorvex pe iPhone sau Mac pentru a adăuga sarcini noi."
+            "value": "Deschideți Lorvex pe iPhone pentru a adăuga sarcini noi."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Откройте Lorvex на iPhone или Mac, чтобы добавлять новые задачи."
+            "value": "Откройте Lorvex на iPhone, чтобы добавлять новые задачи."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "புதிய பணிகளைச் சேர்க்க iPhone அல்லது Macஇல் Lorvexஐத் திறக்கவும்."
+            "value": "புதிய பணிகளைச் சேர்க்க iPhoneஇல் Lorvexஐத் திறக்கவும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "కొత్త టాస్క్‌లను జోడించడానికి iPhone లేదా Macలో Lorvexను తెరవండి."
+            "value": "కొత్త టాస్క్‌లను జోడించడానికి iPhoneలో Lorvexను తెరవండి."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "เปิด Lorvex บน iPhone หรือ Mac เพื่อจดงานใหม่"
+            "value": "เปิด Lorvex บน iPhone เพื่อจดงานใหม่"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni görev eklemek için Lorvex’i iPhone veya Mac’te açın."
+            "value": "Yeni görev eklemek için Lorvex’i iPhone’da açın."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Відкрийте Lorvex на iPhone або Mac, щоб додавати нові завдання."
+            "value": "Відкрийте Lorvex на iPhone, щоб додавати нові завдання."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "نئے کام شامل کرنے کے لیے iPhone یا Mac پر Lorvex کھولیں۔"
+            "value": "نئے کام شامل کرنے کے لیے iPhone پر Lorvex کھولیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hãy mở Lorvex trên iPhone hoặc Mac để ghi nhanh nhiệm vụ mới."
+            "value": "Hãy mở Lorvex trên iPhone để ghi nhanh nhiệm vụ mới."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iPhone 或 Mac 上打开 Lorvex 以添加新任务。"
+            "value": "在 iPhone 上打开 Lorvex 以添加新任务。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "請在 iPhone 或 Mac 上開啟 Lorvex 以新增任務。"
+            "value": "請在 iPhone 上開啟 Lorvex 以新增任務。"
           }
         }
       }

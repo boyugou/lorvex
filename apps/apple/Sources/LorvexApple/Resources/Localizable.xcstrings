@@ -142429,186 +142429,187 @@
       }
     },
     "settings.calendar.two_way_detail": {
+      "comment": "Footer of the calendar sync toggle: events are read into Lorvex, and events added in Lorvex are written to the dedicated Lorvex calendar by default, with a picker for another writable calendar.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يقرأ Lorvex أحداث تقويمك، ويكتب الأحداث التي تضيفها فيه في تقويم \"Lorvex\" المخصص، ولا يكتب أبدًا في تقويماتك الشخصية."
+            "value": "يقرأ Lorvex أحداث تقويمك، ويكتب الأحداث التي تضيفها فيه في تقويم \"Lorvex\" المخصص افتراضيًا. عند إضافة حدث، يمكنك اختيار تقويم آخر يمكنك الكتابة فيه."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "আপনার ক্যালেন্ডারের ইভেন্ট Lorvex-এ পড়া হয়, আর Lorvex-এ আপনার যোগ করা ইভেন্ট লেখা হয় একটি আলাদা “Lorvex” ক্যালেন্ডারে – আপনার ব্যক্তিগত ক্যালেন্ডারে কখনোই নয়।"
+            "value": "আপনার ক্যালেন্ডারের ইভেন্ট Lorvex-এ পড়া হয়, আর Lorvex-এ আপনার যোগ করা ইভেন্ট লেখা হয় একটি আলাদা “Lorvex” ক্যালেন্ডারে ডিফল্টভাবে। আপনি কোনো ইভেন্ট যোগ করার সময় লেখা যায় এমন অন্য একটি ক্যালেন্ডার বেছে নিতে পারেন।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liest deine Kalenderereignisse in Lorvex ein und schreibt die in Lorvex hinzugefügten Ereignisse in einen eigenen Kalender „Lorvex“ – niemals in deine persönlichen Kalender."
+            "value": "Liest deine Kalenderereignisse in Lorvex ein und schreibt die in Lorvex hinzugefügten Ereignisse standardmäßig in einen eigenen Kalender „Lorvex“. Beim Hinzufügen eines Ereignisses kannst du einen anderen beschreibbaren Kalender wählen."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Διαβάζει τα γεγονότα του ημερολογίου σας στο Lorvex και γράφει τα γεγονότα που προσθέτετε στο Lorvex σε ένα ειδικό ημερολόγιο «Lorvex» – ποτέ στα προσωπικά σας ημερολόγια."
+            "value": "Διαβάζει τα γεγονότα του ημερολογίου σας στο Lorvex και γράφει τα γεγονότα που προσθέτετε στο Lorvex σε ένα ειδικό ημερολόγιο «Lorvex» από προεπιλογή. Όταν προσθέτετε ένα γεγονός, μπορείτε να επιλέξετε άλλο ημερολόγιο στο οποίο έχετε δικαίωμα εγγραφής."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read your calendar events into Lorvex and write the events you add in Lorvex into a dedicated “Lorvex” calendar — never your personal calendars."
+            "value": "Read your calendar events into Lorvex and write the events you add in Lorvex into a dedicated “Lorvex” calendar by default. When you add an event, you can choose another calendar you can write to."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lee tus eventos del calendario en Lorvex y escribe los eventos que añadas en Lorvex en un calendario “Lorvex” propio, nunca en tus calendarios personales."
+            "value": "Lee tus eventos del calendario en Lorvex y escribe los eventos que añadas en Lorvex en un calendario “Lorvex” propio de forma predeterminada. Al añadir un evento, puedes elegir otro calendario en el que puedas escribir."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "رویدادهای تقویم شما را در Lorvex می‌خواند و رویدادهایی را که در Lorvex اضافه می‌کنید در تقویم اختصاصی «Lorvex» می‌نویسد — هرگز در تقویم‌های شخصی شما."
+            "value": "رویدادهای تقویم شما را در Lorvex می‌خواند و رویدادهایی را که در Lorvex اضافه می‌کنید در تقویم اختصاصی «Lorvex» به‌طور پیش‌فرض می‌نویسد. هنگام افزودن رویداد، می‌توانید تقویم دیگری را که امکان نوشتن در آن را دارید انتخاب کنید."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvex lit vos événements de calendrier et enregistre ceux que vous y ajoutez dans un calendrier « Lorvex » dédié, jamais dans vos calendriers personnels."
+            "value": "Lorvex lit vos événements de calendrier et enregistre ceux que vous y ajoutez dans un calendrier « Lorvex » dédié par défaut. Lorsque vous ajoutez un événement, vous pouvez choisir un autre calendrier dans lequel vous pouvez écrire."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "קריאת אירועי לוח השנה שלך אל Lorvex וכתיבת האירועים שמוסיפים ב-Lorvex ללוח שנה ייעודי בשם \"Lorvex\" — אף פעם לא ללוחות השנה האישיים שלך."
+            "value": "קריאת אירועי לוח השנה שלך אל Lorvex וכתיבת האירועים שמוסיפים ב-Lorvex ללוח שנה ייעודי בשם \"Lorvex\" כברירת מחדל. בעת הוספת אירוע, אפשר לבחור לוח שנה אחר שאפשר לכתוב אליו."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "आपके कैलेंडर इवेंट Lorvex में पढ़े जाते हैं, और Lorvex में जोड़े गए इवेंट एक अलग “Lorvex” कैलेंडर में लिखे जाते हैं। आपके निजी कैलेंडर में कभी कुछ नहीं लिखा जाता।"
+            "value": "आपके कैलेंडर इवेंट Lorvex में पढ़े जाते हैं, और Lorvex में जोड़े गए इवेंट एक अलग “Lorvex” कैलेंडर में लिखे जाते हैं। यह डिफ़ॉल्ट रूप से होता है। इवेंट जोड़ते समय, आप लिखे जा सकने वाले किसी दूसरे कैलेंडर को चुन सकते हैं।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Membaca acara kalender ke Lorvex dan menulis acara yang ditambahkan di Lorvex ke kalender “Lorvex” tersendiri – tidak pernah ke kalender pribadi."
+            "value": "Membaca acara kalender ke Lorvex dan menulis acara yang ditambahkan di Lorvex ke kalender “Lorvex” tersendiri secara default. Saat menambahkan acara, Anda dapat memilih kalender lain yang dapat ditulisi."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvex legge gli eventi del tuo calendario e scrive quelli che aggiungi in Lorvex in un calendario “Lorvex” dedicato, mai nei tuoi calendari personali."
+            "value": "Lorvex legge gli eventi del tuo calendario e scrive quelli che aggiungi in Lorvex in un calendario “Lorvex” dedicato per impostazione predefinita. Quando aggiungi un evento, puoi scegliere un altro calendario in cui puoi scrivere."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "カレンダーのイベントをLorvexに読み込み、Lorvexで追加したイベントは専用の「Lorvex」カレンダーに書き込みます。個人のカレンダーには書き込みません。"
+            "value": "カレンダーのイベントをLorvexに読み込み、Lorvexで追加したイベントは既定では専用の「Lorvex」カレンダーに書き込みます。イベントを追加するときは、書き込み可能な別のカレンダーを選ぶこともできます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "캘린더 이벤트를 Lorvex로 읽어 오고, Lorvex에서 추가한 이벤트는 전용 ‘Lorvex’ 캘린더에 기록합니다. 개인 캘린더에는 기록하지 않습니다."
+            "value": "캘린더 이벤트를 Lorvex로 읽어 오고, Lorvex에서 추가한 이벤트는 기본적으로 전용 ‘Lorvex’ 캘린더에 기록합니다. 이벤트를 추가할 때 기록할 수 있는 다른 캘린더를 선택할 수 있습니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "तुमच्या दिनदर्शिकेतील इव्हेंट Lorvex मध्ये वाचले जातात आणि Lorvex मध्ये तुम्ही जोडलेले इव्हेंट एका स्वतंत्र ‘Lorvex’ दिनदर्शिकेत लिहिले जातात – तुमच्या वैयक्तिक दिनदर्शिकांमध्ये कधीच नाही."
+            "value": "तुमच्या दिनदर्शिकेतील इव्हेंट Lorvex मध्ये वाचले जातात आणि Lorvex मध्ये तुम्ही जोडलेले इव्हेंट एका स्वतंत्र ‘Lorvex’ दिनदर्शिकेत लिहिले जातात, डीफॉल्टनुसार. इव्हेंट जोडताना, तुम्ही लिहिता येईल अशी दुसरी दिनदर्शिका निवडू शकता."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Membaca peristiwa kalendar ke dalam Lorvex dan menulis peristiwa yang ditambahkan dalam Lorvex ke kalendar “Lorvex” khusus – tidak pernah ke kalendar peribadi."
+            "value": "Membaca peristiwa kalendar ke dalam Lorvex dan menulis peristiwa yang ditambahkan dalam Lorvex ke kalendar “Lorvex” khusus secara lalai. Apabila menambah peristiwa, anda boleh memilih kalendar lain yang boleh ditulis."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leest je agenda-activiteiten in Lorvex in en schrijft activiteiten die je in Lorvex toevoegt naar een aparte agenda ‘Lorvex’ – nooit naar je persoonlijke agenda’s."
+            "value": "Leest je agenda-activiteiten in Lorvex in en schrijft activiteiten die je in Lorvex toevoegt standaard naar een aparte agenda ‘Lorvex’. Wanneer je een activiteit toevoegt, kun je een andere agenda kiezen waarnaar je kunt schrijven."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvex odczytuje wydarzenia z twoich kalendarzy, a dodane w Lorvex wydarzenia zapisuje w osobnym kalendarzu „Lorvex” — nigdy w twoich kalendarzach osobistych."
+            "value": "Lorvex odczytuje wydarzenia z twoich kalendarzy, a dodane w Lorvex wydarzenia zapisuje w osobnym kalendarzu „Lorvex” domyślnie. Dodając wydarzenie, możesz wybrać inny kalendarz, do którego możesz zapisywać."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Lorvex lê os eventos do seu calendário e grava os eventos que você adiciona nele em um calendário “Lorvex” dedicado, nunca nos seus calendários pessoais."
+            "value": "O Lorvex lê os eventos do seu calendário e grava os eventos que você adiciona nele em um calendário “Lorvex” dedicado por padrão. Ao adicionar um evento, você pode escolher outro calendário no qual pode gravar."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Citește evenimentele din calendar în Lorvex și scrie evenimentele adăugate în Lorvex într-un calendar dedicat „Lorvex” – niciodată în calendarele personale."
+            "value": "Citește evenimentele din calendar în Lorvex și scrie evenimentele adăugate în Lorvex într-un calendar dedicat „Lorvex” implicit. Când adăugați un eveniment, puteți alege un alt calendar în care puteți scrie."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvex считывает события из ваших календарей, а добавленные в Lorvex события записывает в отдельный календарь «Lorvex» — никогда не в ваши личные календари."
+            "value": "Lorvex считывает события из ваших календарей, а добавленные в Lorvex события записывает в отдельный календарь «Lorvex» по умолчанию. При добавлении события можно выбрать другой календарь, доступный для записи."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "உங்கள் கேலண்டர் நிகழ்வுகளை Lorvexஇல் படிக்கும்; Lorvexஇல் நீங்கள் சேர்க்கும் நிகழ்வுகளை அதற்கென உள்ள தனி “Lorvex” கேலண்டரில் எழுதும் – உங்கள் தனிப்பட்ட கேலண்டர்களில் ஒருபோதும் எழுதாது."
+            "value": "உங்கள் கேலண்டர் நிகழ்வுகளை Lorvexஇல் படிக்கும்; Lorvexஇல் நீங்கள் சேர்க்கும் நிகழ்வுகளை அதற்கென உள்ள தனி “Lorvex” கேலண்டரில் இயல்புநிலையாக எழுதும். நிகழ்வைச் சேர்க்கும்போது, எழுத அனுமதிக்கப்பட்ட வேறொரு கேலண்டரைத் தேர்ந்தெடுக்கலாம்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "మీ క్యాలెండర్ ఇవెంట్‌లను Lorvexలోకి చదువుతుంది, మరియు Lorvexలో మీరు జోడించే ఇవెంట్‌లను ప్రత్యేక “Lorvex” క్యాలెండర్‌లో రాస్తుంది – మీ వ్యక్తిగత క్యాలెండర్‌లలో ఎప్పుడూ రాయదు."
+            "value": "మీ క్యాలెండర్ ఇవెంట్‌లను Lorvexలోకి చదువుతుంది, మరియు Lorvexలో మీరు జోడించే ఇవెంట్‌లను ప్రత్యేక “Lorvex” క్యాలెండర్‌లో డిఫాల్ట్‌గా రాస్తుంది. ఇవెంట్ జోడించేటప్పుడు, రాయడానికి వీలున్న వేరే క్యాలెండర్‌ను ఎంచుకోవచ్చు."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "อ่านกิจกรรมปฏิทินของคุณเข้า Lorvex และเขียนกิจกรรมที่คุณเพิ่มใน Lorvex ลงในปฏิทิน “Lorvex” โดยเฉพาะ ไม่เขียนลงในปฏิทินส่วนตัวของคุณเลย"
+            "value": "อ่านกิจกรรมปฏิทินของคุณเข้า Lorvex และเขียนกิจกรรมที่คุณเพิ่มใน Lorvex ลงในปฏิทิน “Lorvex” โดยเฉพาะ เป็นค่าเริ่มต้น เมื่อเพิ่มกิจกรรม คุณสามารถเลือกปฏิทินอื่นที่สามารถเขียนลงได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takvim etkinliklerinizi Lorvex’e okur ve Lorvex’te eklediğiniz etkinlikleri özel bir “Lorvex” takvimine yazar; kişisel takvimlerinize asla yazmaz."
+            "value": "Takvim etkinliklerinizi Lorvex’e okur ve Lorvex’te eklediğiniz etkinlikleri özel bir “Lorvex” takvimine varsayılan olarak yazar. Etkinlik eklerken, yazabileceğiniz başka bir takvimi seçebilirsiniz."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvex зчитує події з ваших календарів, а додані в Lorvex події записує в окремий календар «Lorvex» — ніколи не у ваші особисті календарі."
+            "value": "Lorvex зчитує події з ваших календарів, а додані в Lorvex події записує в окремий календар «Lorvex» за замовчуванням. Під час додавання події можна вибрати інший календар, до якого можна записувати."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "آپ کے کیلنڈر ایونٹس کو Lorvex میں پڑھیں اور Lorvex میں شامل کردہ ایونٹس کو ایک مخصوص \"Lorvex\" کیلنڈر میں لکھیں — آپ کے ذاتی کیلنڈرز میں کبھی نہیں۔"
+            "value": "آپ کے کیلنڈر ایونٹس کو Lorvex میں پڑھیں اور Lorvex میں شامل کردہ ایونٹس کو ایک مخصوص \"Lorvex\" کیلنڈر میں ڈیفالٹ کے طور پر لکھیں۔ ایونٹ شامل کرتے وقت، آپ کوئی دوسرا کیلنڈر منتخب کر سکتے ہیں جس میں لکھا جا سکے۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đọc các sự kiện lịch vào Lorvex và ghi các sự kiện thêm trong Lorvex vào một lịch “Lorvex” riêng – không bao giờ vào lịch cá nhân."
+            "value": "Đọc các sự kiện lịch vào Lorvex và ghi các sự kiện thêm trong Lorvex vào một lịch “Lorvex” riêng theo mặc định. Khi thêm sự kiện, bạn có thể chọn một lịch khác mà bạn có thể ghi vào."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "将你的日历事件读入 Lorvex，并把你在 Lorvex 中添加的事件写入专用的“Lorvex”日历，不会写入你的个人日历。"
+            "value": "将你的日历事件读入 Lorvex，并默认把你在 Lorvex 中添加的事件写入专用的“Lorvex”日历。添加事件时，你可以选择其他可写入的日历。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "將你的行事曆事件讀取到 Lorvex，並把你在 Lorvex 中新增的事件寫入專用的「Lorvex」行事曆，絕不會寫入你的個人行事曆。"
+            "value": "將你的行事曆事件讀取到 Lorvex，並預設把你在 Lorvex 中新增的事件寫入專用的「Lorvex」行事曆。新增事件時，你可以選擇其他可寫入的行事曆。"
           }
         }
       }
@@ -184951,187 +184952,187 @@
       }
     },
     "task.permanent_delete.message": {
-      "comment": "Explains that a permanent delete removes the task with its checklist items, reminders, and links, and cannot be undone.",
+      "comment": "Message of the permanent-delete confirmation: the task is deleted and cannot be restored, its last state stays in the activity log until retention removes it, and iCloud keeps an encrypted copy until the user deletes the iCloud data.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ستتم إزالة هذه المهمة وجميع عناصر قائمة التحقق والتذكيرات والروابط الخاصة بها نهائيًا. لا يمكن التراجع عن هذا الإجراء."
+            "value": "ستتم حذف المهمة وعناصر قائمة التحقق والتذكيرات والروابط الخاصة بها، ولا يمكن استعادتها. تبقى نسخة من آخر حالة لها في سجل النشاط إلى أن تُزيلها سياسة الاحتفاظ، ويحتفظ iCloud بنسخة مشفّرة منها حتى تحذف بيانات Lorvex من iCloud."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এই টাস্ক এবং এর সব চেকলিস্ট আইটেম, রিমাইন্ডার ও লিঙ্ক চিরতরে সরিয়ে ফেলা হবে। এটি পূর্বাবস্থায় ফেরানো যাবে না।"
+            "value": "টাস্কটি এবং এর চেকলিস্ট আইটেম, রিমাইন্ডার ও লিঙ্ক মুছে ফেলা হবে এবং পুনরুদ্ধার করা যাবে না। এর শেষ অবস্থার একটি অনুলিপি সংরক্ষণ-নীতি তা মুছে দেওয়া পর্যন্ত কার্যকলাপের লগে থাকবে, এবং আপনি Lorvex-এর iCloud ডেটা মুছে ফেলা পর্যন্ত iCloud একটি এনক্রিপ্টেড অনুলিপি রাখবে।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Aufgabe und alle zugehörigen Checklistenpunkte, Erinnerungen und Verknüpfungen werden endgültig entfernt. Dies kann nicht rückgängig gemacht werden."
+            "value": "Die Aufgabe und die zugehörigen Checklistenpunkte, Erinnerungen und Verknüpfungen werden gelöscht und können nicht wiederhergestellt werden. Eine Kopie ihres letzten Zustands bleibt im Aktivitätsprotokoll, bis die Aufbewahrungsfrist sie entfernt, und iCloud bewahrt eine verschlüsselte Kopie auf, bis du die iCloud-Daten von Lorvex löschst."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Αυτή η εργασία και όλα τα στοιχεία της λίστας ελέγχου, οι υπομνήσεις και οι σύνδεσμοί της αφαιρούνται οριστικά. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
+            "value": "Η εργασία και τα στοιχεία της λίστας ελέγχου, οι υπομνήσεις και οι σύνδεσμοί της διαγράφονται και δεν μπορούν να επαναφερθούν. Ένα αντίγραφο της τελευταίας κατάστασής της παραμένει στο αρχείο δραστηριότητας έως ότου το αφαιρέσει η πολιτική διατήρησης, και το iCloud διατηρεί ένα κρυπτογραφημένο αντίγραφο έως ότου διαγράψετε τα δεδομένα iCloud του Lorvex."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This task and all its checklist items, reminders, and links are removed for good. This can’t be undone."
+            "value": "The task and its checklist items, reminders, and links are deleted and can’t be restored. A copy of its last state stays in the activity log until retention removes it, and iCloud keeps an encrypted copy until you delete Lorvex’s iCloud data."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta tarea y todos sus elementos de lista de comprobación, recordatorios y vínculos se eliminan para siempre. Esta acción no se puede deshacer."
+            "value": "La tarea y sus elementos de lista de comprobación, recordatorios y vínculos se eliminan y no se pueden restaurar. Una copia de su último estado permanece en el registro de actividad hasta que la retención la elimine, y iCloud conserva una copia cifrada hasta que elimines los datos de Lorvex en iCloud."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "این کار و همه موارد چک‌لیست، یادآورها و پیوندهایش برای همیشه حذف می‌شوند. این کار قابل بازگشت نیست."
+            "value": "کار و موارد چک‌لیست، یادآورها و پیوندهایش حذف می‌شوند و قابل بازگشت نیستند. یک نسخه از آخرین وضعیت آن تا زمانی که سیاست نگهداری آن را حذف کند در گزارش فعالیت باقی می‌ماند و iCloud یک نسخه رمزگذاری‌شده را تا زمانی که داده‌های iCloud مربوط به Lorvex را حذف کنید نگه می‌دارد."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette tâche, ainsi que tous ses éléments de liste de contrôle, rappels et liens, sera supprimée définitivement. Cette action est irréversible."
+            "value": "La tâche, ainsi que ses éléments de liste de contrôle, rappels et liens, sera supprimée et ne pourra pas être restaurée. Une copie de son dernier état reste dans le journal d’activité jusqu’à ce que la durée de conservation la supprime, et iCloud conserve une copie chiffrée jusqu’à ce que vous supprimiez les données iCloud de Lorvex."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "המשימה וכל פריטי רשימת התיוג, התזכורות והקישורים שלה יימחקו לצמיתות. לא ניתן לבטל פעולה זו."
+            "value": "המשימה ופריטי רשימת התיוג, התזכורות והקישורים שלה יימחקו ולא ניתן לשחזרם. עותק של המצב האחרון שלה נשאר ביומן הפעילות עד שמדיניות השמירה תסיר אותו, ו-iCloud שומר עותק מוצפן עד למחיקת נתוני iCloud של Lorvex."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "यह कार्य और उसके सभी चेकलिस्ट आइटम, रिमाइंडर और लिंक हमेशा के लिए हट जाते हैं। इसे पूर्ववत नहीं किया जा सकता।"
+            "value": "कार्य और उसके चेकलिस्ट आइटम, रिमाइंडर और लिंक हटा दिए जाते हैं और पुनर्स्थापित नहीं किए जा सकते। इसकी अंतिम स्थिति की एक प्रति गतिविधि लॉग में तब तक रहती है जब तक प्रतिधारण नीति उसे हटा न दे, और जब तक आप Lorvex का iCloud डेटा नहीं हटाते, तब तक iCloud एक एन्क्रिप्टेड प्रति रखता है।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tugas ini beserta semua item daftar centang, pengingat, dan tautannya dihapus secara permanen. Tindakan ini tidak dapat diurungkan."
+            "value": "Tugas beserta item daftar centang, pengingat, dan tautannya dihapus dan tidak dapat dipulihkan. Salinan kondisi terakhirnya tetap ada di log aktivitas hingga retensi menghapusnya, dan iCloud menyimpan salinan terenkripsi hingga Anda menghapus data iCloud Lorvex."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa attività, insieme a tutti i suoi elementi della lista di controllo, promemoria e collegamenti, verrà eliminata definitivamente. L’azione non può essere annullata."
+            "value": "L’attività, insieme ai suoi elementi della lista di controllo, promemoria e collegamenti, verrà eliminata e non potrà essere ripristinata. Una copia del suo ultimo stato resta nel registro delle attività finché la conservazione non la rimuove, e iCloud conserva una copia cifrata finché non elimini i dati di Lorvex su iCloud."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このタスクと、そのチェックリスト項目、リマインダー、リンクがすべて完全に削除されます。この操作は取り消せません。"
+            "value": "タスクと、そのチェックリスト項目、リマインダー、リンクは削除され、復元できません。その最後の状態のコピーは、保持期間によって削除されるまでアクティビティログに残り、iCloudには、LorvexのiCloudデータを削除するまで暗号化されたコピーが残ります。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 할 일과 모든 체크리스트 항목, 알림, 링크가 완전히 제거됩니다. 이 동작은 취소할 수 없습니다."
+            "value": "할 일과 체크리스트 항목, 알림, 링크가 삭제되며 복구할 수 없습니다. 할 일의 마지막 상태 사본은 보관 기간에 따라 삭제될 때까지 활동 기록에 남고, iCloud에는 Lorvex의 iCloud 데이터를 삭제할 때까지 암호화된 사본이 보관됩니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "हे कार्य आणि त्याचे सर्व तपासणी यादी आयटम, रिमाइंडर आणि लिंक कायमचे काढून टाकले जातात. हे पूर्ववत करता येणार नाही."
+            "value": "कार्य आणि त्याचे तपासणी यादी आयटम, रिमाइंडर आणि लिंक हटवले जातात आणि पुनर्संचयित करता येणार नाहीत. त्याच्या शेवटच्या स्थितीची एक प्रत धारणा धोरण ती काढून टाकेपर्यंत क्रियाकलाप लॉगमध्ये राहते, आणि तुम्ही Lorvex चा iCloud डेटा हटवेपर्यंत iCloud एक एन्क्रिप्टेड प्रत ठेवते."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tugas ini beserta semua item senarai semak, peringatan dan pautannya dipadam secara kekal. Tindakan ini tidak boleh dibuat asal."
+            "value": "Tugas beserta item senarai semak, peringatan dan pautannya dipadam dan tidak boleh dipulihkan. Salinan keadaan terakhirnya tinggal dalam log aktiviti sehingga tempoh pengekalan mengalih keluarnya, dan iCloud menyimpan salinan disulitkan sehingga anda memadamkan data iCloud Lorvex."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze taak en alle bijbehorende checklistonderdelen, herinneringen en koppelingen worden definitief verwijderd. Dit kan niet ongedaan worden gemaakt."
+            "value": "De taak en de bijbehorende checklistonderdelen, herinneringen en koppelingen worden verwijderd en kunnen niet worden hersteld. Een kopie van de laatste status blijft in het activiteitenlogboek totdat het bewaarbeleid die verwijdert, en iCloud bewaart een versleutelde kopie totdat je de iCloud-gegevens van Lorvex verwijdert."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "To zadanie wraz ze wszystkimi elementami listy kontrolnej, przypomnieniami i linkami zostanie usunięte na zawsze. Tej operacji nie można cofnąć."
+            "value": "Zadanie wraz z elementami listy kontrolnej, przypomnieniami i linkami zostanie usunięte i nie będzie można go przywrócić. Kopia ostatniego stanu zadania pozostaje w dzienniku aktywności, dopóki okres przechowywania jej nie usunie, a iCloud przechowuje zaszyfrowaną kopię, dopóki nie usuniesz danych Lorvex z iCloud."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta tarefa e todos os seus itens da lista de verificação, lembretes e vínculos serão removidos permanentemente. Esta ação não pode ser desfeita."
+            "value": "A tarefa e os seus itens da lista de verificação, lembretes e vínculos serão excluídos e não poderão ser restaurados. Uma cópia do último estado da tarefa permanece no registro de atividades até que o período de retenção a remova, e o iCloud mantém uma cópia criptografada até que você exclua os dados do Lorvex no iCloud."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Această sarcină, împreună cu toate elementele listei de control, mementourile și legăturile ei, va fi eliminată definitiv. Acțiunea nu poate fi anulată."
+            "value": "Sarcina, împreună cu elementele listei de control, mementourile și legăturile ei, va fi ștearsă și nu va putea fi restaurată. O copie a ultimei stări a acesteia rămâne în jurnalul de activitate până când perioada de retenție o elimină, iar iCloud păstrează o copie criptată până când ștergeți datele Lorvex din iCloud."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта задача со всеми пунктами чек-листа, напоминаниями и ссылками будет удалена навсегда. Это действие необратимо."
+            "value": "Задача с пунктами чек-листа, напоминаниями и ссылками будет удалена и не может быть восстановлена. Копия последнего состояния задачи остаётся в журнале активности, пока срок хранения не удалит её, а iCloud хранит зашифрованную копию, пока вы не удалите данные Lorvex из iCloud."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "இந்தப் பணியும் அதன் சரிபார்ப்புப் பட்டியல் ஐட்டங்கள், நினைவூட்டல்கள், இணைப்புகள் அனைத்தும் நிரந்தரமாக நீக்கப்படும். இதைச் செயல்தவிர்க்க முடியாது."
+            "value": "பணியும் அதன் சரிபார்ப்புப் பட்டியல் ஐட்டங்கள், நினைவூட்டல்கள், இணைப்புகளும் நீக்கப்பட்டு மீட்டெடுக்க முடியாது. அதன் கடைசி நிலையின் ஒரு நகல், தக்கவைப்புக் கொள்கை அதை நீக்கும் வரை செயல்பாட்டுப் பதிவில் இருக்கும்; நீங்கள் Lorvexஇன் iCloud தரவை நீக்கும் வரை iCloud ஒரு குறியாக்கப்பட்ட நகலை வைத்திருக்கும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "ఈ టాస్క్, దీని చెక్‌లిస్ట్ ఐటెమ్‌లు, రిమైండర్‌లు, లింక్‌లు అన్నీ శాశ్వతంగా తొలగించబడతాయి. ఇది అన్‌డూ చేయబడదు."
+            "value": "టాస్క్, దీని చెక్‌లిస్ట్ ఐటెమ్‌లు, రిమైండర్‌లు, లింక్‌లు తొలగించబడతాయి మరియు పునరుద్ధరించడం సాధ్యం కాదు. దీని చివరి స్థితి కాపీ, నిలుపుదల విధానం దాన్ని తీసివేసే వరకు యాక్టివిటీ లాగ్‌లో ఉంటుంది, మరియు మీరు Lorvex యొక్క iCloud డేటాను తొలగించే వరకు iCloud ఒక గుప్తీకరించిన కాపీని ఉంచుతుంది."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "งานนี้พร้อมรายการเช็คลิสต์ เตือนความจำ และลิงก์ทั้งหมดจะถูกลบอย่างถาวร การดำเนินการนี้ไม่สามารถเลิกทำได้"
+            "value": "งานพร้อมรายการเช็คลิสต์ เตือนความจำ และลิงก์จะถูกลบและไม่สามารถกู้คืนได้ สำเนาของสถานะล่าสุดจะยังคงอยู่ในบันทึกกิจกรรมจนกว่าระยะเวลาการเก็บรักษาจะลบออก และ iCloud จะเก็บสำเนาที่เข้ารหัสไว้จนกว่าคุณจะลบข้อมูล iCloud ของ Lorvex"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu görev; tüm kontrol listesi öğeleri, anımsatıcıları ve bağlantılarıyla birlikte kalıcı olarak kaldırılır. Bu işlem geri alınamaz."
+            "value": "Görev; kontrol listesi öğeleri, anımsatıcıları ve bağlantılarıyla birlikte silinir ve geri yüklenemez. Görevin son durumunun bir kopyası, saklama süresi onu kaldırana kadar etkinlik günlüğünde kalır; iCloud ise Lorvex’in iCloud verilerini siz silene kadar şifrelenmiş bir kopyayı saklar."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Це завдання з усіма пунктами чек-листа, нагадуваннями та посиланнями буде видалено назавжди. Ця дія незворотна."
+            "value": "Завдання з пунктами чек-листа, нагадуваннями та посиланнями буде видалено і його не можна відновити. Копія його останнього стану залишається в журналі активності, доки період зберігання її не видалить, а iCloud зберігає зашифровану копію, доки ви не видалите дані Lorvex з iCloud."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "یہ کام اور اس کے تمام چیک لسٹ آئٹمز، یاد دہانیاں اور لنکس ہمیشہ کے لیے ہٹا دیے جائیں گے۔ اسے واپس نہیں کیا جا سکتا۔"
+            "value": "کام اور اس کے چیک لسٹ آئٹمز، یاد دہانیاں اور لنکس حذف کر دیے جائیں گے اور بحال نہیں کیے جا سکتے۔ اس کام کی آخری حالت کی ایک نقل سرگرمی لاگ میں اس وقت تک رہتی ہے جب تک برقرار رکھنے کی مدت اسے ہٹا نہ دے، اور جب تک آپ Lorvex کا iCloud ڈیٹا حذف نہ کریں، iCloud ایک خفیہ کاری شدہ نقل رکھتا ہے۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nhiệm vụ này cùng mọi mục checklist, lời nhắc và liên kết của nó sẽ bị xóa vĩnh viễn. Không thể hoàn tác hành động này."
+            "value": "Nhiệm vụ cùng các mục checklist, lời nhắc và liên kết của nó sẽ bị xóa và không thể khôi phục. Một bản sao trạng thái cuối của nhiệm vụ vẫn nằm trong nhật ký hoạt động cho đến khi thời hạn lưu giữ xóa nó; iCloud giữ một bản sao đã mã hóa cho đến khi bạn xóa dữ liệu Lorvex trên iCloud."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "此任务及其所有清单项、提醒和关联都将被永久删除，无法撤销。"
+            "value": "该任务及其清单项、提醒和关联都将被删除，无法恢复。其最后状态的副本会保留在活动日志中，直到保留策略将其清除，iCloud 则会保留一份加密副本，直到你删除 Lorvex 的 iCloud 数据。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "這個任務及其所有核對清單項目、提醒與連結都會被永久移除，且無法還原。"
+            "value": "該任務及其核對清單項目、提醒與連結都會被刪除，且無法還原。其最後狀態的副本會保留在活動紀錄中，直到保留政策將其清除，iCloud 則會保留一份加密副本，直到你刪除 Lorvex 的 iCloud 資料。"
           }
         }
       }

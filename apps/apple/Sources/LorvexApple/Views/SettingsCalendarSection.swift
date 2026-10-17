@@ -56,7 +56,7 @@ private struct SettingsCalendarSyncSection: View {
         LocalizedStringResource(
           "settings.calendar.two_way_detail",
           defaultValue:
-            "Read your calendar events into Lorvex and write the events you add in Lorvex into a dedicated “Lorvex” calendar — never your personal calendars.",
+            "Read your calendar events into Lorvex and write the events you add in Lorvex into a dedicated “Lorvex” calendar by default. When you add an event, you can choose another calendar you can write to.",
           table: "Localizable",
           bundle: LorvexL10n.bundle))
     }

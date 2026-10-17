@@ -149,7 +149,7 @@ struct LorvexWatchStoreTests {
     #expect(store.canMutateTasks == false)
     #expect(store.canCaptureTask == false)
     #expect(store.taskActionUnavailableReason == "Open Lorvex on iPhone to change tasks.")
-    #expect(store.captureUnavailableReason == "Open Lorvex on iPhone or Mac to capture new tasks.")
+    #expect(store.captureUnavailableReason == "Open Lorvex on iPhone to capture new tasks.")
     #expect(store.error == nil)
 
     await store.completeTask(id: task.id)

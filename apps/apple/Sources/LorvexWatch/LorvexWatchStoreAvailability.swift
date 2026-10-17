@@ -43,7 +43,7 @@ extension LorvexWatchStore {
     }
     if mutationForwarder == nil {
       return String(
-        localized: "watch.unavailable.capture", defaultValue: "Open Lorvex on iPhone or Mac to capture new tasks.",
+        localized: "watch.unavailable.capture", defaultValue: "Open Lorvex on iPhone to capture new tasks.",
         table: "Localizable", bundle: WatchL10n.bundle)
     }
     return nil

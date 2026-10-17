@@ -72,19 +72,26 @@ enum ApplyList {
   ) throws {
     let val = try ApplyJSON.parseObject(payload)
 
-    // Unicode hygiene: scrub free-text list fields at the sync apply boundary.
-    let nameOwned = ApplyAggregate.scrub(try ApplyJSON.requiredStr(val, "name", entity: "list"))
-    if nameOwned.isEmpty {
-      throw ApplyError.invalidPayload("list \(entityId) name is empty")
-    }
-    let nameLen = nameOwned.count
-    if nameLen > ValidationLimits.maxTitleLength {
-      throw ApplyError.invalidPayload(
-        "list \(entityId) name is too long (\(nameLen) chars; max "
-          + "\(ValidationLimits.maxTitleLength))")
+    // The same single-line, non-empty, length-capped name the local writers store: a fold of a
+    // peer's name that already follows that rule is a no-op, so the two devices agree.
+    let nameOwned: String
+    do {
+      nameOwned = try ListValidation.normalizeName(
+        ApplyAggregate.scrub(try ApplyJSON.requiredStr(val, "name", entity: "list")))
+    } catch {
+      throw ApplyError.invalidPayload("list \(entityId) name failed validation: \(error)")
     }
     let color = try ApplyJSON.optionalStr(val, "color", entity: "list")
     let icon = try ApplyJSON.optionalStr(val, "icon", entity: "list")
+    // The icon is returned to an assistant unfenced, so it must be the symbol or emoji token the
+    // local writers accept, and the color the hex value they accept. Validate only: the stored
+    // value is the peer's, as written.
+    do {
+      _ = try ListValidation.normalizeColor(color)
+      _ = try ListValidation.normalizeIcon(icon)
+    } catch {
+      throw ApplyError.invalidPayload("list \(entityId) appearance failed validation: \(error)")
+    }
     let description = ApplyAggregate.scrubOpt(
       try ApplyJSON.optionalStr(val, "description", entity: "list"))
     if let d = description {
@@ -98,6 +105,11 @@ enum ApplyList {
     // list rides the LWW-gated list upsert like any other owned column, so the
     // archive state converges across devices.
     let archivedAt = try ApplyJSON.optionalStr(val, "archived_at", entity: "list")
+    // The inbox is the fallback every task files under, so it is never archived (the local
+    // archive refuses it): a peer that archives it would hide the list new tasks go to.
+    if archivedAt != nil, entityId == inboxListId {
+      throw ApplyError.invalidPayload("list \(entityId) is the inbox and cannot be archived")
+    }
     let createdAt = try ApplyJSON.requiredStr(val, "created_at", entity: "list")
     let updatedAt = try ApplyJSON.requiredStr(val, "updated_at", entity: "list")
     // Synced manual display order. A peer that predates the column omits it; in

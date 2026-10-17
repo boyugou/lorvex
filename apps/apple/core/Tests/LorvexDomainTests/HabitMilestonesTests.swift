@@ -149,4 +149,17 @@ final class HabitMilestonesTests: XCTestCase {
     // Crossing a sub-ladder target with no ladder rung in range still fires.
     XCTAssertEqual(justReachedHabitMilestone(prev: 2, new: 5, target: 4, metric: .streak), 4)
   }
+
+  /// A count total near Int64.max (a crafted row) must not trap the ladder: the rungs saturate at
+  /// Int.max, which no real count reaches, and the walk stops there instead of looping.
+  func testCountLadderSaturatesInsteadOfTrappingOnHugeTotals() {
+    let large = habitMilestoneStanding(value: 5_000_000_000_000_000_000, target: nil, metric: .count)
+    XCTAssertEqual(large.currentMilestone, 5_000_000_000_000_000_000)
+    XCTAssertEqual(large.nextMilestone, Int.max)
+    XCTAssertTrue((0...1).contains(large.progressToNext))
+
+    let maximum = habitMilestoneStanding(value: Int.max, target: nil, metric: .count)
+    XCTAssertNotNil(maximum.currentMilestone)
+    XCTAssertEqual(maximum.nextMilestone, Int.max)
+  }
 }

@@ -478,7 +478,8 @@ public enum DailyReviewOpsRepo {
     try db.execute(
       sql: sql,
       arguments: [
-        date, summary, mood, energyLevel, wins, blockers, learnings,
+        date, scrubReviewText(summary), mood, energyLevel, scrubReviewText(wins),
+        scrubReviewText(blockers), scrubReviewText(learnings),
         timezone, createdAt, updatedAt, version,
       ])
     return db.changesCount > 0

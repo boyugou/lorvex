@@ -137,6 +137,14 @@ enum ApplyCalendarEvent {
         throw ApplyError.invalidPayload(
           "calendar_event \(incoming.id) cannot clear immutable series_cutover_id")
       }
+      // A decision's id is a deterministic UUIDv8 that any peer can compute from its synced
+      // fields. A plain base event's id is a UUIDv7 (`EntityID.newEntityIDString`), so a plain
+      // base carrying the v8 form would claim a decision's identity and displace the real
+      // decision. A cutover segment carries a cutover marker and is exempt above.
+      if incoming.seriesCutoverId == nil, cutover == nil, Self.hasDecisionShapedId(incoming.id) {
+        throw ApplyError.invalidPayload(
+          "calendar_event \(incoming.id) is a base event with an occurrence-decision identity")
+      }
       if let cutover, cutover.state == .deleted {
         _ = try CalendarSeriesCutoverCleanup.removeSegmentData(
           db, cutoverId: cutover.id, barrierVersion: version,
@@ -222,6 +230,13 @@ enum ApplyCalendarEvent {
       version: envelope.version.description, payloadSchemaVersion: envelope.payloadSchemaVersion)
     guard incoming.isBase else { return false }
     return try CalendarEventSyncRow.staleIncomingRegisterWins(local: local, incoming: incoming)
+  }
+
+  /// Whether `id` has the canonical UUIDv8 shape (version nibble 8), the form of an occurrence
+  /// decision's identity.
+  static func hasDecisionShapedId(_ id: String) -> Bool {
+    let bytes = Array(id.utf8)
+    return bytes.count == 36 && bytes[14] == UInt8(ascii: "8")
   }
 
   private static func validatedRow(

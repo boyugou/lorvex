@@ -387,6 +387,12 @@ extension ApplyError {
     if case Outbox.OutboxError.payloadContractUnavailable(let detail) = error {
       return .store("sync payload contract unavailable: \(detail)")
     }
+    if let storeError = error as? StoreError, case .validation(let message) = storeError {
+      // A repository write refused a value the envelope carried (a recurrence exception that is
+      // not a date, for one). The same envelope re-fails identically, so drop that one envelope:
+      // as `.store` it aborted the whole inbound page on every refetch, and no later record applied.
+      return .invalidPayload(message)
+    }
     if let payloadError = error as? PayloadError {
       switch payloadError {
       case .sql(let underlying):

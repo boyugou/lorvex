@@ -93,6 +93,19 @@ final class ApplyFoundationTests: XCTestCase {
     }
   }
 
+  /// A repository write that refuses a value the envelope carried (a recurrence exception that is
+  /// not a date) is that envelope's fault: it must drop the envelope, not abort the inbound page,
+  /// because the page is refetched and refails identically.
+  func testARepositoryValidationRefusalDropsTheEnvelopeNotThePage() {
+    guard case .invalidPayload(let message) = ApplyError.lift(
+      StoreError.validation("invalid date format: not-a-date"))
+    else { return XCTFail("a validation refusal must lift to .invalidPayload") }
+    XCTAssertEqual(message, "invalid date format: not-a-date")
+    guard case .store = ApplyError.lift(StoreError.invariant("x")) else {
+      return XCTFail("an invariant failure stays batch-fatal .store")
+    }
+  }
+
   // MARK: - LwwUpsertSpec.buildSQL
 
   func testBuildSQLEmitsStrictLwwClause() {

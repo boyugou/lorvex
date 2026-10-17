@@ -108,7 +108,10 @@ final class ApplyChildTests: XCTestCase {
     }
   }
 
-  func testTaskReminderUpsertClearsDeliveryStateWhenTimeChanges() throws {
+  /// A peer re-anchors a reminder. The device's `delivered` receipt survives (the reminder is the
+  /// same one-shot, so it must not surface again), and a pending receipt is discarded so the
+  /// next scheduling pass arms the new instant.
+  func testTaskReminderUpsertKeepsADeliveredReceiptWhenTimeChanges() throws {
     try withDB { db in
       try self.insertTask(db, "task-1")
       try ApplyChild.applyTaskReminderUpsert(
@@ -124,8 +127,33 @@ final class ApplyChildTests: XCTestCase {
         version: self.vNew, tieBreak: .rejectEqual)
       XCTAssertEqual(try self.reminderAt(db, "rem-001"), "2026-04-01T10:00:00.000Z")
       XCTAssertEqual(
+        try self.countDeliveryState(db, "rem-001"), 1,
+        "a delivered receipt must survive a peer's re-anchor of the same reminder")
+    }
+  }
+
+  func testTaskReminderUpsertDiscardsAPendingReceiptWhenTimeChanges() throws {
+    try withDB { db in
+      try self.insertTask(db, "task-1")
+      try ApplyChild.applyTaskReminderUpsert(
+        db, entityId: "rem-001",
+        payload: self.taskReminderPayload(taskId: "task-1", reminderAt: "2026-03-15T09:00:00Z"),
+        version: self.vOld, tieBreak: .rejectEqual)
+      try db.execute(
+        sql: """
+          INSERT INTO task_reminder_delivery_state
+            (reminder_id, delivery_state, last_armed_at, updated_at)
+          VALUES ('rem-001', 'pending', '2026-03-15T08:00:00Z', '2026-03-15T08:00:00Z')
+          """)
+      XCTAssertEqual(try self.countDeliveryState(db, "rem-001"), 1)
+
+      try ApplyChild.applyTaskReminderUpsert(
+        db, entityId: "rem-001",
+        payload: self.taskReminderPayload(taskId: "task-1", reminderAt: "2026-04-01T10:00:00Z"),
+        version: self.vNew, tieBreak: .rejectEqual)
+      XCTAssertEqual(
         try self.countDeliveryState(db, "rem-001"), 0,
-        "delivery_state row must be cleared when reminder_at is edited")
+        "a pending arming receipt is discarded when reminder_at is edited")
     }
   }
 

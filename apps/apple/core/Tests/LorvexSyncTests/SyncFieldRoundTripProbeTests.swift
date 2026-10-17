@@ -491,7 +491,10 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
     try runProbe(
       ProbeSpec(
         kind: .list, entityId: uuid(2), table: "lists", pkColumns: ["id"], pkValues: [uuid(2)],
-        isEdge: false, overrides: ["id": .text(uuid(2))]))
+        // `icon` and `color` are validated on apply as an SF Symbol token and a hex value, so
+        // the probe seeds valid ones (they are stored verbatim and round-trip).
+        isEdge: false,
+        overrides: ["id": .text(uuid(2)), "icon": .text("star.fill"), "color": .text("#4287f5")]))
   }
 
   func testRoundTripHabit() throws {
@@ -538,7 +541,7 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
         pkValues: [uuid(5)], isEdge: false,
         overrides: [
           "id": .text(uuid(5)), "event_type": .text("birthday"),
-          "timezone": .text("America/Los_Angeles"),
+          "timezone": .text("America/Los_Angeles"), "color": .text("#4287f5"),
           // Valid calendar URL scheme (validated on apply, stored verbatim).
           "url": .text("https://probe.example.com/e"),
           // `attendees` is a JSON-in-TEXT column (json_valid CHECK); seed an

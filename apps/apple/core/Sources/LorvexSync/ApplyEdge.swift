@@ -127,6 +127,14 @@ enum ApplyEdge {
       throw ApplyError.invalidPayload(
         "habit_completion payload.value must be > 0 (got \(value))")
     }
+    // Every writer clamps a completion to its habit's target, which is capped at
+    // `maxHabitTargetCount`. A larger value is a corrupt or hostile row, and it would make the
+    // habit's total overflow on every read.
+    if value > ValidationLimits.maxHabitTargetCount {
+      throw ApplyError.invalidPayload(
+        "habit_completion payload.value must be at most \(ValidationLimits.maxHabitTargetCount)"
+          + " (got \(value))")
+    }
     let note = try ApplyJSON.optionalStr(val, "note", entity: "habit_completion")
     let createdAt = try ApplyJSON.requiredStr(val, "created_at", entity: "habit_completion")
     let updatedAt = try ApplyJSON.requiredStr(val, "updated_at", entity: "habit_completion")

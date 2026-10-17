@@ -89,5 +89,10 @@ extension SwiftLorvexCoreService {
       throw LorvexCoreError.unsupportedOperation(
         "Habit completion value must be positive for \(habitID):\(completion.completedDate).")
     }
+    guard Int64(completion.value) <= ValidationLimits.maxHabitTargetCount else {
+      throw LorvexCoreError.unsupportedOperation(
+        "Habit completion value must be at most \(ValidationLimits.maxHabitTargetCount) "
+          + "for \(habitID):\(completion.completedDate).")
+    }
   }
 }

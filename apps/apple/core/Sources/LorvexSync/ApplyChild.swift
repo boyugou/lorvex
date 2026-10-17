@@ -72,9 +72,16 @@ enum ApplyChild {
       timeChanged = false
     }
     if timeChanged {
+      // A peer's re-anchor is the same one-shot reminder, so keep this device's `delivered`
+      // receipt: deleting it would let the reminder surface again. A pending receipt is
+      // discarded so the next scheduling pass arms the new instant. Matches the local re-anchor
+      // (`SwiftLorvexCoreService+Preferences`).
       do {
         try db.execute(
-          sql: "DELETE FROM task_reminder_delivery_state WHERE reminder_id = ?",
+          sql: """
+            DELETE FROM task_reminder_delivery_state
+            WHERE reminder_id = ? AND delivery_state <> 'delivered'
+            """,
           arguments: [entityId])
       } catch { throw ApplyError.lift(error) }
     }

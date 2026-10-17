@@ -48,9 +48,16 @@ public func habitMilestoneRung(index: Int, for metric: HabitMilestoneMetric) -> 
   case .count:
     let decade = index / countMilestoneDecadeSteps.count
     let step = countMilestoneDecadeSteps[index % countMilestoneDecadeSteps.count]
+    // Saturates instead of overflowing: a total near Int64.max (a crafted or corrupt row) would
+    // otherwise trap every habit read. No count reaches Int.max, so the saturated rung is never
+    // a real milestone.
     var scale = 1
-    for _ in 0..<decade { scale *= 10 }
-    return step * scale
+    for _ in 0..<decade {
+      let (next, overflow) = scale.multipliedReportingOverflow(by: 10)
+      scale = overflow ? Int.max : next
+    }
+    let (rung, overflow) = step.multipliedReportingOverflow(by: scale)
+    return overflow ? Int.max : rung
   }
 }
 
@@ -58,7 +65,9 @@ public func habitMilestoneRung(index: Int, for metric: HabitMilestoneMetric) -> 
 private func milestoneRungAtOrBelow(_ value: Int, metric: HabitMilestoneMetric) -> Int? {
   guard value >= habitMilestoneRung(index: 0, for: metric) else { return nil }
   var index = 0
-  while habitMilestoneRung(index: index + 1, for: metric) <= value {
+  while habitMilestoneRung(index: index + 1, for: metric) <= value,
+    habitMilestoneRung(index: index + 1, for: metric) < Int.max
+  {
     index += 1
   }
   return habitMilestoneRung(index: index, for: metric)
@@ -68,7 +77,10 @@ private func milestoneRungAtOrBelow(_ value: Int, metric: HabitMilestoneMetric) 
 /// is unbounded).
 private func nextMilestoneRungAbove(_ value: Int, metric: HabitMilestoneMetric) -> Int {
   var index = 0
-  while habitMilestoneRung(index: index, for: metric) <= value {
+  // Stops at the saturated rung, so a value at Int.max cannot loop forever.
+  while habitMilestoneRung(index: index, for: metric) <= value,
+    habitMilestoneRung(index: index, for: metric) < Int.max
+  {
     index += 1
   }
   return habitMilestoneRung(index: index, for: metric)

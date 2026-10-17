@@ -46,10 +46,12 @@ The helper tells every assistant session how to work with Lorvex: gather the
 context a request needs, confirm anything vague, and explain each change. The
 full playbook is [`docs/design/AI_OPERATING_MODEL.md`](../../docs/design/AI_OPERATING_MODEL.md).
 
-Everything stays on your Mac. The helper is a local process that talks to
-Claude Code over standard input and output, and Lorvex syncs your data
-between your devices through your own iCloud account. Changes the assistant
-makes are listed in the app's AI activity log unless you turn that log off.
+Lorvex keeps your data on this Mac. The helper is a local process that talks
+to Claude Code over standard input and output. Claude Code passes what the
+tools return into its conversation with Claude, under Anthropic's terms.
+Lorvex syncs data to your other devices only when you turn iCloud sync on,
+through your own iCloud account. Changes the assistant makes are listed in
+the app's AI activity log unless you turn that log off.
 
 ## Updates
 

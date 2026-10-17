@@ -54,8 +54,9 @@ Reminders are delivered as local, on-device notifications only.
 
 On Mac, you can reset or delete this Mac's local data from Settings → Data at
 any time — that is local to that Mac, and a copy already synced to iCloud is
-not affected. On iPhone/iPad there is no in-app local-reset action;
-uninstalling Lorvex is how you remove its local data on that device. Settings
+not affected. On iPhone/iPad, Settings → Reset → "Erase This Device's Data"
+erases this device's local data and leaves iCloud alone; uninstalling Lorvex
+also removes its local data on that device. Settings
 also offers "Delete iCloud Data" (Settings → Data on macOS, Settings → Cloud
 Sync on iPhone/iPad), which removes every Lorvex record from your iCloud
 account for all devices that sync with it and turns sync off until you

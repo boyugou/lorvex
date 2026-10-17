@@ -107,8 +107,9 @@ Lorvex is also a complete planner on its own, without any assistant connected:
 
 Built natively for Apple platforms — macOS, iPhone, and iPad — with widgets,
 App Intents and Shortcuts, Spotlight, an Apple Watch companion, and system
-light/dark appearance. Every AI change is recorded in a changelog you can read,
-and any field the AI writes you can correct.
+light/dark appearance. Every AI change is recorded in an activity log you can
+read, unless you turn the log off. You can edit almost every field the AI
+writes; an AI note on a task can be cleared, not edited.
 
 Privacy by design:
 

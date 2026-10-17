@@ -3072,7 +3072,7 @@ The **Today** workspace is your day in one list, read top to bottom:
 - **Done** — what you finished today; click or tap its header to fold it
 
 On Mac a quick-add field sits under the tasks; on iPhone and iPad the day's
-habits follow as rings. Nothing you or the assistant put on today is hidden.
+habits follow as rings. Nothing you or the assistant put on today is hidden, unless its hide-until date is after today.
 On Mac the day's schedule leads the page, under the briefing: your calendar
 events and the day's timed tasks in time order, above the tasks without a
 time. An event that runs past midnight shows its start on the day it begins
@@ -3100,7 +3100,7 @@ accept or dismiss it. A suggestion for today starts from the current time:
 meetings that already ended are left out, a task you are in the middle of
 keeps its place, and tasks that no longer fit before your day hours end
 are listed as not scheduled, with **Move to Tomorrow** beside them. Day hours
-(Settings, 08:00–23:00 unless you change them) are the part of the day Lorvex
+(Settings; 09:00–18:00 after Mac setup, 08:00–23:00 when none is set) are the part of the day Lorvex
 plans into. Tasks are placed in Today's order, each at the
 earliest free time long enough for it, so a short task can fill the gap before
 a meeting that a longer one did not fit, and a ten-minute break follows each

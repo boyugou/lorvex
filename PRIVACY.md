@@ -137,10 +137,10 @@ not use a push-notification service to deliver reminder content.
 - **On Mac**, you can reset or delete this Mac's local Lorvex data at any time
   from within the app (Settings → Data → "Reset This Device"). This
   is local to that Mac; a copy already synced to iCloud is not affected.
-- **On iPhone/iPad**, Lorvex does not currently offer an in-app local-reset
-  action; uninstalling the app (see below) is how you remove its local data
-  on that device, or use "Delete iCloud Data" (below) to remove the synced
-  copy.
+- **On iPhone/iPad**, Settings → Reset → "Erase This Device's Data" erases this
+  device's local Lorvex data; it does not touch iCloud. Uninstalling the app
+  also removes its local data, and "Delete iCloud Data" (below) removes the
+  synced copy.
 - You can delete Lorvex's iCloud data from within the app ("Delete iCloud
   Data" — Settings → Data on macOS, Settings → Cloud Sync on iPhone/iPad).
   This removes every Lorvex record from your iCloud account, for all devices

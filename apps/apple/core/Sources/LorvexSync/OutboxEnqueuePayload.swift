@@ -65,6 +65,13 @@ extension OutboxEnqueue {
         try RecurrenceExceptionsRepo.loadTaskExceptionsJSON(db, taskId: entityId)
       }
       object["recurrence_exceptions"] = exceptionsJSON.map(JSONValue.string) ?? .null
+      // A receiving device stores an empty free-text field as NULL, the way it
+      // stores a clear. Sent as `""`, a task written with an empty note would
+      // read back on every receiver as a different snapshot and be re-emitted
+      // once more by each one; sent as null it is the same everywhere.
+      for key in ["body", "raw_input", "ai_notes"] where object[key] == .string("") {
+        object[key] = .null
+      }
       return .object(object)
     }
 

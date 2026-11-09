@@ -77,13 +77,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Widgets and the Focus filter load every open task in full to count them
     (`TaskRepoRead.getWidgetActionableTasks`); a store with thousands of open
     tasks and long notes risks the extension's memory limit. Count in SQL.
-  - A task written with an empty note, raw input, or AI note stores `""`; a
-    receiving device stores it as NULL and re-emits the task once so every
-    replica converges on NULL (`AbsencePreserveReemit.divergedTaskPayload`).
-    That is one extra record per task per receiving device. Removing the
-    re-emit breaks convergence (`SyncConvergenceSimulationTests`) and replay
-    idempotency (`recordsFetchedAgainChangeNothing`); the fix is for the local
-    writers to store an empty free-text field as NULL, as the apply does.
   - A task's tag and dependency caps (`maxTaskTags`, `maxTaskDependencies`) are
     held by the local writers only. Sync applies edges one by one and unions
     concurrent additions, so two devices that each added tags can merge a task

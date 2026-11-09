@@ -117,6 +117,36 @@ final class ListFallbackReemitDedupTests: XCTestCase {
     }
   }
 
+  /// A task stored with an empty note is sent with a null note, the way every receiver stores
+  /// it, so applying it reads back as the same snapshot and nothing is re-emitted.
+  func testATaskWithAnEmptyNoteIsSentAsTheReceiverStoresIt() throws {
+    let store = try SyncTestSupport.freshStore()
+    try store.writer.write { db in
+      let base = try SyncTestSupport.completeEnvelope(
+        entityType: .task, entityId: self.taskT, operation: .upsert,
+        version: try Hlc.parse("1711234567890_0000_a1b2c3d4a1b2c3d4"), payloadSchemaVersion: 1,
+        payload: """
+          {"list_id":"inbox","title":"T","status":"open",\
+          "created_at":"2026-01-01T09:00:00.000Z","updated_at":"2026-01-01T09:00:00.000Z",\
+          "defer_count":0}
+          """,
+        deviceId: "device-001")
+      guard case .applied = try Apply.applyEnvelope(db, registry: self.registry, envelope: base) else {
+        return XCTFail("the task must apply")
+      }
+      // The origin's own writer stored empty strings.
+      try db.execute(
+        sql: "UPDATE tasks SET body = '', raw_input = '', ai_notes = '' WHERE id = ?",
+        arguments: [self.taskT])
+      guard case .object(let sent) = try OutboxEnqueue.readEntityPayloadSnapshot(
+        db, entityType: EntityName.task, entityId: self.taskT)
+      else { return XCTFail("a task snapshot is an object") }
+      XCTAssertEqual(sent["body"], .null)
+      XCTAssertEqual(sent["raw_input"], .null)
+      XCTAssertEqual(sent["ai_notes"], .null)
+    }
+  }
+
   /// The dedup key is `(entity_id, payload_list_id)`: a task that later names a
   /// DIFFERENT tombstoned list re-emits once for that new list even after the
   /// first list was claimed.

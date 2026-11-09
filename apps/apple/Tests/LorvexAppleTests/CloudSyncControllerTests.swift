@@ -919,6 +919,23 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
         recordName: name) == nil)
   }
 
+  @Test func aTaskWithAnEmptyNoteIsNotSentBackByTheDeviceThatFetchesIt() async throws {
+    let peer = try await Harness()
+    let task = try await peer.core.createTask(title: "Quick capture", notes: "")
+    _ = await peer.controller.start()
+    let created = await peer.batch()
+
+    let h = try await Harness()
+    _ = await h.controller.start()
+    await h.controller.handleSentRecords(saved: await h.batch(), failed: [])
+    await h.controller.handleFetchedRecords(created)
+
+    // The receiver stores the empty note as NULL; the record it fetched says the same.
+    let name = try #require(created.first { (try? envelope(of: $0).entityId) == task.id })
+      .recordID.recordName
+    #expect(!(try h.core.unsyncedOutboundRecordNames().contains(name)))
+  }
+
   @Test func theNewestUnsentVersionIsReportedPerRecord() async throws {
     let h = try await Harness()
     let task = try await h.core.createTask(title: "First", notes: "")

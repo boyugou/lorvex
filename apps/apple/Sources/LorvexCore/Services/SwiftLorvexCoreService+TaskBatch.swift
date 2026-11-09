@@ -35,14 +35,31 @@ extension SwiftLorvexCoreService {
         return .skipped
       }
       guard let oldStatus = TaskStatus.parse(row.core.status) else { return .skipped }
-      let result = try LifecycleTransitions.applyReopenTransition(
-        db, taskId: TaskId(trusted: id), oldStatus: oldStatus,
-        now: SyncTimestampFormat.syncTimestampNow(), reminderVersion: hlc.nextVersionString())
-      guard result.updated else { return .skipped }
-      try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
-      try self.flushLifecyclePlan(
-        db, hlc: hlc, deviceId: deviceId, plan: LifecycleSyncPlan.from(reopen: result))
-      return .changed
+      // A finished occurrence whose next occurrence has moved on refuses to
+      // reopen after its status is already written, so each task runs in a
+      // savepoint: a refused one is rolled back and skipped like a missing or
+      // open one, and the rest of the batch still reopens.
+      var outcome = BatchLifecycleMutationOutcome.skipped
+      try db.inSavepoint {
+        let result: ReopenLifecycleTransitionResult
+        do {
+          result = try LifecycleTransitions.applyReopenTransition(
+            db, taskId: TaskId(trusted: id), oldStatus: oldStatus,
+            now: SyncTimestampFormat.syncTimestampNow(), reminderVersion: hlc.nextVersionString())
+        } catch TaskLifecycleError.reopenBlockedByAdvancedSuccessor,
+          TaskLifecycleError.reopenBlockedByOtherGeneration,
+          TaskLifecycleError.reopenBlockedByLaterOccurrence
+        {
+          return .rollback
+        }
+        guard result.updated else { return .rollback }
+        try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
+        try self.flushLifecyclePlan(
+          db, hlc: hlc, deviceId: deviceId, plan: LifecycleSyncPlan.from(reopen: result))
+        outcome = .changed
+        return .commit
+      }
+      return outcome
     }
   }
 

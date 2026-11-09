@@ -28,7 +28,9 @@ extension CoreBridgeClient {
     return .object([
       "results": Self.taskValues(from: result.changedTasks),
       "count": .int(result.changedTasks.count),
-      "skipped": Self.skippedObjects(result.skipped, reason: "not found or already open"),
+      "skipped": Self.skippedObjects(
+        result.skipped,
+        reason: "not found, already open, or a repeat whose next occurrence was finished or changed"),
     ])
   }
 

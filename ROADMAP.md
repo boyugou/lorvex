@@ -59,10 +59,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     the calendar grids and week strips (`isDateInToday`), which lay events out
     in device time, the event and snooze date chips (`LorvexDateChip`), and the
     iPhone edit sheet's Add Time proposal.
-  - Batch reopen is all-or-nothing. Every lifecycle refusal a person can reach
-    is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
-    core's English (a start on an already open task, a finished-to-finished
-    transition that is not complete or cancel) are not reachable from the UI.
   - CloudKit traffic and scale (read-only review against Apple's CKSyncEngine
     guidance, 2026-11-09; none loses data): every local write and every push
     runs a full fetch-then-send pass (`runCloudSyncCycle`), where Apple's

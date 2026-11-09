@@ -7,33 +7,12 @@ import SwiftUI
 /// means "use the default" (the app accent or the per-habit auto hue, and the
 /// default glyph), offered as a leading Default swatch and icon so a choice
 /// can be cleared. A row of swatches ends with the system color well for any
-/// other color; below it a search field filters the curated icon grid.
+/// other color; below it a search field filters the shared icon grid
+/// (``LorvexIconCatalog``), the same set the iPhone and iPad picker offers.
 struct LorvexAppearancePicker: View {
   @Binding var icon: String?
   @Binding var color: String?
   let idPrefix: String
-
-  /// Curated SF Symbols covering common planning / life-area metaphors, grouped
-  /// loosely (general → time/comms → health/fitness → home/leisure → work/money).
-  static let iconChoices: [String] = [
-    "list.bullet", "checklist", "checkmark.seal", "star", "flag", "flag.checkered",
-    "tag", "bolt", "heart", "leaf", "flame", "drop", "moon", "moon.stars", "sun.max",
-    "sun.haze", "cloud", "snowflake", "sparkles", "lightbulb", "target", "trophy",
-    "rosette", "pencil", "book", "books.vertical", "doc.text", "newspaper", "bookmark",
-    "paperclip", "folder", "tray", "archivebox", "calendar", "calendar.badge.clock",
-    "clock", "alarm", "hourglass", "timer", "stopwatch", "bell", "bell.badge",
-    "envelope", "phone", "message", "bubble.left.and.bubble.right", "video", "person.2",
-    "hand.raised", "figure.run", "figure.walk", "figure.hiking", "figure.cooldown",
-    "bicycle", "dumbbell", "sportscourt", "bed.double", "pills", "cross.case", "cross",
-    "stethoscope", "lungs", "brain.head.profile", "eye", "fork.knife", "cup.and.saucer",
-    "wineglass", "carrot", "house", "cart", "bag", "shippingbox", "gift", "pawprint",
-    "camera", "film", "gamecontroller", "headphones", "music.note", "guitars",
-    "theatermasks", "puzzlepiece", "paintbrush", "hammer", "wrench.and.screwdriver",
-    "gearshape", "key", "wifi", "briefcase", "laptopcomputer", "terminal", "globe",
-    "map", "mountain.2", "umbrella", "thermometer", "airplane", "graduationcap",
-    "dollarsign.circle", "creditcard", "banknote", "chart.bar", "chart.pie",
-    "chart.line.uptrend.xyaxis",
-  ]
 
   /// The width of the popover the picker fills, padded by `Spacing.m`.
   static let popoverWidth: CGFloat = 340
@@ -50,17 +29,8 @@ struct LorvexAppearancePicker: View {
     )
   }
 
-  private var filteredIcons: [String] { Self.icons(matching: iconQuery) }
-
-  /// Curated icons filtered by a search: every word typed must occur in an
-  /// icon's name or keywords in the user's language, or in its SF Symbol name
-  /// (``LorvexIconNames/matches(_:query:)``). An empty query returns the whole
-  /// set, in the curated order.
-  static func icons(matching query: String) -> [String] {
-    let query = query.trimmingCharacters(in: .whitespaces)
-    guard !query.isEmpty else { return iconChoices }
-    return iconChoices.filter { LorvexIconNames.matches($0, query: query) }
-  }
+  /// The shared icon set (``LorvexIconCatalog``) filtered by the search field.
+  private var filteredIcons: [String] { LorvexIconCatalog.choices(matching: iconQuery) }
 
   /// Return in the search field chooses the first icon the search found, so a
   /// typed name picks without a click; the grid then shows it selected. An
@@ -74,11 +44,12 @@ struct LorvexAppearancePicker: View {
 
   /// The icons shown in the grid: the filtered set, with a current icon that is
   /// not in the curated list (e.g. one set via an MCP tool) surfaced first so the
-  /// picker reflects and can keep it. Only when not actively searching.
+  /// picker reflects and can keep it. Only when not actively searching. A filled
+  /// variant chosen on an iPhone (`star.fill`) is its outline's tile, not another.
   private var displayedIcons: [String] {
     var icons = filteredIcons
     if iconQuery.trimmingCharacters(in: .whitespaces).isEmpty,
-      let icon, !icon.isEmpty, !icons.contains(icon)
+      let icon, !icon.isEmpty, !icons.contains(LorvexIconCatalog.outlineName(of: icon))
     {
       icons.insert(icon, at: 0)
     }
@@ -179,9 +150,9 @@ struct LorvexAppearancePicker: View {
   }
 
   private func iconButton(name: String?) -> some View {
-    let isSelected = icon == name
+    let isSelected = icon.map(LorvexIconCatalog.outlineName(of:)) == name.map(LorvexIconCatalog.outlineName(of:))
     let label =
-      name.map { LorvexIconNames.name(for: $0) ?? $0 }
+      name.map { LorvexIconCatalog.name(for: $0) ?? $0 }
       ?? String(localized: "appearance.icon.default", defaultValue: "Default icon", table: "Localizable", bundle: LorvexL10n.bundle)
     return Button {
       icon = name

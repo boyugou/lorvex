@@ -1,32 +1,50 @@
 import LorvexCore
 import SwiftUI
 
-/// SF Symbol sets offered when picking a list / habit icon.
+/// The icons a list or habit sheet puts first in the shared icon grid
+/// (``LorvexIconCatalog``), and the glyph each grid icon is drawn and stored as.
 enum MobileIconChoices {
+  /// Outline names of the icons that suit a list, first in a list sheet's grid.
   static let list: [String] = [
-    "tray.fill", "folder.fill", "briefcase.fill", "house.fill", "cart.fill",
-    "book.fill", "graduationcap.fill", "heart.fill", "star.fill", "flag.fill",
-    "bolt.fill", "leaf.fill", "airplane", "fork.knife", "gamecontroller.fill",
-    "paintbrush.fill", "music.note", "dollarsign.circle.fill",
+    "tray", "folder", "briefcase", "house", "cart", "book", "graduationcap", "heart", "star",
+    "flag", "bolt", "leaf", "airplane", "fork.knife", "gamecontroller", "paintbrush",
+    "music.note", "dollarsign.circle",
   ]
+  /// Outline names of the icons that suit a habit, first in a habit sheet's grid.
   static let habit: [String] = [
-    "repeat", "book.fill", "figure.run", "drop.fill", "bed.double.fill",
-    "dumbbell.fill", "brain.head.profile", "fork.knife", "cup.and.saucer.fill",
-    "leaf.fill", "heart.fill", "moon.fill", "sun.max.fill", "pencil",
-    "music.note", "camera.fill", "pills.fill", "figure.mind.and.body",
+    "repeat", "book", "figure.run", "drop", "bed.double", "dumbbell", "brain.head.profile",
+    "fork.knife", "cup.and.saucer", "leaf", "heart", "moon", "sun.max", "pencil", "music.note",
+    "camera", "pills", "figure.mind.and.body",
   ]
+
+  /// The glyph the grid draws for each curated icon, which is also the name a
+  /// tap stores: the filled variant where this system has one, as iOS draws
+  /// its icons, otherwise the outline. The Mac picker treats a filled variant
+  /// as its outline's tile, so a choice made here is found there.
+  private static let drawn: [String: String] = Dictionary(
+    LorvexIconCatalog.choices.map { ($0, LorvexSymbol.name(for: "\($0).fill", fallback: $0)) },
+    uniquingKeysWith: { first, _ in first })
+
+  /// The glyph to draw and store for `icon`: a curated outline name becomes
+  /// its filled variant where one exists; any other name is kept as it is.
+  static func symbol(for icon: String) -> String { drawn[icon] ?? icon }
 }
 
 /// The color swatches and SF Symbol grid offered when picking a list or habit's
 /// appearance, sized for the popover ``MobileCreationHeader`` opens from its
 /// tile. Sets the color and icon the catalog rows render. With no explicit
 /// choice a list or habit draws the default accent and its fallback glyph, and
-/// the picker shows those two as selected.
+/// the picker shows those two as selected. The grid offers the shared icon set
+/// the Mac picker offers (``LorvexIconCatalog``), `leadingIcons` first, under a
+/// search field that matches each icon's name and keywords in the user's
+/// language; it scrolls, and opens scrolled to the icon that is selected.
 struct MobileIconColorPicker: View {
   @Binding var icon: String?
   @Binding var color: String?
   let fallbackIcon: String
-  let iconChoices: [String]
+  let leadingIcons: [String]
+
+  @State private var iconQuery = ""
 
   /// The popover's width: six 42-point icon buttons, five 8-point gaps, and
   /// the 14-point content padding on both sides.
@@ -51,6 +69,30 @@ struct MobileIconColorPicker: View {
   /// emoji or unknown icon resolves to the fallback glyph, as it does there.
   private var selectedSymbol: String { LorvexSymbol.name(for: icon, fallback: fallbackIcon) }
 
+  /// The height of the scrolling icon grid: four rows of buttons and the top
+  /// half of a fifth, so the cut row shows that the grid scrolls.
+  static let iconGridHeight: CGFloat = 4 * (42 + LorvexDesign.Spacing.s) + 21
+
+  private var isSearching: Bool { !iconQuery.trimmingCharacters(in: .whitespaces).isEmpty }
+
+  /// The icons in the grid: the curated set filtered by the search, with a
+  /// current icon from outside it (one an assistant set over MCP) first while
+  /// not searching, so the grid shows the selection and can keep it.
+  private var displayedIcons: [String] {
+    var icons = LorvexIconCatalog.choices(matching: iconQuery, leading: leadingIcons)
+    let selectedOutline = LorvexIconCatalog.outlineName(of: selectedSymbol)
+    if !isSearching, !icons.contains(selectedOutline) {
+      icons.insert(selectedSymbol, at: 0)
+    }
+    return icons
+  }
+
+  /// The entry of `icons` that is selected, the one the grid opens scrolled to.
+  private func selectedEntry(in icons: [String]) -> String? {
+    let selectedOutline = LorvexIconCatalog.outlineName(of: selectedSymbol)
+    return icons.first { LorvexIconCatalog.outlineName(of: $0) == selectedOutline }
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
@@ -65,12 +107,8 @@ struct MobileIconColorPicker: View {
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
         pickerHeader(String(localized: "appearance.icon", defaultValue: "Icon", table: "Localizable", bundle: MobileL10n.bundle))
-        LazyVGrid(
-          columns: Array(repeating: GridItem(.flexible(), spacing: LorvexDesign.Spacing.s), count: 6),
-          spacing: LorvexDesign.Spacing.s
-        ) {
-          ForEach(iconChoices, id: \.self) { iconButton($0) }
-        }
+        searchField
+        iconGrid
       }
     }
     .padding(LorvexDesign.Spacing.m)
@@ -119,8 +157,90 @@ struct MobileIconColorPicker: View {
     .accessibilityAddTraits(isSelected ? [.isSelected] : [])
   }
 
-  private func iconButton(_ symbol: String) -> some View {
-    let isSelected = selectedSymbol == symbol
+  /// Filters the grid by an icon's name or keywords in the user's language, or
+  /// its SF Symbol name. Return chooses the first icon found.
+  private var searchField: some View {
+    HStack(spacing: LorvexDesign.Spacing.xs) {
+      Image(systemName: "magnifyingglass")
+        .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
+      TextField(
+        String(localized: "appearance.icon.search", defaultValue: "Search icons", table: "Localizable", bundle: MobileL10n.bundle),
+        text: $iconQuery
+      )
+      .autocorrectionDisabled()
+      #if os(iOS)
+        .textInputAutocapitalization(.never)
+      #endif
+      .submitLabel(.done)
+      .onSubmit(chooseFirstMatch)
+      .accessibilityIdentifier("appearance.icon.search")
+      if !iconQuery.isEmpty {
+        Button {
+          iconQuery = ""
+        } label: {
+          Image(systemName: "xmark.circle.fill")
+            .foregroundStyle(.tertiary)
+            .frame(minWidth: 28, minHeight: 28)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(String(localized: "common.clear", defaultValue: "Clear", table: "Localizable", bundle: MobileL10n.bundle))
+      }
+    }
+    .font(LorvexDesign.Typography.primaryText)
+    .padding(.horizontal, LorvexDesign.Spacing.s)
+    .frame(minHeight: 36)
+    .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+  }
+
+  /// The scrolling grid of icons, or a line saying the search found none. It
+  /// keeps one height whatever it holds, so the popover does not resize as a
+  /// search narrows it.
+  private var iconGrid: some View {
+    let icons = displayedIcons
+    return ScrollViewReader { proxy in
+      ScrollView {
+        LazyVGrid(
+          columns: Array(repeating: GridItem(.flexible(), spacing: LorvexDesign.Spacing.s), count: 6),
+          spacing: LorvexDesign.Spacing.s
+        ) {
+          ForEach(icons, id: \.self) { iconButton($0) }
+        }
+      }
+      .scrollDismissesKeyboard(.immediately)
+      .overlay {
+        if icons.isEmpty {
+          Text(
+            String(
+              format: String(
+                localized: "search.empty.title", defaultValue: "No Results for “%@”",
+                table: "Localizable", bundle: MobileL10n.bundle),
+              iconQuery.trimmingCharacters(in: .whitespaces))
+          )
+          .font(LorvexDesign.Typography.secondaryText)
+          .foregroundStyle(.secondary)
+          .multilineTextAlignment(.center)
+        }
+      }
+      .onAppear {
+        if let entry = selectedEntry(in: icons) { proxy.scrollTo(entry, anchor: .center) }
+      }
+    }
+    .frame(height: Self.iconGridHeight)
+  }
+
+  /// Return in the search field chooses the first icon the search found, so a
+  /// typed name picks without a tap; an empty search leaves the choice alone.
+  private func chooseFirstMatch() {
+    guard isSearching, let first = displayedIcons.first else { return }
+    lorvexAnimated(.snappy) { icon = MobileIconChoices.symbol(for: first) }
+  }
+
+  private func iconButton(_ entry: String) -> some View {
+    let symbol = MobileIconChoices.symbol(for: entry)
+    let isSelected =
+      LorvexIconCatalog.outlineName(of: selectedSymbol) == LorvexIconCatalog.outlineName(of: entry)
     return Button {
       lorvexAnimated(.snappy) { icon = symbol }
     } label: {
@@ -135,7 +255,9 @@ struct MobileIconColorPicker: View {
     .buttonStyle(.plain)
     // Icon-only buttons otherwise read the raw SF Symbol name ("figure.run");
     // give each a human, localized label.
-    .accessibilityLabel(Self.iconName(symbol))
+    .accessibilityLabel(
+      LorvexIconCatalog.name(for: symbol)
+        ?? String(localized: "appearance.icon", defaultValue: "Icon", table: "Localizable", bundle: MobileL10n.bundle))
     .accessibilityAddTraits(isSelected ? [.isSelected] : [])
   }
 
@@ -153,47 +275,6 @@ struct MobileIconColorPicker: View {
     case "#FF2D55": return String(localized: "appearance.color.pink", defaultValue: "Pink", table: "Localizable", bundle: MobileL10n.bundle)
     case "#8E8E93": return String(localized: "appearance.color.gray", defaultValue: "Gray", table: "Localizable", bundle: MobileL10n.bundle)
     default: return String(localized: "appearance.color", defaultValue: "Color", table: "Localizable", bundle: MobileL10n.bundle)
-    }
-  }
-
-  /// A localized human name for an SF Symbol offered in the icon grid, for
-  /// VoiceOver. Falls back to a generic "Icon" for an unmapped symbol.
-  static func iconName(_ symbol: String) -> String {
-    switch symbol {
-    case "tray.fill": return String(localized: "appearance.icon.inbox", defaultValue: "Inbox", table: "Localizable", bundle: MobileL10n.bundle)
-    case "folder.fill": return String(localized: "appearance.icon.folder", defaultValue: "Folder", table: "Localizable", bundle: MobileL10n.bundle)
-    case "briefcase.fill": return String(localized: "appearance.icon.briefcase", defaultValue: "Briefcase", table: "Localizable", bundle: MobileL10n.bundle)
-    case "house.fill": return String(localized: "appearance.icon.home", defaultValue: "Home", table: "Localizable", bundle: MobileL10n.bundle)
-    case "cart.fill": return String(localized: "appearance.icon.cart", defaultValue: "Cart", table: "Localizable", bundle: MobileL10n.bundle)
-    case "book.fill": return String(localized: "appearance.icon.book", defaultValue: "Book", table: "Localizable", bundle: MobileL10n.bundle)
-    case "graduationcap.fill":
-      return String(localized: "appearance.icon.graduation", defaultValue: "Graduation", table: "Localizable", bundle: MobileL10n.bundle)
-    case "heart.fill": return String(localized: "appearance.icon.heart", defaultValue: "Heart", table: "Localizable", bundle: MobileL10n.bundle)
-    case "star.fill": return String(localized: "appearance.icon.star", defaultValue: "Star", table: "Localizable", bundle: MobileL10n.bundle)
-    case "flag.fill": return String(localized: "appearance.icon.flag", defaultValue: "Flag", table: "Localizable", bundle: MobileL10n.bundle)
-    case "bolt.fill": return String(localized: "appearance.icon.lightning", defaultValue: "Lightning", table: "Localizable", bundle: MobileL10n.bundle)
-    case "leaf.fill": return String(localized: "appearance.icon.leaf", defaultValue: "Leaf", table: "Localizable", bundle: MobileL10n.bundle)
-    case "airplane": return String(localized: "appearance.icon.airplane", defaultValue: "Airplane", table: "Localizable", bundle: MobileL10n.bundle)
-    case "fork.knife": return String(localized: "appearance.icon.dining", defaultValue: "Dining", table: "Localizable", bundle: MobileL10n.bundle)
-    case "gamecontroller.fill": return String(localized: "appearance.icon.games", defaultValue: "Games", table: "Localizable", bundle: MobileL10n.bundle)
-    case "paintbrush.fill": return String(localized: "appearance.icon.paintbrush", defaultValue: "Paintbrush", table: "Localizable", bundle: MobileL10n.bundle)
-    case "music.note": return String(localized: "appearance.icon.music", defaultValue: "Music", table: "Localizable", bundle: MobileL10n.bundle)
-    case "dollarsign.circle.fill": return String(localized: "appearance.icon.money", defaultValue: "Money", table: "Localizable", bundle: MobileL10n.bundle)
-    case "repeat": return String(localized: "appearance.icon.repeat", defaultValue: "Repeat", table: "Localizable", bundle: MobileL10n.bundle)
-    case "figure.run": return String(localized: "appearance.icon.running", defaultValue: "Running", table: "Localizable", bundle: MobileL10n.bundle)
-    case "drop.fill": return String(localized: "appearance.icon.water", defaultValue: "Water", table: "Localizable", bundle: MobileL10n.bundle)
-    case "bed.double.fill": return String(localized: "appearance.icon.sleep", defaultValue: "Sleep", table: "Localizable", bundle: MobileL10n.bundle)
-    case "dumbbell.fill": return String(localized: "appearance.icon.workout", defaultValue: "Workout", table: "Localizable", bundle: MobileL10n.bundle)
-    case "brain.head.profile": return String(localized: "appearance.icon.mind", defaultValue: "Mind", table: "Localizable", bundle: MobileL10n.bundle)
-    case "cup.and.saucer.fill": return String(localized: "appearance.icon.coffee", defaultValue: "Coffee", table: "Localizable", bundle: MobileL10n.bundle)
-    case "moon.fill": return String(localized: "appearance.icon.moon", defaultValue: "Moon", table: "Localizable", bundle: MobileL10n.bundle)
-    case "sun.max.fill": return String(localized: "appearance.icon.sun", defaultValue: "Sun", table: "Localizable", bundle: MobileL10n.bundle)
-    case "pencil": return String(localized: "appearance.icon.pencil", defaultValue: "Pencil", table: "Localizable", bundle: MobileL10n.bundle)
-    case "camera.fill": return String(localized: "appearance.icon.camera", defaultValue: "Camera", table: "Localizable", bundle: MobileL10n.bundle)
-    case "pills.fill": return String(localized: "appearance.icon.medication", defaultValue: "Medication", table: "Localizable", bundle: MobileL10n.bundle)
-    case "figure.mind.and.body":
-      return String(localized: "appearance.icon.mindfulness", defaultValue: "Mindfulness", table: "Localizable", bundle: MobileL10n.bundle)
-    default: return String(localized: "appearance.icon", defaultValue: "Icon", table: "Localizable", bundle: MobileL10n.bundle)
     }
   }
 }

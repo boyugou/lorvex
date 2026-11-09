@@ -211,6 +211,39 @@ func mobileAppInstallsItsBackgroundDatabaseAccessAtLaunch() throws {
     source.contains("DatabaseSuspension.installBackgroundAccess(BackgroundDatabaseWork.access)"))
 }
 
+/// Work that holds the database in the background (a Watch message, the Watch session's
+/// activation refresh, an App Intent's tail) has no system window of its own, so the app holds
+/// a background task for as long as any of it runs, and the task's expiration suspends the
+/// database before the system suspends the process (`0xdead10cc`).
+@Test
+func backgroundDatabaseWorkHoldsABackgroundTaskThatSuspendsOnExpiry() throws {
+  let source = try String(
+    contentsOf: packageRoot().appending(path: "Sources/LorvexMobileApp/BackgroundDatabaseWork.swift"),
+    encoding: .utf8
+  )
+  let begin = try #require(source.range(of: "static func begin() {"))
+  let end = try #require(source.range(of: "static func end() {"))
+  let beginBody = source[begin.upperBound..<end.lowerBound]
+  #expect(beginBody.contains("DatabaseSuspension.resume()"))
+  #expect(beginBody.contains("beginBackgroundTask(withName: \"Lorvex database\")"))
+  #expect(beginBody.contains("expire()"))
+
+  let expire = try #require(source.range(of: "private static func expire() {"))
+  let expireBody = source[expire.upperBound...].prefix(200)
+  #expect(expireBody.contains("DatabaseSuspension.suspend()"))
+  #expect(expireBody.contains("endBackgroundTask()"))
+
+  let endBody = source[end.upperBound..<expire.lowerBound]
+  #expect(endBody.contains("guard activeUsers == 0 else { return }"))
+  #expect(endBody.contains("endBackgroundTask()"))
+
+  let receiver = try String(
+    contentsOf: packageRoot().appending(path: "Sources/LorvexMobile/PhoneWatchConnectivityReceiver.swift"),
+    encoding: .utf8
+  )
+  #expect(receiver.contains("guard session.isWatchAppInstalled else { return }"))
+}
+
 private func packageRoot() -> URL {
   var url = URL(fileURLWithPath: #filePath)
   while url.lastPathComponent != "apps" {

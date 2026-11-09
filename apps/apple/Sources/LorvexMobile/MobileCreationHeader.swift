@@ -22,7 +22,7 @@ struct MobileCreationHeader<Name: View, Subtitle: View>: View {
   @Binding var icon: String?
   @Binding var color: String?
   let fallbackIcon: String
-  let iconChoices: [String]
+  let leadingIcons: [String]
   let idPrefix: String
   var willChooseAppearance: () -> Void = {}
   @ViewBuilder var name: () -> Name
@@ -90,7 +90,7 @@ struct MobileCreationHeader<Name: View, Subtitle: View>: View {
     .accessibilityIdentifier("\(idPrefix).appearance")
     .popover(isPresented: $isChoosingAppearance) {
       MobileIconColorPicker(
-        icon: $icon, color: $color, fallbackIcon: fallbackIcon, iconChoices: iconChoices
+        icon: $icon, color: $color, fallbackIcon: fallbackIcon, leadingIcons: leadingIcons
       )
       .presentationCompactAdaptation(.popover)
     }

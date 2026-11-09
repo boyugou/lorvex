@@ -24,7 +24,7 @@ struct MobileHabitSheetHeader: View {
       icon: $store.habitDraft.icon,
       color: $store.habitDraft.color,
       fallbackIcon: "repeat",
-      iconChoices: MobileIconChoices.habit,
+      leadingIcons: MobileIconChoices.habit,
       idPrefix: idPrefix,
       willChooseAppearance: { focusedField = nil }
     ) {

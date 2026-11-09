@@ -107,7 +107,12 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   while suspended; the scene turning active resumes and refreshes. App Intents
   and notification actions that run in a backgrounded process wrap their work in
   `DatabaseSuspension.withBackgroundAccess(_:)` and report success only after
-  the bracket ends. At backgrounding, `BackgroundSyncFlush.flushThenSuspend(store:)`
+  the bracket ends. Every piece of such work, and the Watch receiver's commands
+  and replica refreshes, counts as a `BackgroundDatabaseWork` user, which holds
+  a UIKit background task while any user runs: work with no system window of
+  its own would otherwise be suspended mid-transaction when the window it was
+  woken in closes, and the task's expiration suspends the database first. At
+  backgrounding, `BackgroundSyncFlush.flushThenSuspend(store:)`
   writes autosave drafts and runs a CloudKit pass; a new self-saving draft must
   be added to that flush. The first confirmed case (build 115, 2026-10-12) was a
   background launch whose root view refreshed and published the widget snapshot

@@ -24,7 +24,7 @@ struct MobileListSheetHeader: View {
       icon: $store.listDraft.icon,
       color: $store.listDraft.color,
       fallbackIcon: "tray.fill",
-      iconChoices: MobileIconChoices.list,
+      leadingIcons: MobileIconChoices.list,
       idPrefix: idPrefix,
       willChooseAppearance: { focusedField = nil }
     ) {

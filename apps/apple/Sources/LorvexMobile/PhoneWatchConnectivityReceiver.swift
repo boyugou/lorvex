@@ -201,7 +201,12 @@ public struct PhoneWatchDatabaseAccess: Sendable {
       // A regular startup refresh may race ahead of session activation, where
       // the transfer publisher correctly drops it. Every successful activation
       // (including watch-switch reactivation) therefore creates a fresh
-      // authoritative replica baseline.
+      // authoritative replica baseline, when there is a watch app to send it
+      // to; an install later gets its first one from
+      // `sessionWatchStateDidChange(_:)`. Without the check every launch of an
+      // iPhone with no watch, background launches included, ran a second full
+      // refresh for nothing.
+      guard session.isWatchAppInstalled else { return }
       Task { @MainActor [weak self] in
         await self?.refreshReplicaBaseline()
       }

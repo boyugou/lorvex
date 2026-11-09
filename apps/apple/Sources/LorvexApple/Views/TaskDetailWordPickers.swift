@@ -30,6 +30,10 @@ struct TaskDetailDayPicker: View {
   let title: String
   let hint: String
   let presets: [LorvexTaskFieldChoices.DayPreset]
+  /// The planner's day as local midnight, from which Today, Tomorrow, and the
+  /// other presets count: a task's days are the planner's, which differ from
+  /// the device's when Settings > Time Zone names another zone.
+  let today: Date
   let selection: Date?
   let onSet: (Date) -> Void
   let onClear: () -> Void
@@ -42,7 +46,7 @@ struct TaskDetailDayPicker: View {
   private var presetDays: [(preset: LorvexTaskFieldChoices.DayPreset, date: Date)] {
     var seen = Set<Date>()
     return presets.compactMap { preset in
-      guard let date = LorvexTaskFieldChoices.date(for: preset, calendar: calendar),
+      guard let date = LorvexTaskFieldChoices.date(for: preset, from: today, calendar: calendar),
         seen.insert(date).inserted
       else { return nil }
       return (preset, date)
@@ -63,7 +67,7 @@ struct TaskDetailDayPicker: View {
       }
       .padding(.horizontal, -LorvexDesign.Spacing.s)
       Divider()
-      TaskDetailMonthCalendar(selection: selection) { onSet(calendar.startOfDay(for: $0)) }
+      TaskDetailMonthCalendar(selection: selection, today: today) { onSet(calendar.startOfDay(for: $0)) }
       if selection != nil, let time {
         Divider()
         timeRow(time)

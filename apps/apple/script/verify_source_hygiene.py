@@ -1353,7 +1353,7 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorProperties.swift'), 'struct InspectorProperties<Editor: View, MenuItems: View>: View'),
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorProperties.swift'), '.background(.windowBackground)'),
     ('file_missing', 'Sources/LorvexApple/Views/TaskDetailPropertySentence.swift'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailWordPickers.swift'), 'TaskDetailMonthCalendar(selection: selection)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailWordPickers.swift'), 'TaskDetailMonthCalendar(selection: selection, today: today)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailWordPickers.swift'), '.datePickerStyle(.graphical)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailView.swift'), 'presets: [.tomorrow, .nextMonday, .nextMonth]'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailWordPickers.swift'), 'LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs)'),

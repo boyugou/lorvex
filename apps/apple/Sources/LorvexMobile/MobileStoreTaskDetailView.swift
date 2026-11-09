@@ -112,6 +112,7 @@ struct MobileStoreTaskDetailView: View {
           draft: draft,
           lists: store.lists?.lists ?? [],
           currentListID: task.listID,
+          today: PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayString) ?? .now,
           tagSuggestions: tagSuggestions,
           searchDependencyCandidates: searchDependencyCandidates,
           resolveDependencyTasks: resolveDependencyTasks,

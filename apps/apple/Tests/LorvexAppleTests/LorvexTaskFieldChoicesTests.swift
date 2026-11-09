@@ -16,6 +16,41 @@ struct LorvexTaskFieldChoicesTests {
         == "\u{2212}15 minutes")
   }
 
+  @Test("Today and Tomorrow count from the planner's day when its zone is already a day ahead")
+  func dayPresetsCountFromThePlannersDay() throws {
+    // 23:30 in Los Angeles on Nov 9 is already Nov 10 for a planner set to New York.
+    var device = Calendar(identifier: .gregorian)
+    device.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+    let now = try #require(
+      device.date(from: DateComponents(year: 2026, month: 11, day: 9, hour: 23, minute: 30)))
+    let plannerToday = try #require(
+      PlannedDayBridge.displayDate(forLogicalDay: "2026-11-10", timeZone: device.timeZone))
+    let day = { (date: Date) in device.dateComponents([.month, .day], from: date) }
+
+    // Counting from the device's clock names the device's day, a day behind.
+    #expect(day(try #require(LorvexTaskFieldChoices.date(for: .today, from: now, calendar: device))).day == 9)
+    #expect(day(try #require(LorvexTaskFieldChoices.date(for: .today, from: plannerToday, calendar: device))).day == 10)
+    #expect(day(try #require(LorvexTaskFieldChoices.date(for: .tomorrow, from: plannerToday, calendar: device))).day == 11)
+    #expect(
+      LorvexTaskFieldChoices.quickDays(from: plannerToday, calendar: device).map { day($0.date).day }
+        == [10, 11, 12])
+  }
+
+  @Test("the task editors pass the planner's day to their day presets")
+  func taskEditorsCountFromThePlannersDay() throws {
+    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let read = { (path: String) in try String(contentsOf: root.appending(path: path), encoding: .utf8) }
+    let macPicker = try read("Sources/LorvexApple/Views/TaskDetailWordPickers.swift")
+    #expect(macPicker.contains("LorvexTaskFieldChoices.date(for: preset, from: today, calendar: calendar)"))
+    let macDetail = try read("Sources/LorvexApple/Views/TaskDetailView.swift")
+    #expect(macDetail.contains("PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayDateString)"))
+    let mobile = try read("Sources/LorvexMobile/MobileTaskFieldEditor.swift")
+    #expect(mobile.contains("LorvexTaskFieldChoices.quickDays(from: today, calendar: calendar)"))
+    let mobileDetail = try read("Sources/LorvexMobile/MobileStoreTaskDetailView.swift")
+    #expect(mobileDetail.contains("today: PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayString)"))
+  }
+
   @Test("Add Time on today starts at the next half hour, strictly after the clock")
   func newTimeOnTodayStartsAtTheNextHalfHour() {
     // 10:10 proposes 10:30; 10:30 itself proposes 11:00.

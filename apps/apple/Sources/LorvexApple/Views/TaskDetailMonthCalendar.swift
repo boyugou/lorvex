@@ -12,16 +12,19 @@ private enum TaskDetailMonthCalendarMetrics {
 /// and days of the neighbouring months are dimmed but still pickable. It
 /// opens on the month of `selection` (today's month when nil) and follows
 /// `selection` to its month when it changes from outside, such as a preset.
-/// `onPick` receives the clicked day's local midnight.
+/// `today` is the planner's day as local midnight, which may differ from the
+/// device's when Settings > Time Zone names another zone. `onPick` receives
+/// the clicked day's local midnight.
 struct TaskDetailMonthCalendar: View {
   let selection: Date?
+  let today: Date
   let onPick: (Date) -> Void
 
   @State private var month: Date?
 
   private var calendar: Calendar { .autoupdatingCurrent }
 
-  private var shownMonth: Date { month ?? monthStart(of: selection ?? .now) }
+  private var shownMonth: Date { month ?? monthStart(of: selection ?? today) }
 
   var body: some View {
     VStack(spacing: LorvexDesign.Spacing.xs) {
@@ -42,7 +45,7 @@ struct TaskDetailMonthCalendar: View {
               TaskDetailMonthDayCell(
                 day: day,
                 isSelected: selection.map { calendar.isDate($0, inSameDayAs: day) } ?? false,
-                isToday: calendar.isDateInToday(day),
+                isToday: calendar.isDate(day, inSameDayAs: today),
                 isInMonth: calendar.isDate(day, equalTo: shownMonth, toGranularity: .month)
               ) { onPick(day) }
             }

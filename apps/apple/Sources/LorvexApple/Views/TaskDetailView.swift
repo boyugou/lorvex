@@ -242,6 +242,11 @@ struct TaskDetailView: View {
 
   // MARK: - Word pickers
 
+  /// The planner's day as local midnight, which the day pickers count from.
+  private var plannerToday: Date {
+    PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayDateString) ?? .now
+  }
+
   /// The popover behind one word: only that field's control.
   @ViewBuilder
   func wordEditor(_ id: String, task: LorvexTask) -> some View {
@@ -253,6 +258,7 @@ struct TaskDetailView: View {
           localized: "task_detail.metadata.planned_hint", defaultValue: "The day you plan to work on it.",
           table: "Localizable", bundle: LorvexL10n.bundle),
         presets: [.today, .tomorrow, .thisWeekend, .nextMonday],
+        today: plannerToday,
         selection: store.taskDetailHasPlannedDate ? store.taskDetailPlannedDatePickerDate : nil,
         onSet: { date in
           store.setTaskDetailHasPlannedDate(true)
@@ -273,6 +279,7 @@ struct TaskDetailView: View {
           localized: "task_detail.metadata.due_hint", defaultValue: "The deadline to finish by.",
           table: "Localizable", bundle: LorvexL10n.bundle),
         presets: [.today, .tomorrow, .thisWeekend, .nextMonday],
+        today: plannerToday,
         selection: store.taskDetailHasDueDate ? store.taskDetailDueDatePickerDate : nil,
         onSet: { date in
           store.setTaskDetailHasDueDate(true)
@@ -287,6 +294,7 @@ struct TaskDetailView: View {
           defaultValue: "Hidden from your lists until this day.", table: "Localizable",
           bundle: LorvexL10n.bundle),
         presets: [.tomorrow, .nextMonday, .nextMonth],
+        today: plannerToday,
         selection: store.taskDetailHasAvailableFrom ? store.taskDetailAvailableFromPickerDate : nil,
         onSet: { date in
           store.setTaskDetailHasAvailableFrom(true)

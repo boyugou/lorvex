@@ -13,6 +13,10 @@ struct MobileTaskFieldEditor: View {
   @Binding var draft: MobileTaskEditDraft
   let lists: [LorvexList]
   let currentListID: LorvexList.ID?
+  /// The planner's day as local midnight, from which Today and Tomorrow
+  /// count: a task's days are the planner's, which differ from the device's
+  /// when Settings > Time Zone names another zone.
+  let today: Date
   let tagSuggestions: [String]
   let searchDependencyCandidates: (String, Set<LorvexTask.ID>) async -> [LorvexTask]
   let resolveDependencyTasks: ([LorvexTask.ID]) async -> [LorvexTask]
@@ -40,7 +44,7 @@ struct MobileTaskFieldEditor: View {
           if draft.hasPlannedDate {
             Section {
               MobileTaskTimeRows(
-                time: $draft.plannedTime, day: draft.plannedDate,
+                time: $draft.plannedTime, day: draft.plannedDate, today: today,
                 length: draft.parsedEstimatedMinutes)
             }
           }
@@ -101,7 +105,7 @@ struct MobileTaskFieldEditor: View {
 
   private func dayEditor(has: Binding<Bool>, date: Binding<Date>, hint: String) -> some View {
     let calendar = Calendar.autoupdatingCurrent
-    let quick: [(String, Date)] = LorvexTaskFieldChoices.quickDays(calendar: calendar).map { offset, day in
+    let quick: [(String, Date)] = LorvexTaskFieldChoices.quickDays(from: today, calendar: calendar).map { offset, day in
       let label =
         offset == 0 ? MobileCaptureCopy.today
         : offset == 1
@@ -228,6 +232,8 @@ struct MobileTaskTimeRows: View {
   @Binding var time: Range<Int>?
   /// The planned day at local midnight.
   let day: Date
+  /// The planner's day as local midnight; a new time on it starts after now.
+  var today: Date = .now
   /// How long a new time runs: the task's estimate when it has one.
   let length: Int?
 
@@ -254,7 +260,7 @@ struct MobileTaskTimeRows: View {
         lorvexAnimated(.snappy) {
           time = LorvexTaskFieldChoices.newTime(
             length: length, nowMinutes: (now.hour ?? 0) * 60 + (now.minute ?? 0),
-            isToday: calendar.isDateInToday(day))
+            isToday: calendar.isDate(day, inSameDayAs: today))
         }
       } label: {
         Label(MobileTaskFieldCopy.addTime, systemImage: "clock")

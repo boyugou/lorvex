@@ -41,6 +41,12 @@ public protocol CloudSyncEngineStore: AnyObject, Sendable {
   /// them, and the device-local `ai_changelog` entity is never sent.
   func unsyncedOutboundRecordNames() throws -> Set<String>
 
+  /// The newest version among each entity's outbox rows that still have to be
+  /// sent (the rows ``unsyncedOutboundRecordNames()`` counts), by CloudKit
+  /// record name. A fetched record newer than all of them must not lend those
+  /// rows its change tag: they predate what the server holds.
+  func newestUnsyncedOutboundVersions() throws -> [String: Hlc]
+
   /// One bounded FIFO page of eligible outbox rows after `afterOutboxId`.
   /// Rows waiting to retry are included only once due. Advance with
   /// ``PendingOutboundPage/lastScannedOutboxId``, which stays set even when

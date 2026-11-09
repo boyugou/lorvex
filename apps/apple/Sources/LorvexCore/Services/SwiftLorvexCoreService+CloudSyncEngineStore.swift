@@ -23,6 +23,31 @@ extension SwiftLorvexCoreService: CloudSyncEngineStore {
     }
   }
 
+  public func newestUnsyncedOutboundVersions() throws -> [String: Hlc] {
+    try read { db in
+      // The CHECK on `version` fixes its width and digit sets, so the text
+      // maximum is the HLC maximum.
+      let rows = try Row.fetchAll(
+        db,
+        sql: """
+          SELECT entity_type, entity_id, MAX(version) AS version
+          FROM sync_outbox
+          WHERE synced_at IS NULL
+            AND (disposition IS NULL OR disposition = 'retry_wait')
+            AND entity_type <> ?
+          GROUP BY entity_type, entity_id
+          """,
+        arguments: [EntityName.aiChangelog])
+      var versions: [String: Hlc] = [:]
+      for row in rows {
+        let version = try Hlc.parseCanonical(row["version"])
+        versions[SyncRecordName.opaque(entityType: row["entity_type"], entityId: row["entity_id"])] =
+          version
+      }
+      return versions
+    }
+  }
+
   public func applyFetchedRecords(
     _ envelopes: [SyncEnvelope], parking raws: [RawEnvelopeFields], undecodable: Int
   ) throws -> InboundApplyReport {

@@ -63,19 +63,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
     core's English (a start on an already open task, a finished-to-finished
     transition that is not complete or cancel) are not reachable from the UI.
-  - CloudKit push can overwrite a newer server record (found by a read-only
-    audit, 2026-10-16, traced in code, not yet reproduced against CloudKit): an
-    outbox row queued before a fetch is saved on the change tag that
-    `handleFetchedRecords` just cached for that record, so the save succeeds
-    without a conflict and the older version replaces the server's newer one; a
-    device that later fetches only the record never sees the newer edit.
-    Withholding the cached tag for records that still have unsent rows would
-    send that push through the HLC conflict path, but an inbound task whose
-    body is `""` is stored as NULL and re-emitted by the receiver
-    (`divergedTaskPayload`), so those records always have an unsent row and the
-    withholding would drop the tag cache for nearly every fetched task. Stop
-    that empty-body echo first, then withhold the tag, and add a controller
-    test with a fake engine that enforces change tags.
+  - A task written with an empty note, raw input, or AI note stores `""`; a
+    receiving device stores it as NULL and re-emits the task once so every
+    replica converges on NULL (`AbsencePreserveReemit.divergedTaskPayload`).
+    That is one extra record per task per receiving device. Removing the
+    re-emit breaks convergence (`SyncConvergenceSimulationTests`) and replay
+    idempotency (`recordsFetchedAgainChangeNothing`); the fix is for the local
+    writers to store an empty free-text field as NULL, as the apply does.
   - A task's tag and dependency caps (`maxTaskTags`, `maxTaskDependencies`) are
     held by the local writers only. Sync applies edges one by one and unions
     concurrent additions, so two devices that each added tags can merge a task

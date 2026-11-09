@@ -163,7 +163,9 @@ extension CloudSyncController {
 
   /// Applies one fetched batch in a single Core transaction, then caches the
   /// batch's system fields so the next local edit of those records saves
-  /// against the current server version. A failed apply sets
+  /// against the current server version. A record whose server copy is newer
+  /// than every row of it this device still has to send is the exception
+  /// (``namesNewerThanTheirUnsentRows(_:)``). A failed apply sets
   /// `inboundApplyFailed`: no later engine state is persisted, and the engine
   /// is rebuilt from the last persisted state so the batch is fetched again.
   func handleFetchedRecords(_ records: [CKRecord]) async {
@@ -193,7 +195,13 @@ extension CloudSyncController {
       let report = try store.applyFetchedRecords(envelopes, parking: raws, undecodable: undecodable)
       pendingReport.inbound.accumulate(report)
       if let accountID {
-        await cacheSystemFields(of: records, accountID: accountID)
+        let withheld = namesNewerThanTheirUnsentRows(envelopes)
+        await cacheSystemFields(
+          of: records.filter { !withheld.contains($0.recordID.recordName) }, accountID: accountID)
+        if !withheld.isEmpty {
+          await systemFieldsStore.remove(
+            recordNames: withheld, accountIdentifier: accountID, zoneName: zoneID.zoneName)
+        }
       }
     } catch {
       inboundApplyFailed = true
@@ -202,5 +210,29 @@ extension CloudSyncController {
       // which a cancelled or failed fetch may never deliver.
       Task { await self.setEngineAsideAfterInboundFailure() }
     }
+  }
+
+  /// Record names among the fetched `envelopes` whose server version is newer
+  /// than every unsynced outbox row of the same entity.
+  ///
+  /// Those rows predate what the server holds, so they must not go out on the
+  /// change tag this fetch carries: the save would pass the
+  /// `.ifServerRecordUnchanged` barrier and replace the newer server record
+  /// with an older version, which a device that later fetches only that record
+  /// would keep. With no cached tag the save comes back `serverRecordChanged`
+  /// and the HLC conflict path resolves it. A row newer than the fetched
+  /// version (a later local edit, or the join this apply re-emitted) is sent
+  /// on the fresh tag as usual. If the outbox cannot be read, no fetched tag is
+  /// trusted.
+  func namesNewerThanTheirUnsentRows(_ envelopes: [SyncEnvelope]) -> Set<String> {
+    let names = envelopes.map {
+      SyncRecordName.opaque(entityType: $0.entityType.asString, entityId: $0.entityId)
+    }
+    guard let unsent = try? store.newestUnsyncedOutboundVersions() else { return Set(names) }
+    var withheld = Set<String>()
+    for (name, envelope) in zip(names, envelopes) {
+      if let local = unsent[name], local < envelope.version { withheld.insert(name) }
+    }
+    return withheld
   }
 }

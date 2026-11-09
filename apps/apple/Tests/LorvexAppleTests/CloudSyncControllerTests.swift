@@ -766,6 +766,74 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     #expect(cached != nil)
   }
 
+  /// A task this device edited, then a peer edited later; the peer's record is fetched before
+  /// this device sends. `localEditsLast` flips who edits last.
+  private func fetchedOverAnUnsentEdit(localEditsLast: Bool) async throws -> (
+    h: Harness, taskID: LorvexTask.ID, name: String
+  ) {
+    let peer = try await Harness()
+    let task = try await peer.core.createTask(title: "Original", notes: "Notes")
+    _ = await peer.controller.start()
+    let created = await peer.batch()
+    await peer.controller.handleSentRecords(saved: created, failed: [])
+
+    let h = try await Harness()
+    _ = await h.controller.start()
+    await h.controller.handleFetchedRecords(created)
+    let renameLocal = { _ = try await h.core.updateTask(TaskUpdateDraft(id: task.id, title: "Local title")) }
+    let renamePeer = { _ = try await peer.core.updateTask(TaskUpdateDraft(id: task.id, title: "Server title")) }
+    try await (localEditsLast ? renamePeer : renameLocal)()
+    try await Task.sleep(for: .milliseconds(5))
+    try await (localEditsLast ? renameLocal : renamePeer)()
+
+    await peer.controller.noteLocalChanges()
+    let server = try #require(
+      await peer.batch().first { (try? envelope(of: $0).entityId) == task.id })
+    await peer.controller.handleSentRecords(saved: [server], failed: [])
+    let name = server.recordID.recordName
+    #expect(try h.core.unsyncedOutboundRecordNames().contains(name))
+
+    await h.controller.handleFetchedRecords([server])
+    return (h, task.id, name)
+  }
+
+  @Test func aFetchedRecordNewerThanAnUnsentEditLendsItNoChangeTag() async throws {
+    let (h, taskID, name) = try await fetchedOverAnUnsentEdit(localEditsLast: false)
+
+    #expect(try await h.core.loadTask(id: taskID).title == "Server title")
+    // The older local row would otherwise go out on the fetched tag and replace the
+    // newer server record; with no tag its save conflicts and the HLC merge decides.
+    #expect(
+      await h.fields.systemFields(
+        accountIdentifier: "account-a", zoneName: CloudSyncController.zoneName,
+        recordName: name) == nil)
+  }
+
+  @Test func aFetchedRecordOlderThanAnUnsentEditCachesItsChangeTag() async throws {
+    let (h, taskID, name) = try await fetchedOverAnUnsentEdit(localEditsLast: true)
+
+    #expect(try await h.core.loadTask(id: taskID).title == "Local title")
+    #expect(
+      await h.fields.systemFields(
+        accountIdentifier: "account-a", zoneName: CloudSyncController.zoneName,
+        recordName: name) != nil)
+  }
+
+  @Test func theNewestUnsentVersionIsReportedPerRecord() async throws {
+    let h = try await Harness()
+    let task = try await h.core.createTask(title: "First", notes: "")
+    _ = try await h.core.updateTask(TaskUpdateDraft(id: task.id, title: "Second"))
+    _ = await h.controller.start()
+    let records = await h.batch()
+    let record = try #require(records.first { (try? envelope(of: $0).entityId) == task.id })
+
+    let versions = try h.core.newestUnsyncedOutboundVersions()
+    #expect(versions[record.recordID.recordName] == (try envelope(of: record)).version)
+
+    await h.controller.handleSentRecords(saved: records, failed: [])
+    #expect(try h.core.newestUnsyncedOutboundVersions().isEmpty)
+  }
+
   @Test func legacyZonesAreDeletedWhenSeen() async throws {
     let h = try await Harness()
     _ = await h.controller.start()

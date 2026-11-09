@@ -209,6 +209,13 @@ extension CloudSyncController {
             recordNames: withheld, accountIdentifier: accountID, zoneName: zoneID.zoneName)
         }
       }
+      // The server already holds the write a queued row would send (a full
+      // re-upload of records the zone has, or a save whose reply was lost):
+      // confirm the row instead of uploading it again. The engine drops the
+      // name once no outbox work is left for it.
+      if let held = try? store.unsyncedOutboxIdsHeldByServer(envelopes), !held.isEmpty {
+        _ = try? store.reconcileOutbound(OutboundReconciliationRequest(confirmedOutboxIds: held))
+      }
     } catch {
       inboundApplyFailed = true
       Self.log.error("Applying fetched records failed: \(String(describing: error), privacy: .public)")

@@ -47,6 +47,13 @@ public protocol CloudSyncEngineStore: AnyObject, Sendable {
   /// rows its change tag: they predate what the server holds.
   func newestUnsyncedOutboundVersions() throws -> [String: Hlc]
 
+  /// Ids of the outbox rows the server already holds, judged from fetched
+  /// `envelopes`: every unsynced row (active or waiting to retry) of an entity
+  /// whose newest such row carries exactly a fetched envelope's version. A
+  /// version names one write, so the server has that write and the older rows
+  /// it superseded; sending them again would upload what is already there.
+  func unsyncedOutboxIdsHeldByServer(_ envelopes: [SyncEnvelope]) throws -> [Int64]
+
   /// One bounded FIFO page of eligible outbox rows after `afterOutboxId`.
   /// Rows waiting to retry are included only once due. Advance with
   /// ``PendingOutboundPage/lastScannedOutboxId``, which stays set even when

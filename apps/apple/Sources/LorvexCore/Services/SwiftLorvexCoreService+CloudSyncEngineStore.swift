@@ -48,6 +48,28 @@ extension SwiftLorvexCoreService: CloudSyncEngineStore {
     }
   }
 
+  public func unsyncedOutboxIdsHeldByServer(_ envelopes: [SyncEnvelope]) throws -> [Int64] {
+    guard !envelopes.isEmpty else { return [] }
+    return try read { db in
+      var held: [Int64] = []
+      for envelope in envelopes {
+        let rows = try Row.fetchAll(
+          db,
+          sql: """
+            SELECT id, version FROM sync_outbox
+            WHERE entity_type = ? AND entity_id = ?
+              AND synced_at IS NULL
+              AND (disposition IS NULL OR disposition = 'retry_wait')
+            """,
+          arguments: [envelope.entityType.asString, envelope.entityId])
+        let versions = rows.map { $0["version"] as String }
+        guard let newest = versions.max(), newest == envelope.version.description else { continue }
+        held += rows.map { $0["id"] as Int64 }
+      }
+      return held
+    }
+  }
+
   public func applyFetchedRecords(
     _ envelopes: [SyncEnvelope], parking raws: [RawEnvelopeFields], undecodable: Int
   ) throws -> InboundApplyReport {

@@ -66,9 +66,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     system-fields cache (`FileCloudSyncRecordSystemFieldsStore`) is one JSON
     file rewritten whole, now at most once per two seconds of changes and at
     the end of each explicit pass (a separate SQLite file in the cache
-    directory would write only what changed); a full re-upload
-    sends records the server already holds unchanged (an exact-replay fetch
-    could confirm the queued row instead).
+    directory would write only what changed). A queued write the server
+    already holds is confirmed when it is fetched, but a full re-upload still
+    sends each record whose fetch has not arrived yet.
   - A task's tag and dependency caps (`maxTaskTags`, `maxTaskDependencies`) are
     held by the local writers only. Sync applies edges one by one and unions
     concurrent additions, so two devices that each added tags can merge a task

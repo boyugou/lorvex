@@ -957,6 +957,37 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     #expect(!(try h.core.unsyncedOutboundRecordNames().contains(name)))
   }
 
+  @Test func aFetchedRecordThatIsTheQueuedWriteConfirmsItInsteadOfSendingIt() async throws {
+    let h = try await Harness()
+    let task = try await h.core.createTask(title: "Already up", notes: "Notes")
+    _ = await h.controller.start()
+    let records = await h.batch()
+    let name = try #require(records.first { (try? envelope(of: $0).entityId) == task.id })
+      .recordID.recordName
+    #expect(try h.core.unsyncedOutboundRecordNames().contains(name))
+
+    // The save landed but its reply was lost, or a full re-upload queued what the zone has:
+    // the next fetch brings back exactly the queued write.
+    await h.controller.handleFetchedRecords(records)
+
+    #expect(!(try h.core.unsyncedOutboundRecordNames().contains(name)))
+    #expect(await h.batch().allSatisfy { $0.recordID.recordName != name })
+  }
+
+  @Test func aFetchedOlderVersionLeavesTheNewerQueuedWriteToSend() async throws {
+    let h = try await Harness()
+    let task = try await h.core.createTask(title: "First", notes: "Notes")
+    _ = await h.controller.start()
+    let first = await h.batch()
+    _ = try await h.core.updateTask(TaskUpdateDraft(id: task.id, title: "Second"))
+
+    await h.controller.handleFetchedRecords(first)
+
+    let name = try #require(first.first { (try? envelope(of: $0).entityId) == task.id })
+      .recordID.recordName
+    #expect(try h.core.unsyncedOutboundRecordNames().contains(name), "the rename still has to go")
+  }
+
   @Test func theNewestUnsentVersionIsReportedPerRecord() async throws {
     let h = try await Harness()
     let task = try await h.core.createTask(title: "First", notes: "")

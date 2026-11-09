@@ -21,11 +21,18 @@ extension AppStore {
     }
   }
 
-  /// Applies an `IndexSet` move to the habit catalog order, then persists the
-  /// resulting order via the synced core.
-  func moveHabits(fromOffsets source: IndexSet, toOffset destination: Int) async {
+  /// Moves `habitID` to just before, or with `after` just after, `neighborID`
+  /// in the catalog order as it stands when the move runs, then persists that
+  /// order via the synced core. Positions read when the user clicked can be
+  /// out of date by then (a sync or an assistant changed the catalog), and an
+  /// offset past the end of the order traps, so the move works from ids. A
+  /// habit that is gone by then is left alone.
+  func moveHabit(_ habitID: LorvexHabit.ID, beside neighborID: LorvexHabit.ID, after: Bool) async {
     var ordered = orderedHabits.map(\.id)
-    ordered.move(fromOffsets: source, toOffset: destination)
+    guard habitID != neighborID, let from = ordered.firstIndex(of: habitID) else { return }
+    ordered.remove(at: from)
+    guard let neighbor = ordered.firstIndex(of: neighborID) else { return }
+    ordered.insert(habitID, at: after ? neighbor + 1 : neighbor)
     await reorderHabits(ordered)
   }
 

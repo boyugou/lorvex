@@ -11,9 +11,13 @@ import Observation
 @Observable
 final class OpenAtLoginModel {
   @ObservationIgnored private let loginItem: any LoginItemControlling
-  /// Bumped whenever the system's answer may have changed, so views that read
-  /// ``status`` ask again.
-  private var revision = 0
+
+  /// What the system last reported. It is read once when the model is made,
+  /// on every ``refresh()``, and after every change, never while a view
+  /// renders: each read is a blocking round trip to a system service (about
+  /// 60 ms on macOS 27), and the Settings pane read it a dozen times per
+  /// update, which macOS reported as a hang.
+  private(set) var status: LoginItemStatus
 
   /// Whether the last change ended somewhere other than where it was asked to.
   /// The switch then shows where the item really is, with a note.
@@ -21,11 +25,7 @@ final class OpenAtLoginModel {
 
   init(loginItem: any LoginItemControlling) {
     self.loginItem = loginItem
-  }
-
-  var status: LoginItemStatus {
-    _ = revision
-    return loginItem.status
+    status = loginItem.status
   }
 
   /// Whether the switch is on: the item is on, or waits only for approval.
@@ -40,14 +40,14 @@ final class OpenAtLoginModel {
     } catch {
       // Judged below.
     }
-    lastChangeFailed = (loginItem.status != .off) != on
-    revision += 1
+    status = loginItem.status
+    lastChangeFailed = (status != .off) != on
   }
 
   /// Asks the system again, dropping the note about an earlier failure.
   func refresh() {
     lastChangeFailed = false
-    revision += 1
+    status = loginItem.status
   }
 
   func openSystemSettings() {

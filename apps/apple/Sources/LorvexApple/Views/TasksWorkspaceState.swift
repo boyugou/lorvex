@@ -23,13 +23,20 @@ extension TasksView {
     byPriority(store.taskWorkspaceCancelledTasks)
   }
 
+  /// Every task the table shows, each once. A task can sit in two lanes (a
+  /// deferred task later hidden until a date is in both dated lanes), and the
+  /// table keys its rows by task id: a repeated id breaks its selection and
+  /// can throw during an animated update.
   var visibleTaskPool: [LorvexTask] {
-    visibleOpenTasks
+    var seen = Set<LorvexTask.ID>()
+    return
+      (visibleOpenTasks
       + visibleDeferredTasks
       + visibleScheduledTasks
       + visibleCompletedTasks
       + visibleCancelledTasks
-      + visibleSomedayTasks
+      + visibleSomedayTasks)
+      .filter { seen.insert($0.id).inserted }
   }
 
   var tableVisibleTaskPool: [LorvexTask] {

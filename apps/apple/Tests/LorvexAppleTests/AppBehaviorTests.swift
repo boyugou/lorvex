@@ -62,7 +62,7 @@ func appStoreToastMessageIsIndependentOfErrorMessage() throws {
 
 @MainActor
 @Test
-func moveHabitsPermutesVisibleOrderViaSyncedCore() async throws {
+func moveHabitPermutesVisibleOrderViaSyncedCore() async throws {
   let defaults = UserDefaults(suiteName: "test.moveHabits")!
   defaults.removePersistentDomain(forName: "test.moveHabits")
   let store = AppStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
@@ -70,13 +70,18 @@ func moveHabitsPermutesVisibleOrderViaSyncedCore() async throws {
   let original = store.orderedHabits.map(\.id)
   guard original.count >= 2 else { return }
 
-  // Drag the first habit two slots down. The new order is persisted through the
+  // Move the first habit to just after the second. The new order is persisted through the
   // core `position` column (no UserDefaults) and reflected back on refresh.
-  await store.moveHabits(fromOffsets: IndexSet([0]), toOffset: 2)
+  await store.moveHabit(original[0], beside: original[1], after: true)
   let reordered = store.orderedHabits.map(\.id)
   #expect(reordered != original)
   #expect(Set(reordered) == Set(original))
-  #expect(reordered.first == original[1])
+  #expect(Array(reordered.prefix(2)) == [original[1], original[0]])
+
+  // A move whose habit or neighbor is gone by the time it runs changes nothing.
+  await store.moveHabit("00000000-0000-7000-8000-00000000dead", beside: original[1], after: true)
+  await store.moveHabit(original[1], beside: "00000000-0000-7000-8000-00000000dead", after: false)
+  #expect(store.orderedHabits.map(\.id) == reordered)
 }
 
 @MainActor

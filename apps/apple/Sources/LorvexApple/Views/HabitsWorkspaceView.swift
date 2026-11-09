@@ -163,11 +163,9 @@ struct HabitsWorkspaceView: View {
     let groupIDs = all.filter { HabitCadenceBucket(frequencyType: $0.frequencyType) == bucket }
       .map(\.id)
     guard let posInGroup = groupIDs.firstIndex(of: habitID),
-      groupIDs.indices.contains(posInGroup + delta),
-      let fromGlobal = all.firstIndex(where: { $0.id == habitID }),
-      let neighborGlobal = all.firstIndex(where: { $0.id == groupIDs[posInGroup + delta] })
+      groupIDs.indices.contains(posInGroup + delta)
     else { return }
-    let destination = delta > 0 ? neighborGlobal + 1 : neighborGlobal
-    Task { await store.moveHabits(fromOffsets: IndexSet(integer: fromGlobal), toOffset: destination) }
+    let neighborID = groupIDs[posInGroup + delta]
+    Task { await store.moveHabit(habitID, beside: neighborID, after: delta > 0) }
   }
 }

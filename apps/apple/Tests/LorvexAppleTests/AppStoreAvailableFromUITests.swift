@@ -213,6 +213,15 @@ func laterFoldIncludesAndPagesSnoozedTasks() throws {
   #expect(view.contains("pagedSections: [.deferred, .scheduled, .someday]"))
 }
 
+/// A deferred task later hidden until a date sits in both dated lanes; the table keys rows by id,
+/// so the pool it shows lists each task once.
+@Test
+func tasksTableShowsATaskInTwoLanesOnce() throws {
+  let state = try availableFromSource("Sources/LorvexApple/Views/TasksWorkspaceState.swift")
+  let pool = try #require(state.range(of: "var visibleTaskPool: [LorvexTask] {"))
+  #expect(state[pool.upperBound...].prefix(400).contains(".filter { seen.insert($0.id).inserted }"))
+}
+
 @Test
 func listRowRendersHiddenUntilBadge() throws {
   let row = try availableFromSource("Sources/LorvexApple/Views/LorvexTaskRow.swift")

@@ -8,7 +8,13 @@ import os
 /// system would report.
 @MainActor
 private final class FakeLoginItem: LoginItemControlling {
-  var status: LoginItemStatus
+  /// What the system reports; reading it through ``status`` counts as a query.
+  var reported: LoginItemStatus
+  private(set) var statusReads = 0
+  var status: LoginItemStatus {
+    statusReads += 1
+    return reported
+  }
   /// What a successful `register()` leaves behind.
   var statusAfterRegister: LoginItemStatus = .on
   var registerError: (any Error)?
@@ -18,19 +24,19 @@ private final class FakeLoginItem: LoginItemControlling {
   private(set) var settingsOpened = 0
 
   init(status: LoginItemStatus = .off) {
-    self.status = status
+    reported = status
   }
 
   func register() throws {
     registerCalls += 1
     if let registerError { throw registerError }
-    status = statusAfterRegister
+    reported = statusAfterRegister
   }
 
   func unregister() throws {
     unregisterCalls += 1
     if let unregisterError { throw unregisterError }
-    status = .off
+    reported = .off
   }
 
   func openSystemSettings() {
@@ -133,12 +139,29 @@ struct OpenAtLoginTests {
       observed.withLock { $0 = true }
     }
 
-    item.status = .on
+    item.reported = .on
     #expect(!observed.withLock { $0 })
     model.refresh()
 
     #expect(observed.withLock { $0 })
     #expect(model.isOn)
+  }
+
+  @Test func readingTheSwitchDoesNotAskTheSystem() {
+    // Each query is a blocking round trip to a system service; Settings reads the switch
+    // on every update, and asking there was a hang macOS reported.
+    let item = FakeLoginItem(status: .on)
+    let model = OpenAtLoginModel(loginItem: item)
+    let afterInit = item.statusReads
+
+    for _ in 0..<20 {
+      _ = model.isOn
+      _ = model.status
+    }
+    #expect(item.statusReads == afterInit)
+
+    model.refresh()
+    #expect(item.statusReads == afterInit + 1)
   }
 
   @Test func theWayToSystemSettingsGoesToTheLoginItem() {

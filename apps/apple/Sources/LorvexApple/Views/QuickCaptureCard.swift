@@ -62,6 +62,15 @@ struct QuickCaptureCard: View {
     selection = TextSelection(insertionPoint: model.text.endIndex)
   }
 
+  /// Keeps the selection inside `text` when the line shrinks under it: Escape
+  /// empties it and a pasted line loses its line break, while the selection
+  /// still points past the new end.
+  private func clampSelection(to text: String) {
+    guard case .selection(let range)? = selection?.indices, range.upperBound > text.endIndex
+    else { return }
+    selection = TextSelection(insertionPoint: text.endIndex)
+  }
+
   private var field: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "plus.circle.fill")
@@ -75,6 +84,7 @@ struct QuickCaptureCard: View {
         .focused($fieldFocused)
         .onSubmit { Task { await model.submit() } }
         .lorvexSingleLine($model.text)
+        .onChange(of: model.text) { _, text in clampSelection(to: text) }
         .accessibilityIdentifier("quickCapture.field")
     }
   }

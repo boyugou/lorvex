@@ -13,7 +13,7 @@ enum TaskBatchOpsToolCatalog {
   static let batchCompleteTool = Tool(
     name: "batch_complete_tasks",
     title: "Batch Complete Tasks",
-    description: "Mark multiple tasks as completed in one call. Use instead of calling complete_task in a loop. Each recurring task also spawns its next occurrence, as complete_task does. Skips unknown ids and tasks that are already completed or cancelled (reopen a cancelled task first). Returns {results, count, skipped} where results is the completed task objects and skipped is [{id, reason}].",
+    description: "Mark multiple tasks as completed in one call. Use instead of calling complete_task in a loop. Each recurring task also spawns its next occurrence, as complete_task does. Skips unknown ids, tasks that are already completed or cancelled (reopen a cancelled task first), and a recurring task whose next occurrence was already finished on another device; the rest of the batch still completes. Returns {results, count, skipped} where results is the completed task objects and skipped is [{id, reason}].",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -53,7 +53,7 @@ enum TaskBatchOpsToolCatalog {
   static let batchCancelTool = Tool(
     name: "batch_cancel_tasks",
     title: "Batch Cancel Tasks",
-    description: "Soft-delete multiple tasks at once (status=cancelled). Skips unknown ids and tasks that are already completed or cancelled. A recurring task is cancelled for this occurrence and its next one is created, so the series continues, unless cancel_series=true. Cancelling also removes each task's dependency links in both directions; reopen_task does not restore them. Returns {results, count, skipped} where results is the cancelled task objects and skipped is [{id, reason}].",
+    description: "Soft-delete multiple tasks at once (status=cancelled). Skips unknown ids, tasks that are already completed or cancelled, and a recurring task whose next occurrence was already finished on another device. A recurring task is cancelled for this occurrence and its next one is created, so the series continues, unless cancel_series=true. Cancelling also removes each task's dependency links in both directions; reopen_task does not restore them. Returns {results, count, skipped} where results is the cancelled task objects and skipped is [{id, reason}].",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

@@ -83,6 +83,35 @@ final class BatchLifecycleMixedStatusTests: XCTestCase {
     XCTAssertEqual(reopened.status, .open)
   }
 
+  func testBatchCompleteSkipsARepeatWhoseNextOccurrenceMovedOnAndCompletesTheRest() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let repeating = try await service.createTask(title: "Water the plants", notes: "")
+    _ = try await service.setTaskRecurrence(
+      taskID: repeating.id, rule: TaskRecurrenceRule(freq: .daily))
+    _ = try await service.completeTask(id: repeating.id)
+    let successorID = try XCTUnwrap(
+      try service.read { db in
+        try String.fetchOne(
+          db, sql: "SELECT id FROM tasks WHERE title = 'Water the plants' AND id != ?",
+          arguments: [repeating.id])
+      })
+    _ = try await service.reopenTaskReturningTask(id: repeating.id)
+    // Another device finished the reserved next occurrence while this one was open again.
+    try service.write { db in
+      try db.execute(
+        sql: "UPDATE tasks SET status = 'completed', completed_at = '2026-04-02T10:00:00Z' WHERE id = ?",
+        arguments: [successorID])
+    }
+    let plain = try await service.createTask(title: "Plain", notes: "")
+
+    let result = try await service.batchCompleteTasks(ids: [repeating.id, plain.id])
+
+    XCTAssertEqual(result.changedIDs, [plain.id])
+    XCTAssertEqual(result.skipped, [repeating.id])
+    let stillOpen = try await service.loadTask(id: repeating.id)
+    XCTAssertEqual(stillOpen.status, .open)
+  }
+
   func testBatchDeferSkipsFinishedAndMissingTasks() async throws {
     let f = try await fixture()
     let result = try await f.service.batchDeferTasks(

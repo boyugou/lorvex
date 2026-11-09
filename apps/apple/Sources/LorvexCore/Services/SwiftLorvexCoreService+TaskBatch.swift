@@ -18,14 +18,26 @@ extension SwiftLorvexCoreService {
       {
         return .skipped
       }
-      let result = try LifecycleTransitions.applyCompletionTransition(
-        db, taskId: TaskId(trusted: id), now: SyncTimestampFormat.syncTimestampNow(),
-        reminderVersion: hlc.nextVersionString())
-      guard result.updated else { return .skipped }
-      try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
-      try self.flushLifecyclePlan(
-        db, hlc: hlc, deviceId: deviceId, plan: LifecycleSyncPlan.from(completion: result))
-      return .changed
+      // A repeat whose next occurrence already moved on refuses after its status
+      // is written; the savepoint rolls back that one task and the batch goes on.
+      var outcome = BatchLifecycleMutationOutcome.skipped
+      try db.inSavepoint {
+        let result: CompletionLifecycleTransitionResult
+        do {
+          result = try LifecycleTransitions.applyCompletionTransition(
+            db, taskId: TaskId(trusted: id), now: SyncTimestampFormat.syncTimestampNow(),
+            reminderVersion: hlc.nextVersionString())
+        } catch TaskLifecycleError.completeBlockedByAdvancedSuccessor {
+          return .rollback
+        }
+        guard result.updated else { return .rollback }
+        try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
+        try self.flushLifecyclePlan(
+          db, hlc: hlc, deviceId: deviceId, plan: LifecycleSyncPlan.from(completion: result))
+        outcome = .changed
+        return .commit
+      }
+      return outcome
     }
   }
 
@@ -505,17 +517,31 @@ extension SwiftLorvexCoreService {
           continue
         }
 
-        let result = try LifecycleTransitions.applyCancelTransition(
-          db, taskId: typedId, now: now,
-          reminderVersion: hlc.nextVersionString(),
-          cancelSeries: cancelSeries,
-          seriesClearVersion: cancelSeries ? hlc.nextVersionString() : nil)
-        guard result.updated else {
+        // A repeat whose next occurrence already moved on refuses after its
+        // status is written; the savepoint rolls back that one task and the
+        // batch goes on.
+        var cancelled: CancelLifecycleTransitionResult?
+        try db.inSavepoint {
+          let result: CancelLifecycleTransitionResult
+          do {
+            result = try LifecycleTransitions.applyCancelTransition(
+              db, taskId: typedId, now: now,
+              reminderVersion: hlc.nextVersionString(),
+              cancelSeries: cancelSeries,
+              seriesClearVersion: cancelSeries ? hlc.nextVersionString() : nil)
+          } catch TaskLifecycleError.cancelBlockedByAdvancedSuccessor {
+            return .rollback
+          }
+          guard result.updated else { return .rollback }
+          try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
+          cancelled = result
+          return .commit
+        }
+        guard let cancelled else {
           skipped.append(id)
           continue
         }
-        try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
-        syncPlans.append(LifecycleSyncPlan.from(cancel: result))
+        syncPlans.append(LifecycleSyncPlan.from(cancel: cancelled))
         cancelledIds.append(id)
         cancelledTasks.append(try TaskResponse.loadEnrichedTaskJSON(db, taskId: typedId))
       }

@@ -564,8 +564,10 @@ public actor CloudSyncController: CKSyncEngineDelegate {
         throw CloudSyncInboundApplyFailure()
       }
       try await engine.sendChanges(.init())
+      await systemFieldsStore.flush()
       if let fetchError { throw fetchError }
     } catch {
+      await systemFieldsStore.flush()
       publish(takePendingReport())
       throw error
     }

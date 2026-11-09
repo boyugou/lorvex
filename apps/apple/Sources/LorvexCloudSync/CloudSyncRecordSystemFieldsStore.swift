@@ -45,9 +45,16 @@ public protocol CloudSyncRecordSystemFieldsStoring: Sendable {
 
   /// Forget the given record names with one write.
   func remove(recordNames: Set<String>, accountIdentifier: String, zoneName: String) async
+
+  /// Writes any change the store is still holding back (a store may coalesce
+  /// its writes). Called at the end of an explicit sync pass, which is also the
+  /// pass the iPhone runs as it leaves the foreground.
+  func flush() async
 }
 
 extension CloudSyncRecordSystemFieldsStoring {
+  public func flush() async {}
+
   public func storeAll(
     _ entries: [String: Data], accountIdentifier: String, zoneName: String
   ) async {
@@ -71,12 +78,46 @@ extension CloudSyncRecordSystemFieldsStoring {
 /// the established device-local sync-state pattern so reconstructible transport
 /// cache does not become durable user
 /// schema and there is nothing to migrate.
+///
+/// The file holds an entry for every record the zone has, and each write
+/// rewrites it whole, so entries stored or removed within `coalescingDelay` of
+/// each other reach the file in one write (``flush()`` writes at once). A
+/// first sync of thousands of records then writes the file a few times rather
+/// than once per batch. Changes lost to a crash inside that window cost one
+/// `serverRecordChanged` per record, like any missing or stale entry. Forgetting
+/// a whole account or zone is written at once, since a stale tag from another
+/// zone costs an `unknownItem` round trip per record.
 public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsStoring {
   private let fileURL: URL
+  private let coalescingDelay: Duration
   private var cache: [String: Data]?
+  private var writeScheduled = false
 
-  public init(directory: URL) {
+  public init(directory: URL, coalescingDelay: Duration = .seconds(2)) {
     self.fileURL = directory.appendingPathComponent("record-system-fields.json")
+    self.coalescingDelay = coalescingDelay
+  }
+
+  public func flush() async {
+    guard writeScheduled else { return }
+    writeNow()
+  }
+
+  /// Writes the cache after `coalescingDelay`, once for every change made in
+  /// the meantime.
+  private func scheduleWrite() {
+    guard !writeScheduled else { return }
+    writeScheduled = true
+    let delay = coalescingDelay
+    Task { [weak self] in
+      try? await Task.sleep(for: delay)
+      await self?.flush()
+    }
+  }
+
+  private func writeNow() {
+    writeScheduled = false
+    persist(cache ?? [:])
   }
 
   public func systemFields(
@@ -91,7 +132,7 @@ public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsSt
     var map = loaded()
     map[key(accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)] = systemFields
     cache = map
-    persist(map)
+    scheduleWrite()
   }
 
   public func remove(accountIdentifier: String, zoneName: String, recordName: String) async {
@@ -102,7 +143,7 @@ public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsSt
           accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)) != nil
     else { return }
     cache = map
-    persist(map)
+    scheduleWrite()
   }
 
   public func storeAll(
@@ -114,7 +155,7 @@ public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsSt
       map[key(accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)] = data
     }
     cache = map
-    persist(map)
+    scheduleWrite()
   }
 
   public func remove(
@@ -129,7 +170,7 @@ public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsSt
     }
     guard map.count != priorCount else { return }
     cache = map
-    persist(map)
+    scheduleWrite()
   }
 
   public func removeAll(accountIdentifier: String, zoneName: String) async {
@@ -139,12 +180,12 @@ public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsSt
     map = map.filter { !$0.key.hasPrefix(prefix) }
     guard map.count != priorCount else { return }
     cache = map
-    persist(map)
+    writeNow()
   }
 
   public func removeAll() async {
     cache = [:]
-    persist([:])
+    writeNow()
   }
 
   private func loaded() -> [String: Data] {

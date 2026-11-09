@@ -39,8 +39,52 @@ func recordSystemFieldsStoreExcludesItsDirectoryFromBackupOnWrite() async throws
   let store = FileCloudSyncRecordSystemFieldsStore(directory: dir)
 
   await store.store(Data([0xAB]), accountIdentifier: "account-A", zoneName: "Lorvex", recordName: "task|abc")
+  await store.flush()
 
   #expect(isExcludedFromBackup(dir) == true)
+}
+
+/// The system-fields file holds an entry for every record and is rewritten whole, so changes
+/// close together reach it in one write; flush writes at once, and a new store reads them back.
+@Test
+func recordSystemFieldsStoreCoalescesWritesUntilFlushed() async throws {
+  let dir = makeTempDirectoryURL("sysfields-coalesce")
+  defer { try? FileManager.default.removeItem(at: dir) }
+  let file = dir.appendingPathComponent("record-system-fields.json")
+  let store = FileCloudSyncRecordSystemFieldsStore(directory: dir, coalescingDelay: .seconds(60))
+
+  await store.storeAll(
+    ["task|a": Data([1]), "task|b": Data([2])], accountIdentifier: "account-A", zoneName: "Lorvex")
+  await store.remove(recordNames: ["task|b"], accountIdentifier: "account-A", zoneName: "Lorvex")
+  #expect(!FileManager.default.fileExists(atPath: file.path), "nothing written before the flush")
+  #expect(
+    await store.systemFields(accountIdentifier: "account-A", zoneName: "Lorvex", recordName: "task|a")
+      == Data([1]))
+
+  await store.flush()
+  let reopened = FileCloudSyncRecordSystemFieldsStore(directory: dir)
+  #expect(
+    await reopened.systemFields(accountIdentifier: "account-A", zoneName: "Lorvex", recordName: "task|a")
+      == Data([1]))
+  #expect(
+    await reopened.systemFields(accountIdentifier: "account-A", zoneName: "Lorvex", recordName: "task|b")
+      == nil)
+}
+
+@Test
+func recordSystemFieldsStoreWritesOnItsOwnAfterTheDelay() async throws {
+  let dir = makeTempDirectoryURL("sysfields-delay")
+  defer { try? FileManager.default.removeItem(at: dir) }
+  let file = dir.appendingPathComponent("record-system-fields.json")
+  let store = FileCloudSyncRecordSystemFieldsStore(directory: dir, coalescingDelay: .milliseconds(50))
+
+  await store.store(Data([7]), accountIdentifier: "account-A", zoneName: "Lorvex", recordName: "task|c")
+  var waited = 0
+  while !FileManager.default.fileExists(atPath: file.path), waited < 200 {
+    try await Task.sleep(for: .milliseconds(25))
+    waited += 1
+  }
+  #expect(FileManager.default.fileExists(atPath: file.path))
 }
 
 @Test

@@ -68,9 +68,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     runs a full fetch-then-send pass (`runCloudSyncCycle`), where Apple's
     pattern is to register the change and let the engine send; the
     system-fields cache (`FileCloudSyncRecordSystemFieldsStore`) is one JSON
-    file rewritten whole after every batch, so a first sync writes in
-    proportion to the square of the record count (a separate SQLite file in
-    the cache directory would write only what changed); a full re-upload
+    file rewritten whole, now at most once per two seconds of changes and at
+    the end of each explicit pass (a separate SQLite file in the cache
+    directory would write only what changed); a full re-upload
     sends records the server already holds unchanged (an exact-replay fetch
     could confirm the queued row instead); the storage-full hold has no timer
     to resume sending when it ends.

@@ -11,7 +11,8 @@ import Testing
 /// of its own, so a test waits for the result rather than for a return.
 @MainActor
 private func waitUntil(_ condition: () async throws -> Bool) async throws -> Bool {
-  for _ in 0..<60 {
+  // 30 s, not the 3 s the work needs: a full run starves the main actor for minutes.
+  for _ in 0..<600 {
     if try await condition() { return true }
     try await Task.sleep(for: .milliseconds(50))
   }

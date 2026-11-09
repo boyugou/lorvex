@@ -63,6 +63,24 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
     core's English (a start on an already open task, a finished-to-finished
     transition that is not complete or cancel) are not reachable from the UI.
+  - CloudKit push can overwrite a newer server record (found by a read-only
+    audit, 2026-10-16, traced in code, not yet reproduced against CloudKit): an
+    outbox row queued before a fetch is saved on the change tag that
+    `handleFetchedRecords` just cached for that record, so the save succeeds
+    without a conflict and the older version replaces the server's newer one; a
+    device that later fetches only the record never sees the newer edit.
+    Withholding the cached tag for records that still have unsent rows would
+    send that push through the HLC conflict path, but an inbound task whose
+    body is `""` is stored as NULL and re-emitted by the receiver
+    (`divergedTaskPayload`), so those records always have an unsent row and the
+    withholding would drop the tag cache for nearly every fetched task. Stop
+    that empty-body echo first, then withhold the tag, and add a controller
+    test with a fake engine that enforces change tags.
+  - A task's tag and dependency caps (`maxTaskTags`, `maxTaskDependencies`) are
+    held by the local writers only. Sync applies edges one by one and unions
+    concurrent additions, so two devices that each added tags can merge a task
+    above the cap; that task's tags (or dependencies) can then be changed
+    only by one update that leaves at most the cap.
   - A task repeating on the 29th or 30th skips the months that lack that day,
     as RFC 5545 says (`CalendarRecurrence.injectBymonthday`); only an anchor
     that is its month's last day becomes `BYMONTHDAY=-1` and follows month

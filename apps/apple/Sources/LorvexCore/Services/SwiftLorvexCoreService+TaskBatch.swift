@@ -11,6 +11,13 @@ extension SwiftLorvexCoreService {
 
   public func batchCompleteTasks(ids: [LorvexTask.ID]) async throws -> TaskBatchLifecycleResult {
     try batchLifecycle(ids: ids, operation: "batch_complete") { db, hlc, deviceId, id in
+      // A cancelled task cannot go straight to completed (a single complete_task refuses it), so
+      // the batch skips it like a missing or finished one instead of aborting the rest.
+      if let row = try TaskRepo.Read.getTask(db, taskId: TaskId(trusted: id)),
+        TaskStatus.parse(row.core.status) == .cancelled
+      {
+        return .skipped
+      }
       let result = try LifecycleTransitions.applyCompletionTransition(
         db, taskId: TaskId(trusted: id), now: SyncTimestampFormat.syncTimestampNow(),
         reminderVersion: hlc.nextVersionString())

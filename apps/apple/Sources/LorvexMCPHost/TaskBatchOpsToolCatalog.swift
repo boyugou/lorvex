@@ -13,7 +13,7 @@ enum TaskBatchOpsToolCatalog {
   static let batchCompleteTool = Tool(
     name: "batch_complete_tasks",
     title: "Batch Complete Tasks",
-    description: "Mark multiple tasks as completed in one call. Use instead of calling complete_task in a loop. Returns {results, count, skipped} where results is the completed task objects and skipped is [{id, reason}] for ids that could not be completed.",
+    description: "Mark multiple tasks as completed in one call. Use instead of calling complete_task in a loop. Each recurring task also spawns its next occurrence, as complete_task does. Skips unknown ids and tasks that are already completed or cancelled (reopen a cancelled task first). Returns {results, count, skipped} where results is the completed task objects and skipped is [{id, reason}].",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -53,14 +53,15 @@ enum TaskBatchOpsToolCatalog {
   static let batchCancelTool = Tool(
     name: "batch_cancel_tasks",
     title: "Batch Cancel Tasks",
-    description: "Soft-delete multiple tasks at once (status=cancelled). Skips already-completed or already-cancelled tasks. Pass cancel_series=true to stop any recurring series. Returns {results, count, skipped} where results is the cancelled task objects and skipped is [{id, reason}].",
+    description: "Soft-delete multiple tasks at once (status=cancelled). Skips unknown ids and tasks that are already completed or cancelled. A recurring task is cancelled for this occurrence and its next one is created, so the series continues, unless cancel_series=true. Cancelling also removes each task's dependency links in both directions; reopen_task does not restore them. Returns {results, count, skipped} where results is the cancelled task objects and skipped is [{id, reason}].",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
         "task_ids": taskIDsProperty,
         "cancel_series": .object([
           "type": .string("boolean"),
-          "description": .string("When true, clear recurrence on cancelled recurring tasks."),
+          "description": .string(
+            "When true, a recurring task is cancelled with its recurrence cleared and no next occurrence is created. Defaults to false: the series continues."),
         ]),
         IdempotencyKeySchema.propertyName: IdempotencyKeySchema.property,
       ]),

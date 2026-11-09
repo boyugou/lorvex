@@ -19,7 +19,7 @@ extension CoreBridgeClient {
       "results": Self.taskValues(from: result.changedTasks),
       "count": .int(result.changedTasks.count),
       "skipped": Self.skippedObjects(
-        result.skipped, reason: "not found or already completed"),
+        result.skipped, reason: "not found, cancelled, or already completed"),
     ])
   }
 

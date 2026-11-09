@@ -257,13 +257,13 @@ final class CalendarEventTests: XCTestCase {
   func testUpdateNormalizesPatchesAndEffectiveFields() throws {
     var input = updateInput()
     input.title = "  Planning  "
-    input.url = .set("MAILTO:team@example.com")
+    input.url = .set("WEBCAL://Example.com/team.ics")
     input.timezone = .clear
     input.endTime = .clear
     let normalized = try CalendarNormalization.normalizeCalendarUpdate(
       input, existing: existingFixture())
     XCTAssertEqual(normalized.title, "Planning")
-    XCTAssertEqual(normalized.url, .set("mailto:team@example.com"))
+    XCTAssertEqual(normalized.url, .set("webcal://Example.com/team.ics"))
     XCTAssertEqual(normalized.timezone, .clear)
     XCTAssertEqual(normalized.endTime, .clear)
     XCTAssertNil(normalized.effective.timezone)

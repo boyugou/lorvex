@@ -1,6 +1,13 @@
 import MCP
 
 enum CalendarToolCatalog {
+  /// The `url` property of every tool that writes a Lorvex-owned event: the sync wire carries an
+  /// event's link as an http, https, or webcal URL, so no other scheme is stored.
+  static let urlProperty: Value = .object([
+    "type": .string("string"),
+    "description": .string("Optional link for the event: an http, https, or webcal URL."),
+  ])
+
   static let timelineTool = Tool(
     name: "get_calendar_timeline",
     title: "Get Calendar Timeline",
@@ -99,7 +106,7 @@ enum CalendarToolCatalog {
         ]),
         "location": .object(["type": .string("string")]),
         "notes": .object(["type": .string("string")]),
-        "url": .object(["type": .string("string")]),
+        "url": urlProperty,
         "color": .object([
           "type": .string("string"),
           "description": .string("Optional hex color."),
@@ -161,7 +168,7 @@ enum CalendarToolCatalog {
               "all_day": .object(["type": .string("boolean")]),
               "location": .object(["type": .string("string")]),
               "notes": .object(["type": .string("string")]),
-              "url": .object(["type": .string("string")]),
+              "url": urlProperty,
               "color": .object([
                 "type": .string("string"),
                 "description": .string("Optional hex color."),

@@ -212,7 +212,7 @@ public enum CalendarNormalization {
     let trimmed = trimWhitespace(sanitized)
     if trimmed.isEmpty { return nil }
     try validateLength(trimmed, field: "url", max: ValidationLimits.maxShortTextLength)
-    switch ValidationFormat.validateUserURL(trimmed) {
+    switch ValidationFormat.validateCalendarURL(trimmed) {
     case .success(let canonical): return canonical
     case .failure(let err):
       throw CalendarEventOpError.validation(err.description)
@@ -231,7 +231,7 @@ public enum CalendarNormalization {
           "url must not be empty; clear the field instead")
       }
       try validateLength(trimmed, field: "url", max: ValidationLimits.maxShortTextLength)
-      switch ValidationFormat.validateUserURL(trimmed) {
+      switch ValidationFormat.validateCalendarURL(trimmed) {
       case .success(let canonical): return .set(canonical)
       case .failure(let err):
         throw CalendarEventOpError.validation(err.description)

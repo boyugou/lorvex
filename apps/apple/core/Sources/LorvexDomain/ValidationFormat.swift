@@ -43,14 +43,6 @@ public enum ValidationFormat {
     return .success(end)
   }
 
-  /// Per-validator message bundle for ``validateURLWithSchemeAllowlist``.
-  struct URLMessages {
-    let emptyExpected: String
-    let schemeExpected: String
-    let controlExpected: String
-    let whitespaceExpected: String
-  }
-
   /// Lowercase only ASCII bytes of `s`, leaving non-ASCII scalars untouched.
   /// The scheme allowlist matches on this form, so a Unicode-aware lowercasing
   /// would change codepoints.
@@ -87,31 +79,6 @@ public enum ValidationFormat {
     return String(out)
   }
 
-  /// Shared body for ``validateUserURL(_:)`` and ``validateCalendarURL(_:)``.
-  /// Walks: sanitize → trim → empty-check → scheme-allowlist → control chars →
-  /// whitespace → lowercase-scheme. Returns the sanitized + trimmed canonical
-  /// form so callers persist that, not the raw input.
-  static func validateURLWithSchemeAllowlist(
-    _ s: String, allowedPrefixes: [String], msgs: URLMessages
-  ) -> Result<String, ValidationError> {
-    let cleaned = UnicodeHygiene.sanitizeUserText(s)
-    let trimmed = trimWhitespace(cleaned)
-    if trimmed.isEmpty {
-      return .failure(.invalidFormat(field: "url", expected: msgs.emptyExpected, actual: s))
-    }
-    let lowered = asciiLowercased(trimmed)
-    if !allowedPrefixes.contains(where: { lowered.hasPrefix($0) }) {
-      return .failure(.invalidFormat(field: "url", expected: msgs.schemeExpected, actual: s))
-    }
-    if trimmed.unicodeScalars.contains(where: { $0.properties.generalCategory == .control }) {
-      return .failure(.invalidFormat(field: "url", expected: msgs.controlExpected, actual: s))
-    }
-    if trimmed.unicodeScalars.contains(where: { $0.properties.isWhitespace }) {
-      return .failure(.invalidFormat(field: "url", expected: msgs.whitespaceExpected, actual: s))
-    }
-    return .success(lowercaseURLScheme(trimmed))
-  }
-
   /// Trim leading/trailing Unicode whitespace scalars, using the Unicode
   /// `White_Space` property.
   static func trimWhitespace(_ s: String) -> String {
@@ -123,32 +90,42 @@ public enum ValidationFormat {
     return String(String.UnicodeScalarView(scalars[lo..<hi]))
   }
 
-  /// Validate a general-purpose user-pasted link. Accepts `http`, `https`,
-  /// `mailto`, and `tel` schemes. Returns the sanitized + trimmed canonical
-  /// form. Plain `http://` is intentionally accepted here; the stricter
-  /// https-preferring calendar policy lives in ``validateCalendarURL(_:)``.
-  public static func validateUserURL(_ s: String) -> Result<String, ValidationError> {
-    let allowed = ["http://", "https://", "mailto:", "tel:"]
-    let msgs = URLMessages(
-      emptyExpected: "non-empty URL with http://, https://, mailto:, or tel: scheme",
-      schemeExpected: "scheme must be http, https, mailto, or tel",
-      controlExpected: "URL must not contain control characters",
-      whitespaceExpected: "URL must not contain whitespace; encode spaces as %20")
-    return validateURLWithSchemeAllowlist(s, allowedPrefixes: allowed, msgs: msgs)
-  }
-
-  /// Validate a calendar-subscription / calendar-event URL. Accepts only
-  /// `http`, `https`, and `webcal` schemes; rejects `javascript:`, `data:`,
-  /// `file:`, and every other scheme. Returns the sanitized + trimmed
-  /// canonical form.
+  /// Validate a calendar-event URL. Accepts only `http`, `https`, and `webcal`
+  /// schemes, the set the sync wire's `calendar-url` format carries; rejects
+  /// `javascript:`, `data:`, `file:`, `mailto:`, `tel:`, and every other
+  /// scheme. Every writer of an event link and the sync apply hold it to this
+  /// one rule, so a link one door takes is never refused at another.
+  ///
+  /// Walks: sanitize → trim → empty-check → scheme-allowlist → control chars →
+  /// whitespace → lowercase-scheme. Returns the sanitized + trimmed canonical
+  /// form so callers persist that, not the raw input.
   public static func validateCalendarURL(_ s: String) -> Result<String, ValidationError> {
-    let allowed = ["http://", "https://", "webcal://"]
-    let msgs = URLMessages(
-      emptyExpected: "non-empty calendar URL with http://, https://, or webcal:// scheme",
-      schemeExpected: "calendar URL scheme must be http, https, or webcal",
-      controlExpected: "calendar URL must not contain control characters",
-      whitespaceExpected: "calendar URL must not contain whitespace; encode spaces as %20")
-    return validateURLWithSchemeAllowlist(s, allowedPrefixes: allowed, msgs: msgs)
+    let cleaned = UnicodeHygiene.sanitizeUserText(s)
+    let trimmed = trimWhitespace(cleaned)
+    if trimmed.isEmpty {
+      return .failure(
+        .invalidFormat(
+          field: "url", expected: "non-empty calendar URL with http://, https://, or webcal:// scheme",
+          actual: s))
+    }
+    let lowered = asciiLowercased(trimmed)
+    if !["http://", "https://", "webcal://"].contains(where: { lowered.hasPrefix($0) }) {
+      return .failure(
+        .invalidFormat(
+          field: "url", expected: "calendar URL scheme must be http, https, or webcal", actual: s))
+    }
+    if trimmed.unicodeScalars.contains(where: { $0.properties.generalCategory == .control }) {
+      return .failure(
+        .invalidFormat(
+          field: "url", expected: "calendar URL must not contain control characters", actual: s))
+    }
+    if trimmed.unicodeScalars.contains(where: { $0.properties.isWhitespace }) {
+      return .failure(
+        .invalidFormat(
+          field: "url",
+          expected: "calendar URL must not contain whitespace; encode spaces as %20", actual: s))
+    }
+    return .success(lowercaseURLScheme(trimmed))
   }
 
   /// Validate a CSS-style hex color: `#RGB` (3 hex digits) or `#RRGGBB`

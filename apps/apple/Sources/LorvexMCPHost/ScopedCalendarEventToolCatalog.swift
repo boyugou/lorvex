@@ -35,7 +35,7 @@ extension CalendarLinksToolCatalog {
         "notes": .object(["type": .string("string")]),
         "recurrence": RecurrenceRuleSchema.calendarRecurrencePatchProperty,
         "timezone": .object(["type": .string("string")]),
-        "url": .object(["type": .string("string")]),
+        "url": CalendarToolCatalog.urlProperty,
         "color": .object(["type": .string("string")]),
         "event_type": .object([
           "type": .string("string"),

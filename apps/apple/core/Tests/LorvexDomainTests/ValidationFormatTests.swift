@@ -21,64 +21,63 @@ final class ValidationFormatTests: XCTestCase {
     return nil
   }
 
-  // -- validateUserURL --
+  // -- validateCalendarURL --
 
-  func testURLAllowsHttps() { okURL(ValidationFormat.validateUserURL("https://example.com/path?x=1")) }
-  func testURLAllowsHttp() { okURL(ValidationFormat.validateUserURL("http://example.com")) }
-  func testURLAllowsMailto() { okURL(ValidationFormat.validateUserURL("mailto:user@example.com")) }
-  func testURLAllowsTel() { okURL(ValidationFormat.validateUserURL("tel:+15555555555")) }
-  func testURLRejectsJavascriptScheme() { errURL(ValidationFormat.validateUserURL("javascript:alert(1)")) }
+  func testURLAllowsHttps() { okURL(ValidationFormat.validateCalendarURL("https://example.com/path?x=1")) }
+  func testURLAllowsHttp() { okURL(ValidationFormat.validateCalendarURL("http://example.com")) }
+  func testURLAllowsWebcal() { okURL(ValidationFormat.validateCalendarURL("webcal://example.com/feed.ics")) }
+  func testURLRejectsMailtoAndTel() {
+    // The sync wire's `calendar-url` format carries http, https, and webcal only, so a link with
+    // another scheme is refused at the write instead of failing later when it is queued for sync.
+    errURL(ValidationFormat.validateCalendarURL("mailto:user@example.com"))
+    errURL(ValidationFormat.validateCalendarURL("tel:+15555555555"))
+  }
+  func testURLRejectsJavascriptScheme() { errURL(ValidationFormat.validateCalendarURL("javascript:alert(1)")) }
   func testURLRejectsJavascriptCaseInsensitive() {
-    errURL(ValidationFormat.validateUserURL("JaVaScRiPt:alert(1)"))
+    errURL(ValidationFormat.validateCalendarURL("JaVaScRiPt:alert(1)"))
   }
   func testURLRejectsDataScheme() {
-    errURL(ValidationFormat.validateUserURL("data:text/html;base64,PHNjcmlwdD4="))
+    errURL(ValidationFormat.validateCalendarURL("data:text/html;base64,PHNjcmlwdD4="))
   }
-  func testURLRejectsFileScheme() { errURL(ValidationFormat.validateUserURL("file:///etc/passwd")) }
-  func testURLRejectsEmpty() { errURL(ValidationFormat.validateUserURL("")) }
-  func testURLRejectsWhitespaceOnly() { errURL(ValidationFormat.validateUserURL("   ")) }
-  func testURLRejectsNoScheme() { errURL(ValidationFormat.validateUserURL("example.com/path")) }
+  func testURLRejectsFileScheme() { errURL(ValidationFormat.validateCalendarURL("file:///etc/passwd")) }
+  func testURLRejectsEmpty() { errURL(ValidationFormat.validateCalendarURL("")) }
+  func testURLRejectsWhitespaceOnly() { errURL(ValidationFormat.validateCalendarURL("   ")) }
+  func testURLRejectsNoScheme() { errURL(ValidationFormat.validateCalendarURL("example.com/path")) }
 
   func testURLLowercasesSchemeInCanonicalForm() {
-    XCTAssertEqual(canonical(ValidationFormat.validateUserURL("MAILTO:foo@example.com")), "mailto:foo@example.com")
     XCTAssertEqual(
-      canonical(ValidationFormat.validateUserURL("HTTPS://Example.com/Path")),
+      canonical(ValidationFormat.validateCalendarURL("HTTPS://Example.com/Path")),
       "https://Example.com/Path")
-    XCTAssertEqual(canonical(ValidationFormat.validateUserURL("Tel:+15555555555")), "tel:+15555555555")
     XCTAssertEqual(
       canonical(ValidationFormat.validateCalendarURL("WEBCAL://Example.com/feed.ics")),
       "webcal://Example.com/feed.ics")
   }
 
   func testURLRejectsControlCharacters() {
-    errURL(ValidationFormat.validateUserURL("https://example.com/\npath"))
-    errURL(ValidationFormat.validateUserURL("https://example.com/\rpath"))
-    errURL(ValidationFormat.validateUserURL("https://example.com/\tpath"))
+    errURL(ValidationFormat.validateCalendarURL("https://example.com/\npath"))
+    errURL(ValidationFormat.validateCalendarURL("https://example.com/\rpath"))
+    errURL(ValidationFormat.validateCalendarURL("https://example.com/\tpath"))
   }
 
   func testURLRejectsJavascriptWithLeadingZeroWidth() {
-    errURL(ValidationFormat.validateUserURL("\u{200B}javascript:alert(1)"))
-    errURL(ValidationFormat.validateUserURL("\u{FEFF}javascript:alert(1)"))
-    errURL(ValidationFormat.validateUserURL("\u{202E}javascript:alert(1)"))
-  }
-
-  func testURLStripsLeadingZeroWidthForLegitimateScheme() {
-    okURL(ValidationFormat.validateUserURL("\u{200B}https://example.com/path"))
-    okURL(ValidationFormat.validateUserURL("\u{FEFF}https://example.com/path"))
-  }
-
-  func testCalendarURLRejectsJavascriptWithLeadingZeroWidth() {
     errURL(ValidationFormat.validateCalendarURL("\u{200B}javascript:alert(1)"))
+    errURL(ValidationFormat.validateCalendarURL("\u{FEFF}javascript:alert(1)"))
     errURL(ValidationFormat.validateCalendarURL("\u{202E}javascript:alert(1)"))
   }
 
-  func testURLValidatorsReturnSanitizedCanonicalFormForBidiZeroWidth() {
-    let dirtyUser = "  \u{202E}\u{200B}\u{FEFF}https://example.com/path?x=1  "
-    XCTAssertEqual(canonical(ValidationFormat.validateUserURL(dirtyUser)), "https://example.com/path?x=1")
+  func testURLStripsLeadingZeroWidthForLegitimateScheme() {
+    okURL(ValidationFormat.validateCalendarURL("\u{200B}https://example.com/path"))
+    okURL(ValidationFormat.validateCalendarURL("\u{FEFF}https://example.com/path"))
+  }
 
-    let dirtyCalendar = "\u{202E}\u{200B}webcal://example.com/feed.ics\u{FEFF}"
+  func testURLReturnsSanitizedCanonicalFormForBidiZeroWidth() {
+    let dirtyHTTPS = "  \u{202E}\u{200B}\u{FEFF}https://example.com/path?x=1  "
     XCTAssertEqual(
-      canonical(ValidationFormat.validateCalendarURL(dirtyCalendar)), "webcal://example.com/feed.ics")
+      canonical(ValidationFormat.validateCalendarURL(dirtyHTTPS)), "https://example.com/path?x=1")
+
+    let dirtyWebcal = "\u{202E}\u{200B}webcal://example.com/feed.ics\u{FEFF}"
+    XCTAssertEqual(
+      canonical(ValidationFormat.validateCalendarURL(dirtyWebcal)), "webcal://example.com/feed.ics")
   }
 
   // -- validateCalendarDateRange --

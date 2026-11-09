@@ -73,7 +73,7 @@ extension TaskMutationToolCatalog {
   static let batchCancelTasksInListTool = Tool(
     name: "batch_cancel_tasks_in_list",
     title: "Batch Cancel Tasks In List",
-    description: "Cancel all open, in-progress, and someday tasks in a list at once. Use when closing out a project, archiving a list, or clearing a backlog. Narrower than batch_cancel_tasks (by ID) — the list_id + statuses filter selects the candidates automatically. Pass cancel_series=true to stop any recurring series. Defaults to cancelling open, in_progress, and someday tasks; pass statuses=[\"open\"] to target only not-yet-started tasks. Returns {results, count, list_id, skipped} where results is the cancelled task objects.",
+    description: "Cancel all open, in-progress, and someday tasks in a list at once. Use when closing out a project, archiving a list, or clearing a backlog. Narrower than batch_cancel_tasks (by ID) — the list_id + statuses filter selects the candidates automatically. A recurring task is cancelled for this occurrence and its next one is created, so the series continues, unless cancel_series=true. Cancelling also removes each task's dependency links in both directions; reopen_task does not restore them. Defaults to cancelling open, in_progress, and someday tasks; pass statuses=[\"open\"] to target only not-yet-started tasks. Returns {results, count, list_id, skipped} where results is the cancelled task objects.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -93,7 +93,7 @@ extension TaskMutationToolCatalog {
         "cancel_series": .object([
           "type": .string("boolean"),
           "description": .string(
-            "When true, cancels the entire recurring series for recurring tasks. Defaults to false."),
+            "When true, a recurring task is cancelled with its recurrence cleared and no next occurrence is created. Defaults to false: the series continues."),
         ]),
         IdempotencyKeySchema.propertyName: IdempotencyKeySchema.property,
       ]),

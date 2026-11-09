@@ -95,6 +95,14 @@ struct LorvexMobileApp: App {
           #if os(iOS)
             DebugLaunchOrientation.applyIfRequested()
           #endif
+          // iOS 27 reports a foreground launch as backgrounded until its scene
+          // connects, so the store starts suspended and resumes as the scene
+          // turns active; seeding before that is refused write by write.
+          var waits = 0
+          while DatabaseSuspension.isSuspended, waits < 100 {
+            try? await Task.sleep(for: .milliseconds(100))
+            waits += 1
+          }
           await store.debugSeedSampleDataIfNeeded()
           // Load the snapshot before resolving a launch deep-link so hooks that
           // read seeded data (e.g. `lorvex://firsttask`) see it rather than an

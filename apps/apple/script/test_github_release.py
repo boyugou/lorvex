@@ -52,6 +52,12 @@ class GitHubReleaseTests(unittest.TestCase):
         self.assertEqual(release.releases_to_delete(tags, "1.0.0", 133), ["v1.0.0+131", "v1.0.0+132"])
         self.assertEqual(release.releases_to_delete([], "1.0.0", 133), [])
 
+    def test_newest_build_before_reads_local_and_remote_tags(self) -> None:
+        tags = ["v1.0.0+134", "v1.0.0+135", "v1.0.0+136", "v1.0.0+137", "v1.0.0+notes"]
+        self.assertEqual(release.newest_build_before(137, tags), 136)
+        self.assertEqual(release.newest_build_before(136, tags[:2]), 135)
+        self.assertEqual(release.newest_build_before(120, tags), 119)
+
     def test_the_notes_skeleton_is_complete_but_marked_unfinished(self) -> None:
         sha = "b" * 64
         skeleton = release.NOTES_TEMPLATE.format(

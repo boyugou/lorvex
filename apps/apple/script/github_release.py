@@ -129,8 +129,24 @@ def build_commit(build: int) -> str:
 
 
 def previous_build(build: int, version: str) -> int:
-    tags = run(["git", "tag", "--list", f"v{version}+*"]).splitlines()
-    earlier = [int(t.rsplit("+", 1)[1]) for t in tags if int(t.rsplit("+", 1)[1]) < build]
+    """The newest tagged build of `version` before `build`, local or on GitHub:
+    `publish` creates each release's tag on GitHub, so a checkout that never
+    fetched it would otherwise name an older release."""
+    local = run(["git", "tag", "--list", f"v{version}+*"]).splitlines()
+    remote = run(
+        ["git", "ls-remote", "--tags", "--refs", "origin", f"v{version}+*"], check=False
+    ).splitlines()
+    return newest_build_before(build, local + [line.split("refs/tags/")[-1] for line in remote])
+
+
+def newest_build_before(build: int, tags: list[str]) -> int:
+    """The highest build number among `tags` (`v<version>+<build>`) below
+    `build`, or `build - 1` when none is."""
+    earlier = []
+    for tag in tags:
+        number = tag.rsplit("+", 1)[-1]
+        if number.isdigit() and int(number) < build:
+            earlier.append(int(number))
     return max(earlier) if earlier else build - 1
 
 

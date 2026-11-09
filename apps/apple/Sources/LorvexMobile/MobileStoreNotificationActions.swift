@@ -45,7 +45,7 @@ extension MobileStore {
     await updateBadge(tasks: await mobileBadgeTasks())
   }
 
-  func updateBadge(tasks: [LorvexTask]) async {
+  func updateBadge(tasks: [some LorvexTaskCountFacts]) async {
     let coordinator = BadgeCoordinator(
       badgeEnabled: badgeEnabled,
       today: logicalTodayString,
@@ -58,10 +58,10 @@ extension MobileStore {
   /// show, read uncapped so the count stays exact however many tasks rank
   /// ahead of an overdue one. Falls back to the Today snapshot, which holds the
   /// day's due and overdue tasks, when the read fails.
-  private func mobileBadgeTasks() async -> [LorvexTask] {
+  private func mobileBadgeTasks() async -> [WidgetStatsTask] {
     if let source = try? await core.loadWidgetStatsSource() {
       return source.actionableTasks
     }
-    return snapshot.today.tasks
+    return snapshot.today.tasks.map(WidgetStatsTask.init)
   }
 }

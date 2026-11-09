@@ -22,7 +22,7 @@ public struct BadgeCoordinator: Sendable {
   }
 
   /// Sets the badge count derived from `tasks`, or clears it when disabled.
-  public func update(tasks: [LorvexTask]) async {
+  public func update(tasks: [some LorvexTaskCountFacts]) async {
     let count = badgeEnabled ? Self.badgeCount(tasks: tasks, today: today) : 0
     await setBadge(count)
   }
@@ -33,7 +33,7 @@ public struct BadgeCoordinator: Sendable {
   /// so a started task keeps its badge) and its action date — planned-first with
   /// a deadline fallback (`planned_date ?? due_date`) — is on or before `today`
   /// (ISO-8601 `yyyy-MM-dd`).
-  public static func badgeCount(tasks: [LorvexTask], today: String) -> Int {
+  public static func badgeCount(tasks: [some LorvexTaskCountFacts], today: String) -> Int {
     tasks.filter { task in
       guard task.status.isActionable else { return false }
       guard let actionDate = task.plannedDate ?? task.dueDate else { return false }

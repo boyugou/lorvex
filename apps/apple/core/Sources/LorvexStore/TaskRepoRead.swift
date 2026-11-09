@@ -223,35 +223,51 @@ extension TaskRepo {
       return try rows.map(TaskRepo.rowToTaskRow)
     }
 
-    /// Every task that contributes to glance-surface workload statistics.
+    /// The columns glance counts read for an actionable task: its id, status,
+    /// list, and the days it is due and planned.
+    public struct WidgetCountRow: Sendable, Equatable {
+      public let id: String
+      public let status: String
+      public let listId: String?
+      public let dueDate: String?
+      public let plannedDate: String?
+    }
+
+    /// Every task that contributes to glance-surface workload statistics, as
+    /// the few columns the counts read.
     ///
     /// Open tasks follow the ordinary day-surface visibility rule (including
     /// overdue-wins), while an explicitly started task remains visible even if
     /// it carries a future `available_from`. Unlike the dashboard query this is
     /// deliberately uncapped: callers use it for exact aggregate counts, never
-    /// as a rendered top-N list.
-    public static func getWidgetActionableTasks(
+    /// as a rendered list, so it reads no text, tags, or checklist and has no
+    /// order. Every app refresh and every widget, Focus filter, or notification
+    /// action runs it, the extensions under a tight memory limit.
+    public static func getWidgetActionableCountRows(
       _ db: Database, today: String
-    ) throws -> [TaskRow] {
+    ) throws -> [WidgetCountRow] {
       let visible = TaskReadBuckets.availableVisibilityPredicate(
         taskAlias: "tasks", datePlaceholder: ":today")
-      let rows = try Row.fetchAll(
+      return try Row.fetchAll(
         db,
         sql: """
-          SELECT \(TaskRepo.taskColumns) FROM tasks \
+          SELECT id, status, list_id, due_date, planned_date FROM tasks \
           WHERE status IN (\(StatusName.actionableStatusSqlList)) \
           AND tasks.archived_at IS NULL \
-          AND (status = :started OR \(visible)) \
-          ORDER BY \(TaskRepo.taskOrderBy)
+          AND (status = :started OR \(visible))
           """,
-        arguments: ["today": today, "started": StatusName.inProgress])
-      return try rows.map(TaskRepo.rowToTaskRow)
+        arguments: ["today": today, "started": StatusName.inProgress]
+      ).map { row in
+        WidgetCountRow(
+          id: row["id"], status: row["status"], listId: row["list_id"],
+          dueDate: row["due_date"], plannedDate: row["planned_date"])
+      }
     }
 
     /// Every task the system search index carries: each task that is neither
     /// cancelled nor in the Trash, in the canonical task order.
     ///
-    /// Deliberately uncapped, like ``getWidgetActionableTasks(_:today:)``: the
+    /// Deliberately uncapped, like ``getWidgetActionableCountRows(_:today:)``: the
     /// caller replaces the whole index from this set, so a top-N page would
     /// drop every task ranked past its cap from search.
     public static func getSearchIndexTasks(_ db: Database) throws -> [TaskRow] {

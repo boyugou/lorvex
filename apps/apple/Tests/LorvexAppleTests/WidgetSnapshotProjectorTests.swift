@@ -219,7 +219,7 @@ func widgetSnapshotProjectorCountsFromUncappedStatsSourceNotTheDaysList() {
       dueDate: nil, estimatedMinutes: nil, listID: "work", completedAt: "2026-05-22T10:00:00Z")
   }
   let statsSource = WidgetStatsSource(
-    actionableTasks: actionable,
+    actionableTasks: actionable.map(WidgetStatsTask.init),
     completedTodayTasks: completedToday)
 
   let projector = WidgetSnapshotProjector(calendar: calendar, now: { now })

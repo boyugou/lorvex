@@ -22,6 +22,28 @@ final class WidgetSnapshotSourceTests: XCTestCase {
     XCTAssertEqual(completedStats.completedTodayTasks.count, 501)
   }
 
+  /// The stats read only the columns the counts need; what they read must match the full task.
+  func testWidgetStatsTasksCarryTheFullTasksCountFacts() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let day = 86_400.0
+    let today = Calendar(identifier: .gregorian).startOfDay(for: Date())
+    let tasks = try await service.batchCreateTasks([
+      TaskCreateDraft(title: "Overdue", dueDate: today.addingTimeInterval(-3 * day)),
+      TaskCreateDraft(title: "Planned", plannedDate: today, availableFrom: nil),
+      TaskCreateDraft(title: "Both", dueDate: today.addingTimeInterval(2 * day), plannedDate: today),
+      TaskCreateDraft(title: "Undated"),
+    ])
+    _ = try await service.startTask(id: tasks[3].id)
+
+    let stats = try await service.loadWidgetStatsSource().actionableTasks
+    XCTAssertEqual(Set(stats.map(\.id)), Set(tasks.map(\.id)))
+    for task in tasks {
+      let full = try await service.loadTask(id: task.id)
+      let counted = try XCTUnwrap(stats.first { $0.id == task.id })
+      XCTAssertEqual(counted, WidgetStatsTask(full), task.title)
+    }
+  }
+
   func testCompletedTodayUsesExactProductTimezoneSpringForwardWindow() async throws {
     let service = try SwiftLorvexCoreService.inMemory()
     _ = try await service.setPreference(key: "timezone", value: "America/Los_Angeles")

@@ -48,7 +48,9 @@ public struct WidgetSnapshotProjector: Sendable {
     // `statsSource` is supplied, else the day's list. Overdue / due-today and
     // per-list counts are computed against all actionable tasks, not the
     // Focus-narrowed subset, so they reflect the full workload.
-    let statsBase = statsSource?.actionableTasks.filter { $0.status.isActionable } ?? dayTasks
+    let statsBase =
+      statsSource?.actionableTasks.filter { $0.status.isActionable }
+      ?? dayTasks.map(WidgetStatsTask.init)
     // Completed-today is counted off the canonical recently-completed set (the
     // day's list is actionable-only, so it never contains a completed task).
     let completedBase = statsSource?.completedTodayTasks ?? today.tasks
@@ -83,11 +85,11 @@ public struct WidgetSnapshotProjector: Sendable {
     // counts consistent with the displayed date and correct across time zones —
     // a plain `calendar.isDate(_:inSameDayAs:)` against the local calendar
     // would shift a UTC-anchored due date by a day for any user not on UTC.
-    let dueTodayPredicate: (LorvexTask) -> Bool = { task in
+    let dueTodayPredicate: (WidgetStatsTask) -> Bool = { task in
       guard let dueDate = task.dueDate else { return false }
       return Self.dateOnlyString(from: dueDate) == todayYmd
     }
-    let overduePredicate: (LorvexTask) -> Bool = { task in
+    let overduePredicate: (WidgetStatsTask) -> Bool = { task in
       guard let dueDate = task.dueDate else { return false }
       return Self.dateOnlyString(from: dueDate) < todayYmd
     }

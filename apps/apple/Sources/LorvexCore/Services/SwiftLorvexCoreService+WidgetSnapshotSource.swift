@@ -1,3 +1,4 @@
+import Foundation
 import GRDB
 import LorvexDomain
 import LorvexRuntime
@@ -47,8 +48,15 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
     let logicalDay = try date ?? WorkflowTimezone.todayYmdForConn(db)
     let completionWindow = try WorkflowTimezone.dayWindowUtcBoundsForConn(
       db, endingOn: logicalDay, spanDays: 1)
-    let actionable = try Self.enrich(
-      db, rows: TaskRepo.Read.getWidgetActionableTasks(db, today: logicalDay))
+    let actionable = try TaskRepo.Read.getWidgetActionableCountRows(db, today: logicalDay)
+      .compactMap { row in
+        LorvexTask.Status(rawValue: row.status).map { status in
+          WidgetStatsTask(
+            id: row.id, status: status, listID: row.listId,
+            dueDate: row.dueDate.flatMap(Self.storedDay),
+            plannedDate: row.plannedDate.flatMap(Self.storedDay))
+        }
+      }
     let completed = try Self.enrich(
       db,
       rows: TaskRepo.Read.getCompletedTasks(
@@ -56,5 +64,11 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
     return WidgetStatsSource(
       actionableTasks: actionable,
       completedTodayTasks: completed)
+  }
+
+  /// A stored `YYYY-MM-DD` day as the UTC midnight ``LorvexTask`` dates use,
+  /// read the way the task deserializer reads it.
+  private static func storedDay(_ raw: String) -> Date? {
+    LorvexDateFormatters.utcMidnight(ofDayKey: raw) ?? LorvexDateFormatters.ymdUTC.date(from: raw)
   }
 }

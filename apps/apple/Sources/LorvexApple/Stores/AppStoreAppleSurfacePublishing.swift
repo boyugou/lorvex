@@ -113,7 +113,7 @@ extension AppStore {
     await updateBadge(tasks: source.actionableTasks)
   }
 
-  func updateBadge(tasks: [LorvexTask]) async {
+  func updateBadge(tasks: [some LorvexTaskCountFacts]) async {
     let today = logicalTodayDateString
     // The true due-today/overdue count (independent of whether the dock badge is
     // enabled) drives the menu-bar attention chip + glyph, keeping it in step

@@ -661,6 +661,27 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     #expect(sent.isSuperset(of: [big.id, another.id]), "both tasks go out once the hold ends")
   }
 
+  @Test func theEndOfAStorageHoldSendsWithoutWaitingForAnEdit() async throws {
+    let h = try await Harness()
+    let clock = HandClock()
+    await h.controller.setClockForTesting { clock.now }
+    _ = try await h.core.createTask(title: "Big", notes: "")
+    _ = await h.controller.start()
+    let engine = try h.engine
+    let records = await h.batch()
+    await h.controller.handleSentRecords(
+      saved: [], failed: records.map { ($0, CKError(.quotaExceeded)) })
+    let sendsBefore = engine.sendCount
+
+    // Still inside the hold: nothing is asked of the engine.
+    await h.controller.resumeSendsAfterStorageHold(engineID: ObjectIdentifier(engine))
+    #expect(engine.sendCount == sendsBefore)
+
+    clock.advance(by: 301)
+    await h.controller.resumeSendsAfterStorageHold(engineID: ObjectIdentifier(engine))
+    #expect(engine.sendCount == sendsBefore + 1)
+  }
+
   @Test func consecutiveStorageRefusalsDoubleTheHoldUntilASaveEndsThem() async throws {
     let h = try await Harness()
     let clock = HandClock()

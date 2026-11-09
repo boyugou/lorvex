@@ -315,11 +315,30 @@ extension CloudSyncController {
   /// records only to be refused the same way, so sends wait out a hold that
   /// grows with each consecutive refusal (``storageFullHold(afterRefusals:)``).
   /// Fetches go on. The first send after the hold ends tries again; a send
-  /// CloudKit takes, or a new engine, ends the backoff.
+  /// CloudKit takes, or a new engine, ends the backoff. The engine itself does
+  /// not try again when a hold ends (it was told there was nothing to send), so
+  /// a timer asks it to (``resumeSendsAfterStorageHold(engineID:)``).
   func holdSendsForFullStorage() {
-    storageFullHoldEnd = now().addingTimeInterval(
-      Self.storageFullHold(afterRefusals: storageFullRefusals))
+    let hold = Self.storageFullHold(afterRefusals: storageFullRefusals)
+    storageFullHoldEnd = now().addingTimeInterval(hold)
     storageFullRefusals += 1
+    guard let engine else { return }
+    let engineID = ObjectIdentifier(engine)
+    Task { [weak self] in
+      try? await Task.sleep(for: .seconds(hold + 1))
+      await self?.resumeSendsAfterStorageHold(engineID: engineID)
+    }
+  }
+
+  /// Sends what waited out a storage-full hold, once the hold has ended, on the
+  /// engine that was refused; a replaced engine starts without a hold.
+  func resumeSendsAfterStorageHold(engineID: ObjectIdentifier) async {
+    guard state == .running, !isDeletingCloudData, let engine,
+      ObjectIdentifier(engine) == engineID, storageFullHoldEnd != nil,
+      !isHoldingSendsForFullStorage
+    else { return }
+    await noteLocalChanges()
+    try? await engine.sendChanges(.init())
   }
 
   /// Whether sends are waiting out a storage-full hold.

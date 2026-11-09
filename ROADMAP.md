@@ -72,8 +72,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     the end of each explicit pass (a separate SQLite file in the cache
     directory would write only what changed); a full re-upload
     sends records the server already holds unchanged (an exact-replay fetch
-    could confirm the queued row instead); the storage-full hold has no timer
-    to resume sending when it ends.
+    could confirm the queued row instead).
   - A task's tag and dependency caps (`maxTaskTags`, `maxTaskDependencies`) are
     held by the local writers only. Sync applies edges one by one and unions
     concurrent additions, so two devices that each added tags can merge a task

@@ -37,6 +37,11 @@ struct LorvexMobileApp: App {
     let builtStore = Self.makeStore()
     builtStore.diagnosticFallback = .live
     _store = State(initialValue: builtStore)
+    #if canImport(UIKit)
+      // A silent push can launch the app in the background, where no scene
+      // connects and the root view's task that attaches the store never runs.
+      LorvexMobileAppDelegate.launchStore = builtStore
+    #endif
 
     #if canImport(WatchConnectivity)
       let receiver = PhoneWatchConnectivityReceiver(
@@ -171,6 +176,9 @@ private extension Scene {
         // replenishment the foreground refresh fan-out does.
         ReminderBackgroundRefresh.schedule()
         await BackgroundDatabaseWork.run {
+          // Apply what other devices changed first, so a task completed
+          // elsewhere does not get its reminder armed again here.
+          await store.syncInBackgroundWake()
           await store.replenishReminderWindow()
         }
       }

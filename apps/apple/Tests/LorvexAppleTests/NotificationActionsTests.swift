@@ -244,6 +244,29 @@ func backgroundDatabaseWorkHoldsABackgroundTaskThatSuspendsOnExpiry() throws {
   #expect(receiver.contains("guard session.isWatchAppInstalled else { return }"))
 }
 
+/// A silent push that launches the app in the background connects no scene, so the push handler
+/// falls back to the store the app built at launch; and the reminder refresh wake syncs before
+/// it re-arms reminders, so a task completed on another device is not reminded here.
+@Test
+func backgroundWakesReachTheStoreAndSyncBeforeReminders() throws {
+  let app = try String(
+    contentsOf: packageRoot().appending(path: "Sources/LorvexMobileApp/LorvexMobileApp.swift"),
+    encoding: .utf8)
+  let delegate = try String(
+    contentsOf: packageRoot().appending(path: "Sources/LorvexMobileApp/LorvexMobileAppDelegate.swift"),
+    encoding: .utf8)
+
+  let initRange = try #require(app.range(of: "init() {"))
+  let handoff = try #require(app.range(of: "LorvexMobileAppDelegate.launchStore = builtStore"))
+  let rootRange = try #require(app.range(of: "private var rootContent"))
+  #expect(handoff.lowerBound > initRange.lowerBound && handoff.lowerBound < rootRange.lowerBound)
+  #expect(delegate.contains("guard let store = self?.store ?? Self.launchStore else {"))
+
+  let sync = try #require(app.range(of: "await store.syncInBackgroundWake()"))
+  let replenish = try #require(app.range(of: "await store.replenishReminderWindow()"))
+  #expect(sync.lowerBound < replenish.lowerBound)
+}
+
 private func packageRoot() -> URL {
   var url = URL(fileURLWithPath: #filePath)
   while url.lastPathComponent != "apps" {

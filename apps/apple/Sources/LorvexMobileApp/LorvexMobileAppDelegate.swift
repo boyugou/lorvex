@@ -20,6 +20,11 @@ import LorvexSystemIntents
   {
     @MainActor weak var store: MobileStore?
 
+    /// The store the app built at launch, set in `LorvexMobileApp.init()`. A
+    /// background launch (a silent push after the system ended the app) connects
+    /// no scene, so ``store``, attached by the root view, stays nil there.
+    @MainActor static var launchStore: MobileStore?
+
     nonisolated private static let log = Logger(
       subsystem: "com.lorvex.mobile",
       category: "notifications")
@@ -128,8 +133,9 @@ import LorvexSystemIntents
     /// own when one arrives; this keeps the app awake for that work within the
     /// push budget. An active app runs the full refresh so newly applied data
     /// reaches the visible views, widgets, reminders, and badge; a background
-    /// wake runs only the sync pass. Before launch attaches the store, the push
-    /// is left to the engine, which starts with the store and fetches then.
+    /// wake runs only the sync pass. A push that launched the app in the
+    /// background, before any scene attached the store, uses the store built at
+    /// launch (``launchStore``).
     func application(
       _ application: UIApplication,
       didReceiveRemoteNotification userInfo: [AnyHashable: Any],
@@ -141,7 +147,7 @@ import LorvexSystemIntents
         return
       }
       Task { @MainActor [weak self] in
-        guard let store = self?.store else {
+        guard let store = self?.store ?? Self.launchStore else {
           completionHandler(.noData)
           return
         }

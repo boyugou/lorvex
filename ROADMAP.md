@@ -63,6 +63,20 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     is worded in `UserFacingError+Reason.swift`; the cases it leaves to the
     core's English (a start on an already open task, a finished-to-finished
     transition that is not complete or cancel) are not reachable from the UI.
+  - CloudKit traffic and scale (read-only review against Apple's CKSyncEngine
+    guidance, 2026-11-09; none loses data): every local write and every push
+    runs a full fetch-then-send pass (`runCloudSyncCycle`), where Apple's
+    pattern is to register the change and let the engine send; the
+    system-fields cache (`FileCloudSyncRecordSystemFieldsStore`) is one JSON
+    file rewritten whole after every batch, so a first sync writes in
+    proportion to the square of the record count (a separate SQLite file in
+    the cache directory would write only what changed); a full re-upload
+    sends records the server already holds unchanged (an exact-replay fetch
+    could confirm the queued row instead); the storage-full hold has no timer
+    to resume sending when it ends.
+  - Widgets and the Focus filter load every open task in full to count them
+    (`TaskRepoRead.getWidgetActionableTasks`); a store with thousands of open
+    tasks and long notes risks the extension's memory limit. Count in SQL.
   - A task written with an empty note, raw input, or AI note stores `""`; a
     receiving device stores it as NULL and re-emits the task once so every
     replica converges on NULL (`AbsencePreserveReemit.divergedTaskPayload`).

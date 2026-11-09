@@ -189,10 +189,16 @@ its own (a push, the system scheduler) publish the same report.
 
 ### Account changes
 
-When the engine reports an account change, or the app receives
-`CKAccountChanged`, the running engine is set aside before anything else
-happens, so no record crosses between accounts while the account is checked.
-The account is then evaluated again, and one of the rules below applies.
+When the engine reports an account change, the running engine is set aside
+before anything else happens, so no record crosses between accounts while the
+account is checked. The app's `CKAccountChanged` observer first checks the
+account instead: the system posts that notification several times a day with
+the same account signed in (seen on macOS 27), and tearing the engine down for
+each one cancelled its operations and built an engine whose background task the
+system refused to register again. A running engine on the account it syncs is
+kept; a real switch is also reported by the engine itself. Otherwise the engine
+is set aside, the account is evaluated again, and one of the rules below
+applies.
 
 The transport keeps the existing account fingerprint store (a hash of the
 CloudKit user record ID) to know which account the local data was last synced

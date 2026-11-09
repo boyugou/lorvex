@@ -133,6 +133,11 @@ public actor CloudSyncController: CKSyncEngineDelegate {
   /// Consecutive sends CloudKit refused for full storage, for the hold's
   /// backoff.
   var storageFullRefusals = 0
+  /// The most records the next batch carries. CloudKit refuses a request that
+  /// is too large as a whole with `limitExceeded`; sending the same batch again
+  /// would fail the same way, so the cap halves after each such refusal and
+  /// doubles back toward ``maxBatchRecords`` after each batch CloudKit takes.
+  var batchRecordCap = CloudSyncController.maxBatchRecords
   /// The clock the storage-full hold reads.
   var now: @Sendable () -> Date = { Date() }
   var pendingReport = CloudSyncCycleReport.empty
@@ -219,10 +224,27 @@ public actor CloudSyncController: CKSyncEngineDelegate {
     inFlight = [:]
   }
 
-  /// Re-evaluates after `CKAccountChanged`. A running engine is set aside
-  /// first, so nothing crosses between accounts while the account is checked.
+  /// Re-evaluates after `CKAccountChanged`.
+  ///
+  /// The system posts it for more than a sign-in, sign-out, or switch: macOS
+  /// posts it several times a day with the same account signed in. A running
+  /// engine still on the account it syncs is therefore kept. Tearing it down
+  /// would cancel its operations, refresh the app, and build an engine whose
+  /// background task the system refuses to register a second time, all for
+  /// nothing. A real change of account is reported by the engine itself
+  /// (``handleEngineAccountChange(isSignIn:)``), which sets it aside at once.
+  /// Any other outcome sets the engine aside and evaluates from scratch.
   @discardableResult
   public func handleAccountChange() async -> CloudSyncControllerState {
+    if state == .running, engine != nil, let bound = accountID {
+      let availability = (try? await accountChecker.checkAccountStatus()) ?? .couldNotDetermine
+      if availability == .available,
+        await accountIdentifier.currentAccountIdentifier() == bound,
+        state == .running, engine != nil, accountID == bound
+      {
+        return state
+      }
+    }
     if state == .running {
       supersedeEvaluation()
       await tearDownEngine()
@@ -365,6 +387,7 @@ public actor CloudSyncController: CKSyncEngineDelegate {
     // A new engine may sync with another account, whose storage has room.
     storageFullHoldEnd = nil
     storageFullRefusals = 0
+    batchRecordCap = Self.maxBatchRecords
     let engine = makeEngine(persisted, true, self)
     self.engine = engine
     if checkpoint != "1" { ensureZoneSaveQueued(on: engine) }

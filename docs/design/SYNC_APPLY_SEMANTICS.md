@@ -318,7 +318,11 @@ versions:
 
 `entity_redirect` tombstones are never emitted, and `ai_changelog` is never
 enqueued. The backfill never mints a fresh HLC, and re-enqueuing at the stored
-version is idempotent, so it cannot overwrite a concurrent peer edit. CloudKit
+version is idempotent. It cannot overwrite a concurrent peer edit because a
+record fetched with a version newer than every unsent row of its entity lends
+those rows no change tag (`CloudSyncController.namesNewerThanTheirUnsentRows`;
+the same rule covers a server record a send returns), so their save comes back
+`serverRecordChanged` and the HLC merge decides. CloudKit
 delivery order is not semantic: a missing alias target defers durably in the
 pending inbox until its live row or tombstone arrives. Tombstones stay in
 CloudKit for the life of the zone; deletes are not compacted. Nothing local is

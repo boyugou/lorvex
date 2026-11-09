@@ -62,7 +62,7 @@ extension CloudSyncController {
           groups[name]?.absorb(item)
           continue
         }
-        if order.count >= Self.maxBatchRecords || bytes >= Self.maxBatchBytes { break scan }
+        if order.count >= batchRecordCap || bytes >= Self.maxBatchBytes { break scan }
         groups[name] = CloudSyncOutboundGroup(item)
         order.append(name)
         bytes += item.envelope.payload.utf8.count + 512
@@ -133,6 +133,7 @@ extension CloudSyncController {
     var resolvedFailureNames = Set<String>()
     var zoneMissing = false
     var storageFull = false
+    var batchTooLarge = false
     var pushed = 0
 
     for record in saved where record.recordID.zoneID == zoneID {
@@ -199,7 +200,14 @@ extension CloudSyncController {
         requeue.insert(name)
       case .quotaExceeded:
         storageFull = true
-      case .batchRequestFailed, .limitExceeded:
+      case .limitExceeded where batchRecordCap > 1:
+        // The request as a whole was too large: send it again in a smaller batch.
+        batchTooLarge = true
+        requeue.insert(name)
+      case .batchRequestFailed, .serverResponseLost:
+        // Another record failed the atomic batch, or the reply was lost after
+        // the server may have saved: send it again; a save that did land comes
+        // back as an exact replay and is confirmed.
         requeue.insert(name)
       case .networkFailure, .networkUnavailable, .zoneBusy, .serviceUnavailable,
         .requestRateLimited, .notAuthenticated, .operationCancelled,
@@ -257,7 +265,17 @@ extension CloudSyncController {
         cacheAfterCommit = saved
       }
     }
-    if !cacheAfterCommit.isEmpty { await cacheSystemFields(of: cacheAfterCommit, accountID: accountID) }
+    let (cacheable, withheld) = recordsSafeToCache(cacheAfterCommit)
+    if !cacheable.isEmpty { await cacheSystemFields(of: cacheable, accountID: accountID) }
+    if !withheld.isEmpty {
+      await systemFieldsStore.remove(
+        recordNames: withheld, accountIdentifier: accountID, zoneName: zoneID.zoneName)
+    }
+    if batchTooLarge {
+      batchRecordCap = max(1, batchRecordCap / 2)
+    } else if !saved.isEmpty {
+      batchRecordCap = min(Self.maxBatchRecords, batchRecordCap * 2)
+    }
     if storageFull {
       pendingReport.iCloudStorageFull = true
       holdSendsForFullStorage()

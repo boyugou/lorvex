@@ -301,6 +301,16 @@ extension MobileStore {
     await runCloudSyncCycle()
   }
 
+  /// Runs one sync pass from a background wake (the reminder refresh task), so
+  /// what other devices changed is applied before the wake re-arms reminders.
+  /// Returns when the pass ends or after `deadline` seconds, whichever is
+  /// first, so the wake keeps time for the reminders; the pass itself is not
+  /// cancelled. A no-op while sync is off.
+  public func syncInBackgroundWake(deadline: TimeInterval = 12) async {
+    guard cloudSyncMode == .live, cloudSyncController != nil else { return }
+    _ = await handleCloudKitPush(applicationIsActive: false, backgroundDeadline: deadline)
+  }
+
   /// Re-evaluates the sync identity after `CKAccountChanged`. A switch to a
   /// different Apple ID pauses sync until the user adopts the new account; the
   /// same or a first account resumes with a refresh. Best-effort — failures

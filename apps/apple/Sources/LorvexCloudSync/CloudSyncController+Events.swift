@@ -162,15 +162,18 @@ extension CloudSyncController {
   // MARK: - Inbound records
 
   /// Applies one fetched batch in a single Core transaction, then caches the
-  /// batch's system fields so the next local edit of those records saves
-  /// against the current server version. A record whose server copy is newer
-  /// than every row of it this device still has to send is the exception
-  /// (``namesNewerThanTheirUnsentRows(_:)``). A failed apply sets
+  /// system fields of its applied records so the next local edit of those
+  /// records saves against the current server version. A record whose server
+  /// copy is newer than every row of it this device still has to send is the
+  /// exception (``namesNewerThanTheirUnsentRows(_:)``), and records this device
+  /// never saves (an `ai_changelog` record, a parked schema-ahead one) are not
+  /// cached, since the cache file is rewritten whole. A failed apply sets
   /// `inboundApplyFailed`: no later engine state is persisted, and the engine
   /// is rebuilt from the last persisted state so the batch is fetched again.
   func handleFetchedRecords(_ records: [CKRecord]) async {
     guard acceptsSyncTraffic, !inboundApplyFailed else { return }
     var envelopes: [SyncEnvelope] = []
+    var applied: [CKRecord] = []
     var raws: [RawEnvelopeFields] = []
     var undecodable = 0
     var fetched = 0
@@ -178,7 +181,10 @@ extension CloudSyncController {
       fetched += 1
       switch CloudSyncEnvelopeRecord.decode(record) {
       case .decoded(let envelope):
-        if envelope.entityType != .aiChangelog { envelopes.append(envelope) }
+        if envelope.entityType != .aiChangelog {
+          envelopes.append(envelope)
+          applied.append(record)
+        }
       case .unknownEntityType(let raw):
         if raw.entityType != EntityName.aiChangelog { raws.append(raw) }
       case .corrupt:
@@ -197,7 +203,7 @@ extension CloudSyncController {
       if let accountID {
         let withheld = namesNewerThanTheirUnsentRows(envelopes)
         await cacheSystemFields(
-          of: records.filter { !withheld.contains($0.recordID.recordName) }, accountID: accountID)
+          of: applied.filter { !withheld.contains($0.recordID.recordName) }, accountID: accountID)
         if !withheld.isEmpty {
           await systemFieldsStore.remove(
             recordNames: withheld, accountIdentifier: accountID, zoneName: zoneID.zoneName)
@@ -234,5 +240,32 @@ extension CloudSyncController {
       if let local = unsent[name], local < envelope.version { withheld.insert(name) }
     }
     return withheld
+  }
+
+  /// `records` without those whose version is newer than every unsynced outbox
+  /// row of the same record, and the names left out: the same rule as
+  /// ``namesNewerThanTheirUnsentRows(_:)``, for the server records a send
+  /// returned. An edit made while the save was in flight can carry an older
+  /// clock than the server record that won (another device's clock ahead of
+  /// this one's), and must not go out on that record's tag.
+  func recordsSafeToCache(_ records: [CKRecord]) -> (safe: [CKRecord], withheld: Set<String>) {
+    guard !records.isEmpty else { return ([], []) }
+    guard let unsent = try? store.newestUnsyncedOutboundVersions() else {
+      return ([], Set(records.map(\.recordID.recordName)))
+    }
+    var safe: [CKRecord] = []
+    var withheld = Set<String>()
+    for record in records {
+      let name = record.recordID.recordName
+      if let local = unsent[name],
+        let text = CloudSyncEnvelopeRecord.versionString(from: record),
+        let version = try? Hlc.parseCanonical(text), local < version
+      {
+        withheld.insert(name)
+      } else {
+        safe.append(record)
+      }
+    }
+    return (safe, withheld)
   }
 }

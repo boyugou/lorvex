@@ -279,12 +279,34 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     #expect(await h.controller.start() == .paused(.accountChanged))
   }
 
-  @Test func anAccountChangeNotificationSetsTheEngineAsideFirst() async throws {
+  @Test func anAccountChangeNotificationToAnotherAccountSetsTheEngineAside() async throws {
     let h = try await Harness()
     _ = await h.controller.start()
     await h.account.set("account-b")
     #expect(await h.controller.handleAccountChange() == .paused(.accountChanged))
     #expect(try h.engine.cancelled)
+  }
+
+  @Test func anAccountChangeNotificationForTheSameAccountKeepsTheEngine() async throws {
+    let h = try await Harness()
+    _ = await h.controller.start()
+    let engine = try h.engine
+
+    // macOS posts CKAccountChanged several times a day with the same account signed in.
+    #expect(await h.controller.handleAccountChange() == .running)
+    #expect(h.engines.engines.count == 1, "no replacement engine")
+    #expect(engine.cancelled == false)
+    #expect(await h.controller.engine != nil)
+  }
+
+  @Test func anAccountChangeNotificationWithICloudSignedOutStopsTheEngine() async throws {
+    let h = try await Harness()
+    _ = await h.controller.start()
+    await h.account.set(nil)
+
+    #expect(await h.controller.handleAccountChange() == .unavailable(.couldNotDetermine))
+    #expect(try h.engine.cancelled)
+    #expect(await h.controller.engine == nil)
   }
 
   @Test func aFailedStartRecoversOnTheNextStart() async throws {
@@ -564,6 +586,46 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     #expect(try h.engine.pendingSaveNames.contains(name), "the newer edit still has to go out")
   }
 
+  @Test func aBatchRefusedAsTooLargeIsSentAgainInSmallerBatches() async throws {
+    let h = try await Harness()
+    for index in 0..<6 { _ = try await h.core.createTask(title: "Task \(index)", notes: "Notes") }
+    _ = await h.controller.start()
+    let first = await h.batch()
+    #expect(first.count > 3)
+
+    await h.controller.handleSentRecords(
+      saved: [], failed: first.map { ($0, CKError(.limitExceeded)) })
+    #expect(await h.controller.batchRecordCap == CloudSyncController.maxBatchRecords / 2)
+    #expect(try h.engine.pendingSaveNames.isSuperset(of: first.map(\.recordID.recordName)))
+
+    // Refused again and again, the batch shrinks until it fits.
+    for _ in 0..<6 {
+      let again = await h.batch()
+      await h.controller.handleSentRecords(
+        saved: [], failed: again.map { ($0, CKError(.limitExceeded)) })
+    }
+    #expect(await h.controller.batchRecordCap == 1)
+    #expect(await h.batch().count == 1)
+
+    // A batch CloudKit takes lets the cap grow back.
+    let one = await h.batch()
+    await h.controller.handleSentRecords(saved: one, failed: [])
+    #expect(await h.controller.batchRecordCap == 2)
+  }
+
+  @Test func aLostServerReplyIsSentAgain() async throws {
+    let h = try await Harness()
+    _ = try await h.core.createTask(title: "Lost reply", notes: "Notes")
+    _ = await h.controller.start()
+    let records = await h.batch()
+
+    await h.controller.handleSentRecords(
+      saved: [], failed: records.map { ($0, CKError(.serverResponseLost)) })
+
+    #expect(try h.engine.pendingSaveNames.isSuperset(of: records.map(\.recordID.recordName)))
+    #expect(try h.core.unsyncedOutboundRecordNames().isSuperset(of: records.map(\.recordID.recordName)))
+  }
+
   @Test func quotaExceededKeepsRowsQueuedAndReportsFullStorage() async throws {
     let h = try await Harness()
     _ = try await h.core.createTask(title: "Big", notes: "")
@@ -819,6 +881,44 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
         recordName: name) != nil)
   }
 
+  @Test func aServerWinnerLendsNoChangeTagToAnOlderEditMadeDuringTheSend() async throws {
+    let peer = try await Harness()
+    let list = try await peer.core.createList(name: "Original", description: nil)
+    _ = await peer.controller.start()
+    let created = await peer.batch()
+    await peer.controller.handleSentRecords(saved: created, failed: [])
+
+    let h = try await Harness()
+    _ = await h.controller.start()
+    await h.controller.handleFetchedRecords(created)
+    let rename = { (core: SwiftLorvexCoreService, name: String) in
+      _ = try await core.updateList(id: list.id, name: name, description: .unset, color: nil, icon: nil)
+    }
+    try await rename(h.core, "Sent")
+    await h.controller.noteLocalChanges()
+    let sent = try #require(await h.batch().first { (try? envelope(of: $0).entityId) == list.id })
+    // While that save is in flight: an edit here, then a later one on the peer that wins.
+    try await rename(h.core, "During the send")
+    try await Task.sleep(for: .milliseconds(5))
+    try await rename(peer.core, "Server")
+    await peer.controller.noteLocalChanges()
+    let server = try #require(
+      await peer.batch().first { (try? envelope(of: $0).entityId) == list.id })
+    await h.fields.clear()
+
+    await h.controller.handleSentRecords(
+      saved: [], failed: [(sent, conflict(client: sent, server: server))])
+
+    let name = sent.recordID.recordName
+    let newest = try #require(try h.core.newestUnsyncedOutboundVersions()[name])
+    #expect(newest < (try envelope(of: server)).version, "the edit made during the send is older")
+    // Sent on the server's tag, that older edit would replace the server's record.
+    #expect(
+      await h.fields.systemFields(
+        accountIdentifier: "account-a", zoneName: CloudSyncController.zoneName,
+        recordName: name) == nil)
+  }
+
   @Test func theNewestUnsentVersionIsReportedPerRecord() async throws {
     let h = try await Harness()
     let task = try await h.core.createTask(title: "First", notes: "")
@@ -832,6 +932,31 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
 
     await h.controller.handleSentRecords(saved: records, failed: [])
     #expect(try h.core.newestUnsyncedOutboundVersions().isEmpty)
+  }
+
+  @Test func aFetchedChangelogRecordIsNotCached() async throws {
+    let peer = try await Harness()
+    _ = try await peer.core.createTask(title: "From a peer", notes: "Notes")
+    _ = await peer.controller.start()
+    let task = try #require(await peer.batch().first { (try? envelope(of: $0).entityType) == .task })
+
+    let h = try await Harness()
+    _ = await h.controller.start()
+    let changelog = SyncEnvelope(
+      entityType: .aiChangelog, entityId: "00000000-0000-7000-8000-00000000c10c",
+      operation: .upsert, version: try Hlc.parseCanonical("1711234567890_0000_a1b2c3d4a1b2c3d4"),
+      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion, payload: "{}",
+      deviceId: "peer-device")
+    let record = CloudSyncEnvelopeRecord.makeRecord(changelog, zoneID: lorvexZone)
+
+    await h.controller.handleFetchedRecords([task, record])
+
+    // A changelog record is never applied or sent from this device, so its tag is never needed.
+    #expect(await h.fields.cachedRecordCount() == 1)
+    #expect(
+      await h.fields.systemFields(
+        accountIdentifier: "account-a", zoneName: CloudSyncController.zoneName,
+        recordName: record.recordID.recordName) == nil)
   }
 
   @Test func legacyZonesAreDeletedWhenSeen() async throws {

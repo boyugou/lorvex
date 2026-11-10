@@ -38,6 +38,14 @@ extension MobileStore {
     await updateBadge()
   }
 
+  /// Publishes the widget snapshot from a background wake. A snapshot belongs
+  /// to the day it was written for, so after midnight the widgets show their
+  /// "open the app" state until a new one is published; the wake publishes it
+  /// instead of leaving that to the next launch. Best-effort.
+  public func publishWidgetSnapshotInBackgroundWake() async {
+    _ = try? await publishWidgetSnapshot()
+  }
+
   /// Updates the app-icon badge to reflect the current due/overdue task count.
   ///
   /// Clears the badge when `badgeEnabled` is false.

@@ -582,7 +582,11 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
       // container. A suspended store takes no lock the system could suspend the
       // process on (`0xdead10cc`), so this does not take it either: the work is
       // refused as the suspended connection would refuse it, and retried after
-      // `DatabaseSuspension.resume()`.
+      // `DatabaseSuspension.resume()`. The operation is counted before the check
+      // and until the lock is released, so a suspension that arrives after the
+      // check waits for it (`DatabaseSuspension.suspend(waitingForOperations:)`).
+      DatabaseSuspension.operationWillBegin()
+      defer { DatabaseSuspension.operationDidEnd() }
       if DatabaseSuspension.isSuspended { throw DatabaseSuspension.suspendedError }
 
       do {

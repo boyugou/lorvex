@@ -230,12 +230,18 @@ func backgroundDatabaseWorkHoldsABackgroundTaskThatSuspendsOnExpiry() throws {
 
   let expire = try #require(source.range(of: "private static func expire() {"))
   let expireBody = source[expire.upperBound...].prefix(200)
-  #expect(expireBody.contains("DatabaseSuspension.suspend()"))
+  // Both exits wait for database work in flight to give up its locks before the
+  // background task ends: suspending only interrupts, and the system may
+  // suspend the process as soon as the task is over.
+  let suspension = "DatabaseSuspension.suspend(waitingForOperations: lockReleaseWait)"
+  #expect(expireBody.contains(suspension))
   #expect(expireBody.contains("endBackgroundTask()"))
 
   let endBody = source[end.upperBound..<expire.lowerBound]
   #expect(endBody.contains("guard activeUsers == 0 else { return }"))
-  #expect(endBody.contains("endBackgroundTask()"))
+  let endSuspension = try #require(endBody.range(of: suspension))
+  let endTask = try #require(endBody.range(of: "endBackgroundTask()"))
+  #expect(endSuspension.lowerBound < endTask.lowerBound)
 
   let receiver = try String(
     contentsOf: packageRoot().appending(path: "Sources/LorvexMobile/PhoneWatchConnectivityReceiver.swift"),

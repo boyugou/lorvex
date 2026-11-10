@@ -10,9 +10,10 @@
   /// and a bounded habit horizon are handed to the system at once; the OS frees a
   /// slot as each one-shot fires, but nothing re-arms the next batch (or reaps a
   /// consumed habit cadence's remaining same-cycle requests) until the app runs
-  /// again. Foreground activation and CloudKit silent pushes already replenish the
-  /// window; this closes the gap for a device left closed for days with no push,
-  /// by asking iOS for a background-refresh wake that runs the same replenishment.
+  /// again. Foreground activation replenishes the window, and so does a CloudKit
+  /// silent push that applied a change; this closes the gap for a device left
+  /// closed for days with no push, by asking iOS for a background-refresh wake
+  /// that runs the same replenishment and publishes the day's widget snapshot.
   ///
   /// Best-effort by design: iOS decides when — and whether — to run app-refresh
   /// tasks from usage and power heuristics, so this is an extra opportunity, not a

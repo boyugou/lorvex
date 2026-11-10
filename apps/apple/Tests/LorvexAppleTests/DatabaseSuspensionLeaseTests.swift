@@ -45,6 +45,69 @@ struct DatabaseSuspensionLeaseTests {
     }
   }
 
+  /// Suspending interrupts a statement, but the operation that ran it holds its
+  /// locks until its thread has unwound, so a host waits for the operations in
+  /// flight before it lets the system suspend the process.
+  @Test
+  func suspendingWaitsForTheOperationsInFlight() async {
+    let state = DatabaseSuspension.State { _ in }
+    await DatabaseSuspension.$stateOverride.withValue(state) {
+      // Nothing in flight: no wait.
+      #expect(DatabaseSuspension.suspend(waitingForOperations: 5))
+      #expect(DatabaseSuspension.isSuspended)
+      DatabaseSuspension.resume()
+
+      // One that ends while the suspension waits.
+      DatabaseSuspension.operationWillBegin()
+      let ending = Task {
+        try? await Task.sleep(for: .milliseconds(40))
+        DatabaseSuspension.operationDidEnd()
+      }
+      #expect(DatabaseSuspension.suspend(waitingForOperations: 5))
+      await ending.value
+      DatabaseSuspension.resume()
+
+      // One that does not end: the wait gives up at its bound and says so.
+      DatabaseSuspension.operationWillBegin()
+      #expect(!DatabaseSuspension.suspend(waitingForOperations: 0.05))
+      DatabaseSuspension.operationDidEnd()
+    }
+  }
+
+  /// A managed operation is counted from before it reads the suspended flag
+  /// until its lock is released, and a refused one leaves nothing counted.
+  @Test
+  func managedOperationsAreCountedWhileTheyHoldTheLease() async throws {
+    let fm = FileManager.default
+    let root = URL(fileURLWithPath: NSTemporaryDirectory())
+      .appendingPathComponent("lorvex-suspension-count-\(UUID().uuidString)", isDirectory: true)
+    try fm.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? fm.removeItem(at: root) }
+    let env = InMemoryDbLocatorEnv(
+      dataDir: root.appendingPathComponent("AppSupport").path, homeDir: root.path,
+      platform: .current)
+    let state = DatabaseSuspension.State { _ in }
+
+    try await DatabaseSuspension.$stateOverride.withValue(state) {
+      try await SwiftLorvexCoreService.$dbLocatorEnvironmentOverride.withValue(env) {
+        let service = SwiftLorvexCoreService(databasePath: nil)
+        _ = try await service.setPreference(key: "theme", value: "system")
+
+        let idleInside = try service.read { _ in
+          // In flight: a suspension asked to wait gives up at its bound.
+          state.operations.waitUntilIdle(deadline: Date().addingTimeInterval(0.05))
+        }
+        #expect(!idleInside)
+        #expect(state.operations.waitUntilIdle(deadline: Date()))
+
+        DatabaseSuspension.suspend()
+        #expect(throws: DatabaseError.self) { try service.read { _ in } }
+        #expect(state.operations.waitUntilIdle(deadline: Date()))
+        DatabaseSuspension.resume()
+      }
+    }
+  }
+
   @Test
   func suspendAndResumeTrackTheirOwnState() {
     // A state of its own: the real one is shared with every test running beside

@@ -180,8 +180,28 @@ extension MobileStore {
       // it during teardown cannot leave an untracked refresh task running. Core
       // writes are already burst-coalesced by `DatabaseChangeSignal`, while
       // concurrent lifecycle triggers still converge through `refreshFlight`.
-      await refresh()
+      await refreshAdoptingBackgroundWrite()
     }
+  }
+
+  /// A refresh for a write that may have been made while the app is in the
+  /// background: a reminder's Complete or Defer button, a Shortcuts or Siri
+  /// action.
+  ///
+  /// Such a write takes the store for its own length only, and the store is
+  /// suspended again by the time its signal arrives. A plain refresh would
+  /// then fail on its first read and leave the widget listing the finished
+  /// task, the badge unchanged, and the task's other reminders armed until the
+  /// app is next opened. Taking the store back for the refresh
+  /// (`DatabaseSuspension.backgroundAccess`) lets it re-plan all three and
+  /// send the change. In the foreground the bracket changes nothing.
+  @discardableResult
+  func refreshAdoptingBackgroundWrite() async -> MobileCloudSyncLifecycleResult {
+    let access = DatabaseSuspension.backgroundAccess
+    await access?.begin()
+    let result = await refresh()
+    await access?.end()
+    return result
   }
 
   func databaseChangeOriginIsSelf(_ notification: Notification) -> Bool {
@@ -200,7 +220,7 @@ extension MobileStore {
   func observeBackgroundMutationsApplied() async {
     let stream = NotificationCenter.default.notifications(named: .lorvexBackgroundMutationApplied)
     for await _ in stream {
-      await refresh()
+      await refreshAdoptingBackgroundWrite()
     }
   }
 
@@ -264,8 +284,11 @@ extension MobileStore {
   /// Route a Lorvex CloudKit push by the app's execution state. The engine
   /// fetches on its own when a push arrives; this keeps the app awake for that
   /// work within the push budget. An active app runs the full refresh so the
-  /// visible surfaces, widgets, reminders, and badge adopt what arrived; a
-  /// background wake runs only the sync pass. Either returns by `deadline`;
+  /// visible surfaces, widgets, reminders, and badge adopt what arrived. A
+  /// background wake runs the sync pass and then adopts what it applied: a
+  /// reminder added on another device is armed on this one, the reminder of a
+  /// task finished elsewhere is withdrawn, and the badge and widgets follow,
+  /// without waiting for the app to be opened. Either returns by `deadline`;
   /// the work continues best-effort past it.
   @discardableResult
   public func handleCloudKitPush(
@@ -275,7 +298,13 @@ extension MobileStore {
     let race = CloudSyncLifecycleRace()
     let work = Task { @MainActor [weak self] in
       guard let self else { return race.finish(.noData) }
-      race.finish(applicationIsActive ? await self.refresh() : await self.runCloudSyncCycle())
+      if applicationIsActive {
+        race.finish(await self.refresh())
+      } else {
+        let result = await self.runCloudSyncCycle()
+        await self.reloadInboundSurfacesIfNeeded(after: result)
+        race.finish(result)
+      }
     }
     let deadlineTask = Task.detached {
       try? await Task.sleep(nanoseconds: UInt64(max(0, backgroundDeadline) * 1_000_000_000))

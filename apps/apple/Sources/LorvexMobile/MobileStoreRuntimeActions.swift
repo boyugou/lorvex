@@ -21,6 +21,10 @@ extension MobileStore {
   }
 
   private func performRefresh() async -> MobileCloudSyncLifecycleResult {
+    // The store is closed while the app is in the background; the refresh that
+    // runs as the app returns, or one that takes the store back first
+    // (`refreshAdoptingBackgroundWrite`), does the work.
+    guard !DatabaseSuspension.isSuspended else { return .noData }
     let signpost = LorvexSignpost.begin(.refreshTotal)
     defer { LorvexSignpost.end(signpost) }
 
@@ -162,6 +166,11 @@ extension MobileStore {
       invalidateAllViewOwnedData()
       return true
     } catch {
+      // The store is closed while the app is in the background, and a reload
+      // caught by that fails on its next read. Nothing is wrong with the data:
+      // what is on screen stays, no error is raised, and the refresh that runs
+      // as the app returns reads everything again.
+      if DatabaseSuspension.isSuspended { return false }
       // A recovering open may have set aside a database before this failure;
       // surface the recovery notice so it isn't lost, then present the failure —
       // which, for a fatal open, is the `unrecoverable` fatal copy.

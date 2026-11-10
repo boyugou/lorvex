@@ -72,16 +72,22 @@ import LorvexCore
       activeUsers = max(activeUsers - 1, 0)
       guard activeUsers == 0 else { return }
       if UIApplication.shared.applicationState == .background {
-        DatabaseSuspension.suspend()
+        DatabaseSuspension.suspend(waitingForOperations: lockReleaseWait)
       }
       endBackgroundTask()
     }
+
+    /// How long a suspension waits for database work still in flight to give
+    /// up its locks before the background task ends and the system may suspend
+    /// the process. Interrupted work unwinds in milliseconds; the bound only
+    /// keeps a stuck thread from holding the main thread.
+    private static let lockReleaseWait: TimeInterval = 1
 
     /// The background task's time ran out with work still holding the
     /// database: release every lock before the system suspends the process.
     /// The users still counted end later; the last one finds nothing to end.
     private static func expire() {
-      DatabaseSuspension.suspend()
+      DatabaseSuspension.suspend(waitingForOperations: lockReleaseWait)
       endBackgroundTask()
     }
 

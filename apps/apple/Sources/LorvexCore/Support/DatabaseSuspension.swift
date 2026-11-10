@@ -44,8 +44,42 @@ public enum DatabaseSuspension {
     /// suspended.
     let suspended = Mutex<Bool>(false)
     let post: @Sendable (Notification.Name) -> Void
+    /// Counts the store operations in flight, each holding the storage lock
+    /// and whatever SQLite locks its statements took, and wakes a waiter when
+    /// the last one ends.
+    let operations = OperationGate()
 
     init(post: @escaping @Sendable (Notification.Name) -> Void) { self.post = post }
+  }
+
+  /// A count of operations in flight that a thread can wait on.
+  final class OperationGate: @unchecked Sendable {
+    private let condition = NSCondition()
+    private var count = 0
+
+    func enter() {
+      condition.lock()
+      count += 1
+      condition.unlock()
+    }
+
+    func leave() {
+      condition.lock()
+      count -= 1
+      if count == 0 { condition.broadcast() }
+      condition.unlock()
+    }
+
+    /// Blocks until no operation is in flight or `deadline` passes, and
+    /// returns whether none is.
+    func waitUntilIdle(deadline: Date) -> Bool {
+      condition.lock()
+      defer { condition.unlock() }
+      while count > 0 {
+        if !condition.wait(until: deadline) { return count == 0 }
+      }
+      return true
+    }
   }
 
   private static let processState = State { name in
@@ -75,6 +109,34 @@ public enum DatabaseSuspension {
     state.suspended.withLock { $0 = true }
     state.post(Database.suspendNotification)
   }
+
+  /// ``suspend()``, then wait up to `timeout` seconds for the store operations
+  /// already in flight to end, and return whether they all did.
+  ///
+  /// Suspending interrupts a running statement, but the operation that ran it
+  /// still holds its locks until its thread has rolled back and returned. A
+  /// host that lets the system suspend the process the moment it has posted
+  /// the suspension can be suspended inside that gap, which is the very
+  /// termination suspending exists to prevent; waiting here, before the host
+  /// gives up its background time, closes it. The wait blocks the calling
+  /// thread. The operations run on other threads and need nothing from the
+  /// caller, and they end within milliseconds of the interrupt.
+  @discardableResult
+  public static func suspend(waitingForOperations timeout: TimeInterval) -> Bool {
+    let state = state
+    suspend()
+    return state.operations.waitUntilIdle(deadline: Date().addingTimeInterval(timeout))
+  }
+
+  /// Marks the start of a store operation that takes the storage lock. Call it
+  /// before reading ``isSuspended``: a suspension then either sees the
+  /// operation and waits for it, or the operation sees the suspension and
+  /// takes no lock. Balance it with ``operationDidEnd()``.
+  public static func operationWillBegin() { state.operations.enter() }
+
+  /// Marks the end of an operation begun with ``operationWillBegin()``, after
+  /// its locks are released.
+  public static func operationDidEnd() { state.operations.leave() }
 
   /// Let the managed store acquire database locks again. Idempotent, and
   /// required before database work that follows a ``suspend()``.
@@ -143,6 +205,14 @@ public enum DatabaseSuspension {
     installedBackgroundAccess.withLock { $0 = access }
   }
 
+  /// The installed ``BackgroundAccess``, for work that cannot be handed over as
+  /// a closure because it is isolated to an actor: the caller awaits `begin`,
+  /// does the work, and awaits `end`, however the work ended. Nil where no
+  /// host installed one, where the work runs unchanged.
+  public static var backgroundAccess: BackgroundAccess? {
+    backgroundAccessOverride ?? installedBackgroundAccess.withLock { $0 }
+  }
+
   /// Runs `body` with the store resumed for its duration, through the installed
   /// ``BackgroundAccess``, and returns or throws what `body` does.
   ///
@@ -155,8 +225,7 @@ public enum DatabaseSuspension {
   public static func withBackgroundAccess<Value>(
     _ body: () async throws -> Value
   ) async rethrows -> Value {
-    let access = backgroundAccessOverride ?? installedBackgroundAccess.withLock { $0 }
-    return try await withBackgroundAccess(access, body)
+    try await withBackgroundAccess(backgroundAccess, body)
   }
 
   /// ``withBackgroundAccess(_:)`` through an explicit `access`; `nil` runs

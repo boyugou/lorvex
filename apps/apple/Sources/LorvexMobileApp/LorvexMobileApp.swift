@@ -42,6 +42,11 @@ struct LorvexMobileApp: App {
       // connects and the root view's task that attaches the store never runs.
       LorvexMobileAppDelegate.launchStore = builtStore
     #endif
+    // The root view starts these too, but a background launch never builds it.
+    // A reminder's button or a Shortcuts action handled there changes the
+    // database, and it is the store's observers that then re-plan the
+    // reminders, the badge, and the widgets.
+    builtStore.startLifetimeObserversIfNeeded()
 
     #if canImport(WatchConnectivity)
       let receiver = PhoneWatchConnectivityReceiver(
@@ -188,6 +193,7 @@ private extension Scene {
           // elsewhere does not get its reminder armed again here.
           await store.syncInBackgroundWake()
           await store.replenishReminderWindow()
+          await store.publishWidgetSnapshotInBackgroundWake()
         }
       }
     #else

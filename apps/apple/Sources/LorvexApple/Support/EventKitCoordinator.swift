@@ -161,18 +161,38 @@ actor EventKitCoordinator {
     }
     let resolvedWindowStart = windowStart ?? Self.ymd(from)
     let resolvedWindowEnd = windowEnd ?? Self.ymd(to)
+    let calendarFilter = await loadCalendarFilter()
     let fetched = try await access.fetchEvents(
       start: from,
       end: to,
       windowEndDay: resolvedWindowEnd,
-      calendarFilter: await loadCalendarFilter())
+      calendarFilter: calendarFilter)
     let rows = EventKitIngest.providerRows(
       from: fetched, scope: SwiftLorvexCoreService.eventKitScope, accessMode: mode)
     let count = try provider.ingestEventKitEvents(
       rows, builtAtMode: mode,
       windowStart: resolvedWindowStart,
       windowEnd: resolvedWindowEnd)
+    try await removeSeriesCalendarNoLongerHas(
+      fetchedKeys: Set(fetched.map(\.key)), calendarFilter: calendarFilter)
     return IngestReport(ingestedCount: count)
+  }
+
+  /// Removes the mirrored repeating series Calendar no longer has.
+  ///
+  /// A window's ingest leaves a series alone when the window holds none of its
+  /// occurrences, so a series deleted in Calendar would otherwise stay in
+  /// Lorvex for good. Each series this fetch did not return is looked up in
+  /// Calendar by the identifier it was stored under, and removed only when it
+  /// is gone or now sits in a calendar Lorvex does not mirror.
+  private func removeSeriesCalendarNoLongerHas(
+    fetchedKeys: Set<String>, calendarFilter: EventKitCalendarFilter
+  ) async throws {
+    let unseen = try provider.recurringEventKitMirrorKeys().filter { !fetchedKeys.contains($0) }
+    guard !unseen.isEmpty else { return }
+    let missing = await access.missingEventKeys(unseen, calendarFilter: calendarFilter)
+    guard !missing.isEmpty else { return }
+    try provider.removeEventKitMirrorRows(keys: missing)
   }
 
   private static func ymd(_ date: Date) -> String {

@@ -880,5 +880,34 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
 
     XCTAssertEqual(try mirroredKeys(service), ["ek-standup"])
   }
+
+  /// A series and its moved occurrences go together; other rows, including a
+  /// series whose key begins with the same characters, stay.
+  func testRemovingASeriesTakesItsMovedOccurrencesWithIt() async throws {
+    let service = try makeService()
+    try await optIntoFullDetailTier(service)
+    let rule = #"{"FREQ":"WEEKLY"}"#
+    func event(_ key: String, _ date: String, recurrence: String? = nil) -> EventKitFetchedEvent {
+      EventKitFetchedEvent(
+        key: key, title: key, notes: nil, startDate: date, startTime: "09:00",
+        endDate: date, endTime: "09:30", allDay: false, location: nil, timezone: nil,
+        recurrence: recurrence)
+    }
+    try ingest(
+      service,
+      [
+        event("ek-series", "2026-06-01", recurrence: rule),
+        event("ek-series:2026-06-08", "2026-06-09"),
+        event("ek-series2", "2026-06-02", recurrence: rule),
+        event("ek-one-off", "2026-06-03"),
+      ],
+      from: "2026-06-01", to: "2026-06-14")
+    XCTAssertEqual(try service.recurringEventKitMirrorKeys(), ["ek-series", "ek-series2"])
+
+    let removed = try service.removeEventKitMirrorRows(keys: ["ek-series"])
+
+    XCTAssertEqual(removed, 2)
+    XCTAssertEqual(try mirroredKeys(service), ["ek-series2", "ek-one-off"])
+  }
 }
 

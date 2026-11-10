@@ -260,6 +260,19 @@ actor FakeEventKitAccess: EventKitAccessing {
 
   func setEventSourceResult(_ source: EventKitEventSource?) { eventSourceResult = source }
 
+  /// Keys `missingEventKeys` reports as gone, and the keys it was asked about.
+  var missingKeys: Set<String> = []
+  private(set) var missingKeyQueries: [[String]] = []
+  func setMissingKeys(_ keys: Set<String>) { missingKeys = keys }
+  func setFetchResultForTesting(_ events: [EventKitFetchedEvent]) { fetchResult = events }
+
+  func missingEventKeys(
+    _ keys: [String], calendarFilter: EventKitCalendarFilter
+  ) async -> Set<String> {
+    missingKeyQueries.append(keys)
+    return missingKeys.intersection(keys)
+  }
+
   func fetchEvents(
     start: Date, end: Date, windowEndDay: String,
     calendarFilter: EventKitCalendarFilter
@@ -376,6 +389,13 @@ final class FakeEventKitProvider: EventKitProviderServicing, @unchecked Sendable
       ingestedWindows.append((windowStart, windowEnd))
     }
     return events.count
+  }
+  var recurringKeys: [String] = []
+  private(set) var removedKeys: [Set<String>] = []
+  func recurringEventKitMirrorKeys() throws -> [String] { lock.withLock { recurringKeys } }
+  func removeEventKitMirrorRows(keys: Set<String>) throws -> Int {
+    lock.withLock { removedKeys.append(keys) }
+    return keys.count
   }
   func setEventKitScopeEnabled(_ enabled: Bool) throws { lock.withLock { scopeEnabled = enabled } }
   func clearEventKitMirror() throws -> Int { lock.withLock { clearCount += 1 }; return 0 }

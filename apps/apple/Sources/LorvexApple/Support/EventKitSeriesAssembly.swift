@@ -34,13 +34,21 @@ struct EventKitOccurrence: Equatable {
 /// no EXDATE list, but its enumeration is authoritative within the window.
 /// Row count stays bounded: one master per series plus one row per detached
 /// occurrence, never one row per projected occurrence.
+///
+/// The master starts where the series does (`seriesStarts`, the series' first
+/// occurrence as EventKit reports it), not at its first occurrence in the
+/// window: a rule that ends after a number of occurrences counts them from the
+/// series' start, and a series that began earlier still shows on earlier days.
+/// Without a known start, the first occurrence in the window stands in.
 enum EventKitSeriesAssembly {
   /// Hard cap on projected dates examined per series. Daily over the widest
   /// ~7-year ingest window is ~2.6k; the cap only stops a pathological rule.
   static let maxProjectedOccurrences = 4000
 
   static func assemble(
-    _ occurrences: [EventKitOccurrence], windowEndYmd: String
+    _ occurrences: [EventKitOccurrence],
+    seriesStarts: [String: EventKitFetchedEvent] = [:],
+    windowEndYmd: String
   ) -> [EventKitFetchedEvent] {
     var order: [String] = []
     var groups: [String: [EventKitOccurrence]] = [:]
@@ -53,29 +61,49 @@ enum EventKitSeriesAssembly {
     var results: [EventKitFetchedEvent] = []
     for key in order {
       guard let group = groups[key] else { continue }
-      results.append(contentsOf: assembleSeries(group, windowEndYmd: windowEndYmd))
+      results.append(
+        contentsOf: assembleSeries(
+          group, seriesStart: seriesStarts[key], windowEndYmd: windowEndYmd))
     }
     return results
   }
 
   private static func assembleSeries(
-    _ group: [EventKitOccurrence], windowEndYmd: String
+    _ group: [EventKitOccurrence], seriesStart: EventKitFetchedEvent?, windowEndYmd: String
   ) -> [EventKitFetchedEvent] {
-    guard let rule = group.compactMap({ $0.event.recurrence }).first else {
+    guard let inWindowRule = group.compactMap({ $0.event.recurrence }).first else {
       // Non-recurring, or a rule the bridge could not express: a single
       // representative row (the first enumerated occurrence).
       return group.first.map { [$0.event] } ?? []
     }
 
-    let master = group.first { !$0.isDetached } ?? group[0]
+    let firstInWindow = group.first { !$0.isDetached } ?? group[0]
+    let master: EventKitFetchedEvent
+    let rule: String
+    if let seriesStart, let startRule = seriesStart.recurrence,
+      seriesStart.startDate <= firstInWindow.event.startDate
+    {
+      master = seriesStart
+      rule = startRule
+    } else {
+      master = firstInWindow.event
+      rule = inWindowRule
+    }
     let onRuleDates = Set(group.filter { !$0.isDetached }.map(\.event.startDate))
+    // Cancellations are known only where the window was fetched: from its
+    // first occurrence (an on-rule one, or a moved one's original slot) on.
+    // Earlier projected dates were not enumerated, so none is called cancelled.
+    let windowSlots =
+      group.filter { !$0.isDetached }.map(\.event.startDate)
+      + group.filter(\.isDetached).map { $0.occurrenceYmd ?? $0.event.startDate }
     let exceptions = projectedExceptions(
-      rule: rule, baseYmd: master.event.startDate, windowEndYmd: windowEndYmd,
-      onRuleDates: onRuleDates)
+      rule: rule, baseYmd: master.startDate,
+      fromYmd: max(master.startDate, windowSlots.min() ?? master.startDate),
+      windowEndYmd: windowEndYmd, onRuleDates: onRuleDates)
 
     var results = [
       rebuilt(
-        master.event, key: master.event.key, recurrence: rule,
+        master, key: master.key, recurrence: rule,
         recurrenceExceptions: encodeExceptions(exceptions))
     ]
     // Each moved/edited occurrence renders standalone at its real time; its
@@ -90,20 +118,27 @@ enum EventKitSeriesAssembly {
     return results
   }
 
-  /// Projected dates within `[baseYmd, windowEndYmd]` that have no surviving
-  /// on-rule occurrence — i.e. cancelled occurrences and the original slots of
-  /// moved ones. A rule the projection engine cannot parse yields no exceptions
-  /// (the master renders the raw projection, the pre-assembly behavior).
+  /// Dates the rule projects from `baseYmd` that fall within `[fromYmd,
+  /// windowEndYmd]` and have no surviving on-rule occurrence — i.e. cancelled
+  /// occurrences and the original slots of moved ones. A rule the projection
+  /// engine cannot parse yields no exceptions (the master renders the raw
+  /// projection, the pre-assembly behavior).
   private static func projectedExceptions(
-    rule: String, baseYmd: String, windowEndYmd: String, onRuleDates: Set<String>
+    rule: String, baseYmd: String, fromYmd: String, windowEndYmd: String,
+    onRuleDates: Set<String>
   ) -> [String] {
     var exceptions: [String] = []
     guard
       var date = try? CalendarRecurrence.firstOccurrenceOnOrAfter(
-        recurrenceJson: rule, baseDateYmd: baseYmd, targetDateYmd: baseYmd)
+        recurrenceJson: rule, baseDateYmd: baseYmd, targetDateYmd: fromYmd)
     else { return [] }
+    // The projection stops at an UNTIL date but not after a COUNT of
+    // occurrences, so the series' last date bounds the walk too.
+    let lastDate =
+      (try? CalendarRecurrence.countEndDate(recurrenceJson: rule, baseDate: baseYmd))
+      .flatMap { $0 }.map { min($0, windowEndYmd) } ?? windowEndYmd
     var iterations = 0
-    while date <= windowEndYmd, iterations < maxProjectedOccurrences {
+    while date <= lastDate, iterations < maxProjectedOccurrences {
       if !onRuleDates.contains(date) { exceptions.append(date) }
       iterations += 1
       guard

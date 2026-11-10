@@ -168,6 +168,8 @@ actor LiveEventKitAccess: EventKitAccessing {
     // Chunk a wide range into <=4-year windows: EventKit rejects predicates
     // spanning more than four years and a single huge predicate is slow.
     var occurrences: [EventKitOccurrence] = []
+    var seriesStarts: [String: EventKitFetchedEvent] = [:]
+    var seriesLookedUp = Set<String>()
     let lorvexID = await loadCalendarID()
     var windowStart = start
     let chunk: TimeInterval = 4 * 365 * 24 * 3600
@@ -188,6 +190,18 @@ actor LiveEventKitAccess: EventKitAccessing {
           continue
         }
         guard let fetched = Self.fetchedEvent(from: ekEvent) else { continue }
+        // Where the series starts: EventKit resolves a repeating event's item
+        // identifier to its first occurrence. Looked up once per series; a
+        // first occurrence that was itself moved does not say where the rule
+        // starts.
+        if ekEvent.hasRecurrenceRules, seriesLookedUp.insert(fetched.key).inserted,
+          let first = store.calendarItem(withIdentifier: ekEvent.calendarItemIdentifier)
+            as? EKEvent,
+          !first.isDetached, let start = Self.fetchedEvent(from: first),
+          start.key == fetched.key
+        {
+          seriesStarts[fetched.key] = start
+        }
         occurrences.append(
           EventKitOccurrence(
             event: fetched,
@@ -202,7 +216,7 @@ actor LiveEventKitAccess: EventKitAccessing {
     // recurrence exceptions plus standalone rows for moved occurrences, so
     // moved/cancelled occurrences render correctly (see EventKitSeriesAssembly).
     return EventKitSeriesAssembly.assemble(
-      occurrences, windowEndYmd: windowEndDay)
+      occurrences, seriesStarts: seriesStarts, windowEndYmd: windowEndDay)
   }
 
   func upsertLorvexEvent(
@@ -464,6 +478,26 @@ actor LiveEventKitAccess: EventKitAccessing {
     }
     let predicate = store.predicateForEvents(withStart: start, end: end, calendars: nil)
     return store.events(matching: predicate).first { Self.stableKey(for: $0) == key }
+  }
+
+  func missingEventKeys(
+    _ keys: [String], calendarFilter: EventKitCalendarFilter
+  ) async -> Set<String> {
+    guard isReadAuthorized(), !keys.isEmpty else { return [] }
+    let lorvexID = await loadCalendarID()
+    var missing = Set<String>()
+    for key in keys {
+      // A key is the event's external identifier when it has one, else its
+      // local identifier (`stableKey(for:)`).
+      var items = store.calendarItems(withExternalIdentifier: key)
+      if let local = store.calendarItem(withIdentifier: key) { items.append(local) }
+      let mirrored = items.contains { item in
+        guard let calendarID = item.calendar?.calendarIdentifier else { return false }
+        return calendarID != lorvexID && calendarFilter.allows(calendarID: calendarID)
+      }
+      if !mirrored { missing.insert(key) }
+    }
+    return missing
   }
 
   func eventSource(forEventKey key: String, dayHint: String?) async -> EventKitEventSource? {

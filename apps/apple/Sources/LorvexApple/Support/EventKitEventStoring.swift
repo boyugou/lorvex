@@ -16,6 +16,7 @@ protocol EventKitEventStoring: Sendable {
   func predicateForEvents(withStart startDate: Date, end endDate: Date, calendars: [EKCalendar]?)
     -> NSPredicate
   func calendarItem(withIdentifier identifier: String) -> EKCalendarItem?
+  func calendarItems(withExternalIdentifier externalIdentifier: String) -> [EKCalendarItem]
   var defaultCalendarForNewEvents: EKCalendar? { get }
   func makeEvent() -> EKEvent
 

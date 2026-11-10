@@ -1,4 +1,5 @@
 import Foundation
+import LorvexStore
 import LorvexCore
 import Testing
 
@@ -984,3 +985,31 @@ func rescheduleCalendarEventSkipsRecurringEvents() async throws {
   // Recurring drag-edits route through the sheet (this-instance vs series).
   #expect(store.errorMessage == nil)
 }
+
+/// A repeating series this fetch did not return is looked up in Calendar and
+/// removed only when Calendar no longer has it; one-off rows and series this
+/// fetch returned are not looked up.
+@MainActor
+@Test
+func eventKitIngestRemovesOnlyTheSeriesCalendarNoLongerHas() async throws {
+  let access = FakeEventKitAccess()
+  await access.setFetchResultForTesting([
+    EventKitFetchedEvent(
+      key: "series-returned", title: "Standup", notes: nil, startDate: "2026-06-01",
+      startTime: "09:00", endDate: "2026-06-01", endTime: "09:15", allDay: false,
+      location: nil, timezone: nil, recurrence: #"{"FREQ":"DAILY"}"#)
+  ])
+  await access.setMissingKeys(["series-deleted"])
+  let provider = FakeEventKitProvider()
+  provider.recurringKeys = ["series-deleted", "series-kept", "series-returned"]
+  let coordinator = makeCoordinator(access: access, provider: provider)
+
+  _ = try await coordinator.ingest(
+    from: Date(timeIntervalSince1970: 1_780_272_000),
+    to: Date(timeIntervalSince1970: 1_780_876_800),
+    windowStart: "2026-06-01", windowEnd: "2026-06-07")
+
+  #expect(await access.missingKeyQueries == [["series-deleted", "series-kept"]])
+  #expect(provider.removedKeys == [["series-deleted"]])
+}
+

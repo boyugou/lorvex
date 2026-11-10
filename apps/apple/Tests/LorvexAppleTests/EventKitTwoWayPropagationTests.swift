@@ -58,6 +58,11 @@ final class FakeEKEventStore: EventKitEventStoring, @unchecked Sendable {
   func calendarItem(withIdentifier identifier: String) -> EKCalendarItem? {
     itemsByIdentifier[identifier]
   }
+  /// EKEvents addressable by external identifier, as Calendar keeps them.
+  var itemsByExternalIdentifier: [String: [EKEvent]] = [:]
+  func calendarItems(withExternalIdentifier externalIdentifier: String) -> [EKCalendarItem] {
+    itemsByExternalIdentifier[externalIdentifier] ?? []
+  }
   var defaultCalendarForNewEvents: EKCalendar? { nil }
   func makeEvent() -> EKEvent { EKEvent(eventStore: backing) }
 
@@ -980,3 +985,29 @@ func changeObserverCallsRefreshClosureOnNotification() async {
   let count = await counter.value
   #expect(count >= 1)
 }
+
+/// A stored key is looked up in Calendar by the identifier it was stored
+/// under. A series is missing when Calendar has no item for it, or has it only
+/// in a calendar Lorvex does not mirror from.
+@Test
+func liveAccessReportsTheSeriesCalendarNoLongerMirrors() async throws {
+  let store = FakeEKEventStore()
+  let work = store.makeCalendar()
+  let hidden = store.makeCalendar()
+  store.existingCalendars = [work, hidden]
+  let kept = store.makeEvent()
+  kept.calendar = work
+  let moved = store.makeEvent()
+  moved.calendar = hidden
+  store.itemsByExternalIdentifier = ["ext-kept": [kept], "ext-hidden": [moved]]
+  let access = LiveEventKitAccess(
+    store: store, readAuthorizationProvider: { store.fullAccessGranted })
+
+  let missing = await access.missingEventKeys(
+    ["ext-kept", "ext-hidden", "ext-deleted"],
+    calendarFilter: EventKitCalendarFilter(
+      includedCalendarIDs: [], excludedCalendarIDs: [hidden.calendarIdentifier]))
+
+  #expect(missing == ["ext-hidden", "ext-deleted"])
+}
+

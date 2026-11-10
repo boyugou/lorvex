@@ -144,4 +144,57 @@ struct EventKitSeriesAssemblyTests {
     #expect(rows.count == 1)
     #expect(rows[0].startDate == "2026-01-05")
   }
+
+  @Test("a series that began before the window starts where it began, and counts from there")
+  func masterStartsAtTheSeriesStart() throws {
+    // Weekly, ten times, from 2025-11-03; the window holds the ninth and tenth.
+    let counted = #"{"FREQ":"WEEKLY","COUNT":10}"#
+    let occurrences = ["2025-12-29", "2026-01-05"].map {
+      EventKitOccurrence(
+        event: event(startDate: $0, recurrence: counted), isDetached: false, occurrenceYmd: $0)
+    }
+    let rows = EventKitSeriesAssembly.assemble(
+      occurrences,
+      seriesStarts: ["ext-1": event(startDate: "2025-11-03", recurrence: counted)],
+      windowEndYmd: "2026-01-18")
+
+    let master = try #require(rows.first)
+    #expect(rows.count == 1)
+    #expect(master.startDate == "2025-11-03")
+    #expect(master.recurrence == counted)
+    // Nothing before the window's first occurrence is called cancelled, and the
+    // series' end after its tenth occurrence leaves no slot to cancel after it.
+    #expect(master.recurrenceExceptions == nil)
+  }
+
+  @Test("a series start is not trusted when it comes after the window's first occurrence")
+  func aLaterSeriesStartIsIgnored() throws {
+    let occurrences = ["2026-01-05", "2026-01-12"].map {
+      EventKitOccurrence(
+        event: event(startDate: $0, recurrence: weekly), isDetached: false, occurrenceYmd: $0)
+    }
+    let rows = EventKitSeriesAssembly.assemble(
+      occurrences,
+      seriesStarts: ["ext-1": event(startDate: "2026-01-12", recurrence: weekly)],
+      windowEndYmd: "2026-01-12")
+    #expect(try #require(rows.first).startDate == "2026-01-05")
+  }
+
+  @Test("cancellations are found only from the window's first occurrence on")
+  func cancellationsStayInsideTheWindow() throws {
+    // Weekly from 2025-12-01; the window shows 2026-01-05 and 2026-01-19, so
+    // 2026-01-12 was cancelled, while December was never enumerated.
+    let occurrences = ["2026-01-05", "2026-01-19"].map {
+      EventKitOccurrence(
+        event: event(startDate: $0, recurrence: weekly), isDetached: false, occurrenceYmd: $0)
+    }
+    let rows = EventKitSeriesAssembly.assemble(
+      occurrences,
+      seriesStarts: ["ext-1": event(startDate: "2025-12-01", recurrence: weekly)],
+      windowEndYmd: "2026-01-19")
+    let master = try #require(rows.first)
+    #expect(master.startDate == "2025-12-01")
+    #expect(master.recurrenceExceptions == #"["2026-01-12"]"#)
+  }
 }
+

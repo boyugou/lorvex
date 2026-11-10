@@ -19,6 +19,10 @@ public protocol EventKitProviderServicing: AnyObject, Sendable {
     windowStart: String, windowEnd: String
   ) throws -> Int
   func setEventKitScopeEnabled(_ enabled: Bool) throws
+  /// The keys of the mirrored repeating series.
+  func recurringEventKitMirrorKeys() throws -> [String]
+  /// Remove the mirrored series `keys` and their moved occurrences.
+  @discardableResult func removeEventKitMirrorRows(keys: Set<String>) throws -> Int
   @discardableResult func clearEventKitMirror() throws -> Int
   @discardableResult func linkTaskToEventKitEvent(
     taskID: String, providerEventKey: String
@@ -157,6 +161,54 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
       db, providerKind: ProviderKind.eventkit, providerScope: eventKitScope,
       from: from, to: to,
       anchorTimezone: try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier)
+  }
+
+  /// The keys of the mirrored repeating series: rows with a rule. A window's
+  /// ingest never infers that one is gone (see
+  /// ``ingestEventKitEvents(_:builtAtMode:windowStart:windowEnd:)``); the app
+  /// looks each up in Calendar and passes the missing ones to
+  /// ``removeEventKitMirrorRows(keys:)``.
+  public func recurringEventKitMirrorKeys() throws -> [String] {
+    try read { db in
+      try String.fetchAll(
+        db,
+        sql: """
+          SELECT provider_event_key FROM provider_calendar_events
+          WHERE provider_kind = ? AND provider_scope = ? AND recurrence IS NOT NULL
+          ORDER BY provider_event_key
+          """,
+        arguments: [ProviderKind.eventkit, Self.eventKitScope])
+    }
+  }
+
+  /// Remove the mirrored series `keys` together with the rows of their moved
+  /// occurrences, which are keyed `"{seriesKey}:{originalYmd}"`. Returns the
+  /// count of rows removed.
+  @discardableResult
+  public func removeEventKitMirrorRows(keys: Set<String>) throws -> Int {
+    guard !keys.isEmpty else { return 0 }
+    let scope = Self.eventKitScope
+    return try write { db in
+      var removed = 0
+      for key in keys.sorted() {
+        let prefix = key + ":"
+        let rows = try String.fetchAll(
+          db,
+          sql: """
+            SELECT provider_event_key FROM provider_calendar_events
+            WHERE provider_kind = ? AND provider_scope = ?
+              AND (provider_event_key = ? OR substr(provider_event_key, 1, ?) = ?)
+            """,
+          arguments: [ProviderKind.eventkit, scope, key, prefix.count, prefix])
+        for row in rows {
+          try ProviderRepo.deleteProviderEvent(
+            db, providerKind: ProviderKind.eventkit, providerScope: scope,
+            providerEventKey: row)
+          removed += 1
+        }
+      }
+      return removed
+    }
   }
 
   /// Flip the EventKit scope's availability. Disabling drops the scope out of

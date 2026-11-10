@@ -229,26 +229,17 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   habit on chosen weekdays is reminded on each of them; the task entity
   queries take background access; a burst of calendar change notices runs one
   refresh; a change of the device's time zone re-plans reminders; a widget
-  snapshot reloads the widgets only when it changes what they show. Found
-  sound: reminder triggers as true instants and
+  snapshot reloads the widgets only when it changes what they show; on the
+  Mac a repeating Calendar series is mirrored from its first occurrence, so a
+  series that ends after a count ends where Calendar ends it, and a series
+  Calendar no longer has is removed once Calendar confirms it, as is a one-off
+  event deleted after it began. Found sound: reminder triggers as true instants and
   the shared 60-request budget, the widget snapshot file (atomic write, lock,
   ordering), the Watch replica ordering and command journal, the bracketing of
   every intent runner, the Spotlight prune, and the EventKit permission and
   privacy-tier checks. Four items of
   `apps/apple/docs/reference/apple-official/APPLE_NOTIFICATION_REMINDER_AUDIT.md` still
   stand (N5, N6, N8, N10).
-  - A repeating Calendar series deleted elsewhere can stay in Lorvex. The ingest
-    drops a one-off event Calendar no longer returns for a window the event
-    reaches into, but a series that began before the window is kept, since
-    one window's fetch does not show that the whole series is gone. Looking
-    each such series up in `EKEventStore` by identifier and passing the ones
-    that come back nil to the ingest would close it, best together with the
-    next item, which also lives in series assembly.
-  - A repeating calendar series is mirrored from the first occurrence in the
-    window (`EventKitSeriesAssembly`: `group.first { !$0.isDetached }`), and
-    its `COUNT` is copied as is: a ten-week series ingested at week nine shows
-    ten more weeks, and a Calendar left on next month makes every refresh store
-    masters that start next month.
   - What Lorvex wrote into Apple Calendar is updated only by Mac actions
     (`AppStoreCalendarWriteBack`): an event deleted or moved on the iPhone or by
     the assistant keeps its old copy in Apple Calendar, which Lorvex itself

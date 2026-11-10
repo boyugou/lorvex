@@ -117,6 +117,14 @@ protocol EventKitAccessing: Sendable {
   /// (deleted/moved) or read access is not granted — never throws.
   func eventSource(forEventKey key: String, dayHint: String?) async -> EventKitEventSource?
 
+  /// The keys among `keys` whose system-calendar event no longer exists, or
+  /// now lives only where Lorvex does not mirror from (a calendar
+  /// `calendarFilter` hides, or the Lorvex calendar). A key is looked up by
+  /// the identifier it was stored under, never inferred from one fetch.
+  func missingEventKeys(
+    _ keys: [String], calendarFilter: EventKitCalendarFilter
+  ) async -> Set<String>
+
   /// Fetch system-calendar events overlapping `[start, end]` across all
   /// calendars, mapped to the neutral ingest shape. `windowEndDay` is the
   /// inclusive product-day label represented by the absolute interval; it is

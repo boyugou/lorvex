@@ -22,6 +22,11 @@ extension MobileStore {
     // Busy from the first await, so a second import or a sync-mode change
     // cannot start while the pre-import pass runs.
     isDataImportRunning = true
+    // Leaving the app closes the store at once, and every record after that
+    // would fail. The import holds the store, and with it the background time
+    // the system allows, until it has finished.
+    let access = DatabaseSuspension.backgroundAccess
+    await access?.begin()
     _ = await runCloudSyncCycle(forDataImport: true)
     let summary = await LorvexDataImporter.apply(plan: plan, decoded: decoded, using: core)
     if summary.totalImported > 0 {
@@ -33,6 +38,7 @@ extension MobileStore {
       let syncResult = await runCloudSyncCycle()
       await reloadInboundSurfacesIfNeeded(after: syncResult)
     }
+    await access?.end()
     return summary
   }
 }

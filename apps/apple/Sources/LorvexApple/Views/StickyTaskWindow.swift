@@ -70,6 +70,17 @@ private struct StickyTaskWindowContent: View {
       detachedStore.startDetachedWindowObserversIfNeeded()
       await detachedStore.loadDetachedTaskWindow(taskID: taskID)
     }
+    // Autosave about 1.2 s after typing pauses, as the inspector does. A sticky
+    // can stay frontmost for hours, and losing focus is otherwise its only
+    // save, so a crash would take everything typed since.
+    .task(id: windowStore?.taskDetailDraftFingerprint ?? "") {
+      guard let windowStore, let id = windowStore.selectedTaskID,
+        windowStore.taskDetailDraftHasChanges(for: id)
+      else { return }
+      try? await Task.sleep(nanoseconds: 1_200_000_000)
+      guard !Task.isCancelled else { return }
+      await windowStore.saveSelectedTaskDraftIfNeeded()
+    }
     .onDisappear {
       guard let windowStore else { return }
       windowStore.stopDetachedWindowObservers()

@@ -499,13 +499,14 @@ func startLifetimeObserversStartsObserversOnceAndIsIdempotent() async throws {
 
   store.startLifetimeObserversIfNeeded()
   // Remote-change, EventKit, notification-action-error, app-activation, unified
-  // database-change, CloudKit-account-change, and calendar-day-change observers;
-  // plus the one-shot interrupted CloudKit deletion-cleanup retry.
-  #expect(store.lifetimeObserverTasks.count == 8)
+  // database-change, CloudKit-account-change, calendar-day-change, and
+  // time-zone-change observers; plus the one-shot interrupted CloudKit
+  // deletion-cleanup retry.
+  #expect(store.lifetimeObserverTasks.count == 9)
 
   // A second call (e.g. the main window reopening) must not double-start.
   store.startLifetimeObserversIfNeeded()
-  #expect(store.lifetimeObserverTasks.count == 8)
+  #expect(store.lifetimeObserverTasks.count == 9)
 
   for task in store.lifetimeObserverTasks { task.cancel() }
 }

@@ -351,6 +351,10 @@ final class AppStore {
   /// once — across repeated refreshes and after the user dismisses it.
   @ObservationIgnored var hasSurfacedDatabaseRecoveryNotice = false
 
+  /// Whether this run has asked the database for a quarantine notice left by
+  /// another process; it is asked once.
+  @ObservationIgnored var hasReadStoredDatabaseRecoveryNotice = false
+
   // MARK: - Services
 
   var core: any LorvexCoreServicing

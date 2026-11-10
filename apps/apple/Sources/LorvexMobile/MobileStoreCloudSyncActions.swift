@@ -111,6 +111,7 @@ extension MobileStore {
       Task { [weak self] in await self?.observeBackgroundMutationsApplied() },
       Task { [weak self] in await self?.observeNotificationActionErrors() },
       Task { [weak self] in await self?.observeCalendarDayChange() },
+      Task { [weak self] in await self?.observeSystemTimeZoneChange() },
     ]
     rescheduleLogicalDayBoundaryWake()
     Task.detached(priority: .utility) { LorvexCaptureParser.warmUp() }
@@ -160,6 +161,18 @@ extension MobileStore {
   /// zone / clock changes). Mirrors macOS `AppStore.observeCalendarDayChange`.
   func observeCalendarDayChange() async {
     let stream = NotificationCenter.default.notifications(named: .NSCalendarDayChanged)
+    for await _ in stream {
+      await refresh()
+    }
+  }
+
+  /// Refreshes when the device's time zone changes. A habit reminder is armed
+  /// at an instant computed from a wall time in the device's zone, so after a
+  /// change it would fire at the old zone's hour until something re-plans it;
+  /// a change that keeps the calendar day posts no day-change notice. Mirrors
+  /// macOS `AppStore.observeSystemTimeZoneChange`.
+  func observeSystemTimeZoneChange() async {
+    let stream = NotificationCenter.default.notifications(named: .NSSystemTimeZoneDidChange)
     for await _ in stream {
       await refresh()
     }

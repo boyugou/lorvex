@@ -88,6 +88,8 @@ extension ToolRegistry {
     case let applyError as ApplyError:
       if case .dependencyCycleRejected = applyError { return "dependency_cycle" }
       return "tool_error"
+    case is LorvexStore.SchemaDowngrade:
+      return "restart_required"
     case LorvexCoreError.taskNotFound:
       return "not_found"
     case LorvexCoreError.notFound:
@@ -114,6 +116,13 @@ extension ToolRegistry {
   /// string for a plain `Error` that is only `CustomStringConvertible`, so route
   /// through `errorDescription` / `description` first.
   static func errorMessage(for error: Error) -> String {
+    // The app was updated and has migrated the database, while this helper,
+    // started before the update, still runs the earlier build.
+    if error is LorvexStore.SchemaDowngrade {
+      return "Lorvex was updated, and this connection still runs the earlier version, which "
+        + "cannot write to the updated database. Nothing was changed. Ask the user to quit and "
+        + "reopen the assistant app so it starts the updated Lorvex helper."
+    }
     // Only the errors Lorvex and the MCP SDK raise word themselves for a client. A database or
     // system error describes its SQL, its files, and its internals, which tell an assistant
     // nothing it can act on, so it becomes a plain sentence and its text goes to the private log.

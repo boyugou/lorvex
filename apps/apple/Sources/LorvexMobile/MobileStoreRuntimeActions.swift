@@ -127,7 +127,7 @@ extension MobileStore {
       // recovery now — before the rest of the fan-out — rather than letting a
       // set-aside database be silent if a later load fails. A fatal open instead
       // throws into `catch` and is presented via the `unrecoverable` category.
-      surfaceDatabaseRecoveryNoticeIfNeeded()
+      await surfaceDatabaseRecoveryNoticeIfNeeded()
       // The reads above suspend the main actor, so the editor may have moved or
       // been typed in since they started; adoption checks both.
       adoptLoadedDailyReview(try await loadedDailyReview, readFor: reviewDate)
@@ -174,7 +174,7 @@ extension MobileStore {
       // A recovering open may have set aside a database before this failure;
       // surface the recovery notice so it isn't lost, then present the failure —
       // which, for a fatal open, is the `unrecoverable` fatal copy.
-      surfaceDatabaseRecoveryNoticeIfNeeded()
+      await surfaceDatabaseRecoveryNoticeIfNeeded(readingStoredNotice: false)
       if clearOnFailure { clearLoadedSnapshots() }
       await presentRefreshFailure(error)
       return false
@@ -358,7 +358,9 @@ extension MobileStore {
     let placementsBefore = taskPlacements(of: namedIDs)
     do {
       let updated = try await operation()
-      snapshot.today = try await core.loadToday()
+      // The write is committed. A reload that fails must not report it as
+      // failed: the caller would offer the change again and apply it twice.
+      if let loaded = try? await core.loadToday() { snapshot.today = loaded }
       replaceKnownTask(updated)
       await reloadSurfacesAfterTaskMutation(
         ifPlacementsChangedFrom: placementsBefore, of: namedIDs)

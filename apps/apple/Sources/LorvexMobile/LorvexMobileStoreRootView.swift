@@ -65,7 +65,7 @@ public struct LorvexMobileStoreRootView: View {
         table: "Localizable", bundle: MobileL10n.bundle),
       isPresented: Binding(
         get: { store.databaseRecoveryMessage != nil },
-        set: { if !$0 { store.databaseRecoveryMessage = nil } }
+        set: { if !$0 { store.dismissDatabaseRecoveryNotice() } }
       )
     ) {
       Button(
@@ -73,7 +73,7 @@ public struct LorvexMobileStoreRootView: View {
           localized: "common.ok", defaultValue: "OK", table: "Localizable",
           bundle: MobileL10n.bundle), role: .cancel
       ) {
-        store.databaseRecoveryMessage = nil
+        store.dismissDatabaseRecoveryNotice()
       }
     } message: {
       if let message = store.databaseRecoveryMessage {

@@ -22,6 +22,7 @@ extension AppStore {
       Task { [weak self] in await self?.observeDatabaseChangeSignal() },
       Task { [weak self] in await self?.observeCloudKitAccountChanges() },
       Task { [weak self] in await self?.observeCalendarDayChange() },
+      Task { [weak self] in await self?.observeSystemTimeZoneChange() },
       Task { [weak self] in await self?.connectCloudSyncReports() },
     ]
     rescheduleLogicalDayBoundaryWake()
@@ -39,6 +40,18 @@ extension AppStore {
   /// app's lifetime via `startLifetimeObserversIfNeeded`.
   func observeCalendarDayChange() async {
     let stream = NotificationCenter.default.notifications(named: .NSCalendarDayChanged)
+    for await _ in stream {
+      await refresh()
+    }
+  }
+
+  /// Refreshes when the device's time zone changes. A habit reminder is armed
+  /// at an instant computed from a wall time in the device's zone, so after a
+  /// change it would fire at the old zone's hour until something re-plans it;
+  /// a change that keeps the calendar day posts no day-change notice. Runs for
+  /// the app's lifetime via `startLifetimeObserversIfNeeded`.
+  func observeSystemTimeZoneChange() async {
+    let stream = NotificationCenter.default.notifications(named: .NSSystemTimeZoneDidChange)
     for await _ in stream {
       await refresh()
     }
@@ -396,7 +409,7 @@ extension AppStore {
       today = loadedToday
       rescheduleLogicalDayBoundaryWake()
       let date = logicalTodayDateString
-      surfaceDatabaseRecoveryNoticeIfNeeded()
+      await surfaceDatabaseRecoveryNoticeIfNeeded()
       // The Reviews surface's Day scope may be showing a past day (editable or
       // read-only); refresh reloads the selected day, not today's.
       let reviewDate = dailyReviewEditorDate
@@ -493,7 +506,7 @@ extension AppStore {
       // an unrelated later load failed after a clean recovery); surface the
       // recovery notice so it isn't lost, then present the failure — which, for a
       // fatal open, is the `unrecoverable` fatal copy rather than "try again".
-      surfaceDatabaseRecoveryNoticeIfNeeded()
+      await surfaceDatabaseRecoveryNoticeIfNeeded(readingStoredNotice: false)
       clearLoadedStateAfterRefreshFailure()
       await presentRefreshFailure(error)
     }

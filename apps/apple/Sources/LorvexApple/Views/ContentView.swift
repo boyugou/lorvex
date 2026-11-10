@@ -124,11 +124,11 @@ struct ContentView: View {
         bundle: LorvexL10n.bundle),
       isPresented: Binding(
         get: { store.databaseRecoveryMessage != nil },
-        set: { if !$0 { store.databaseRecoveryMessage = nil } }
+        set: { if !$0 { store.dismissDatabaseRecoveryNotice() } }
       )
     ) {
       Button(String(localized: "common.ok", defaultValue: "OK", table: "Localizable", bundle: LorvexL10n.bundle)) {
-        store.databaseRecoveryMessage = nil
+        store.dismissDatabaseRecoveryNotice()
       }
     } message: {
       if let message = store.databaseRecoveryMessage {

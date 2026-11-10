@@ -219,6 +219,10 @@ public final class MobileStore {
   /// once — across repeated refreshes and after the user dismisses it.
   @ObservationIgnored var hasSurfacedDatabaseRecoveryNotice = false
 
+  /// Whether this run has asked the database for a quarantine notice left by
+  /// another process; it is asked once.
+  @ObservationIgnored var hasReadStoredDatabaseRecoveryNotice = false
+
   /// Coalescing single-flight for the `refresh()` fan-out. A trigger arriving
   /// mid-refresh (scene-active, CloudKit push, DB-change signal, notification
   /// action) does not start a parallel body; it arms one trailing rerun and

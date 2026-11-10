@@ -56,6 +56,29 @@ func aBackgroundWriteIsAdoptedInsideTheStoreBracket() async throws {
   #expect(await scheduler.lastScheduledIDs().isEmpty)
 }
 
+/// Leaving the iPhone app closes the store at once, which would fail every
+/// record a running import has yet to write, so the import holds the store
+/// (and the background time that comes with it) from its first step to its
+/// last.
+@MainActor
+@Test
+func mobileStoreDataImportHoldsTheStoreForItsWholeLength() async throws {
+  let store = MobileStore(core: try makeInMemoryCore(), todayString: { "2026-05-23" })
+  let events = Mutex<[String]>([])
+  let access = DatabaseSuspension.BackgroundAccess(
+    begin: { events.withLock { $0.append("begin") } },
+    end: { events.withLock { $0.append("end") } })
+
+  _ = try await DatabaseSuspension.$backgroundAccessOverride.withValue(access) {
+    try await store.applyDataImport(
+      plan: LorvexImportPlan(entries: []),
+      decoded: LorvexDataImporter.DecodedImport(payload: LorvexDataExportPayload()))
+  }
+
+  #expect(events.withLock { $0 } == ["begin", "end"])
+  #expect(!store.isDataImportRunning)
+}
+
 /// A silent push that reaches a locked iPhone runs the sync pass and then
 /// adopts what it applied, which is what re-plans the reminders, the badge, and
 /// the widgets; and the wake that re-arms reminders also publishes the day's

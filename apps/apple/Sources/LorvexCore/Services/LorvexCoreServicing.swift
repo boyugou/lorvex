@@ -31,11 +31,25 @@ public protocol LorvexCoreServicing: LorvexCalendarServicing,
   /// `nil` on a clean open and for backends without on-disk recovery (in-memory
   /// / preview). Read after the first load; see `DatabaseRecoveryNotice`.
   var databaseRecoveryNotice: DatabaseRecoveryNotice? { get }
+
+  /// The quarantine notice the user has not seen yet: the one from this
+  /// process's own open, or one the fresh database still remembers from the
+  /// process that set the old file aside (a helper, or an app run that ended
+  /// before the notice was shown). `nil` when there is none.
+  func pendingDatabaseRecoveryNotice() async -> DatabaseRecoveryNotice?
+
+  /// Records that the user has seen the quarantine notice, so it is not shown
+  /// again.
+  func acknowledgeDatabaseRecoveryNotice() async
 }
 
 public extension LorvexCoreServicing {
   /// Backends with no on-disk quarantine path report no notice.
   var databaseRecoveryNotice: DatabaseRecoveryNotice? { nil }
+
+  func pendingDatabaseRecoveryNotice() async -> DatabaseRecoveryNotice? { databaseRecoveryNotice }
+
+  func acknowledgeDatabaseRecoveryNotice() async {}
 }
 
 /// The kind of stored entity a ``LorvexCoreError/notFound(entity:id:)`` lookup

@@ -50,6 +50,24 @@ extension SwiftLorvexCoreService {
     guard committed == deviceId else {
       throw StorageCutoverDuringWrite(resolvedDeviceId: deviceId, committingDeviceId: committed)
     }
+    try assertSchemaIsNotNewerThanThisBuild(db)
+  }
+
+  /// Fail the transaction when a newer build has migrated the database since
+  /// this process opened it.
+  ///
+  /// The schema ladder is checked when a store opens, and a process can stay
+  /// open across an app update: the MCP helper runs until its client restarts
+  /// it. Once the updated app migrates the database, that helper would go on
+  /// writing with the older build's code, which knows nothing of the tables
+  /// and rules the migration added. Reading the ladder inside the committing
+  /// transaction refuses those writes with the error an open would raise.
+  func assertSchemaIsNotNewerThanThisBuild(_ db: Database) throws {
+    let known = try schemaLadderTop()
+    let applied = try Int.fetchOne(db, sql: "SELECT MAX(version) FROM schema_migrations") ?? 0
+    if applied > known {
+      throw LorvexStore.SchemaDowngrade(binaryMaxVersion: known, dbMaxVersion: applied)
+    }
   }
 
   /// Run `attempt`, retrying the whole operation when a mid-write factory reset

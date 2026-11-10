@@ -142,7 +142,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     fit, so only a 375 pt device could still show it; none is installed here); the Urdu Today medium widget shows
     one row.
 - Read-only audit of data saving and sync (2026-11-09). Each item was traced
-  to the code named; none is reproduced by a test and none is fixed yet.
+  to the code named and none is reproduced by a test. Fixed since: the Mac's
+  snooze and the iPhone's plan-for-a-day write only their own field, a refresh
+  that fails keeps a task editor with unsaved edits (and on the iPhone a
+  refresh met by the background suspension changes nothing), suspending the
+  iOS store waits for the operations in flight to give up their locks, a
+  process whose database a newer build has migrated since it opened refuses
+  to write (the MCP helper across an app update), and a quarantine is
+  remembered by the fresh database until its notice is seen. The rest is open.
   Checked and found sound: the CloudKit transport's change tags, conflict
   classes, zone deletion, account binding, and end-to-end encrypted fields; the
   HLC lanes; the outbox coalescing; the task editors, which write only the
@@ -157,51 +164,20 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     that row. Tasks and calendar events merge field by field and are not
     affected. Syncing the order as its own register, or as one order record,
     would end it.
-  - Two actions write back fields they did not change: the Mac's snooze
-    (`AppStoreSnoozeActions.snoozeTask`) and the iPhone's plan-for-a-day
-    (`MobileStoreTaskActions.planTask`) load the task and then call the
-    force-set `updateTask(id:title:notes:…)` in a second transaction. A change
-    the assistant or a sync apply commits between the two is reverted, with a
-    new version that every device then takes. `TaskUpdateDraft` with the one
-    field avoids it; the Shortcuts update already does.
-  - A failed refresh on the Mac clears everything, the unsaved task draft
-    included: `performLocalRefresh` runs seven reads without a guard, and its
-    `catch` calls `clearLoadedStateAfterRefreshFailure`, which resets
-    `taskDetailStorage` (the title and notes being typed). One read that throws
-    blanks every surface. The iPhone's `refresh()` clears its snapshots the same
-    way (`loadLocalSurfaces(clearOnFailure: true)`), which a refresh caught by
-    the background suspension can reach.
-  - A set-aside database leaves no lasting trace. When the open path
-    quarantines a corrupt file (`LorvexStore.open`,
-    `recoverManagedByQuarantine`), nothing readable is copied into the new
-    database, the unsent outbox rows stay in the set-aside file, and the notice
-    lives in memory in the process that did the open (`_lastDatabaseRecovery`),
-    shown once. A quarantine done by the MCP helper, by a widget intent, or just
-    before the app quit leaves an empty app with no explanation, and on an
-    iPhone the path in the alert cannot be reached. A marker in the new
-    database, a salvage pass, and an export of the set-aside file would cover it.
-  - A running process does not notice a schema migration. The ladder is checked
-    only at open (`SchemaMigrationRunner.checkDowngrade`). The MCP helper keeps
-    running across an app update, so after a build that adds a migration it
-    writes with the older build's code until its client restarts it. Comparing
-    `MAX(version)` of `schema_migrations` with the value read at open, inside
-    `assertCommittingDatabaseIdentity`, would refuse those writes.
-  - iOS suspension does not wait for work in flight.
-    `BackgroundDatabaseWork.end()` and `expire()` post the suspension and end
-    the background task at once. GRDB's `suspend()` only interrupts, so an
-    operation in flight still holds its SQLite lock and the `flock` on
-    `<db>.storage-lock` until its thread unwinds; a process suspended inside
-    that window is terminated with `0xdead10cc`. Waiting, with a bound, for
-    `activeStoreOperations` to reach zero before ending the task closes it.
-  - A restore cut short on an iPhone cannot be finished by running it again.
-    `MobileStore.applyDataImport` holds no background task, so leaving the app
-    suspends the database at once (the suspension flush skips its sync pass
-    while an import runs) and every later record fails. The tasks already
+  - A set-aside database is not salvaged. When the open path quarantines a
+    corrupt file (`LorvexStore.open`, `recoverManagedByQuarantine`), nothing
+    readable is copied into the new database and the unsent outbox rows stay in
+    the set-aside file. The fresh database remembers the quarantine until the
+    user has seen the notice, whichever process met the bad file, but on an
+    iPhone the file cannot be reached and no surface exports it. A salvage pass
+    and an export of the set-aside file would cover it.
+  - A long restore on an iPhone can still be cut short. The import holds the
+    store while the system allows background time, about half a minute after
+    the app is left; past that every later record fails. The tasks already
     created have not had their deferred pass (`applyDeferredTaskWork`:
     dependencies, the cancelled or in-progress status, the original dates), and
-    a second run skips them because they exist. Holding
-    `BackgroundDatabaseWork` for the import, and finishing the deferred pass for
-    a task the same archive created earlier, would cover it.
+    a second run skips them because they exist. Finishing the deferred pass for
+    a task the same archive created earlier would cover it.
   - The assistant cannot tell that nothing is syncing. With the Mac app quit,
     the MCP helper's writes queue in the outbox and arm no notification until
     the app next runs, and `get_sync_status` reports only queue counts
@@ -225,54 +201,38 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     `DatabasePool` would let them run beside it. `PRAGMA quick_check` runs on
     every open.
 - Read-only audit of how the two apps save what the user types (2026-11-09),
-  same standing: traced to the code, not reproduced, not fixed. Found sound:
+  same standing: traced to the code, not reproduced. Fixed since: the Mac
+  inspector's unsaved edits are written when the selection leaves their task
+  (another row, a closed inspector, another workspace), Start, Pause, and
+  Reopen keep them, a write that fails returns the editor to the task with the
+  text, Quit writes edited checklist rows and does not stall on an emptied
+  title, a sticky note autosaves once typing pauses, and the Mac's inline
+  quick add and the iPhone's checklist composer keep text whose write failed.
+  Found sound:
   the daily review on both platforms, capture, the Mac quit handshake for the
   drafts it covers, dirty-draft preservation across refreshes, and no write
   error swallowed with `try?`.
-  - The Mac inspector loses what was just typed. The task draft autosaves 1.2
-    seconds after the last keystroke, and three paths replace the draft inside
-    that delay without saving it. Clicking another row on Today, a list, or the
-    Calendar: `selectTaskFromList` assigns the selection and calls
-    `syncSelectedTaskDraft()` at once, so the draft already belongs to the new
-    task when `TaskDetailView`'s `onChange(of: selectedTaskID)` asks whether the
-    old one changed (the Tasks workspace only assigns the id and saves; the
-    tests assign the id too, which is why they pass). Closing the inspector
-    (its close button, Escape, the open row again, or moving to Habits, Memory,
-    or Reviews): the `selectedTaskID` `didSet` clears the draft for nil before
-    the view can save. Start, Pause, and Reopen from the inspector set
-    `taskDetailDraftTaskID = nil` and refill the draft from the stored record.
-    The notes editor has no save on blur, so a paragraph typed without a pause
-    is lost whole.
-  - Also on the Mac inspector: an autosave that fails while moving to another
-    task drops that draft, and the next successful action clears its alert
-    (`loadSelectedTaskDetail`); the title autosave stores the trimmed title and
+  - On the Mac inspector: the title autosave stores the trimmed title and
     refills the field, so a trailing space typed before a pause disappears
     ("Buy milk" then "and eggs" joins); a checklist row committed with trailing
     whitespace keeps the inspector counted as edited, and it stops taking the
-    task's changes from other devices until it is selected again.
-  - Quit on the Mac covers the task draft, the review, and sticky notes
-    (`hasPendingAutosaveDraftForTermination`) but not the fields that commit on
-    blur: a checklist row's text and a habit's name and cue are lost when ⌘Q is
-    pressed with the cursor in them. A task whose title was emptied cancels
-    Quit with no message, since the save declines and the draft stays pending.
-    A sticky note saves only when its window loses focus, closes, or the app
-    quits, so a crash loses everything typed since.
+    task's changes from other devices until it is selected again; and any
+    action that succeeds clears another action's error alert (`perform`).
+  - Quit on the Mac does not cover a habit's name and cue, which live in the
+    view and commit on blur: they are lost when ⌘Q is pressed with the cursor
+    in them.
   - Accepting suggested times writes the suggestion as it was computed, on both
     platforms (`acceptSuggestedDayTimes`): `saveDayTimes` takes the time off
     every unfinished task timed that day that the suggestion does not list, so a
     time set after Suggest (in the inspector, by a drag, by the assistant) is
     removed, and an accept after midnight plans for the previous day.
-  - Text cleared before the write is known to have worked: the iPhone
-    checklist composer (`MobileTaskComposerRows`), where an add made while the
-    task's previous write is in flight is refused without a message, and the
-    Mac's inline quick add (`QuickAddRow`). The Mac checklist and the Quick
-    Capture window keep the text on a failure.
+  - The Mac checklist add puts its text back, after a failure, over whatever
+    was typed in the meantime.
   - Sheets that save the whole record from a draft filled when they opened
     write back fields the user did not touch: list edit on both platforms, the
-    iPhone habit editor, the event editor on both, and a calendar drag, which
-    sends the block's title and location with the new time. A change made
-    elsewhere while the sheet was open is reverted. The task editors and the
-    Mac habit inspector send only changed fields.
+    iPhone habit editor, and the event editor on both. A change made elsewhere
+    while the sheet was open is reverted. The task editors, the Mac habit
+    inspector, and calendar drags send only what changed.
   - Smaller: creating a memory entry under a key that exists replaces that
     entry without asking, and on the Mac Edit on a row replaces unsaved composer
     text; on the iPhone only the memory composer refuses a swipe-to-dismiss
@@ -280,39 +240,19 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     write is running.
 - Read-only audit of notifications, calendar mirroring, widgets, the Watch,
   and App Intents (2026-11-09), same standing: traced to the code, not
-  reproduced, not fixed. Found sound: reminder triggers as true instants and
+  reproduced. Fixed since: a push that reaches a locked iPhone re-plans the
+  reminders, the badge, and the widgets from what it applied; the refresh
+  after a reminder's Complete or Defer, or after a Shortcuts write, takes the
+  store back, and the app starts its observers on a background launch; a
+  habit on chosen weekdays is reminded on each of them; the task entity
+  queries take background access; a burst of calendar change notices runs one
+  refresh; a change of the device's time zone re-plans reminders. Found sound: reminder triggers as true instants and
   the shared 60-request budget, the widget snapshot file (atomic write, lock,
   ordering), the Watch replica ordering and command journal, the bracketing of
   every intent runner, the Spotlight prune, and the EventKit permission and
   privacy-tier checks. Four items of
   `apps/apple/docs/reference/apple-official/APPLE_NOTIFICATION_REMINDER_AUDIT.md` still
   stand (N5, N6, N8, N10).
-  - A change that reaches a locked iPhone by push is applied but not acted on.
-    A background wake runs only the sync pass
-    (`MobileStore.handleCloudKitPush`): reminders, the badge, the widget
-    snapshot, and the Watch replica are re-planned only by a foreground
-    refresh, a local write, or a pass the engine reports on its own, and
-    `syncNow()` keeps that report for its caller. A reminder the assistant adds
-    on the Mac is not armed on the phone, and the reminder of a task completed
-    elsewhere still fires, until the app is opened or the background refresh
-    runs (four hours at the soonest). The comment in
-    `ReminderBackgroundRefresh.swift` says a push replenishes the window.
-  - After Complete or Defer on a lock-screen reminder, nothing else is
-    updated. `runTaskWrite` closes its database bracket, which suspends the
-    store again, and only then posts `.lorvexBackgroundMutationApplied`; the
-    refresh that answers it reads a suspended store, fails, clears the loaded
-    snapshots, and sets an error (`loadLocalSurfaces(clearOnFailure: true)`).
-    The widget still lists the task, the badge stays, and the task's other
-    reminders stay armed until the app is opened. Any Siri or Shortcuts write
-    in a backgrounded process ends the same way. The Watch receiver refreshes
-    inside its bracket and is right.
-  - A weekly habit on several days gets one reminder a week. For `.weekly` and
-    `.timesPerWeek` the planner's period is the ISO week
-    (`HabitReminderOccurrencePlanner.periodBounds`), and
-    `deliveredInSamePeriod` drops every later day of a week in which one
-    reminder was delivered, although the habit needs one check-in per day.
-    Monday's reminder for a Monday and Wednesday habit cancels Wednesday's at
-    the next re-plan. The tests never stamp a delivery, so they do not reach it.
   - Calendar events deleted in Apple Calendar can stay in Lorvex. The ingest
     removes stale rows only among those whose `start_date` is inside the window
     (`ProviderRepo.getProviderEventKeys`), while the timeline shows rows that
@@ -329,23 +269,17 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     the assistant keeps its old copy in Apple Calendar, which Lorvex itself
     hides. The lookup reaches back 90 days, so editing an older event writes a
     second copy.
-  - iPhone widgets show "Open Lorvex to refresh" from midnight until the app is
-    opened: the background wake re-plans reminders and the badge
-    (`replenishReminderWindow`) but does not publish the widget snapshot, and
-    no entry for the new day is prepared ahead.
+  - iPhone widgets show "Open Lorvex to refresh" from midnight until the next
+    background wake or launch publishes a snapshot for the new day; no entry
+    for it is prepared ahead, and the system decides when the wake runs.
   - A write from outside the app process changes no notification: a widget
     tap completes a task whose reminder still fires, and neither it nor a Focus
     filter change reaches the Watch until the phone app publishes.
-  - Smaller: the two task entity queries of App Intents
-    (`LorvexTaskEntityQuery`, `LorvexReopenableTaskEntityQuery`) read without
-    background access and drop the error, so a saved task in a Shortcuts
-    automation may not resolve while the app is suspended. A Watch command the
+  - Smaller: a Watch command the
     phone cannot decode is rejected on the watch after three tries without
     renumbering, and the phone then refuses every later command as a sequence
     gap. Every snapshot publish reloads all widget timelines, also when the
     write was refused as older, and the Mac publishes twice per local write.
-    `EKEventStoreChanged` is handled once per notification without coalescing.
-    A time-zone change that keeps the same day does not re-plan habit reminders.
 - Russian at the largest accessibility text size (iPhone, 2026-10-12) was
   captured for Today, Tasks, Habits, and the event detail: legible, hyphenated
   by the system, nothing overlapping.

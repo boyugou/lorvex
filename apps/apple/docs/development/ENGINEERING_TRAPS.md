@@ -118,6 +118,23 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   background launch whose root view refreshed and published the widget snapshot
   inside a write transaction when the process was suspended; read a report with
   `script/testflight_crashes.py`.
+- **A refresh after a background write takes the store back.** A reminder's
+  Complete or Defer button, or a Shortcuts action, opens the store only for its
+  own write, so the refresh its signal starts would read a closed store. The
+  store's observers call `refreshAdoptingBackgroundWrite()`, which brackets the
+  refresh with `DatabaseSuspension.backgroundAccess`; a plain `refresh()` while
+  suspended returns without reading, clearing, or raising an error. A silent
+  push in the background ends with `reloadInboundSurfacesIfNeeded(after:)`,
+  which is what re-plans reminders, the badge, and the widgets. The app starts
+  the store's observers at launch, since a background launch builds no root
+  view.
+- **Suspending waits for the work in flight.** `suspend()` only interrupts a
+  running statement; the operation still holds its SQLite lock and the storage
+  `flock` until its thread has unwound. A host that ends its background task
+  right after suspending can be suspended inside that gap, so it calls
+  `DatabaseSuspension.suspend(waitingForOperations:)`, and every managed
+  operation counts itself in before it reads the suspended flag
+  (`operationWillBegin()` in `withStoreCutoverLease`).
 - **Never touch the process-wide suspension state in a test.** Tests run in
   parallel in one process, and a real `suspend()` flags every connection the
   others hold open, which fails their writes with `SQLITE_ABORT` and can hang the
@@ -374,6 +391,17 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   is part of the convergence design in
   `docs/architecture/MULTI_STORE_COHERENCE.md`; do not remove it. Unit tests
   run with the flag off.
+- **A process can outlive the schema it opened.** The ladder is checked at
+  open, and the MCP helper stays open across an app update, so every write
+  transaction re-reads the ladder (`assertSchemaIsNotNewerThanThisBuild` in the
+  cutover guard) and refuses with `SchemaDowngrade` once a newer build has
+  migrated the database. A new write funnel goes through
+  `assertCommittingDatabaseIdentity`, which makes both checks.
+- **A quarantine is remembered in the fresh database.** The process that set
+  an unreadable file aside may be a helper, so the open path writes the notice
+  into `device_state` and the stores read it once per run
+  (`pendingDatabaseRecoveryNotice()`) until the user dismisses the alert
+  (`dismissDatabaseRecoveryNotice()`).
 - **The Mac inspector edits a draft against its baseline.** The draft
   (`taskDetail*` in `AppStoreTaskDetailStorage`) is compared only with
   `taskDetailDraftSource`, the record it was filled from, never with the live
@@ -383,6 +411,18 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   `finishBatchMutation(on:)`; read dirtiness before the record changes. iOS
   edits use a sheet whose `MobileTaskEditDraft` patches against its opening
   baseline.
+- **The store saves a draft the selection leaves.** The draft autosaves only
+  after typing pauses, and a change of `selectedTaskID` replaces it at once:
+  cleared for nil, refilled by whoever opens the next task. A view's `onChange`
+  runs after that, and a view that left the screen runs nothing, so the
+  `selectedTaskID` observer hands unsaved edits to
+  `saveTaskDraftLeftBehind(for:)` before anything replaces them. Code that
+  refills the draft of the task still selected (`syncSelectedTaskDraft(force:
+  true)`) checks dirtiness first with `taskDetailReloadSnapshot()` and
+  `dirtyTaskIDToPreserve(after:)`; never unbind the draft
+  (`taskDetailDraftTaskID = nil`) and refill it without that check. In a test,
+  drive the path the UI takes (`selectTaskFromList`, `dismissOpenInspector`),
+  then `await store.waitForLeftBehindDraftWrites()`.
 - **Review pages follow the logical day.** State that holds "the day this page
   shows" either follows the logical day or names a deliberate past day, and
   state that follows today flushes dirty drafts before the day moves

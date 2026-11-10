@@ -13,7 +13,10 @@ extension MobileStore {
     isSuggestingDayTimes = true
     defer { isSuggestingDayTimes = false }
     do {
-      proposedDayTimes = try await core.proposeDayTimes(date: logicalTodayString)
+      let date = logicalTodayString
+      let timed = try await core.unfinishedTaskTimes(on: date)
+      proposedDayTimes = try await core.proposeDayTimes(date: date)
+      timesWhenDayTimesWereSuggested = timed
       errorMessage = nil
     } catch {
       await presentUserFacingError(error)
@@ -37,10 +40,29 @@ extension MobileStore {
     }
   }
 
-  /// Save the suggestion under review as the day's times.
+  /// Save the suggestion under review as the day's times, for the day as it
+  /// stands now: a time set since the suggestion was drawn is kept, and a task
+  /// that has left the day's unfinished work is left out
+  /// (``DayTimesProposal/timesToStore(timedWhenSuggested:timedNow:unfinishedToday:)``).
+  /// A suggestion drawn for a day that has since ended is dropped.
   public func useSuggestedDayTimes() async {
     guard let proposal = proposedDayTimes else { return }
-    await replaceDayTimes(date: proposal.date, with: proposal.times)
+    guard proposal.date == logicalTodayString else {
+      dismissSuggestedDayTimes()
+      return
+    }
+    let times: [LorvexTaskTime]
+    do {
+      let current = try await core.loadToday()
+      times = proposal.timesToStore(
+        timedWhenSuggested: timesWhenDayTimesWereSuggested,
+        timedNow: try await core.unfinishedTaskTimes(on: proposal.date),
+        unfinishedToday: Set((current.tasks + current.inProgressTasks).map(\.id)))
+    } catch {
+      await presentUserFacingError(error)
+      return
+    }
+    await replaceDayTimes(date: proposal.date, with: times)
   }
 
   /// Take the times off today's unfinished tasks. The tasks stay on today.

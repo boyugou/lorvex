@@ -11,7 +11,10 @@ extension AppStore {
   /// user accepts or dismisses them. Nothing is stored.
   func suggestDayTimes() async {
     await perform {
-      let proposal = try await core.proposeDayTimes(date: logicalTodayDateString)
+      let date = logicalTodayDateString
+      let timed = try await core.unfinishedTaskTimes(on: date)
+      let proposal = try await core.proposeDayTimes(date: date)
+      todayStorage.timesWhenDayTimesWereSuggested = timed
       lorvexAnimated(.snappy(duration: 0.2)) { proposedDayTimes = proposal }
     }
   }
@@ -35,11 +38,30 @@ extension AppStore {
     }
   }
 
-  /// Save the suggestion under review as the day's times.
+  /// Save the suggestion under review as the day's times, for the day as it
+  /// stands now: a time set since the suggestion was drawn is kept, and a task
+  /// that has left the day's unfinished work is left out
+  /// (``DayTimesProposal/timesToStore(timedWhenSuggested:timedNow:unfinishedToday:)``).
+  /// A suggestion drawn for a day that has since ended is dropped.
   func acceptSuggestedDayTimes(undoManager: UndoManager?) async {
     guard let proposal = proposedDayTimes else { return }
+    guard proposal.date == logicalTodayDateString else {
+      dismissSuggestedDayTimes()
+      return
+    }
+    let times: [LorvexTaskTime]
+    do {
+      let current = try await core.loadToday()
+      times = proposal.timesToStore(
+        timedWhenSuggested: todayStorage.timesWhenDayTimesWereSuggested,
+        timedNow: try await core.unfinishedTaskTimes(on: proposal.date),
+        unfinishedToday: Set((current.tasks + current.inProgressTasks).map(\.id)))
+    } catch {
+      await presentUserFacingError(error)
+      return
+    }
     await replaceDayTimes(
-      date: proposal.date, with: proposal.times, undoManager: undoManager,
+      date: proposal.date, with: times, undoManager: undoManager,
       actionName: TodayCalmCopy.undoSuggestedTimes)
   }
 

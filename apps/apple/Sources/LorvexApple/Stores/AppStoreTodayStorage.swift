@@ -7,6 +7,9 @@ struct AppStoreTodayStorage {
   var today: TodaySnapshot = .empty
   /// Suggested times the user is reviewing, until they accept or dismiss them.
   var proposedDayTimes: DayTimesProposal?
+  /// The times the day's unfinished tasks had when ``proposedDayTimes`` was
+  /// drawn, so accepting it can tell a time set since from one it replaces.
+  var timesWhenDayTimesWereSuggested: [LorvexTask.ID: Range<Int>] = [:]
   var selectedTaskIDs = Set<LorvexTask.ID>()
   /// Tasks completed on the product day, for Today's facts line.
   var doneTodayCount = 0

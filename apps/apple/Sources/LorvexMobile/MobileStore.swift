@@ -29,6 +29,9 @@ public final class MobileStore {
   /// Suggested times for today's tasks while the user decides on them in the
   /// schedule; nothing is stored until they are used.
   public internal(set) var proposedDayTimes: DayTimesProposal?
+  /// The times the day's unfinished tasks had when ``proposedDayTimes`` was
+  /// drawn, so using it can tell a time set since from one it replaces.
+  @ObservationIgnored var timesWhenDayTimesWereSuggested: [LorvexTask.ID: Range<Int>] = [:]
   public internal(set) var isSuggestingDayTimes = false
   public internal(set) var isSavingDayTimes = false
   public internal(set) var isSavingReview = false

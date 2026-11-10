@@ -85,8 +85,17 @@ extension AppStore {
         // The fields still hold what this save wrote (or nothing): fill them
         // from the stored record. A draft that has since become another
         // task's, with what the user typed there, is left alone.
+        let typedTitle = taskDetailTitle
         taskDetailDraftTaskID = nil
         syncSelectedTaskDraft()
+        // The title is stored without the space at its ends, and the cursor
+        // may still be in the field: a space typed after the last word stays,
+        // or the next word would join it.
+        if selectedTaskID == id, taskDetailDraftTaskID == id,
+          typedTitle.trimmingCharacters(in: .whitespacesAndNewlines) == taskDetailTitle
+        {
+          taskDetailTitle = typedTitle
+        }
       }
     }
   }

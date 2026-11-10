@@ -282,3 +282,46 @@ func aFailedRefreshClosesACleanInspector() async throws {
   #expect(store.selectedTaskID == nil)
   #expect(store.taskDetailDraftTaskID == nil)
 }
+
+@MainActor
+@Test("a space typed after a title's last word is not an edit, and survives the autosave")
+func aTrailingSpaceInTheTitleIsNotAnEdit() async throws {
+  let (store, core) = try await makeDraftHandOffStore()
+  let task = try #require(store.today.tasks.first)
+  store.selectTaskFromList(task.id)
+  await store.loadSelectedTaskDetail()
+
+  store.taskDetailTitle = task.title + " "
+  #expect(!store.taskDetailDraftHasChanges(for: task.id))
+  #expect(!store.selectedTaskHasUnsavedEditorState)
+
+  // A word, a space, then a pause long enough for the autosave.
+  store.taskDetailTitle = "Buy milk "
+  await store.saveTaskDetailDraft(id: task.id, preserveSelection: task.id)
+
+  #expect(try await core.loadTask(id: task.id).title == "Buy milk")
+  // The field keeps the space, so the next word does not join the last.
+  #expect(store.taskDetailTitle == "Buy milk ")
+  #expect(!store.selectedTaskHasUnsavedEditorState)
+}
+
+@MainActor
+@Test("a checklist row that differs from its stored text only by a space at its end is not an edit")
+func aTrailingSpaceInAChecklistRowIsNotAnEdit() async throws {
+  let (store, core) = try await makeDraftHandOffStore()
+  let task = try #require(store.today.tasks.first)
+  let withItem = try await core.addTaskChecklistItem(taskID: task.id, text: "Pack the bag")
+  let item = try #require(withItem.checklistItems.first { $0.text == "Pack the bag" })
+  await store.refresh()
+  store.selectTaskFromList(task.id)
+  await store.loadSelectedTaskDetail()
+
+  store.taskDetailChecklistDrafts[item.id] = "Pack the bag "
+  #expect(!store.selectedTaskHasUnsavedEditorState)
+
+  // The row then follows a change made elsewhere instead of holding its draft.
+  _ = try await core.updateTaskChecklistItem(itemID: item.id, text: "Pack both bags")
+  await store.refresh()
+  #expect(store.taskDetailChecklistDrafts[item.id] == "Pack both bags")
+}
+

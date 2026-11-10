@@ -135,7 +135,7 @@ extension AppStore {
     let previous = taskDetailChecklistDrafts
     taskDetailChecklistDrafts = Dictionary(
       uniqueKeysWithValues: task.checklistItems.map { item in
-        if let draft = previous[item.id], draft != item.text {
+        if let draft = previous[item.id], Self.checklistDraft(draft, differsFrom: item.text) {
           return (item.id, draft)
         }
         return (item.id, item.text)

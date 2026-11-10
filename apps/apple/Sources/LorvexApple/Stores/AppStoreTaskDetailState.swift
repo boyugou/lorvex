@@ -79,8 +79,17 @@ extension AppStore {
       return true
     }
     return baseline.checklistItems.contains { item in
-      (taskDetailChecklistDrafts[item.id] ?? item.text) != item.text
+      Self.checklistDraft(taskDetailChecklistDrafts[item.id], differsFrom: item.text)
     }
+  }
+
+  /// Whether a checklist row's draft holds an edit of `stored`. An item is
+  /// stored without the space at its ends, so a draft that differs only there
+  /// is the stored text: counting it as an edit would keep the inspector from
+  /// taking the task's changes from elsewhere for as long as the row is shown.
+  static func checklistDraft(_ draft: String?, differsFrom stored: String) -> Bool {
+    guard let draft else { return false }
+    return draft.trimmingCharacters(in: .whitespacesAndNewlines) != stored
   }
 
   /// One value that changes with any edit to the task-detail draft fields.
@@ -140,7 +149,12 @@ extension AppStore {
   private func taskDetailEditedFields(comparedTo task: LorvexTask) -> TaskDetailEditedFields {
     guard taskDetailDraftTaskID == task.id else { return [] }
     var edited: TaskDetailEditedFields = []
-    if taskDetailTitle != task.title { edited.insert(.title) }
+    // A title is stored without the space at its ends, so a space typed there
+    // is not an edit yet: counting it would save, and refill the field without
+    // it, between two words.
+    if taskDetailTitle.trimmingCharacters(in: .whitespacesAndNewlines) != task.title {
+      edited.insert(.title)
+    }
     if taskDetailNotes != task.notes { edited.insert(.notes) }
     if taskDetailPriority != task.priority { edited.insert(.priority) }
     if taskDetailEstimateIsValid, parsedTaskDetailEstimate != task.estimatedMinutes {

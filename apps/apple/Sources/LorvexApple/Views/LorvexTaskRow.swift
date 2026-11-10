@@ -248,8 +248,9 @@ struct LorvexTaskRow: View {
           }
         }
         if let owningList {
-          // The owning list leads in its own color so a task's home is the first
-          // thing you read on a cross-list surface.
+          // The owning list leads, so a task's home is the first thing you
+          // read on a cross-list surface. Its own color stays on the icon: on
+          // the name it would compete with the date's state colors.
           HStack(spacing: LorvexDesign.Spacing.xs) {
             LorvexListIconView(
               icon: owningList.icon,
@@ -257,8 +258,8 @@ struct LorvexTaskRow: View {
               size: 11,
               font: LorvexDesign.Typography.tertiaryText)
             Text(owningList.name)
+              .foregroundStyle(.secondary)
           }
-          .foregroundStyle(owningList.tint)
           .lineLimit(1)
           .layoutPriority(1)
         }

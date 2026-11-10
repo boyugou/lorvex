@@ -186,7 +186,7 @@ struct WidgetTaskRowView: View {
           defaultValue: "Complete \(row.title)",
           table: "Localizable",
           bundle: WidgetL10n.bundle),
-        tint: (row.priority ?? .p3).priorityTint,
+        tint: (row.priority ?? .p2).priorityTint,
         width: leadRingDiameter,
         alignment: leadRingDiameter == nil ? .leading : .center
       )

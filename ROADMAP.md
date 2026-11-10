@@ -136,6 +136,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     probe (`ZZMutationLatencyProbeTests`) reads about 7 times slower than
     release, mostly unoptimized GRDB row decoding.
   - Mac keyboard: list cards show Edit and Delete only on hover.
+  - Mac focus ring on task rows: a row that was clicked or reached with the
+    arrow keys draws the system focus ring around its selection fill, which
+    reads as a focused text field (owner's screenshot, 2026-11-10). A lighter
+    outline of its own needs a capture of a focused row, and the preview tour
+    never takes the keyboard focus.
   - Polish: Settings > Diagnostics and the activity log show English changelog summaries; German
     Memory sheet titles truncated at 375 pt (rechecked 2026-10-12 at 402 pt:
     "Neuer Gedächtniseintrag" wraps to two lines in the title bar's three-step

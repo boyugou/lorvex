@@ -23,15 +23,23 @@ red flag never argue about what red means.
 | Hue | Meaning | Tokens |
 |---|---|---|
 | accent (the system accent) | selection, the lead task's row, primary actions, links | `accent`, `selectionFill` |
-| red | overdue, P1 priority, errors, destructive actions, the calendar now-line | `overdue`, `priorityHigh`, `error`, `destructive`, `nowIndicator` |
-| orange | due today or soon, P2 priority, warnings | `dueSoon`, `priorityMedium`, `warning` |
+| red | overdue, high priority, errors, destructive actions, the calendar now-line | `overdue`, `priorityHigh`, `error`, `destructive`, `nowIndicator` |
+| orange | due today or soon, warnings | `dueSoon`, `warning` |
 | green | completed, success, a habit finished today | `done`, `success` |
-| secondary gray | neutral counts, cancelled, someday, blocked, low priority, section leaders | `neutral`, `cancelled`, `someday`, `blocked`, `priorityLow` |
+| secondary gray | neutral counts, cancelled, someday, blocked, normal and low priority, section leaders | `neutral`, `cancelled`, `someday`, `blocked`, `priorityNormal`, `priorityLow` |
 | pink | mood in reviews | `mood` |
 | yellow | energy in reviews | `energy` |
 
 Rules that follow from the table:
 
+- A row is neutral until something on it needs attention. A task at the
+  default priority draws the neutral ring (`priorityNormal`), and low priority
+  the same ring, quieter (`priorityLow`); only high priority is red. Normal
+  priority is what nearly every task has, so a hue on it would color every row
+  and say nothing.
+- A list's own color stays on its icon. On a task row the list's name is
+  secondary text beside the tinted icon, so the only colored words on a row
+  are the ones that state a date's condition.
 - Counts and section leaders are neutral. A "3 planned" chip, a "Deferred"
   header, or a "Snoozed" header never borrows a status hue.
 - Warnings appear in Settings, diagnostics, editors, and banners, never on a

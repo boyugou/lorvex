@@ -47,12 +47,13 @@ extension LorvexDesign {
 
     // MARK: Priority
 
-    /// P1 — urgent.
+    /// High priority, the one priority that takes a hue.
     public static let priorityHigh: Color = .red
-    /// P2 — elevated.
-    public static let priorityMedium: Color = .orange
-    /// P3 — recedes.
-    public static let priorityLow: Color = .secondary
+    /// Normal priority, the default every task starts with: neutral, so a
+    /// colored circle always means something.
+    public static let priorityNormal: Color = .secondary
+    /// Low priority: the neutral ring, quieter.
+    public static let priorityLow: Color = Color.secondary.opacity(0.5)
 
     // MARK: Severity — system state in Settings, diagnostics, editors, banners.
 

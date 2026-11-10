@@ -2,16 +2,17 @@ import SwiftUI
 
 /// Shared tint + SF Symbol mapping for a task's priority, parallel to
 /// `LorvexTask.Status`'s presentation. Priority is the primary canonical sort
-/// key, so every task-row surface color-codes it identically: P1 reads as
-/// urgent (red), P2 as elevated (orange), and P3 recedes (secondary). Centralised
-/// so macOS, iOS, and iPadOS can't drift.
+/// key, so every task-row surface shows it identically: high priority is red,
+/// normal priority (the default) is the neutral ring, and low priority is the
+/// same ring, quieter. Centralised so macOS, iOS, and iPadOS can't drift.
 extension LorvexTask.Priority {
-  /// Tint for the priority indicator. P3 uses `.secondary` so low-priority work
-  /// stays visually quiet rather than competing with P1/P2.
+  /// Tint for the priority indicator. Only high priority takes a hue: a task
+  /// at the default priority is neutral, so a colored circle on a row always
+  /// says that the task was marked important.
   public var priorityTint: Color {
     switch self {
     case .p1: LorvexDesign.Palette.priorityHigh
-    case .p2: LorvexDesign.Palette.priorityMedium
+    case .p2: LorvexDesign.Palette.priorityNormal
     case .p3: LorvexDesign.Palette.priorityLow
     }
   }

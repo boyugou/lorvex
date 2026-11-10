@@ -78,9 +78,13 @@ struct HabitProgressRing: View {
   }
 }
 
-/// One habit tile in the momentum board: the habit's color identity up top, a
-/// 7-day rhythm strip, a streak chip, and the completion ring as the focal
-/// action. Clicking the body opens the habit inspector; the ring checks it in.
+/// One habit tile in the momentum board: the name, the completion ring as the
+/// focal action, and a 7-day rhythm strip, on a neutral surface. The habit's
+/// own color marks what it has done: the ring's arc, the filled days, and,
+/// once it has a streak, the streak and the way to its next milestone. A
+/// habit with nothing to show yet stays quiet instead of listing zeros; its
+/// numbers are in the inspector. Clicking the body opens the habit inspector;
+/// the ring checks it in.
 /// A habit set aside for today says so under its name, draws its ring as
 /// skipped (``HabitProgressRing``), and offers Undo Skip in its context menu
 /// where it otherwise offers Skip Today.
@@ -145,17 +149,17 @@ struct HabitMomentumCard: View {
       header
       Spacer(minLength: LorvexDesign.Spacing.s)
       rhythmRow
-      footer
-      if let milestone = habit.milestone {
+      if showsFooter { footer }
+      if let milestone = habit.milestone, milestone.value > 0 {
         HabitMilestoneProgressView(
           milestone: milestone,
           frequencyType: habit.frequencyType,
-          tint: LorvexHabitPalette.baseColor(for: habit),
+          tint: tint,
           style: .compact)
       }
     }
     .padding(LorvexDesign.Spacing.m)
-    .frame(maxWidth: .infinity, minHeight: 168, alignment: .topLeading)
+    .frame(maxWidth: .infinity, minHeight: 124, maxHeight: .infinity, alignment: .topLeading)
     .background(cardBackground)
     .overlay(cardBorder)
     .clipShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
@@ -290,27 +294,25 @@ struct HabitMomentumCard: View {
     HabitRhythmStrip.dayLabels(habit: habit, today: Date(), timeZone: productTimeZone)
   }
 
-  /// The streak as a reading ("12-day streak", "No streak yet"), the stepper
-  /// for a multi-check-in habit, and the 30-day completion rate, which gives
-  /// way first when the card is too narrow for all three.
-  private var footer: some View {
-    ViewThatFits(in: .horizontal) {
-      footerRow(showsRate: true)
-      footerRow(showsRate: false)
-    }
-  }
+  /// Whether the card has a footer: a streak to state, or the stepper of a
+  /// multi-check-in habit.
+  private var showsFooter: Bool { streak > 0 || isMultiTarget }
 
-  private func footerRow(showsRate: Bool) -> some View {
+  /// The streak as a reading ("12-day streak"), once there is one, and the
+  /// stepper for a multi-check-in habit.
+  private var footer: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
-      Label {
-        Text(HabitDisplayText.milestoneValueLabel(metric: "streak", value: streak, frequencyType: habit.frequencyType))
-          .monospacedDigit()
-      } icon: {
-        Image(systemName: "flame.fill")
+      if streak > 0 {
+        Label {
+          Text(HabitDisplayText.milestoneValueLabel(metric: "streak", value: streak, frequencyType: habit.frequencyType))
+            .monospacedDigit()
+        } icon: {
+          Image(systemName: "flame.fill")
+        }
+        .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
+        .foregroundStyle(tint)
+        .fixedSize()
       }
-      .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-      .foregroundStyle(streak > 0 ? tint : LorvexDesign.Palette.neutral)
-      .fixedSize()
 
       if isMultiTarget {
         accumulativeStepper
@@ -318,17 +320,6 @@ struct HabitMomentumCard: View {
       }
 
       Spacer(minLength: 0)
-
-      if showsRate {
-        Text(
-          String(
-            format: String(localized: "habits.card.rate_30d", defaultValue: "%@ in 30 days", table: "Localizable", bundle: LorvexL10n.bundle),
-            habit.completionRate30d.formatted(.percent.precision(.fractionLength(0))))
-        )
-        .font(LorvexDesign.Typography.tertiaryText.monospacedDigit())
-        .foregroundStyle(.secondary)
-        .fixedSize()
-      }
     }
   }
 
@@ -405,17 +396,17 @@ struct HabitMomentumCard: View {
     }
   }
 
+  /// A neutral surface: a wash of the habit's own color turns muddy for warm
+  /// hues in dark mode, and nine washes side by side compete with each other.
   private var cardBackground: some ShapeStyle {
-    // A whisper of the habit's color so each tile carries its own identity
-    // without shouting; deepens slightly on hover.
-    tint.opacity(hovering ? 0.10 : 0.06)
+    hovering ? LorvexDesign.Palette.hoverFill : LorvexDesign.Palette.insetFill
   }
 
   @ViewBuilder
   private var cardBorder: some View {
     RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous)
       .strokeBorder(
-        isSelected ? AnyShapeStyle(tint) : AnyShapeStyle(tint.opacity(0.18)),
+        isSelected ? AnyShapeStyle(tint) : AnyShapeStyle(LorvexDesign.Palette.separator),
         lineWidth: isSelected ? 1.5 : 0.5)
   }
 }

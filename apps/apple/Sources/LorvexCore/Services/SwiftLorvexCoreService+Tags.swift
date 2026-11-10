@@ -53,12 +53,15 @@ extension SwiftLorvexCoreService {
       name: name, description: description, color: color, icon: icon, aiNotes: aiNotes)
     return try withWrite { db, hlc, deviceId in
       let version = hlc.nextVersionString()
+      let position = try Self.positionForNewRow(
+        db, table: "lists", scopeWhere: "archived_at IS NULL")
       let row = try ListRepo.createListWithAiNotes(
         db,
         params: ListCreateParams(
           id: ListId(trusted: EntityID.newEntityIDString()), name: fields.name,
           color: fields.color, icon: fields.icon,
-          description: fields.description, aiNotes: fields.aiNotes, version: version))
+          description: fields.description, aiNotes: fields.aiNotes, position: position,
+          version: version))
       try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .list, entityId: row.id)
       try self.writeChangelogRow(
         db,

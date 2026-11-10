@@ -53,18 +53,20 @@ extension SwiftLorvexCoreService {
       let id = EntityID.newEntityIDString()
       let version = hlc.nextVersionString()
       let now = SyncTimestampFormat.syncTimestampNow()
+      let position = try Self.positionForNewRow(db, table: "habits", scopeWhere: "archived = 0")
       try db.execute(
         sql: """
           INSERT INTO habits
             (id, name, icon, color, cue, frequency_type, per_period_target, day_of_month,
-             target_count, milestone_target, archived, lookup_key, version, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+             target_count, milestone_target, archived, lookup_key, position, version, created_at,
+             updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)
           """,
         arguments: [
           id, validated.name, validated.icon, validated.color, validated.cue,
           fields.frequencyType, fields.perPeriodTarget, fields.dayOfMonth.map { Int64($0) },
-          validated.targetCount, milestone.map { Int64($0) }, validated.lookupKey, version, now,
-          now,
+          validated.targetCount, milestone.map { Int64($0) }, validated.lookupKey, position,
+          version, now, now,
         ])
       try Self.replaceHabitWeekdays(db, habitId: id, weekdays: fields.weekdays ?? [])
       try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .habit, entityId: id)

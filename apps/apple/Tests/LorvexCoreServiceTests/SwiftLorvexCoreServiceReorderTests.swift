@@ -11,9 +11,11 @@ import XCTest
 ///
 /// A reorder is a full-permutation operation: `orderedIDs` must be exactly the
 /// active (non-archived) set. The whole permutation is validated and applied in
-/// one `withWrite` transaction, so the resulting positions are dense
-/// (`0…n-1`, no collisions/gaps) and a rejected reorder — or any throw inside
-/// the transaction — leaves the stored order byte-identical.
+/// one `withWrite` transaction, so the resulting positions increase strictly in
+/// the new order and a rejected reorder — or any throw inside the transaction —
+/// leaves the stored order byte-identical. A row syncs whole, so a reorder
+/// rewrites as few rows as it can: a rewritten row would replace whatever
+/// another device changed in it meanwhile.
 final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
 
   /// Deterministic HLC time source: every mint gets a fresh, strictly
@@ -88,8 +90,8 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
   // MARK: - Lists
 
   /// A full reversal of the entire active catalog persists exactly, and the
-  /// stored positions come out dense (`0…n-1`) — no collision, no gap.
-  func testReorderListsFullReversalPersistsDensely() async throws {
+  /// stored positions increase strictly in the new order: no collision.
+  func testReorderListsFullReversalPersists() async throws {
     let service = try makeService()
     _ = try await service.createList(name: "Alpha", description: nil)
     _ = try await service.createList(name: "Beta", description: nil)
@@ -107,17 +109,17 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
     let reloaded = try await service.loadLists().lists.map(\.id)
     XCTAssertEqual(reloaded, desired, "a fresh loadLists returns the reversed order")
 
-    // Positions are dense 0..n-1 in catalog order — no duplicate or gapped keys.
     let byId = try positions(service, table: "lists")
-    let orderedPositions = desired.map { byId[$0] }
-    XCTAssertEqual(
-      orderedPositions, (0..<Int64(desired.count)).map { Optional($0) },
-      "stored positions are a dense 0..n-1 sequence in the new order")
+    let orderedPositions = desired.compactMap { byId[$0] }
+    XCTAssertEqual(orderedPositions.count, desired.count)
+    XCTAssertTrue(
+      zip(orderedPositions, orderedPositions.dropFirst()).allSatisfy { $0 < $1 },
+      "stored positions increase strictly in the new order")
   }
 
-  /// Only the rows whose position actually changes are re-stamped: reordering a
-  /// densified catalog so two rows swap and the rest hold leaves the unmoved
-  /// rows' `version` untouched, and enqueues only the movers.
+  /// Only a row that has to move is re-stamped: swapping two neighbors moves
+  /// one of them past the other and leaves every other row's `version`
+  /// untouched.
   func testReorderListsBumpsOnlyMovedRows() async throws {
     try await withDeterministicHlcClock {
       let service = try self.makeService()
@@ -125,9 +127,9 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
       let b = try await service.createList(name: "Beta", description: nil)
       let c = try await service.createList(name: "Gamma", description: nil)
 
-      // Densify to [inbox, a, b, c] (positions 0,1,2,3). The order is spelled
-      // out rather than read back from loadLists(), whose order for lists
-      // created in the same instant is not guaranteed.
+      // Establish [inbox, a, b, c]. The order is spelled out rather than read
+      // back from loadLists(), whose order for lists created in the same
+      // instant is not guaranteed.
       let loaded = try await service.loadLists().lists.map(\.id)
       let inboxID = try XCTUnwrap(loaded.first { ![a.id, b.id, c.id].contains($0) })
       _ = try await service.reorderLists(orderedIDs: [inboxID, a.id, b.id, c.id])
@@ -146,12 +148,9 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
       XCTAssertEqual(
         try self.version(service, table: "lists", id: a.id), aBefore,
         "the unmoved list stays untouched")
-      XCTAssertNotEqual(
-        try self.version(service, table: "lists", id: b.id), bBefore,
-        "a moved list's version bumps")
-      XCTAssertNotEqual(
-        try self.version(service, table: "lists", id: c.id), cBefore,
-        "a moved list's version bumps")
+      let bMoved = try self.version(service, table: "lists", id: b.id) != bBefore
+      let cMoved = try self.version(service, table: "lists", id: c.id) != cBefore
+      XCTAssertTrue(bMoved != cMoved, "one of the swapped pair moves past the other, not both")
 
       let order = try await service.loadLists().lists.map(\.id)
       XCTAssertEqual(order, [inboxID, a.id, c.id, b.id], "the catalog now shows c before b")
@@ -163,8 +162,8 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
     _ = try await service.createList(name: "Alpha", description: nil)
     _ = try await service.createList(name: "Beta", description: nil)
 
-    // First reorder densifies positions; a second reorder to the same order must
-    // enqueue nothing.
+    // The first reorder settles the positions; a second reorder to the same
+    // order must enqueue nothing.
     let order = try await service.loadLists().lists.map(\.id)
     _ = try await service.reorderLists(orderedIDs: order)
     let outboxBefore = try outboxCount(service)
@@ -180,7 +179,7 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
     _ = try await service.createList(name: "Alpha", description: nil)
     _ = try await service.createList(name: "Beta", description: nil)
 
-    // Densify first so there is a concrete dense ordering to protect.
+    // Reorder first so there is a concrete stored ordering to protect.
     let order = try await service.loadLists().lists.map(\.id)
     _ = try await service.reorderLists(orderedIDs: order)
 
@@ -216,6 +215,51 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
     XCTAssertEqual(reloaded, order, "the catalog order is exactly what it was before rejection")
   }
 
+  /// Dragging one list re-stamps that list alone, wherever it lands: each
+  /// other list keeps its record as another device may since have changed it.
+  func testMovingOneListRestampsOnlyThatList() async throws {
+    try await withDeterministicHlcClock {
+      let service = try self.makeService()
+      var ids: [String] = []
+      for name in ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"] {
+        ids.append(try await service.createList(name: name, description: nil).id)
+      }
+      let loaded = try await service.loadLists().lists.map(\.id)
+      let inboxID = try XCTUnwrap(loaded.first { !ids.contains($0) })
+      var order = [inboxID] + ids
+      _ = try await service.reorderLists(orderedIDs: order)
+
+      // To the front, into the middle, and to the end, one drag each.
+      for (from, to) in [(5, 1), (1, 3), (2, 5)] {
+        let moved = order.remove(at: from)
+        order.insert(moved, at: to)
+        let before = try order.map { try self.version(service, table: "lists", id: $0) }
+        _ = try await service.reorderLists(orderedIDs: order)
+        let after = try order.map { try self.version(service, table: "lists", id: $0) }
+
+        let restamped = zip(order, zip(before, after)).filter { $0.1.0 != $0.1.1 }.map(\.0)
+        XCTAssertEqual(restamped, [moved], "only the dragged list is written")
+        let reloaded = try await service.loadLists().lists.map(\.id)
+        XCTAssertEqual(reloaded, order)
+      }
+    }
+  }
+
+  /// A list created after the catalog was ordered by hand goes last, after the
+  /// lists the user placed.
+  func testAListCreatedAfterAManualOrderGoesLast() async throws {
+    let service = try makeService()
+    _ = try await service.createList(name: "Alpha", description: nil)
+    _ = try await service.createList(name: "Beta", description: nil)
+    let order = Array(try await service.loadLists().lists.map(\.id).reversed())
+    _ = try await service.reorderLists(orderedIDs: order)
+
+    let created = try await service.createList(name: "Gamma", description: nil)
+
+    let reloaded = try await service.loadLists().lists.map(\.id)
+    XCTAssertEqual(reloaded, order + [created.id])
+  }
+
   // MARK: - Habits
 
   func testReorderHabitsPersistsAndOrdersCatalog() async throws {
@@ -232,11 +276,12 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
     let reloaded = try await service.loadHabits(date: today).habits.map(\.id)
     XCTAssertEqual(reloaded, desired, "a fresh loadHabits returns them in stored position order")
 
-    // Positions are dense 0..n-1 in the new order.
     let byId = try positions(service, table: "habits")
-    XCTAssertEqual(
-      desired.map { byId[$0] }, (0..<Int64(desired.count)).map { Optional($0) },
-      "stored habit positions are dense 0..n-1")
+    let orderedPositions = desired.compactMap { byId[$0] }
+    XCTAssertEqual(orderedPositions.count, desired.count)
+    XCTAssertTrue(
+      zip(orderedPositions, orderedPositions.dropFirst()).allSatisfy { $0 < $1 },
+      "stored habit positions increase strictly in the new order")
   }
 
   func testReorderHabitsBumpsMovedRowVersion() async throws {
@@ -295,5 +340,23 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
 
     let reloaded = try await service.loadHabits(date: today).habits.map(\.id)
     XCTAssertEqual(reloaded, order, "the board order is exactly what it was before rejection")
+  }
+
+  /// A habit created after the board was ordered by hand goes last; on a board
+  /// no one has ordered, habits keep their order by name.
+  func testAHabitCreatedAfterAManualOrderGoesLast() async throws {
+    let service = try makeService()
+    let today = todayYmd()
+    let b = try await service.createHabit(name: "Beta", cue: nil, targetCount: 1)
+    let c = try await service.createHabit(name: "Gamma", cue: nil, targetCount: 1)
+    let a = try await service.createHabit(name: "Alpha", cue: nil, targetCount: 1)
+    let byName = try await service.loadHabits(date: today).habits.map(\.id)
+    XCTAssertEqual(byName, [a.id, b.id, c.id], "an unordered board reads by name")
+
+    _ = try await service.reorderHabits(orderedIDs: [c.id, b.id, a.id], date: today)
+    let created = try await service.createHabit(name: "Aardvark", cue: nil, targetCount: 1)
+
+    let reloaded = try await service.loadHabits(date: today).habits.map(\.id)
+    XCTAssertEqual(reloaded, [c.id, b.id, a.id, created.id])
   }
 }

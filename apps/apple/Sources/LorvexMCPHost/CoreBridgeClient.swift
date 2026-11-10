@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(AppKit)
+  import AppKit
+#endif
 import LorvexDomain
 import LorvexCore
 
@@ -14,6 +17,10 @@ import LorvexCore
 /// keep their delegation: the throw surfaces to the caller as an MCP error.
 struct CoreBridgeClient: Sendable {
   let service: any LorvexCoreServicing
+
+  /// Whether the Lorvex app, the only process that syncs, is running on this
+  /// Mac; nil where that cannot be told.
+  var appIsRunning: @Sendable () -> Bool? = CoreBridgeClient.lorvexAppIsRunning
 
   init(databasePath: String?) {
     // No `writeInitiatorDefault` override: the MCP host keeps the fail-closed
@@ -48,5 +55,18 @@ struct CoreBridgeClient: Sendable {
       }
       return mutations
     }
+  }
+}
+
+extension CoreBridgeClient {
+  /// Whether an app with Lorvex's bundle identifier is running.
+  static let lorvexAppIsRunning: @Sendable () -> Bool? = {
+    #if canImport(AppKit)
+      !NSRunningApplication.runningApplications(
+        withBundleIdentifier: LorvexProductMetadata.bundleIdentifier
+      ).isEmpty
+    #else
+      nil
+    #endif
   }
 }

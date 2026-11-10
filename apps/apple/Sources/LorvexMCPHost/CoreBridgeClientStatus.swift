@@ -5,6 +5,24 @@ import MCP
 extension CoreBridgeClient {
   func loadSyncStatus() async throws -> Value {
     let sync = try await service.loadSyncStatus()
+    let appReport = try await (service as? any CloudSyncAppReporting)?.loadCloudSyncAppReport()
+    // The transport runs in the app, so the app's report is what says which
+    // one is in use; without one the kind stays unknown.
+    let backend: String =
+      switch appReport?.mode {
+      case "live": "cloudkit"
+      case "off": "off"
+      default: sync.backend
+      }
+    let reported: Value =
+      appReport.map { report in
+        .object([
+          "mode": .string(report.mode),
+          "state": .string(report.state),
+          "last_completed_sync_at": report.lastCompletedPassAt.map(Value.string) ?? .null,
+          "reported_at": .string(report.reportedAt),
+        ])
+      } ?? .null
     // Hoist the optional-to-Value conversions into locals: a single large
     // dictionary literal with many inline `map ?? .null` ternaries trips the
     // Swift type-checker's expression-time heuristic.
@@ -16,8 +34,8 @@ extension CoreBridgeClient {
     let deviceID: Value = sync.deviceID.map(Value.string) ?? .null
     return .object([
       "sync_backend_kind_raw": .null,
-      "sync_backend_kind": .string(sync.backend),
-      "sync_backend_kind_effective": .string(sync.backend),
+      "sync_backend_kind": .string(backend),
+      "sync_backend_kind_effective": .string(backend),
       "sync_backend_kind_malformed": .bool(false),
       "sync_backend_kind_malformed_reason": .null,
       "pending_count": .int(sync.pendingCount),
@@ -29,6 +47,8 @@ extension CoreBridgeClient {
       "last_error": lastError,
       "device_id": deviceID,
       "reseed_required": .bool(sync.reseedRequired),
+      "app_reported_sync": reported,
+      "app_running": appIsRunning().map(Value.bool) ?? .null,
     ])
   }
 

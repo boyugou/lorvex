@@ -242,6 +242,7 @@ extension AppStore {
         table: "Localizable", bundle: LorvexL10n.bundle)
       : nil
     await reconcileSurfacesAfterCompletedCloudSyncCycle(report)
+    await reportCloudSyncToAssistant()
   }
 
   /// Publishes the controller's state to the status surfaces. A failure's
@@ -382,6 +383,7 @@ extension AppStore {
   private func runRefreshSyncTail() async {
     await runLocalRetentionMaintenance()
     await runCloudSyncCycle()
+    await reportCloudSyncToAssistant()
   }
 
   /// Reads and publishes every local surface. Performs no network work, so an

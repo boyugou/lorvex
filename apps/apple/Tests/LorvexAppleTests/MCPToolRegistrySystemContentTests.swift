@@ -93,4 +93,32 @@ struct SystemToolTests {
     // kind is the honest placeholder rather than an asserted mode.
     #expect(object["sync_backend_kind"]?.stringValue == "unknown")
   }
+
+  @Test("get_sync_status says what the app last reported about sync, and whether it runs")
+  func syncStatusCarriesTheAppsReport() async throws {
+    let service = try makeInMemoryCore()
+    var bridge = CoreBridgeClient(databasePath: nil, service: service)
+    bridge.appIsRunning = { false }
+    let registry = ToolRegistry(coreBridge: bridge)
+
+    let before = try #require(
+      try await mcpRegistryCall(registry, tool: "get_sync_status").structuredContent?.objectValue)
+    #expect(before["app_reported_sync"] == .null)
+    #expect(before["app_running"]?.boolValue == false)
+    #expect(before["sync_backend_kind"]?.stringValue == "unknown")
+
+    try await service.recordCloudSyncAppReport(
+      CloudSyncAppReport(
+        mode: "live", state: "running", lastCompletedPassAt: "2026-11-10T08:00:00.000Z",
+        reportedAt: "2026-11-10T08:00:01.000Z"))
+
+    let after = try #require(
+      try await mcpRegistryCall(registry, tool: "get_sync_status").structuredContent?.objectValue)
+    #expect(after["sync_backend_kind"]?.stringValue == "cloudkit")
+    let reported = try #require(after["app_reported_sync"]?.objectValue)
+    #expect(reported["mode"]?.stringValue == "live")
+    #expect(reported["state"]?.stringValue == "running")
+    #expect(reported["last_completed_sync_at"]?.stringValue == "2026-11-10T08:00:00.000Z")
+  }
 }
+

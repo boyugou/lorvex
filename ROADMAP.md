@@ -149,7 +149,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   iOS store waits for the operations in flight to give up their locks, a
   process whose database a newer build has migrated since it opened refuses
   to write (the MCP helper across an app update), and a quarantine is
-  remembered by the fresh database until its notice is seen. The rest is open.
+  remembered by the fresh database until its notice is seen, and
+  `get_sync_status` tells the assistant whether the Lorvex app is running and
+  what it last reported about sync. The rest is open.
   Checked and found sound: the CloudKit transport's change tags, conflict
   classes, zone deletion, account binding, and end-to-end encrypted fields; the
   HLC lanes; the outbox coalescing; the task editors, which write only the
@@ -176,11 +178,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     dependencies, the cancelled or in-progress status, the original dates), and
     a second run skips them because they exist. Finishing the deferred pass for
     a task the same archive created earlier would cover it.
-  - The assistant cannot tell that nothing is syncing. With the Mac app quit,
-    the MCP helper's writes queue in the outbox and arm no notification until
-    the app next runs, and `get_sync_status` reports only queue counts
-    (`sync_backend_kind` is `unknown`). A heartbeat the app writes (last run,
-    sync mode, last completed pass) would let the tools say so.
   - Scale, none measured on a large store: the first upload queues the whole
     database in one transaction inside `startEngine()`
     (`Outbox.enqueueAllLiveForFullResync`), during which another process's

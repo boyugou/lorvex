@@ -271,6 +271,10 @@ final class AppStore {
   /// wrote, with the draft's fingerprint as written.
   @ObservationIgnored var lastSavedTaskDraft: (id: LorvexTask.ID, fingerprint: String)?
 
+  /// The sync report last written for the assistant, and when
+  /// (``reportCloudSyncToAssistant()``).
+  @ObservationIgnored var lastCloudSyncAppReport: (report: CloudSyncAppReport, at: Date)?
+
   /// One main-app-owned wake at midnight in the configured product timezone.
   /// Device-midnight notifications are insufficient when the Mac and synced
   /// product zones differ.

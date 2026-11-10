@@ -8,6 +8,19 @@ public struct MobileCalendarDraft: Equatable, Sendable {
   public var timing: CalendarEventTiming
   public var location: String
   public var notes: String
+  /// The draft as ``init(event:fallbackDate:)`` filled it; nil for a draft of a
+  /// new event. Saving an edit writes only the fields that differ from it, so a
+  /// field another writer changed while the sheet was open keeps that change.
+  /// With no baseline every field is written.
+  private(set) var baseline: Baseline?
+
+  /// The edited event's fields as the editor opened with them, text trimmed.
+  struct Baseline: Equatable, Sendable {
+    let title: String
+    let timing: CalendarEventTiming
+    let location: String
+    let notes: String
+  }
 
   public init(
     title: String = "",
@@ -53,6 +66,8 @@ public struct MobileCalendarDraft: Equatable, Sendable {
       location: event.location ?? "",
       notes: event.notes ?? ""
     )
+    baseline = Baseline(
+      title: trimmedTitle, timing: timing, location: trimmedLocation, notes: trimmedNotes)
   }
 
   public var trimmedTitle: String {

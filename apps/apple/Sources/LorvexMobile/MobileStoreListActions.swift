@@ -55,18 +55,25 @@ extension MobileStore {
     guard canUpdateListDraft else { return false }
     isUpdatingList = true
     defer { isUpdatingList = false }
+    let draft = listDraft
+    let baseline = draft.baseline
+    let name = draft.trimmedName
+    let description = draft.trimmedDescription
     do {
-      // Three-state description patch: a non-empty field sets the value; an empty
-      // field clears it (blanking the description in the editor is an explicit
-      // "no value", never a silent leave-as-is).
+      // Only the fields the user changed from the draft's baseline are sent; nil
+      // and `.unset` leave the others as stored, including a change another
+      // writer made while the sheet was open. A description the user emptied
+      // clears it.
       _ = try await core.updateList(
         id: list.id,
-        name: LorvexListNaming.nameToStore(
-          id: list.id, storedName: list.name, editedName: listDraft.trimmedName),
-        description: listDraft.trimmedDescription.isEmpty
-          ? .clear : .set(listDraft.trimmedDescription),
-        color: listDraft.color,
-        icon: listDraft.icon
+        name: name == baseline?.name
+          ? nil
+          : LorvexListNaming.nameToStore(
+            id: list.id, storedName: baseline?.storedName ?? list.name, editedName: name),
+        description: description == baseline?.description
+          ? .unset : description.isEmpty ? .clear : .set(description),
+        color: draft.color == baseline?.color ? nil : draft.color,
+        icon: draft.icon == baseline?.icon ? nil : draft.icon
       )
       lists = try await core.loadLists()
       listDraft = MobileListDraft()

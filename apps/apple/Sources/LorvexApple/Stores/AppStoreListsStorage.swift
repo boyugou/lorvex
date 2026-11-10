@@ -19,6 +19,22 @@ struct AppStoreListsStorage {
   var draftListIcon: String?
   /// `#RRGGBB` hex; nil uses the app accent.
   var draftListColor: String?
+  /// The draft as ``AppStore/prepareListDraft(for:)`` filled it from the list
+  /// being edited; nil while the draft holds a new list. Saving an edit writes
+  /// only the fields that differ from it, so a field another writer changed
+  /// while the sheet was open keeps that change. With no baseline every field
+  /// is written.
+  var draftListBaseline: ListDraftBaseline?
+
+  /// The edited list's stored name and its draft fields as the edit sheet
+  /// opened with them, text trimmed.
+  struct ListDraftBaseline: Equatable {
+    var storedName: String
+    var name: String
+    var description: String
+    var icon: String?
+    var color: String?
+  }
 
   mutating func reset() {
     lists = nil
@@ -31,5 +47,6 @@ struct AppStoreListsStorage {
     draftListDescription = ""
     draftListIcon = nil
     draftListColor = nil
+    draftListBaseline = nil
   }
 }

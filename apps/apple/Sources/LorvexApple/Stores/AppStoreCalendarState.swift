@@ -228,6 +228,7 @@ extension AppStore {
       recurrence: draftCalendarRecurrence,
       recurrenceWasEdited: calendarDraftStorage.draftCalendarRecurrenceWasEdited,
       recurrenceBaseline: calendarDraftStorage.draftCalendarRecurrenceBaseline,
+      editBaseline: calendarDraftStorage.draftCalendarEditBaseline,
       targetCalendarID: draftCalendarTargetCalendarID)
   }
 
@@ -245,6 +246,7 @@ extension AppStore {
     draftCalendarRecurrence = stashed.recurrence
     calendarDraftStorage.draftCalendarRecurrenceWasEdited = stashed.recurrenceWasEdited
     calendarDraftStorage.draftCalendarRecurrenceBaseline = stashed.recurrenceBaseline
+    calendarDraftStorage.draftCalendarEditBaseline = stashed.editBaseline
     draftCalendarTargetCalendarID = stashed.targetCalendarID
   }
 }

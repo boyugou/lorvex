@@ -1,5 +1,6 @@
 import Foundation
 import LorvexCore
+import LorvexDomain
 
 extension MobileStore {
   @discardableResult
@@ -203,21 +204,34 @@ extension MobileStore {
     }
     isUpdatingHabit = true
     defer { isUpdatingHabit = false }
+    let draft = habitDraft
+    let baseline = draft.baseline
+    let cue = draft.trimmedCue
+    let cadence = draft.cadenceInput
+    // The cadence decides which per-day count applies, so the two are one
+    // rhythm: both are written when either changed, neither otherwise.
+    let rhythmChanged = targetCount != baseline?.targetCount || cadence != baseline?.cadence
+    let milestone: Patch<Int> =
+      if let baseline, draft.milestoneTarget == baseline.milestoneTarget {
+        .unset
+      } else {
+        draft.milestoneTarget.map { .set($0) } ?? .clear
+      }
     do {
-      // Three-state cue and milestone patches: a non-empty field sets the value;
-      // an empty field clears it (blanking a cue or goal in the editor is an
-      // explicit "no value", never a silent leave-as-is). The cadence is replaced
-      // atomically from the editor selections.
+      // Only the fields the user changed from the draft's baseline are sent; nil
+      // and `.unset` leave the others as stored, including a change another
+      // writer made while the sheet was open. A cue or goal the user emptied
+      // clears it, and a written cadence replaces the whole rhythm.
       _ = try await core.updateHabit(
         id: habit.id,
-        name: habitDraft.trimmedName,
-        cue: habitDraft.trimmedCue.isEmpty ? .clear : .set(habitDraft.trimmedCue),
-        color: habitDraft.color,
-        icon: habitDraft.icon,
-        targetCount: targetCount,
+        name: draft.trimmedName == baseline?.name ? nil : draft.trimmedName,
+        cue: cue == baseline?.cue ? .unset : cue.isEmpty ? .clear : .set(cue),
+        color: draft.color == baseline?.color ? nil : draft.color,
+        icon: draft.icon == baseline?.icon ? nil : draft.icon,
+        targetCount: rhythmChanged ? targetCount : nil,
         archived: nil,
-        cadence: habitDraft.cadenceInput,
-        milestoneTarget: habitDraft.milestoneTarget.map { .set($0) } ?? .clear
+        cadence: rhythmChanged ? cadence : nil,
+        milestoneTarget: milestone
       )
       habits = try await core.loadHabits(date: logicalTodayString)
       await refreshHabitDetailIfLoaded(id: habit.id)

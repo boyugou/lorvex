@@ -195,6 +195,15 @@ public struct CalendarEventTiming: Equatable, Sendable {
   /// The stored `end_time` as `HH:mm`; nil for an all-day event.
   public var endTime: String? { allDay ? nil : Self.clockKey(end, in: calendar) }
 
+  /// True when this timing and `other` store the same `start_date`,
+  /// `end_date`, `start_time`, `end_time`, and `all_day`. Turning All Day on
+  /// and off again can leave a different `end` instant that stores the same
+  /// fields, so an edit form asks this, not `==`, whether its timing changed.
+  public func storesSameFields(as other: CalendarEventTiming) -> Bool {
+    allDay == other.allDay && startDate == other.startDate && endDate == other.endDate
+      && startTime == other.startTime && endTime == other.endTime
+  }
+
   /// The `end_date` to send when updating an event stored with
   /// `storedEndDate`. The update contract reads nil as "keep the stored end
   /// date", so an event that had an end date and now starts and ends on one

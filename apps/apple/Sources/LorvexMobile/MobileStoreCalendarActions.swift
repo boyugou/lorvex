@@ -91,21 +91,27 @@ extension MobileStore {
     }
     isMutatingCalendarEvent = true
     defer { isMutatingCalendarEvent = false }
+    let draft = calendarDraft
+    let baseline = draft.baseline
+    let timing = draft.timing
+    // The core validates a start and an end as a pair, so the timing is
+    // written whole when any part of it changed and left out otherwise.
+    let timingChanged = baseline.map { !timing.storesSameFields(as: $0.timing) } ?? true
     do {
+      // Only the fields the user changed from the draft's baseline are sent; nil
+      // leaves the others as stored, including a change another writer made
+      // while the sheet was open. A location or notes field the user emptied is
+      // sent as "", which clears it.
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
-        title: calendarDraft.trimmedTitle,
-        startDate: calendarDraft.timing.startDate,
-        endDate: calendarDraft.timing.endDate(updating: event.endDate),
-        startTime: calendarDraft.timing.startTime,
-        endTime: calendarDraft.timing.endTime,
-        allDay: calendarDraft.timing.allDay,
-        // The edit form is a full-object editor: pass the trimmed values directly
-        // (not `trimmedNilIfEmpty`) so clearing the field actually clears it. With
-        // `trimmedNilIfEmpty`, an emptied field became nil → `.unset` → no change, so
-        // the old value reappeared on reload. Empty stores as "" rather than NULL.
-        location: calendarDraft.trimmedLocation,
-        notes: calendarDraft.trimmedNotes
+        title: draft.trimmedTitle == baseline?.title ? nil : draft.trimmedTitle,
+        startDate: timingChanged ? timing.startDate : nil,
+        endDate: timingChanged ? timing.endDate(updating: event.endDate) : nil,
+        startTime: timingChanged ? timing.startTime : nil,
+        endTime: timingChanged ? timing.endTime : nil,
+        allDay: timingChanged ? timing.allDay : nil,
+        location: draft.trimmedLocation == baseline?.location ? nil : draft.trimmedLocation,
+        notes: draft.trimmedNotes == baseline?.notes ? nil : draft.trimmedNotes
       )
       if let index = calendarTimeline?.events.firstIndex(where: { $0.id == updated.id }) {
         calendarTimeline?.events[index] = updated

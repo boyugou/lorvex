@@ -213,6 +213,7 @@ actor FakeEventKitAccess: EventKitAccessing {
   private(set) var fetchWindowEndDays: [String] = []
   private(set) var writes: [(key: String?, title: String, lorvexID: String)] = []
   private(set) var writeRecurrences: [String?] = []
+  private(set) var writeNotesPatches: [EventKitNotesPatch] = []
   private(set) var writeTargets: [EventKitWriteTarget] = []
   private(set) var futureSeriesReplacements: [FakeEventKitFutureSeriesReplacement] = []
   private(set) var calendarIDLookups: [String] = []
@@ -278,6 +279,7 @@ actor FakeEventKitAccess: EventKitAccessing {
     if let upsertError { throw upsertError }
     writes.append((key: existingKey, title: title, lorvexID: lorvexEventID))
     writeRecurrences.append(recurrence)
+    writeNotesPatches.append(notesPatch)
     writeTargets.append(target)
     let key = existingKey ?? { nextKey += 1; return "ek-key-\(nextKey)" }()
     return EventKitWriteResult(providerEventKey: key)
@@ -315,6 +317,7 @@ actor FakeEventKitAccess: EventKitAccessing {
 
   func recordedWrites() -> [(key: String?, title: String, lorvexID: String)] { writes }
   func recordedWriteRecurrences() -> [String?] { writeRecurrences }
+  func recordedWriteNotesPatches() -> [EventKitNotesPatch] { writeNotesPatches }
   func recordedFutureSeriesReplacements() -> [FakeEventKitFutureSeriesReplacement] {
     futureSeriesReplacements
   }

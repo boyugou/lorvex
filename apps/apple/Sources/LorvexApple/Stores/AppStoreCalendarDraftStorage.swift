@@ -26,6 +26,13 @@ struct AppStoreCalendarDraftStorage {
   /// recurrence shape this client cannot decode from being cleared by an
   /// otherwise unrelated edit.
   var draftCalendarRecurrenceBaseline: CalendarRecurrenceBaseline = .known(nil)
+  /// The title, timing, place, notes, and color as
+  /// ``AppStore/prepareCalendarDraft(for:)`` filled them from the event being
+  /// edited; nil while the draft holds a new event. Saving an edit writes only
+  /// the fields that differ from it, so a field another writer changed while
+  /// the form was open keeps that change. With no baseline every field is
+  /// written.
+  var draftCalendarEditBaseline: CalendarEditBaseline?
   /// The writable EventKit calendar the draft event's mirror is filed into, by
   /// `calendarIdentifier`. Nil selects the dedicated Lorvex calendar (the
   /// picker's default). The calendar lives only in the EventKit mirror, so the
@@ -49,12 +56,23 @@ struct AppStoreCalendarDraftStorage {
     var recurrence: TaskRecurrenceRule?
     var recurrenceWasEdited: Bool
     var recurrenceBaseline: CalendarRecurrenceBaseline
+    var editBaseline: CalendarEditBaseline?
     var targetCalendarID: String?
   }
 
   enum CalendarRecurrenceBaseline: Equatable {
     case known(TaskRecurrenceRule?)
     case opaque
+  }
+
+  /// An edited event's draft fields as the edit form opened with them, text
+  /// trimmed.
+  struct CalendarEditBaseline: Equatable {
+    var title: String
+    var timing: CalendarEventTiming
+    var location: String
+    var notes: String
+    var color: String?
   }
 
   mutating func reset() {

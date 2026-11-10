@@ -30,6 +30,21 @@ public struct MobileListDraft: Equatable, Sendable {
   public var color: String?
   /// SF Symbol name; nil falls back to the tray glyph.
   public var icon: String?
+  /// The draft as ``init(list:)`` filled it; nil for a draft of a new list.
+  /// Saving an edit writes only the fields that differ from it, so a field
+  /// another writer changed while the sheet was open keeps that change. With
+  /// no baseline every field is written.
+  private(set) var baseline: Baseline?
+
+  /// The edited list's stored name and its draft fields as the editor opened
+  /// with them, text trimmed.
+  struct Baseline: Equatable, Sendable {
+    let storedName: String
+    let name: String
+    let description: String
+    let color: String?
+    let icon: String?
+  }
 
   public init(
     name: String = "", description: String = "", color: String? = nil, icon: String? = nil
@@ -47,6 +62,9 @@ public struct MobileListDraft: Equatable, Sendable {
     self.description = list.description ?? ""
     self.color = list.color
     self.icon = list.icon
+    self.baseline = Baseline(
+      storedName: list.name, name: trimmedName, description: trimmedDescription, color: color,
+      icon: icon)
   }
 
   public var trimmedName: String {
@@ -102,6 +120,24 @@ public struct MobileHabitDraft: Equatable, Sendable {
   public var weekdays: Set<Int>
   public var timesPerWeek: Int
   public var dayOfMonth: Int
+  /// What the draft saved as when ``init(habit:)`` filled it; nil for a draft
+  /// of a new habit. Saving an edit writes only the fields that differ from it,
+  /// so a field another writer changed while the sheet was open keeps that
+  /// change. With no baseline every field is written.
+  private(set) var baseline: Baseline?
+
+  /// The values a save would have written from the draft as the editor opened:
+  /// the trimmed text, the appearance, the resolved per-day count, the
+  /// assembled cadence, and the milestone goal.
+  struct Baseline: Equatable, Sendable {
+    let name: String
+    let cue: String
+    let color: String?
+    let icon: String?
+    let targetCount: Int?
+    let cadence: HabitCadenceInput
+    let milestoneTarget: Int?
+  }
 
   public init(
     name: String = "", cue: String = "", targetCountText: String = LorvexNumberInput.text(for: 1),
@@ -168,6 +204,9 @@ public struct MobileHabitDraft: Equatable, Sendable {
       self.timesPerWeek = 3
       self.dayOfMonth = 1
     }
+    self.baseline = Baseline(
+      name: trimmedName, cue: trimmedCue, color: color, icon: icon,
+      targetCount: resolvedTargetCount, cadence: cadenceInput, milestoneTarget: milestoneTarget)
   }
 
   /// The wire `frequency_type` the current editor selections resolve to — used

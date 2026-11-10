@@ -7,6 +7,12 @@ extension AppStore {
     draftListDescription = list.description ?? ""
     draftListIcon = list.icon
     draftListColor = list.color
+    listsStorage.draftListBaseline = AppStoreListsStorage.ListDraftBaseline(
+      storedName: list.name,
+      name: draftListName.trimmingCharacters(in: .whitespacesAndNewlines),
+      description: draftListDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+      icon: draftListIcon,
+      color: draftListColor)
   }
 
   /// Reset the shared list draft to empty before presenting the create sheet.
@@ -50,18 +56,22 @@ extension AppStore {
     isCreating = true
     defer { isCreating = false }
     await perform {
+      let baseline = listsStorage.draftListBaseline
+      let name = draftListName.trimmingCharacters(in: .whitespacesAndNewlines)
       let description = draftListDescription.trimmingCharacters(in: .whitespacesAndNewlines)
-      // Three-state description patch: a non-empty field sets the value; an empty
-      // field clears it (blanking the description in the editor is an explicit
-      // "no value", never a silent leave-as-is).
+      // Only the fields the user changed from the baseline are sent; nil and
+      // `.unset` leave the others as stored, including a change another writer
+      // made while the sheet was open. A description the user emptied clears it.
       _ = try await core.updateList(
         id: list.id,
-        name: LorvexListNaming.nameToStore(
-          id: list.id, storedName: list.name,
-          editedName: draftListName.trimmingCharacters(in: .whitespacesAndNewlines)),
-        description: description.isEmpty ? .clear : .set(description),
-        color: draftListColor,
-        icon: draftListIcon
+        name: name == baseline?.name
+          ? nil
+          : LorvexListNaming.nameToStore(
+            id: list.id, storedName: baseline?.storedName ?? list.name, editedName: name),
+        description: description == baseline?.description
+          ? .unset : description.isEmpty ? .clear : .set(description),
+        color: draftListColor == baseline?.color ? nil : draftListColor,
+        icon: draftListIcon == baseline?.icon ? nil : draftListIcon
       )
       lists = try await core.loadLists()
       selectedListID = list.id
@@ -75,6 +85,7 @@ extension AppStore {
     draftListDescription = ""
     draftListIcon = nil
     draftListColor = nil
+    listsStorage.draftListBaseline = nil
   }
 
   func deleteList(_ list: LorvexList) async {

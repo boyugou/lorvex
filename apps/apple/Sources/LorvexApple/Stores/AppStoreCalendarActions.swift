@@ -28,6 +28,13 @@ extension AppStore {
     // Default to the Lorvex calendar; the edit-open path resolves the mirror's
     // actual calendar asynchronously (`resolveDraftTargetCalendar(for:)`).
     draftCalendarTargetCalendarID = nil
+    calendarDraftStorage.draftCalendarEditBaseline =
+      AppStoreCalendarDraftStorage.CalendarEditBaseline(
+        title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
+        timing: draftCalendarTiming,
+        location: draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines),
+        notes: draftCalendarNotes.trimmingCharacters(in: .whitespacesAndNewlines),
+        color: draftCalendarColor)
   }
 
   /// Reset the shared calendar-event draft to fresh defaults before presenting
@@ -46,6 +53,7 @@ extension AppStore {
     draftCalendarRecurrence = nil
     calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
     calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
+    calendarDraftStorage.draftCalendarEditBaseline = nil
     draftCalendarTargetCalendarID = nil
   }
 
@@ -92,35 +100,50 @@ extension AppStore {
     draftCalendarRecurrence = nil
     calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
     calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
+    calendarDraftStorage.draftCalendarEditBaseline = nil
     selection = .calendar
   }
 
   func updateCalendarEvent(_ event: CalendarTimelineEvent) async {
     guard event.editable, !event.supportsScopedMutation else { return }
     await perform {
+      let baseline = calendarDraftStorage.draftCalendarEditBaseline
+      let title = draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+      let timing = draftCalendarTiming
+      let location = draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines)
       let notes = draftCalendarNotes.trimmingCharacters(in: .whitespacesAndNewlines)
+      let notesChanged = notes != baseline?.notes
+      let colorChanged = baseline.map { draftCalendarColor != $0.color } ?? true
+      // The core validates a start and an end as a pair, so the timing is
+      // written whole when any part of it changed and left out otherwise.
+      let timingChanged = baseline.map { !timing.storesSameFields(as: $0.timing) } ?? true
+      // Only the fields the user changed from the baseline are sent; nil leaves
+      // the others as stored, including a change another writer made while the
+      // form was open. A field the user emptied is a deliberate clear, so it is
+      // sent empty rather than nil.
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
-        title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
-        startDate: draftCalendarTiming.startDate,
-        endDate: draftCalendarTiming.endDate(updating: event.endDate),
-        startTime: draftCalendarTiming.startTime,
-        endTime: draftCalendarTiming.endTime,
-        allDay: draftCalendarTiming.allDay,
-        // This is a full-object edit surface. Empty values are deliberate
-        // clears; nil would mean "leave unchanged" at the core patch boundary.
-        location: draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines),
-        notes: notes,
+        title: title == baseline?.title ? nil : title,
+        startDate: timingChanged ? timing.startDate : nil,
+        endDate: timingChanged ? timing.endDate(updating: event.endDate) : nil,
+        startTime: timingChanged ? timing.startTime : nil,
+        endTime: timingChanged ? timing.endTime : nil,
+        allDay: timingChanged ? timing.allDay : nil,
+        location: location == baseline?.location ? nil : location,
+        notes: notesChanged ? notes : nil,
         recurrence: draftCalendarRecurrencePatch,
         timezone: nil,
         url: nil,
-        color: draftCalendarColor ?? "",
+        color: colorChanged ? draftCalendarColor ?? "" : nil,
         eventType: nil,
         personName: nil,
         attendees: .unset
       )
+      // Calendar's copy takes the notes as stored, which are the user's edit or,
+      // when the user left them alone, whatever another writer saved meanwhile.
+      let mirroredNotes = notesChanged ? notes : updated.notes ?? ""
       await writeBackToEventKit(
-        updated, notesPatch: .replace(notes.trimmedNilIfEmpty), taskID: nil,
+        updated, notesPatch: .replace(mirroredNotes.trimmedNilIfEmpty), taskID: nil,
         operation: "eventkit-update",
         target: draftEventKitWriteTarget)
       try await refreshCurrentCalendarTimeline()
@@ -131,6 +154,7 @@ extension AppStore {
       draftCalendarRecurrence = nil
       calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
       calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
+      calendarDraftStorage.draftCalendarEditBaseline = nil
       selection = .calendar
     }
   }

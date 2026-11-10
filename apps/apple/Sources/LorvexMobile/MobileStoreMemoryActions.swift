@@ -44,6 +44,8 @@ extension MobileStore {
       {
         saved = try await core.renameMemory(
           oldKey: originalKey, newKey: memoryKeyDraft, content: memoryContentDraft)
+      } else if originalKey == nil {
+        saved = try await core.createMemory(key: memoryKeyDraft, content: memoryContentDraft)
       } else {
         saved = try await core.upsertMemory(key: memoryKeyDraft, content: memoryContentDraft)
       }

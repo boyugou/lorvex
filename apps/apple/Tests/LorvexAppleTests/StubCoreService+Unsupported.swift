@@ -357,6 +357,9 @@ extension StubCoreService {
   func upsertMemory(key: String, content: String) async throws -> MemoryEntry {
     try await preview.upsertMemory(key: key, content: content)
   }
+  func createMemory(key: String, content: String) async throws -> MemoryEntry {
+    try await preview.createMemory(key: key, content: content)
+  }
   func deleteMemory(key: String) async throws -> Bool { try await preview.deleteMemory(key: key) }
 
   func importRemoteTask(

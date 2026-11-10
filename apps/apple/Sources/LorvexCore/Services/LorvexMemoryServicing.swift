@@ -5,6 +5,12 @@ public protocol LorvexMemoryServicing: Sendable {
 
   func upsertMemory(key: String, content: String) async throws -> MemoryEntry
 
+  /// Creates a memory under `key`, refusing a key another memory already
+  /// holds with `LorvexCoreError.conflict` (entity `.memory`), so composing a
+  /// new entry never replaces one. ``upsertMemory(key:content:)`` is the write
+  /// that replaces on purpose. Returns the created entry.
+  func createMemory(key: String, content: String) async throws -> MemoryEntry
+
   /// Atomically rename a memory from `oldKey` to `newKey` in one transaction
   /// (optionally replacing content with `content`), preserving the entry's opaque
   /// sync id so it is one in-place record edit rather than a create + tombstone.
@@ -16,6 +22,18 @@ public protocol LorvexMemoryServicing: Sendable {
 }
 
 extension LorvexMemoryServicing {
+  /// Non-atomic fallback create for conformers (test doubles) without a
+  /// dedicated implementation: read the keys, then upsert. The production
+  /// ``SwiftLorvexCoreService`` checks and writes in one transaction.
+  public func createMemory(key: String, content: String) async throws -> MemoryEntry {
+    let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+    if try await loadMemory().entries.contains(where: { $0.key == trimmed }) {
+      throw LorvexCoreError.conflict(
+        message: "A memory named '\(trimmed)' already exists.", entity: .memory)
+    }
+    return try await upsertMemory(key: key, content: content)
+  }
+
   /// Non-atomic fallback rename for conformers (test doubles) that don't provide a
   /// dedicated implementation: upsert the new key, then delete the old. The
   /// production ``SwiftLorvexCoreService`` overrides this with a single atomic,

@@ -46,7 +46,7 @@ extension UserFacingError {
     case textTooLong
     /// A tag renamed onto the name of another tag.
     case tagNameTaken
-    /// A memory renamed onto the name of another memory.
+    /// A memory created or renamed under the name of another memory.
     case memoryNameTaken
     /// A timed event starting at a time the clocks skip when daylight saving
     /// time begins.

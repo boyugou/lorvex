@@ -42,4 +42,36 @@ struct AppStoreMemorySaveDraftTests {
     #expect(store.memoryKeyDraft == "next_entry")
     #expect(store.memoryContentDraft == "Started typing the next one.")
   }
+
+  @Test("A new entry under a key another entry holds is refused, and both texts are kept")
+  func newEntryUnderATakenKeyIsRefused() async throws {
+    let preview = try await makeSeededInMemoryCore()
+    _ = try await preview.upsertMemory(key: "travel_notes", content: "Prefers aisle seats.")
+    let store = AppStore(core: StubCoreService(preview: preview))
+    await store.refresh()
+    store.memoryKeyDraft = " travel_notes "
+    store.memoryContentDraft = "Window seat please."
+
+    let saved = await store.saveMemoryDraft()
+
+    #expect(!saved)
+    #expect(store.errorMessage != nil)
+    #expect(store.memoryContentDraft == "Window seat please.")
+    let stored = try await preview.loadMemory().entries.first { $0.key == "travel_notes" }
+    #expect(stored?.content == "Prefers aisle seats.")
+  }
+
+  @Test("Saving an entry opened for editing under its own key still replaces its text")
+  func editingAnEntryUnderItsOwnKeySaves() async throws {
+    let preview = try await makeSeededInMemoryCore()
+    let entry = try await preview.upsertMemory(key: "travel_notes", content: "Prefers aisle seats.")
+    let store = AppStore(core: StubCoreService(preview: preview))
+    await store.refresh()
+    store.beginEditingMemory(entry)
+    store.memoryContentDraft = "Prefers window seats."
+
+    #expect(await store.saveMemoryDraft())
+    let stored = try await preview.loadMemory().entries.first { $0.key == "travel_notes" }
+    #expect(stored?.content == "Prefers window seats.")
+  }
 }

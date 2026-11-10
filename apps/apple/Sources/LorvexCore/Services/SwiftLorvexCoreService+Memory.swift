@@ -31,10 +31,27 @@ extension SwiftLorvexCoreService {
   // MARK: - Memory writes
 
   public func upsertMemory(key: String, content: String) async throws -> MemoryEntry {
+    try writeMemory(key: key, content: content, refusingExistingKey: false)
+  }
+
+  public func createMemory(key: String, content: String) async throws -> MemoryEntry {
+    try writeMemory(key: key, content: content, refusingExistingKey: true)
+  }
+
+  /// Writes `content` under `key` in one transaction; with
+  /// `refusingExistingKey`, a key another memory holds is refused before
+  /// anything is written.
+  private func writeMemory(
+    key: String, content: String, refusingExistingKey: Bool
+  ) throws -> MemoryEntry {
     let key = try Self.normalizedMemoryKey(key)
     return try withWrite { db, hlc, deviceId in
       let existing = try Row.fetchOne(
         db, sql: "SELECT id, version FROM memories WHERE key = ?", arguments: [key])
+      if refusingExistingKey, existing != nil {
+        throw LorvexCoreError.conflict(
+          message: "A memory named '\(key)' already exists.", entity: .memory)
+      }
       let existingId: String? = existing?["id"]
       let existingVersion: String? = existing?["version"]
       let version = try VersionFloor.mint(

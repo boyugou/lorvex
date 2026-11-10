@@ -136,3 +136,43 @@ func mobileStoreRejectsBlankMemoryDraft() async throws {
   #expect(store.canSaveMemoryDraft == false)
   #expect(after == before)
 }
+
+@MainActor
+@Test
+func mobileStoreRefusesANewMemoryUnderATakenKey() async throws {
+  let core = try await makeSeededInMemoryCore()
+  _ = try await core.upsertMemory(key: "travel_notes", content: "Prefers aisle seats.")
+  let store = MobileStore(core: core)
+  await store.refresh()
+  store.memoryKeyDraft = "travel_notes"
+  store.memoryContentDraft = "Window seat please."
+
+  #expect(await store.saveMemoryDraft() == false)
+  #expect(store.errorMessage != nil)
+  #expect(store.memoryContentDraft == "Window seat please.")
+  let stored = try await core.loadMemory().entries.first { $0.key == "travel_notes" }
+  #expect(stored?.content == "Prefers aisle seats.")
+}
+
+/// Creating refuses a key another memory holds, in the same transaction as the
+/// write; upserting replaces on purpose.
+@Test
+func coreCreateMemoryRefusesATakenKey() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let created = try await core.createMemory(key: " packing_list ", content: "Charger.")
+  #expect(created.key == "packing_list")
+
+  do {
+    _ = try await core.createMemory(key: "packing_list", content: "Passport.")
+    Issue.record("a second create under the same key was accepted")
+  } catch LorvexCoreError.conflict(_, let entity) {
+    #expect(entity == .memory)
+  }
+  #expect(
+    UserFacingError.Reason(
+      LorvexCoreError.conflict(message: "", entity: .memory)) == .memoryNameTaken)
+
+  _ = try await core.upsertMemory(key: "packing_list", content: "Passport.")
+  let stored = try await core.loadMemory().entries.first { $0.key == "packing_list" }
+  #expect(stored?.content == "Passport.")
+}

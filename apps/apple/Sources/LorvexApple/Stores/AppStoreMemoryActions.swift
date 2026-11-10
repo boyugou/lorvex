@@ -94,6 +94,8 @@ extension AppStore {
       {
         _ = try await core.renameMemory(
           oldKey: originalKey, newKey: memoryKeyDraft, content: memoryContentDraft)
+      } else if originalKey == nil {
+        _ = try await core.createMemory(key: memoryKeyDraft, content: memoryContentDraft)
       } else {
         _ = try await core.upsertMemory(key: memoryKeyDraft, content: memoryContentDraft)
       }

@@ -210,12 +210,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   typed, and an error alert on either platform stays up until it is
   acknowledged instead of closing when another action succeeds, and the
   iPhone's Undo waits for another task's write to end instead of doing
-  nothing. Found sound:
+  nothing, and a new memory under a name another memory holds is refused
+  instead of replacing it. Found sound:
   the daily review on both platforms, capture, the Mac quit handshake for the
   drafts it covers, dirty-draft preservation across refreshes, and no write
   error swallowed with `try?`.
-  - Smaller: creating a memory entry under a key that exists replaces that
-    entry without asking, and on the Mac Edit on a row replaces unsaved composer
+  - Smaller: on the Mac Edit on a memory row replaces unsaved composer
     text; on the iPhone only the memory composer refuses a swipe-to-dismiss
     with unsaved text.
 - Read-only audit of notifications, calendar mirroring, widgets, the Watch,

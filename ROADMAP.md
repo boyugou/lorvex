@@ -141,6 +141,143 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     "Neuer Gedächtniseintrag" wraps to two lines in the title bar's three-step
     fit, so only a 375 pt device could still show it; none is installed here); the Urdu Today medium widget shows
     one row.
+- Read-only audit of data saving and sync (2026-11-09). Each item was traced
+  to the code named; none is reproduced by a test and none is fixed yet.
+  Checked and found sound: the CloudKit transport's change tags, conflict
+  classes, zone deletion, account binding, and end-to-end encrypted fields; the
+  HLC lanes; the outbox coalescing; the task editors, which write only the
+  fields the user changed; a habit day that holds both a skip and a check-in
+  after a merge (reads count it as kept).
+  - Lists and habits merge as whole rows, and a reorder writes every shifted
+    row: `applyReorder` (`SwiftLorvexCoreService+Reorder.swift`) rewrites
+    `position` and sends each changed row whole at a new version, and
+    `ApplyList.applyListUpsert` and `ApplyHabit` take the whole row of the newer
+    version. A rename, an archive, or a target change made on another device
+    while it was offline is replaced by the reordering device's older copy of
+    that row. Tasks and calendar events merge field by field and are not
+    affected. Syncing the order as its own register, or as one order record,
+    would end it.
+  - Two actions write back fields they did not change: the Mac's snooze
+    (`AppStoreSnoozeActions.snoozeTask`) and the iPhone's plan-for-a-day
+    (`MobileStoreTaskActions.planTask`) load the task and then call the
+    force-set `updateTask(id:title:notes:…)` in a second transaction. A change
+    the assistant or a sync apply commits between the two is reverted, with a
+    new version that every device then takes. `TaskUpdateDraft` with the one
+    field avoids it; the Shortcuts update already does.
+  - A failed refresh on the Mac clears everything, the unsaved task draft
+    included: `performLocalRefresh` runs seven reads without a guard, and its
+    `catch` calls `clearLoadedStateAfterRefreshFailure`, which resets
+    `taskDetailStorage` (the title and notes being typed). One read that throws
+    blanks every surface. The iPhone's `refresh()` clears its snapshots the same
+    way (`loadLocalSurfaces(clearOnFailure: true)`), which a refresh caught by
+    the background suspension can reach.
+  - A set-aside database leaves no lasting trace. When the open path
+    quarantines a corrupt file (`LorvexStore.open`,
+    `recoverManagedByQuarantine`), nothing readable is copied into the new
+    database, the unsent outbox rows stay in the set-aside file, and the notice
+    lives in memory in the process that did the open (`_lastDatabaseRecovery`),
+    shown once. A quarantine done by the MCP helper, by a widget intent, or just
+    before the app quit leaves an empty app with no explanation, and on an
+    iPhone the path in the alert cannot be reached. A marker in the new
+    database, a salvage pass, and an export of the set-aside file would cover it.
+  - A running process does not notice a schema migration. The ladder is checked
+    only at open (`SchemaMigrationRunner.checkDowngrade`). The MCP helper keeps
+    running across an app update, so after a build that adds a migration it
+    writes with the older build's code until its client restarts it. Comparing
+    `MAX(version)` of `schema_migrations` with the value read at open, inside
+    `assertCommittingDatabaseIdentity`, would refuse those writes.
+  - iOS suspension does not wait for work in flight.
+    `BackgroundDatabaseWork.end()` and `expire()` post the suspension and end
+    the background task at once. GRDB's `suspend()` only interrupts, so an
+    operation in flight still holds its SQLite lock and the `flock` on
+    `<db>.storage-lock` until its thread unwinds; a process suspended inside
+    that window is terminated with `0xdead10cc`. Waiting, with a bound, for
+    `activeStoreOperations` to reach zero before ending the task closes it.
+  - A restore cut short on an iPhone cannot be finished by running it again.
+    `MobileStore.applyDataImport` holds no background task, so leaving the app
+    suspends the database at once (the suspension flush skips its sync pass
+    while an import runs) and every later record fails. The tasks already
+    created have not had their deferred pass (`applyDeferredTaskWork`:
+    dependencies, the cancelled or in-progress status, the original dates), and
+    a second run skips them because they exist. Holding
+    `BackgroundDatabaseWork` for the import, and finishing the deferred pass for
+    a task the same archive created earlier, would cover it.
+  - The assistant cannot tell that nothing is syncing. With the Mac app quit,
+    the MCP helper's writes queue in the outbox and arm no notification until
+    the app next runs, and `get_sync_status` reports only queue counts
+    (`sync_backend_kind` is `unknown`). A heartbeat the app writes (last run,
+    sync mode, last completed pass) would let the tools say so.
+  - Scale, none measured on a large store: the first upload queues the whole
+    database in one transaction inside `startEngine()`
+    (`Outbox.enqueueAllLiveForFullResync`), during which another process's
+    write waits at most five seconds, and an iOS suspension midway starts it
+    over. Sent outbox rows keep their payload for seven days
+    (`outboxRetentionDays`), so the database holds two copies of everything for
+    a week after a first upload, and rows queue while sync was never on although
+    the first start queues everything again. The retention sweep
+    (`runPostApplyGC`, more than ten statements and `PRAGMA optimize` in a
+    write transaction) runs inside every fetched batch and after every refresh. The
+    engine state is rewritten as base64 text in `sync_checkpoints` on every
+    state update and lists every pending record. `nextBatch` reads up to 1,000
+    outbox rows with their payloads, in a write transaction, for each batch of
+    200. Each process has one connection (`DatabaseQueue`), so the refresh's
+    parallel reads run one at a time and wait behind an inbound apply;
+    `DatabasePool` would let them run beside it. `PRAGMA quick_check` runs on
+    every open.
+- Read-only audit of how the two apps save what the user types (2026-11-09),
+  same standing: traced to the code, not reproduced, not fixed. Found sound:
+  the daily review on both platforms, capture, the Mac quit handshake for the
+  drafts it covers, dirty-draft preservation across refreshes, and no write
+  error swallowed with `try?`.
+  - The Mac inspector loses what was just typed. The task draft autosaves 1.2
+    seconds after the last keystroke, and three paths replace the draft inside
+    that delay without saving it. Clicking another row on Today, a list, or the
+    Calendar: `selectTaskFromList` assigns the selection and calls
+    `syncSelectedTaskDraft()` at once, so the draft already belongs to the new
+    task when `TaskDetailView`'s `onChange(of: selectedTaskID)` asks whether the
+    old one changed (the Tasks workspace only assigns the id and saves; the
+    tests assign the id too, which is why they pass). Closing the inspector
+    (its close button, Escape, the open row again, or moving to Habits, Memory,
+    or Reviews): the `selectedTaskID` `didSet` clears the draft for nil before
+    the view can save. Start, Pause, and Reopen from the inspector set
+    `taskDetailDraftTaskID = nil` and refill the draft from the stored record.
+    The notes editor has no save on blur, so a paragraph typed without a pause
+    is lost whole.
+  - Also on the Mac inspector: an autosave that fails while moving to another
+    task drops that draft, and the next successful action clears its alert
+    (`loadSelectedTaskDetail`); the title autosave stores the trimmed title and
+    refills the field, so a trailing space typed before a pause disappears
+    ("Buy milk" then "and eggs" joins); a checklist row committed with trailing
+    whitespace keeps the inspector counted as edited, and it stops taking the
+    task's changes from other devices until it is selected again.
+  - Quit on the Mac covers the task draft, the review, and sticky notes
+    (`hasPendingAutosaveDraftForTermination`) but not the fields that commit on
+    blur: a checklist row's text and a habit's name and cue are lost when ⌘Q is
+    pressed with the cursor in them. A task whose title was emptied cancels
+    Quit with no message, since the save declines and the draft stays pending.
+    A sticky note saves only when its window loses focus, closes, or the app
+    quits, so a crash loses everything typed since.
+  - Accepting suggested times writes the suggestion as it was computed, on both
+    platforms (`acceptSuggestedDayTimes`): `saveDayTimes` takes the time off
+    every unfinished task timed that day that the suggestion does not list, so a
+    time set after Suggest (in the inspector, by a drag, by the assistant) is
+    removed, and an accept after midnight plans for the previous day.
+  - Text cleared before the write is known to have worked: the iPhone
+    checklist composer (`MobileTaskComposerRows`), where an add made while the
+    task's previous write is in flight is refused without a message, and the
+    Mac's inline quick add (`QuickAddRow`). The Mac checklist and the Quick
+    Capture window keep the text on a failure.
+  - Sheets that save the whole record from a draft filled when they opened
+    write back fields the user did not touch: list edit on both platforms, the
+    iPhone habit editor, the event editor on both, and a calendar drag, which
+    sends the block's title and location with the new time. A change made
+    elsewhere while the sheet was open is reverted. The task editors and the
+    Mac habit inspector send only changed fields.
+  - Smaller: creating a memory entry under a key that exists replaces that
+    entry without asking, and on the Mac Edit on a row replaces unsaved composer
+    text; on the iPhone only the memory composer refuses a swipe-to-dismiss
+    with unsaved text; the iPhone Undo banner does nothing when another task
+    write is running.
 - Russian at the largest accessibility text size (iPhone, 2026-10-12) was
   captured for Today, Tasks, Habits, and the event detail: legible, hyphenated
   by the system, nothing overlapping.

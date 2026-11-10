@@ -278,6 +278,74 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     text; on the iPhone only the memory composer refuses a swipe-to-dismiss
     with unsaved text; the iPhone Undo banner does nothing when another task
     write is running.
+- Read-only audit of notifications, calendar mirroring, widgets, the Watch,
+  and App Intents (2026-11-09), same standing: traced to the code, not
+  reproduced, not fixed. Found sound: reminder triggers as true instants and
+  the shared 60-request budget, the widget snapshot file (atomic write, lock,
+  ordering), the Watch replica ordering and command journal, the bracketing of
+  every intent runner, the Spotlight prune, and the EventKit permission and
+  privacy-tier checks. Four items of
+  `apps/apple/docs/reference/apple-official/APPLE_NOTIFICATION_REMINDER_AUDIT.md` still
+  stand (N5, N6, N8, N10).
+  - A change that reaches a locked iPhone by push is applied but not acted on.
+    A background wake runs only the sync pass
+    (`MobileStore.handleCloudKitPush`): reminders, the badge, the widget
+    snapshot, and the Watch replica are re-planned only by a foreground
+    refresh, a local write, or a pass the engine reports on its own, and
+    `syncNow()` keeps that report for its caller. A reminder the assistant adds
+    on the Mac is not armed on the phone, and the reminder of a task completed
+    elsewhere still fires, until the app is opened or the background refresh
+    runs (four hours at the soonest). The comment in
+    `ReminderBackgroundRefresh.swift` says a push replenishes the window.
+  - After Complete or Defer on a lock-screen reminder, nothing else is
+    updated. `runTaskWrite` closes its database bracket, which suspends the
+    store again, and only then posts `.lorvexBackgroundMutationApplied`; the
+    refresh that answers it reads a suspended store, fails, clears the loaded
+    snapshots, and sets an error (`loadLocalSurfaces(clearOnFailure: true)`).
+    The widget still lists the task, the badge stays, and the task's other
+    reminders stay armed until the app is opened. Any Siri or Shortcuts write
+    in a backgrounded process ends the same way. The Watch receiver refreshes
+    inside its bracket and is right.
+  - A weekly habit on several days gets one reminder a week. For `.weekly` and
+    `.timesPerWeek` the planner's period is the ISO week
+    (`HabitReminderOccurrencePlanner.periodBounds`), and
+    `deliveredInSamePeriod` drops every later day of a week in which one
+    reminder was delivered, although the habit needs one check-in per day.
+    Monday's reminder for a Monday and Wednesday habit cancels Wednesday's at
+    the next re-plan. The tests never stamp a delivery, so they do not reach it.
+  - Calendar events deleted in Apple Calendar can stay in Lorvex. The ingest
+    removes stale rows only among those whose `start_date` is inside the window
+    (`ProviderRepo.getProviderEventKeys`), while the timeline shows rows that
+    started earlier: a Monday to Friday event deleted on Wednesday stays for
+    the rest of the week, and a repeating series deleted elsewhere keeps its
+    stored master once the window has moved past the master's start.
+  - A repeating calendar series is mirrored from the first occurrence in the
+    window (`EventKitSeriesAssembly`: `group.first { !$0.isDetached }`), and
+    its `COUNT` is copied as is: a ten-week series ingested at week nine shows
+    ten more weeks, and a Calendar left on next month makes every refresh store
+    masters that start next month.
+  - What Lorvex wrote into Apple Calendar is updated only by Mac actions
+    (`AppStoreCalendarWriteBack`): an event deleted or moved on the iPhone or by
+    the assistant keeps its old copy in Apple Calendar, which Lorvex itself
+    hides. The lookup reaches back 90 days, so editing an older event writes a
+    second copy.
+  - iPhone widgets show "Open Lorvex to refresh" from midnight until the app is
+    opened: the background wake re-plans reminders and the badge
+    (`replenishReminderWindow`) but does not publish the widget snapshot, and
+    no entry for the new day is prepared ahead.
+  - A write from outside the app process changes no notification: a widget
+    tap completes a task whose reminder still fires, and neither it nor a Focus
+    filter change reaches the Watch until the phone app publishes.
+  - Smaller: the two task entity queries of App Intents
+    (`LorvexTaskEntityQuery`, `LorvexReopenableTaskEntityQuery`) read without
+    background access and drop the error, so a saved task in a Shortcuts
+    automation may not resolve while the app is suspended. A Watch command the
+    phone cannot decode is rejected on the watch after three tries without
+    renumbering, and the phone then refuses every later command as a sequence
+    gap. Every snapshot publish reloads all widget timelines, also when the
+    write was refused as older, and the Mac publishes twice per local write.
+    `EKEventStoreChanged` is handled once per notification without coalescing.
+    A time-zone change that keeps the same day does not re-plan habit reminders.
 - Russian at the largest accessibility text size (iPhone, 2026-10-12) was
   captured for Today, Tasks, Habits, and the event detail: legible, hyphenated
   by the system, nothing overlapping.

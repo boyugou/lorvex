@@ -155,7 +155,7 @@ struct TaskDetailView: View {
   // MARK: - Properties
 
   /// The task's set fields as rows, with the fields it does not carry yet as
-  /// dashed additions beneath. List, priority, and repeat open native menus;
+  /// additions beneath. List, priority, and repeat open native menus;
   /// every other field opens its editor in a popover.
   func properties(task: LorvexTask) -> some View {
     let content = propertyContent(task: task)

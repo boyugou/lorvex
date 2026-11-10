@@ -355,7 +355,7 @@ them and in the platform module otherwise.
 | `LorvexIconButton` (macOS) | the one icon-only button: a semibold secondary glyph in a 28 pt circular hit area that fills faintly on hover, with its label as tooltip and VoiceOver name; inspector pin and close (`InspectorCloseButton`), pager arrows, and remove buttons in editors |
 | `LorvexIconMenu` (macOS) | the icon-only menu: `LorvexIconButton`'s glyph, 28 pt hit area, and hover, opening a menu through the plain button style with no indicator; the calendar event inspector's More menu (Copy as Text, Share) |
 | `InspectorColumn` + `InspectorPanel` (macOS) | the trailing inspector's content column (top-leading, at most 500 pt wide, shared insets) and the faint grouped card each of its sections sits in; the header's panel draws no card, and inside a popover no panel does. The task and habit inspectors are both built from them |
-| `InspectorProperties` (macOS) | a task's or a habit's set fields as rows (icon, field name, value) with dashed "+ Field" additions; a row opens its field's popover editor, or a native menu for short fixed choices |
+| `InspectorProperties` (macOS) | a task's or a habit's set fields as rows (icon, field name, value) with quiet "+ Field" additions; a row opens its field's popover editor, or a native menu for short fixed choices |
 | `InspectorGlyphLabelStyle` (macOS) | the label of an inspector panel's title or reading (a habit's Progress, History and By Weekday titles and its Progress readings, and the task inspector's Checklist and Notes titles): the glyph centered in a column as wide as the widest symbol of its face (`.inspectorPanelTitle` 20 pt, `.inspectorReading` 16 pt), on the title's first baseline, so sibling titles start on one edge whatever their symbols' widths |
 | `InspectorActionChip` (macOS) | the face of an action in an inspector's header row: a small semibold symbol and an optional short title in the primary color on a quiet fill, as tall as the row's tallest control (the row sizes itself to its content); the task inspector's Start, Defer and overflow controls and the habit inspector's overflow control wear it, a menu through the button menu style with the plain button style and no indicator; `isActive` draws a toggle's on state in the accent |
 | `TaskDetailChoiceRow` (macOS) | a one-click choice in an editor: a title, an optional trailing detail, a hover fill, and an accent title with a checkmark when it is the current value |
@@ -638,7 +638,7 @@ a page.
 
 On macOS a task's set fields are rows in the order a person plans: an icon,
 the field's name, its value ("When — Today, 9:45–10:45 AM", "Due — Thursday").
-Normal priority is the default and earns no row. Unset fields follow as dashed
+Normal priority is the default and earns no row. Unset fields follow as quiet
 "+ Reminder" capsules. A row opens only that field's editor, and every editor
 follows the same rules: presets first and "Custom…" last (priority and repeat
 are native menus, whose "Custom…" opens the full editor in place); no empty

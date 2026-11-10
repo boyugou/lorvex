@@ -11,7 +11,7 @@ import SwiftUI
 /// words reads "tomorrow", not "Tomorrow" (``LorvexDayPhrase``).
 ///
 /// A `nil` summary means the field is unset, and the sentence offers it as a
-/// dashed addition instead of a word.
+/// addition instead of a word.
 extension AppStore {
   /// When the task is to be worked on: the planned day, and the task's time
   /// on it when it has one ("Today, 9:45 – 10:30 AM"). It opens the sentence.

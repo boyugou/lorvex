@@ -5,7 +5,7 @@ import SwiftUI
 /// ``InspectorProperties`` so they read and edit like a task's: how the habit
 /// repeats, when it reminds, and the goal it celebrates. Every habit repeats,
 /// so Repeat is always a row; a habit without reminders or a goal offers them
-/// as dashed additions. The reminder field waits for the inspector's detail
+/// as additions. The reminder field waits for the inspector's detail
 /// (`reminderPolicies` nil) rather than offer an addition the loaded detail
 /// might contradict.
 ///

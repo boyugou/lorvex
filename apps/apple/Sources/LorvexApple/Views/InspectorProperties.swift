@@ -21,7 +21,7 @@ struct InspectorPropertyRow: Identifiable {
   var isUserContent = false
 }
 
-/// A field the item does not carry yet, offered as a dashed "+ Field" capsule.
+/// A field the item does not carry yet, offered as a quiet "+ Field" word.
 struct InspectorPropertyAddition: Identifiable {
   let id: String
   let label: String
@@ -58,7 +58,7 @@ enum InspectorPropertyMetrics {
 }
 
 /// An inspector's fields as rows, one per set field: an icon, the field's
-/// name in the secondary style, and its value. Clicking a row (or a dashed
+/// name in the secondary style, and its value. Clicking a row (or the
 /// addition for a field the item does not carry yet) opens that one field's
 /// editor. The task and habit inspectors share it, so a field reads and edits
 /// the same way in both.
@@ -159,6 +159,28 @@ struct InspectorProperties<Editor: View, MenuItems: View>: View {
   }
 
   private func additionLabel(_ addition: InspectorPropertyAddition) -> some View {
+    InspectorPropertyAdditionLabel(addition: addition)
+  }
+
+  private func presentation(for id: String) -> Binding<Bool> {
+    Binding(
+      get: { editingID == id },
+      set: { if !$0, editingID == id { editingID = nil } })
+  }
+}
+
+/// An addition's label: a plus and the field's name in the secondary style,
+/// with no outline of its own. An item can lack seven fields at once, and
+/// seven outlined capsules read as a form to fill in; as plain words they
+/// stay an offer. The pointer fills the capsule behind the one it is over,
+/// and Increase Contrast outlines each, so it still reads as a control.
+private struct InspectorPropertyAdditionLabel: View {
+  let addition: InspectorPropertyAddition
+
+  @State private var hovering = false
+  @Environment(\.colorSchemeContrast) private var contrast
+
+  var body: some View {
     HStack(spacing: LorvexDesign.Spacing.xxs) {
       Image(systemName: "plus").imageScale(.small)
         .accessibilityHidden(true)
@@ -168,16 +190,14 @@ struct InspectorProperties<Editor: View, MenuItems: View>: View {
     .foregroundStyle(.secondary)
     .padding(.horizontal, LorvexDesign.Spacing.s)
     .padding(.vertical, LorvexDesign.Spacing.xs)
-    .overlay(
-      Capsule().strokeBorder(.secondary.opacity(0.45), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-    )
+    .background(hovering ? LorvexDesign.Palette.hoverFill : .clear, in: Capsule())
+    .overlay {
+      if contrast == .increased {
+        Capsule().strokeBorder(.secondary, lineWidth: 1)
+      }
+    }
     .contentShape(Capsule())
-  }
-
-  private func presentation(for id: String) -> Binding<Bool> {
-    Binding(
-      get: { editingID == id },
-      set: { if !$0, editingID == id { editingID = nil } })
+    .onHover { hovering = $0 }
   }
 }
 

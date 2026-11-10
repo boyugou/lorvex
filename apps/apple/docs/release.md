@@ -285,7 +285,10 @@ checks the toolchain and the credentials before anything builds.
    builds. Run the AppMetadata tests and commit.
 4. `script/release_testflight.sh validate <log-dir>` archives and signs both
    channels and has App Store Connect validate each package, without
-   uploading (about 15 minutes). Then `script/release_testflight.sh deliver
+   uploading (about 15 minutes). The archives compile the working tree, so
+   leave it untouched until validate finishes: an edit made while it runs can
+   land in a package whose build commit does not contain it. Then
+   `script/release_testflight.sh deliver
    <log-dir>` uploads exactly those packages, refuses an iOS package of another
    build number, and prints the two delivery ids. `upload` does both in one
    run. Each channel stops at its first failing step, and a step that fails
@@ -412,9 +415,9 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 138 went up on
-  2026-11-09, so it stops installing around 2027-02-07. Upload a fresh build by
-  2027-01-24 (the steps above), even without a product change, while testers
+- **TestFlight builds expire 90 days after upload.** Build 140 went up on
+  2026-11-10, so it stops installing around 2027-02-08. Upload a fresh build by
+  2027-01-25 (the steps above), even without a product change, while testers
   still use TestFlight.
 - **Signing material.** The Apple Distribution and Mac installer certificates,
   and every iOS and Mac App Store profile that embeds them, expire on

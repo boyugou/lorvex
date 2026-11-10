@@ -35,7 +35,7 @@ struct MobileStoreTaskDetailView: View {
       timeZone: store.logicalTimeZone,
       logicalDay: store.logicalTodayString,
       toggleChecklistItem: toggleChecklistItem,
-      addChecklistItem: { text in _ = await addChecklistItem(text) },
+      addChecklistItem: addChecklistItem,
       removeChecklistItem: { item in _ = await removeChecklistItem(item) },
       addReminder: { date in _ = await addReminder(date) },
       removeReminder: { reminder in _ = await removeReminder(reminder) },

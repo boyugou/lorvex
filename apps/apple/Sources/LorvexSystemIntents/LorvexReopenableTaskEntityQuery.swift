@@ -4,13 +4,9 @@ import LorvexCore
 struct LorvexReopenableTaskEntityQuery: EntityQuery, EntityStringQuery {
   func entities(for identifiers: [LorvexReopenableTaskEntity.ID]) async throws -> [LorvexReopenableTaskEntity] {
     let core = LorvexCoreRuntimeFactory.makeForAppIntent()
-    var entities: [LorvexReopenableTaskEntity] = []
-    for id in identifiers {
-      if let entity = try? await Self.entity(id: id, core: core) {
-        entities.append(entity)
-      }
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.entities(for: identifiers, core: core)
     }
-    return entities
   }
 
   func suggestedEntities() async throws -> [LorvexReopenableTaskEntity] {
@@ -32,6 +28,23 @@ struct LorvexReopenableTaskEntityQuery: EntityQuery, EntityStringQuery {
     core: any LorvexCoreServicing
   ) async throws -> LorvexReopenableTaskEntity {
     LorvexReopenableTaskEntity(task: try await core.loadTask(id: id))
+  }
+
+  /// Each identifier's task, in the order asked. An identifier whose task no
+  /// longer exists is left out; any other failure fails the query.
+  static func entities(
+    for identifiers: [LorvexReopenableTaskEntity.ID],
+    core: any LorvexCoreServicing
+  ) async throws -> [LorvexReopenableTaskEntity] {
+    var entities: [LorvexReopenableTaskEntity] = []
+    for id in identifiers {
+      do {
+        entities.append(try await entity(id: id, core: core))
+      } catch LorvexCoreError.taskNotFound {
+        continue
+      }
+    }
+    return entities
   }
 
   static func suggestedEntities(core: any LorvexCoreServicing) async throws -> [LorvexReopenableTaskEntity] {

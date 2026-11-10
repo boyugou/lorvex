@@ -110,11 +110,17 @@ extension AppStore {
   /// enabled and focused throughout. The fan-out (Spotlight, reminders, badge,
   /// widget, one sync cycle) runs after the commit and never gates the next
   /// line.
-  func createInlineTask(_ text: String, destination: InlineCaptureDestination) async {
-    guard let trimmed = text.trimmedNilIfEmpty else { return }
-    guard await commitSerialized(trimmed, destination: destination) != nil else { return }
+  ///
+  /// Returns whether the task was created. `false` means a blank line or a
+  /// failed write (the error has already been presented), so the row can put
+  /// the line back instead of losing it.
+  @discardableResult
+  func createInlineTask(_ text: String, destination: InlineCaptureDestination) async -> Bool {
+    guard let trimmed = text.trimmedNilIfEmpty else { return false }
+    guard await commitSerialized(trimmed, destination: destination) != nil else { return false }
     feedbackProvider.playFeedback(.captureSubmitted)
     await publishAfterTaskCreate()
+    return true
   }
 
   /// Commit `trimmed` after every capture line committed before it, so lines

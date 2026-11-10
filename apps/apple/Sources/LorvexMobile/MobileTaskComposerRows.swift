@@ -10,9 +10,11 @@ private let composerAddTapOutset: CGFloat = 11
 /// Item" row, takes keyboard focus on appear, and stays open after each added
 /// item so several can be typed in a row. It asks the host to dismiss it when
 /// focus leaves with nothing typed: a tap elsewhere, a scroll that hides the
-/// keyboard, or Return on an empty field.
+/// keyboard, or Return on an empty field. The host answers whether the item was
+/// added; an item that was not comes back into the field when nothing has been
+/// typed since.
 struct MobileChecklistComposerRow: View {
-  let addChecklistItem: (String) async -> Void
+  let addChecklistItem: (String) async -> Bool
   let dismiss: () -> Void
 
   @State private var text = ""
@@ -65,8 +67,22 @@ struct MobileChecklistComposerRow: View {
       return
     }
     text = ""
-    Task { await addChecklistItem(trimmed) }
+    Task {
+      let added = await addChecklistItem(trimmed)
+      if let restored = Self.restoredText(item: trimmed, added: added, current: text) {
+        text = restored
+      }
+    }
     isFocused = true
+  }
+
+  /// The text to put back in the field once the host has answered for `item`,
+  /// or `nil` to leave the field as it is. An item that was not added returns
+  /// only while the field is still empty: the user may already be typing the
+  /// next item, and that is never overwritten.
+  static func restoredText(item: String, added: Bool, current: String) -> String? {
+    guard !added, current.isEmpty else { return nil }
+    return item
   }
 }
 

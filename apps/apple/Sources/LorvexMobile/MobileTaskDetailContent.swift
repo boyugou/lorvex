@@ -21,7 +21,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   /// are named relative to.
   let logicalDay: String
   let toggleChecklistItem: ((TaskChecklistItem) async -> Void)?
-  let addChecklistItem: ((String) async -> Void)?
+  let addChecklistItem: ((String) async -> Bool)?
   let removeChecklistItem: ((TaskChecklistItem) async -> Void)?
   let addReminder: ((Date) async -> Void)?
   let removeReminder: ((TaskReminder) async -> Void)?
@@ -58,7 +58,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     timeZone: TimeZone = .autoupdatingCurrent,
     logicalDay: String,
     toggleChecklistItem: ((TaskChecklistItem) async -> Void)? = nil,
-    addChecklistItem: ((String) async -> Void)? = nil,
+    addChecklistItem: ((String) async -> Bool)? = nil,
     removeChecklistItem: ((TaskChecklistItem) async -> Void)? = nil,
     addReminder: ((Date) async -> Void)? = nil,
     removeReminder: ((TaskReminder) async -> Void)? = nil,

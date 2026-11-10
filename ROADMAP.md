@@ -62,9 +62,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     (`delegateTask`, `returnDelegatedTask`, `clearTaskDelegation`,
     `delegatedTaskCount`), and `delegation` on every task the core returns.
     A backup leaves delegations out (`BackupWholeStoreRoundTripTests`): a
-    restored task is the person's own. Still to do: the MCP tools and the
-    `list_tasks` filter, the Mac and iPhone action and row marker with their
-    strings, and the docs (operating model, features, server instructions).
+    restored task is the person's own. The MCP surface is in too:
+    `delegate_task`, `return_task`, `clear_task_delegation`, the `delegation`
+    filter on `list_tasks`, `delegation` on every task object (its `request`
+    fenced as user text), two counts in `get_overview`'s compact stats, one
+    line in the server instructions, and `routines` among `write_memory`'s
+    typical keys. Still to do: the Mac and iPhone action and row marker with
+    their strings in every language.
 - Undo an assistant's change: the tool shipped (`undo_ai_change`, 2026-10-13):
   an assistant takes back its own update to a task or a one-off calendar event
   from the `ai_changelog` snapshots, restoring only the fields that still hold

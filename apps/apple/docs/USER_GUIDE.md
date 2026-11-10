@@ -3686,6 +3686,7 @@ The MCP host exposes tools across these domains:
 | **Recurrence** | `set_task_recurrence`, `remove_task_recurrence`, `add_task_recurrence_exception`, `remove_task_recurrence_exception` |
 | **Reminders** | `add_task_reminder`, `set_task_reminders`, `remove_task_reminder`, `get_due_task_reminders`, `get_upcoming_task_reminders` |
 | **AI context** | `set_task_ai_notes`, `set_list_ai_notes` |
+| **Tasks handed to the assistant** | `delegate_task`, `return_task`, `clear_task_delegation` |
 | **Dependencies** | `get_dependency_graph`, `get_upcoming_tasks` |
 | **Data export** | `export_data` |
 | **Preferences** | `get_all_preferences`, `get_preference`, `set_preference`, `delete_preference`, `complete_setup` |

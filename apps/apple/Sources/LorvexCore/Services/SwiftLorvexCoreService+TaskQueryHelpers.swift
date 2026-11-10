@@ -105,6 +105,18 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  /// Map the `delegation` list argument to the store's hand-off filter:
+  /// `assistant` and `returned` select that state, `any` either state, and nil
+  /// or anything else applies no filter.
+  static func delegationFilter(_ value: String?) -> TaskRepo.DelegationFilter {
+    switch value.trimmedNilIfEmpty?.lowercased() {
+    case "any": return .delegated
+    case "assistant": return .inState(.assistant)
+    case "returned": return .inState(.returned)
+    default: return .unconstrained
+    }
+  }
+
   static func taskListSortBy(_ value: String) -> TaskRepo.TaskListSortBy {
     switch value {
     case "due_date": return .dueDate

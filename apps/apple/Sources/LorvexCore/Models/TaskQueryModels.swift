@@ -85,6 +85,10 @@ public struct TaskListQueryRequest: Equatable, Sendable {
   public var plannedPresence: String?
   public var blockedOnly: Bool
   public var blockingOthers: Bool
+  /// The task's hand-off to the person's assistant: `assistant` (the assistant
+  /// holds it), `returned` (the assistant handed it back), `any` (handed over,
+  /// in either state), or nil for no filter.
+  public var delegation: String?
   public var sortBy: String
   public var sortDirection: String
   public var limit: Int
@@ -115,6 +119,7 @@ public struct TaskListQueryRequest: Equatable, Sendable {
     plannedPresence: String? = nil,
     blockedOnly: Bool = false,
     blockingOthers: Bool = false,
+    delegation: String? = nil,
     sortBy: String = "priority_due",
     sortDirection: String = "asc",
     limit: Int = 100,
@@ -144,6 +149,7 @@ public struct TaskListQueryRequest: Equatable, Sendable {
     self.plannedPresence = plannedPresence
     self.blockedOnly = blockedOnly
     self.blockingOthers = blockingOthers
+    self.delegation = delegation
     self.sortBy = sortBy
     self.sortDirection = sortDirection
     self.limit = limit

@@ -40,6 +40,7 @@ extension ToolRegistry {
         arguments["blocked_only"], field: "blocked_only", default: false),
       blockingOthers: try StrictScalarArguments.bool(
         arguments["blocking_others"], field: "blocking_others", default: false),
+      delegation: try string("delegation").flatMap(\.trimmedNilIfEmpty),
       sortBy: try StrictScalarArguments.string(
         arguments["sort_by"], field: "sort_by", default: "priority_due"),
       sortDirection: try StrictScalarArguments.string(

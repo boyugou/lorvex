@@ -110,8 +110,9 @@ device.
 4. **`ai_notes` is AI-only. Never human-editable in the UI.**
    The `aiNotesContent(task:)` view in `TaskDetailNotesSection.swift` renders
    read-only with a visual distinction (tinted background, italic rendering). No
-   `TextField` for ai_notes anywhere in the UI. The MCP `set_task_ai_notes` tool is
-   the only write path.
+   `TextField` for ai_notes anywhere in the UI. The MCP tools `set_task_ai_notes`
+   and `return_task` (the result an assistant hands back with a task) are the
+   only write paths.
 5. **Idempotency-key + checksum mismatch is always rejected.**
    Reusing an idempotency key with a different payload is an error, not a replay.
    The MCP host's process cache is an optimization; the authoritative guard is

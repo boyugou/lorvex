@@ -16,7 +16,14 @@ extension CoreBridgeClient {
     return .object(["preferences": .object(preferences)])
   }
 
-  static func overviewCompactValue(from snapshot: OverviewCompactSnapshot) -> Value {
+  /// The compact overview. `delegatedToAssistantCount` counts the open tasks
+  /// handed to the assistant that wait for it; `returnedByAssistantCount` the
+  /// ones it handed back that wait for the user.
+  static func overviewCompactValue(
+    from snapshot: OverviewCompactSnapshot,
+    delegatedToAssistantCount: Int,
+    returnedByAssistantCount: Int
+  ) -> Value {
     .object([
       "date": .string(snapshot.date),
       "stats": .object([
@@ -25,6 +32,8 @@ extension CoreBridgeClient {
         "today_pool_count": .int(snapshot.stats.todayPoolCount),
         "attention_count": .int(snapshot.stats.attentionCount),
         "upcoming_week_count": .int(snapshot.stats.upcomingWeekCount),
+        "delegated_to_assistant_count": .int(delegatedToAssistantCount),
+        "returned_by_assistant_count": .int(returnedByAssistantCount),
       ]),
       "top_tasks": .array(
         snapshot.topTasks.map { task in

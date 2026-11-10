@@ -2,7 +2,7 @@
 
 Status tags: `[SHIPPED]` = present and functional, `[PARTIAL]` = code present but incomplete or has known gaps, `[PLANNED]` = not yet built.
 
-MCP tool count: 117. Scoped calendar edit/delete tools are Apple-specific. Apple Swift is the only Apple ecosystem shipping line for macOS App Store, iOS, iPadOS, watchOS, CloudKit/iCloud, WidgetKit, and App Intents.
+MCP tool count: 120. Scoped calendar edit/delete tools are Apple-specific. Apple Swift is the only Apple ecosystem shipping line for macOS App Store, iOS, iPadOS, watchOS, CloudKit/iCloud, WidgetKit, and App Intents.
 
 ---
 
@@ -73,6 +73,9 @@ All tools are implemented in `LorvexMCPHost`. The host runs `SwiftLorvexCoreServ
 
 ### Task Tools — Write
 `create_task`, `update_task`, `cancel_task`, `defer_task`, `reopen_task`, `complete_task`, `start_task`, `pause_task`, `move_task_to_list`, `set_task_someday`, `archive_task`, `unarchive_task`, `append_to_task_body`, `set_task_ai_notes`, `set_list_ai_notes`
+
+### Tasks Handed to the Assistant
+`delegate_task`, `return_task`, `clear_task_delegation`. A task the user hands to their assistant carries `delegation` (`state` `assistant` or `returned`, the user's `request`, `since`) in every task object; `list_tasks` filters on it (`delegation`: `assistant`, `returned`, `any`), and `get_overview`'s compact stats count both states (`delegated_to_assistant_count`, `returned_by_assistant_count`). `return_task` writes what the assistant did into the task's AI notes and leaves the task open for the user to confirm.
 
 ### Task Batch Tools
 `batch_create_tasks`, `batch_update_tasks`, `batch_complete_tasks`, `batch_cancel_tasks`, `batch_cancel_tasks_in_list`, `batch_defer_tasks`, `batch_reopen_tasks`, `batch_move_tasks`, `permanent_delete_task`

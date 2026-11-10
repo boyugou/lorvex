@@ -144,6 +144,7 @@ struct MCPResponseFencingSweepTests {
     "listName", "listDescription", "listAiNotes", "listAiNotesAgain",
     "taskTitle", "taskNotes", "taskTag", "taskAiNotes", "rawInput", "checklistItem",
     "appendedBody", "blockedTitle", "deferNote", "batchDeferNote",
+    "delegationRequest", "delegationResult",
     "habitName", "habitCue",
     "eventTitle", "eventNotes", "eventLocation", "eventPerson", "attendeeName",
     "memoryKey", "memoryContent",
@@ -263,6 +264,11 @@ struct MCPResponseFencingSweepTests {
         ]))
     _ = try await call(
       "set_task_ai_notes", ["task_id": .string(data.task), "notes": Self.text("taskAiNotes")])
+    // The hand-off stays on the task, so every read of it carries the request.
+    _ = try await call(
+      "delegate_task", ["id": .string(data.task), "request": Self.text("delegationRequest")])
+    _ = try await call(
+      "return_task", ["id": .string(data.task), "result": Self.text("delegationResult")])
     _ = try await call(
       "append_to_task_body", ["task_id": .string(data.task), "text": Self.text("appendedBody")])
     _ = try await call(
@@ -442,6 +448,8 @@ struct MCPResponseFencingSweepTests {
       _ = try await call("remove_task_reminder", ["task_id": task, "reminder_id": .string(reminder)])
     }
 
+    _ = try await call("clear_task_delegation", ["id": task])
+
     // Lifecycle
     for tool in ["pause_task", "set_task_someday", "reopen_task", "start_task", "complete_task"] {
       _ = try await call(tool, ["id": task])
@@ -592,6 +600,7 @@ struct MCPResponseFencingSweepTests {
       ("list_all_tags", [:]),
       ("list_tasks", [:]),
       ("list_tasks", ["shape": "full"]),
+      ("list_tasks", ["delegation": "any"]),
       ("propose_daily_schedule", ["date": "2026-05-30"]),
       ("read_memory", [:]),
       ("search_calendar_events", ["query": "zq"]),

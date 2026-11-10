@@ -149,6 +149,7 @@ extension SwiftLorvexCoreService {
         text: request.text.trimmedNilIfEmpty,
         blocking: .fromFlags(
           blockedOnly: request.blockedOnly, blockingOthers: request.blockingOthers),
+        delegation: Self.delegationFilter(request.delegation),
         sortBy: Self.taskListSortBy(request.sortBy),
         sortDirection: Self.sortDirection(request.sortDirection),
         limit: UInt32(clampedLimit),

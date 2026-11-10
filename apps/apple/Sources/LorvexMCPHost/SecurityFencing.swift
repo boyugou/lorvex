@@ -121,6 +121,8 @@ enum SecurityFencing {
     "wins", "blockers", "learnings", "quote", "defer_note",
     "comment", "location", "person_name", "habit_name", "email",
     "details",
+    // What the user asked the assistant to do when handing a task over.
+    "request",
     // A user-supplied link the calendar bridge echoes verbatim. Recurrence is a
     // typed object of system-controlled enums/ints/dates (freq, byday, until,
     // count), not free text, so it is never fenced.

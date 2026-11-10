@@ -50,6 +50,18 @@ enum TaskToolDefinitions {
     .write(73, TaskMutationToolCatalog.setTaskAINotesTool) {
       try await $0.setTaskAINotesResult(arguments: $1)
     },
+    // Listing orders 117–119: handing a task to the assistant, appended to the
+    // contiguous global order while grouped with the AI-notes tool whose block
+    // return_task writes.
+    .write(117, TaskMutationToolCatalog.delegateTaskTool) {
+      try await $0.delegateTaskResult(arguments: $1)
+    },
+    .write(118, TaskMutationToolCatalog.returnTaskTool) {
+      try await $0.returnTaskResult(arguments: $1)
+    },
+    .write(119, TaskMutationToolCatalog.clearTaskDelegationTool) {
+      try await $0.clearTaskDelegationResult(arguments: $1)
+    },
     .write(74, TaskMutationToolCatalog.completeTaskTool) {
       try await $0.completeTaskResult(arguments: $1)
     },

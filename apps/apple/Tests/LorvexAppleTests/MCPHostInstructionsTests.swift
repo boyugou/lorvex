@@ -16,8 +16,12 @@ struct MCPHostInstructionsTests {
     #expect(unknown.isEmpty, "Unknown identifiers: \(unknown.sorted())")
   }
 
+  /// The cap sits above 3,000 characters because tasks handed to the assistant
+  /// are a capability no tool description can introduce: an assistant has to
+  /// learn, before it reads any tool, that it should look for them and hand
+  /// them back. The rest of the text was tightened first to make room.
   @Test("the instructions stay short enough to ride in every session's context")
   func instructionsStayShort() {
-    #expect(MCPHostInstructions.text.count < 3_000)
+    #expect(MCPHostInstructions.text.count < 3_200)
   }
 }

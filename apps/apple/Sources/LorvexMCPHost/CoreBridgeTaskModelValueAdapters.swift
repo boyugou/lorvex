@@ -89,11 +89,13 @@ struct TaskValueOptions: Sendable, Equatable {
     }
   }
 
+  /// A compact row drops null values, so `delegation` shows only on a task
+  /// handed to the assistant: the rows an assistant scans for.
   private static let compactDefaultFields: Set<String> = [
     "id", "title", "priority", "priority_label", "status", "list_id", "estimated_minutes",
     "due_date", "planned_date", "planned_start_time", "planned_end_time", "available_from",
     "tags", "defer_count", "last_defer_reason", "last_deferred_at", "created_at", "updated_at",
-    "completed_at",
+    "completed_at", "delegation",
   ]
 
   private static func group(for key: String) -> String {
@@ -129,7 +131,7 @@ struct TaskValueOptions: Sendable, Equatable {
     "planned_start_time", "planned_end_time", "available_from", "recurrence", "recurrence_exceptions", "tags", "depends_on",
     "checklist_items", "reminders", "lateness_state", "defer_count",
     "last_defer_reason", "last_deferred_at", "created_at", "updated_at",
-    "completed_at",
+    "completed_at", "delegation",
   ]
 
   /// Every valid `include` value: the field-group names plus the individual field
@@ -209,7 +211,20 @@ extension CoreBridgeClient {
     fields["created_at"] = task.createdAt.map(Value.string) ?? .null
     fields["updated_at"] = task.updatedAt.map(Value.string) ?? .null
     fields["completed_at"] = task.completedAt.map(Value.string) ?? .null
+    fields["delegation"] = task.delegation.map(delegationValue(from:)) ?? .null
     return .object(options.filtered(fields))
+  }
+
+  /// A task's hand-off to the assistant: `state` (`assistant` while the
+  /// assistant holds the task, `returned` once it handed the task back),
+  /// `request` (what the user asked for, in their words, or null), and `since`
+  /// (when the task was handed over).
+  private static func delegationValue(from delegation: LorvexTaskDelegation) -> Value {
+    .object([
+      "state": .string(delegation.state.rawValue),
+      "request": delegation.request.map(Value.string) ?? .null,
+      "since": delegation.since.map(Value.string) ?? .null,
+    ])
   }
 
   static func taskValues(from tasks: [LorvexTask], options: TaskValueOptions = .full) -> Value {

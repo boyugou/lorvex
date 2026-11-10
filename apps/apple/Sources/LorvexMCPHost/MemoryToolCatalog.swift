@@ -33,7 +33,7 @@ enum MemoryToolCatalog {
   static let writeMemoryTool = Tool(
     name: "write_memory",
     title: "Write Memory",
-    description: "Write or update a named section of persistent AI memory. Use to record user preferences, work patterns, list scope summaries, or context that should survive across sessions. Typical keys: user_profile, list_summaries, behavioral_patterns, recent_activity, pending_followups. Returns the written memory entry.",
+    description: "Write or update a named section of persistent AI memory. Use to record user preferences, work patterns, list scope summaries, or context that should survive across sessions. Typical keys: user_profile, list_summaries, behavioral_patterns, recent_activity, pending_followups, and routines (how the user wants a recurring job done, such as their morning plan; update it when the user corrects how you did it). Returns the written memory entry.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

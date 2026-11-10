@@ -34,6 +34,9 @@ extension CoreBridgeClient {
   }
 
   func loadOverviewCompact() async throws -> Value {
-    Self.overviewCompactValue(from: try await service.getOverviewCompact())
+    Self.overviewCompactValue(
+      from: try await service.getOverviewCompact(),
+      delegatedToAssistantCount: try await service.delegatedTaskCount(state: .assistant),
+      returnedByAssistantCount: try await service.delegatedTaskCount(state: .returned))
   }
 }

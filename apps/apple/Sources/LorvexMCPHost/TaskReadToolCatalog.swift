@@ -5,7 +5,7 @@ extension TaskToolCatalog {
     name: "get_task",
     title: "Get Task",
     description:
-      "Read one Lorvex task with enriched detail such as tags, dependencies, checklist items, reminders, lateness state, and a read-only defer_history (recent defer events with their structured reason and any free-text note, newest first).",
+      "Read one Lorvex task with enriched detail such as tags, dependencies, checklist items, reminders, lateness state, delegation (whether the user handed the task to you, as list_tasks describes), and a read-only defer_history (recent defer events with their structured reason and any free-text note, newest first).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -23,8 +23,9 @@ extension TaskToolCatalog {
     name: "list_tasks",
     title: "List Tasks",
     description:
-      "Read a bounded page of Lorvex tasks. This is the primary task-context tool for planning and review: filter by status, list, priority, tags, text, lifecycle dates, due/planned/scheduled dates, and dependency state. "
-      + "Default task rows are compact and omit null/empty heavy fields to save agent context. Use shape=full for complete rows, fields for exact fields, or include for field groups such as notes, ai_notes, dependencies, checklist, reminders, recurrence, defer, and lateness.",
+      "Read a bounded page of Lorvex tasks. This is the primary task-context tool for planning and review: filter by status, list, priority, tags, text, lifecycle dates, due/planned/scheduled dates, dependency state, and whether the user handed the task to you (delegation). "
+      + "Default task rows are compact and omit null/empty heavy fields to save agent context. Use shape=full for complete rows, fields for exact fields, or include for field groups such as notes, ai_notes, dependencies, checklist, reminders, recurrence, defer, and lateness. "
+      + "A task handed to you carries delegation {state, request, since}: state is assistant while you hold it and returned once you handed it back with return_task; request is what the user asked for, or null; since is when it was handed over. A task the user kept has delegation null, which compact rows omit.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -140,6 +141,13 @@ extension TaskToolCatalog {
         "blocking_others": .object([
           "type": .string("boolean"),
           "description": .string("Only return tasks that block at least one active dependent task."),
+        ]),
+        "delegation": .object([
+          "type": .string("string"),
+          "enum": .array([.string("assistant"), .string("returned"), .string("any")]),
+          "description": .string(
+            "Only return tasks the user handed to you: assistant for the ones waiting for you to work on them, returned for the ones you handed back that wait for the user, any for both. Omit it to apply no delegation filter. Combines with status, which defaults to actionable."
+          ),
         ]),
         "sort_by": .object([
           "type": .string("string"),

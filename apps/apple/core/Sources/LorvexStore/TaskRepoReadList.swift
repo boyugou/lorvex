@@ -130,10 +130,22 @@ extension TaskRepo {
     }
   }
 
+  /// Selector over a task's hand-off to the person's assistant: its
+  /// `task_delegations` row for ``TaskDelegationAssignee/assistant``.
+  public enum DelegationFilter: Sendable, Equatable {
+    /// No constraint: tasks handed over and tasks that are not alike.
+    case unconstrained
+    /// Only tasks handed to the assistant, whichever state the hand-off is in.
+    case delegated
+    /// Only tasks handed to the assistant whose hand-off is in this state.
+    case inState(TaskDelegationState)
+  }
+
   /// All filters + sort + pagination for ``TaskRepo/Read/listTasks(_:query:)``.
   /// Defaults: `status = .open`,
   /// `sortBy = .priorityDue`, `sortDirection = .asc`, `limit = 100`,
-  /// `offset = 0`, all ranges/presence/blocking unfiltered, no tags, no text.
+  /// `offset = 0`, all ranges/presence/blocking/delegation unfiltered, no tags,
+  /// no text.
   public struct ListTasksQuery: Sendable, Equatable {
     public var listId: String?
     public var status: TaskStatusListFilter
@@ -164,6 +176,7 @@ extension TaskRepo {
     public var tags: [String]
     public var text: String?
     public var blocking: BlockingFilter
+    public var delegation: DelegationFilter
     public var sortBy: TaskListSortBy
     public var sortDirection: SortDirection
     public var limit: UInt32
@@ -187,6 +200,7 @@ extension TaskRepo {
       tags: [String] = [],
       text: String? = nil,
       blocking: BlockingFilter = .any,
+      delegation: DelegationFilter = .unconstrained,
       sortBy: TaskListSortBy = .priorityDue,
       sortDirection: SortDirection = .asc,
       limit: UInt32 = 100,
@@ -209,6 +223,7 @@ extension TaskRepo {
       self.tags = tags
       self.text = text
       self.blocking = blocking
+      self.delegation = delegation
       self.sortBy = sortBy
       self.sortDirection = sortDirection
       self.limit = limit
@@ -401,6 +416,22 @@ extension TaskRepo.Read {
         + "  AND dependent.status IN (\(activeList)) "
         + "  AND dependent.archived_at IS NULL"
         + ")"
+    }
+
+    let delegated =
+      " AND EXISTS ("
+      + "SELECT 1 FROM task_delegations d "
+      + "WHERE d.task_id = tasks.id AND d.assignee = ?"
+    switch query.delegation {
+    case .unconstrained:
+      break
+    case .delegated:
+      out += delegated + ")"
+      values.append(TaskDelegationAssignee.assistant)
+    case .inState(let state):
+      out += delegated + " AND d.state = ?)"
+      values.append(TaskDelegationAssignee.assistant)
+      values.append(state.rawValue)
     }
   }
 

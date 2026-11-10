@@ -110,8 +110,10 @@ MCP calls:
 - It estimates duration by task type: a phone call is about 15 minutes,
   writing about 2 hours.
 - It stores the user's words as `raw_input`, so the user can check the parse.
-- It records non-obvious reasoning with `set_task_ai_notes`, the only write
-  path for a task's AI notes. Obvious choices need no note.
+- It records non-obvious reasoning with `set_task_ai_notes`, which replaces
+  the task's AI notes. The only other tool that writes them is `return_task`,
+  with the result of work the user handed over ([Pattern 7](#pattern-7-work-the-user-handed-over)).
+  Obvious choices need no note.
 
 ### Pattern 2: Ambiguous extraction
 
@@ -308,6 +310,55 @@ MCP calls:
 2. update_task({ id: task_3, due_date: "2026-03-01" })
 ```
 
+### Pattern 7: Work the user handed over
+
+**Trigger:** any session, or a wake the assistant schedules for itself. A
+personal assistant checks Lorvex on its own, the way it checks mail; Lorvex
+never starts or calls it. The user hands a task over in the app, or says so in
+conversation ("you handle this", "find me a slot"), and the assistant records
+that with `delegate_task`, passing the user's words as `request`.
+
+```
+Reads:
+1. get_overview()                           →  stats.delegated_to_assistant_count: 1
+2. list_tasks({ delegation: "assistant" })  →  "Book the dentist", with delegation
+                                               { state: "assistant",
+                                                 request: "Find a morning slot", since }
+3. get_task(dentist)                        →  its notes and AI notes
+
+The work happens with the assistant's own other tools: its calendar shows
+Tuesday 9:00 and Thursday 8:30 free, and the practice's booking page lists
+Tuesday 9:00.
+
+Writes:
+4. return_task({ id: dentist, result: "Tuesday 9:00 is free on your calendar
+     and at the practice; Thursday 8:30 is the fallback. Left for you: confirm
+     the time, and I will book it, or book it yourself." })
+     →  delegation.state is now "returned", and the result is the task's AI notes
+```
+
+**Key behaviors:**
+- The assistant never completes a task it was handed unless the task says it
+  may. `return_task` leaves the task open; the user reads the result, then
+  completes the task, hands it over again, or takes it back.
+- A second wake finds the task already returned and does nothing:
+  `list_tasks` with `delegation: "assistant"` no longer lists it, so no work is
+  redone, and restating `return_task` with the same result changes nothing.
+- When the request is unclear or the work needs a decision, the assistant
+  asks through the result and hands the task back instead of guessing. The
+  user answers by handing it over again with a new request.
+- The result replaces the task's AI notes: what was done, and what the user
+  still has to decide or do.
+- The tasks handed back (`delegation: "returned"`, counted by
+  `returned_by_assistant_count`) are the user's decisions; in a later
+  conversation the assistant can remind the user of them.
+- `clear_task_delegation` takes a task back with no result: the user changed
+  their mind, the hand-off was a mistake, or the user read the result and
+  keeps the task as their own.
+- How the user wants a recurring job done, such as their morning plan, goes in
+  memory under `routines`; the assistant updates it when the user corrects how
+  the job was done.
+
 ---
 
 ## Decision framework
@@ -376,8 +427,10 @@ Load context in proportion to the request:
    and sync backend. It is cheap; call it whenever dates, times, or working
    hours matter instead of inferring them.
 2. **`get_overview`** returns counts, today's actionable pool, and top tasks
-   (`shape=compact`, the default). `shape=full` adds task objects and the
-   day's briefing.
+   (`shape=compact`, the default). The counts include the tasks the user
+   handed over that wait for the assistant (`delegated_to_assistant_count`),
+   which [Pattern 7](#pattern-7-work-the-user-handed-over) works through.
+   `shape=full` adds task objects and the day's briefing.
 3. **`read_memory`** returns what earlier sessions recorded (see
    [Memory sections](#memory-sections)). Pass `key` or `keys` for specific
    sections.
@@ -405,6 +458,7 @@ open a GitHub issue. Lorvex has no in-app or MCP feedback channel.
 | `behavioral_patterns` | Deferral habits, estimation accuracy, completion rates | Weekly, or when patterns shift |
 | `recent_activity` | What happened in the last few sessions | Every significant session |
 | `pending_followups` | Things noticed but not yet acted on | Every significant session |
+| `routines` | How the user wants a recurring job done, such as their morning plan | When the user corrects how a job was done |
 
 The user can read, edit, and delete memory on the app's Memory page. Write it
 as if the user will read it, because they will: respectful, honest, useful,

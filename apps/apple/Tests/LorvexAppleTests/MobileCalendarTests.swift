@@ -286,6 +286,43 @@ func mobileStorePlansDroppedTaskOntoCalendarDay() async throws {
   #expect(planned.id == LorvexPreviewSeedID.venueTask)
 }
 
+// A drop writes the planned day alone. A change another process (the MCP host,
+// a sync apply) commits after the store's copy of the task was read stays; the
+// stub's read returns the task as it was before that commit. Moving the task to
+// another day clears the time it had on its old day, and planning it for the
+// day it already has keeps its time.
+@MainActor
+@Test
+func mobileStorePlanningADroppedTaskKeepsAChangeCommittedElsewhere() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  let id = try await preview.createTask(title: "Book the venue", notes: "").id
+  try await planTask(preview, id, on: "2026-05-25", time: 9 * 60..<10 * 60)
+  await store.refresh()
+  core.loadTaskOverride = try await preview.loadTask(id: id)
+  _ = try await preview.updateTask(
+    TaskUpdateDraft(id: id, title: "Book the venue, second option", priority: .p1))
+  let targetDay = try #require(ISO8601DateFormatter().date(from: "2026-06-02T12:00:00Z"))
+  let targetKey = LorvexDateFormatters.ymd.string(from: targetDay)
+
+  await store.planTask(id, on: targetDay)
+  core.loadTaskOverride = nil
+
+  #expect(store.errorMessage == nil)
+  let moved = try await preview.loadTask(id: id)
+  #expect(moved.title == "Book the venue, second option")
+  #expect(moved.priority == .p1)
+  #expect(moved.plannedDate.map(LorvexDateFormatters.ymdUTC.string(from:)) == targetKey)
+  #expect(moved.plannedTime == nil)
+
+  try await planTask(preview, id, on: targetKey, time: 14 * 60..<15 * 60)
+  await store.planTask(id, on: targetDay)
+
+  #expect(store.errorMessage == nil)
+  #expect(try await preview.loadTask(id: id).plannedTime == 14 * 60..<15 * 60)
+}
+
 // MARK: - Drag-to-reschedule (iPhone day-view long-press-then-drag)
 
 @MainActor
@@ -317,6 +354,46 @@ func mobileStoreReschedulesTimedEventPreservingDuration() async throws {
   #expect(updated.endTime == "15:30")
   #expect(updated.title == "Strategy session")
   #expect(store.errorMessage == nil)
+}
+
+// The drag carries the block as the day view drew it; a title or location
+// changed elsewhere after that must survive the drop, which writes only times.
+@MainActor
+@Test
+func mobileStoreRescheduleKeepsATitleAndLocationChangedAfterTheBlockWasDrawn() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let logicalDay = try #require(try await core.loadToday().logicalDay)
+  let store = MobileStore(core: core, todayString: { logicalDay })
+  let created = try await core.createCalendarEvent(
+    title: "Strategy session",
+    startDate: logicalDay,
+    endDate: nil,
+    startTime: "09:00",
+    endTime: "10:30",
+    allDay: false,
+    location: "Room 4",
+    notes: nil
+  )
+  await store.refresh()
+  let drawn = try #require(store.calendarTimeline?.events.first { $0.id == created.id })
+  _ = try await core.updateCalendarEvent(
+    id: created.id, title: "Strategy session, moved rooms", startDate: nil, endDate: nil,
+    startTime: nil, endTime: nil, allDay: nil, location: "Room 9", notes: nil)
+
+  let ok = await store.rescheduleCalendarEvent(
+    drawn,
+    newStart: try localDate(on: logicalDay, hour: 14, minute: 0),
+    newEnd: try localDate(on: logicalDay, hour: 15, minute: 30))
+
+  #expect(ok)
+  #expect(store.errorMessage == nil)
+  let stored = try #require(await core.getCalendarEvent(id: created.id))
+  #expect(stored.startTime == "14:00")
+  #expect(stored.endTime == "15:30")
+  #expect(stored.title == "Strategy session, moved rooms")
+  #expect(stored.location == "Room 9")
+  let shown = store.calendarTimeline?.events.first { $0.id == created.id }
+  #expect(shown?.title == "Strategy session, moved rooms")
 }
 
 @MainActor

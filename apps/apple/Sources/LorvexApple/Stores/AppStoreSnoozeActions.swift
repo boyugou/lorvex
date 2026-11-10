@@ -12,26 +12,17 @@ extension AppStore {
     await snoozeTask(id: id, until: date)
   }
 
-  /// Snooze a specific task until `date` by writing `available_from`, preserving
-  /// every other field. Used by the row context menu (`snoozeTask(id:until:)`)
-  /// and the detail actions menu (via ``snoozeSelectedTask(until:)``). Inert for
-  /// resolved (completed / cancelled) tasks.
+  /// Snooze a specific task until `date` by writing `available_from` alone, so
+  /// every other field keeps the value stored when the write lands, including
+  /// one another process changed after the status check read the task. Used by
+  /// the row context menu (`snoozeTask(id:until:)`) and the detail actions menu
+  /// (via ``snoozeSelectedTask(until:)``). Inert for resolved (completed /
+  /// cancelled) tasks.
   func snoozeTask(id: LorvexTask.ID, until date: Date) async {
     await perform {
       let task = try await core.loadTask(id: id)
       guard !task.status.isResolved else { return }
-      let updated = try await core.updateTask(
-        id: id,
-        title: task.title,
-        notes: task.notes,
-        priority: task.priority,
-        estimatedMinutes: task.estimatedMinutes,
-        dueDate: task.dueDate,
-        plannedDate: task.plannedDate,
-        availableFrom: date,
-        tags: task.tags,
-        dependsOn: task.dependsOn
-      )
+      let updated = try await core.updateTask(TaskUpdateDraft(id: id, availableFrom: .set(date)))
       replaceTask(updated)
       let refreshed = try await core.loadToday()
       feedbackProvider.playFeedback(.taskDeferred)

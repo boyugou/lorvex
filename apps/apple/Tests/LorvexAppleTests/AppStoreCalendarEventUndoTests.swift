@@ -115,6 +115,27 @@ func undoingAMoveLeavesATitleEditedAfterwardsAlone() async throws {
   #expect(restored.location == "Room 9")
 }
 
+// The grid hands the move the event as it drew it; a title or location changed
+// elsewhere after that survives the move, which writes only the times.
+@MainActor
+@Test
+func aMoveLeavesATitleEditedAfterTheGridDrewTheEventAlone() async throws {
+  let (store, core, event, today) = try await makeStore()
+  _ = try await core.updateCalendarEvent(
+    id: event.id, title: "Renamed session", startDate: nil, endDate: nil, startTime: nil,
+    endTime: nil, allDay: nil, location: "Room 9", notes: nil)
+
+  await store.rescheduleCalendarEvent(
+    event, newStart: try instant(today, hour: 19), newEnd: try instant(today, hour: 20))
+
+  let moved = try #require(await core.getCalendarEvent(id: event.id))
+  #expect(moved.startTime == "19:00")
+  #expect(moved.endTime == "20:00")
+  #expect(moved.title == "Renamed session")
+  #expect(moved.location == "Room 9")
+  #expect(store.errorMessage == nil)
+}
+
 @MainActor
 @Test
 func undoingAMoveOfADeletedEventDoesNothingAndReportsNoError() async throws {

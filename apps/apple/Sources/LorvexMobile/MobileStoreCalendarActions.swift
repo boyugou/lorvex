@@ -122,8 +122,10 @@ extension MobileStore {
   /// Reschedules an existing calendar event to a new start instant + end
   /// instant. Used by the iPhone day-view drag-to-reschedule gesture (long-
   /// press then drag) so the user can shift an event without opening the
-  /// edit sheet. Keeps title / location / notes / all-day flag intact;
-  /// recurring + non-editable events are silently skipped.
+  /// edit sheet. Writes only the timing: title, location, and notes are sent
+  /// as nil, which leaves each as stored, so one changed elsewhere after the
+  /// block was drawn survives the drop. Recurring + non-editable events are
+  /// silently skipped.
   @discardableResult
   public func rescheduleCalendarEvent(
     _ event: CalendarTimelineEvent,
@@ -142,7 +144,7 @@ extension MobileStore {
     do {
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
-        title: event.title,
+        title: nil,
         startDate: timing.startDate,
         // The end date moves with the drop: the dropped day, or the next one
         // for a drop that runs past midnight. An event that had an end date
@@ -154,7 +156,7 @@ extension MobileStore {
         startTime: timing.startTime,
         endTime: timing.endTime,
         allDay: event.allDay,
-        location: event.location,
+        location: nil,
         notes: nil
       )
       if let index = calendarTimeline?.events.firstIndex(where: { $0.id == updated.id }) {

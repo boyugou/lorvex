@@ -54,6 +54,33 @@ func snoozeIsInertForResolvedTasks() async throws {
   #expect(try await core.loadTask(id: task.id).availableFrom == nil)
 }
 
+// Another process (the MCP host, a sync apply) can commit between the read the
+// snooze makes for its status check and its write. The stub's read returns the
+// task as it was before that commit; the snooze must write `available_from`
+// alone and leave the newer title and planned day in place.
+@MainActor
+@Test
+func snoozeKeepsAChangeCommittedAfterItsStatusRead() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let store = AppStore(core: core)
+  let task = try await preview.createTask(title: "Draft the brief", notes: "")
+  let until = try #require(store.deferStorageDate(daysFromNow: 30))
+  let plannedDay = try #require(store.deferStorageDate(daysFromNow: 40))
+  core.loadTaskOverride = try await preview.loadTask(id: task.id)
+  _ = try await preview.updateTask(
+    TaskUpdateDraft(id: task.id, title: "Draft the brief, second pass", plannedDate: .set(plannedDay)))
+
+  await store.snoozeTask(id: task.id, until: until)
+  core.loadTaskOverride = nil
+
+  let stored = try await preview.loadTask(id: task.id)
+  #expect(stored.availableFrom == until)
+  #expect(stored.title == "Draft the brief, second pass")
+  #expect(stored.plannedDate == plannedDay)
+  #expect(store.errorMessage == nil)
+}
+
 // MARK: - Scheduled section (defer-until / hidden lane)
 
 @MainActor

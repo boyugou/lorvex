@@ -171,15 +171,14 @@ extension AppStore {
     else { return }
     let timing = CalendarEventTiming(start: newStart, end: newEnd, allDay: false)
     let previous = CalendarEventTiming(event: event, fallbackDay: newStart)
-    // Passing `nil` to the core's `updateCalendarEvent(notes:)` keeps the
-    // existing notes column UNCHANGED (the core maps nil → `.unset`).
-    // Passing `""` would overwrite the column to empty and wipe whatever
-    // the user typed in the edit sheet — the drag gesture only changes
-    // start/end, so notes must stay alone.
+    // A nil title, location, or notes leaves that column as stored (the core
+    // maps nil to `.unset`). Sending the grid's copy would write back a title
+    // or location changed elsewhere after the block was drawn, and `""` would
+    // wipe the notes; the drag changes only start and end.
     await perform {
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
-        title: event.title,
+        title: nil,
         startDate: timing.startDate,
         // An event that had an end date and now fits in one day sends its
         // start date: nil keeps the stored end, which would stretch an event
@@ -188,7 +187,7 @@ extension AppStore {
         startTime: timing.startTime,
         endTime: timing.endTime,
         allDay: event.allDay,
-        location: event.location,
+        location: nil,
         notes: notes
       )
       // A temporal-only drag must not clear notes already edited in Calendar;

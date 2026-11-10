@@ -192,21 +192,15 @@ extension MobileStore {
       })
   }
 
+  /// Plan task `id` for the local day `day` falls on (a task dropped on a
+  /// Calendar day). Writes the planned date alone, so every other field keeps
+  /// the value stored when the write lands. A move to another day clears the
+  /// task's planned time; planning it for the day it already has keeps it.
   public func planTask(_ id: LorvexTask.ID, on day: Date) async {
     await mutateTaskReturningTask(id: id) {
-      let task = try await core.loadTask(id: id)
-      return try await core.updateTask(
-        id: task.id,
-        title: task.title,
-        notes: task.notes,
-        priority: task.priority,
-        estimatedMinutes: task.estimatedMinutes,
-        dueDate: task.dueDate,
-        plannedDate: PlannedDayBridge.storageDate(forLocalInstant: day),
-        availableFrom: task.availableFrom,
-        tags: task.tags,
-        dependsOn: task.dependsOn
-      )
+      try await core.updateTask(
+        TaskUpdateDraft(
+          id: id, plannedDate: .set(PlannedDayBridge.storageDate(forLocalInstant: day))))
     }
   }
 

@@ -23,6 +23,38 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   maintenance".
 - watchOS / Widgets design audits (need on-device).
 
+- Hand a task to the assistant (owner approved the idea 2026-11-10; in
+  progress, not released). A task can be handed to the user's own assistant,
+  which works on it with its other tools and hands it back with what it did;
+  the list becomes a queue the person and the assistant share. Decisions:
+  - Storage is a new synced edge, `task_delegation`, keyed `(task_id,
+    assignee)` with a `state` (`assistant` while the assistant holds the
+    task, `returned` once it handed it back); deleting the row takes the task
+    back. It mirrors `habit_completion` (an edge whose left half is an
+    aggregate id, whose right half is a plain string, with one value column),
+    because `schema/sync_payload/README.md` rejects a new field on `task`
+    without a merge adapter. `assignee` is `assistant` for now; the column is
+    a lowercase identifier so named agents can follow without a migration.
+    It needs migration 004 (the table, and `sync_tombstones` rebuilt with the
+    new type), payload manifest 003, and every site that names `habitSkip`
+    (about forty files: `git grep -l habitSkip`), plus the task merge and
+    hard-delete paths.
+  - The assistant's result goes in the task's existing `ai_notes`. The
+    assistant never completes a task it was handed unless the task says it
+    may; the person confirms.
+  - MCP: task objects carry `delegation`; `list_tasks` filters on it;
+    `delegate_task`, `return_task` (result and state in one transaction), and
+    `clear_task_delegation`; `get_overview` counts the tasks waiting for the
+    assistant. `write_memory`'s description gains the key `routines` (how the
+    person wants a recurring job done), which is the whole of "routines as
+    data": a preference note, not a new entity and not MCP prompts.
+  - Apps: one action beside Complete and Defer ("Hand to Assistant", "Take
+    Back"), a marker on the row ("With assistant", "Assistant replied"), on
+    the Mac and the iPhone; four new strings in every language.
+  - Not decided: the Mac running a script the person installed when a task
+    is handed over, so that a tap on the phone starts the agent at home. It
+    would change "no background automation" in the design philosophy, so it
+    waits for the owner.
 - Undo an assistant's change: the tool shipped (`undo_ai_change`, 2026-10-13):
   an assistant takes back its own update to a task or a one-off calendar event
   from the `ai_changelog` snapshots, restoring only the fields that still hold

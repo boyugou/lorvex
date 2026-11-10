@@ -41,7 +41,8 @@
 # (Today with suggested times waiting in the schedule pane), today-event (a
 # timed event from Today's schedule open in the inspector), tasks,
 # tasks-inspector, tasks-inspector-waiting (a task that waits on an unfinished
-# one, so its Start is unavailable), tasks-list (Tasks scoped to the first list
+# one, so its Start is unavailable), tasks-inspector-assistant (a task the
+# assistant handed back, with its reply), tasks-list (Tasks scoped to the first list
 # that is not the Inbox), tasks-search (Tasks searched for a word the notes
 # hold, where the rows quote the notes), lists, calendar, calendar-day,
 # calendar-month, calendar-rail (the week with the Unplanned Tasks rail open),

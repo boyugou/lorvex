@@ -192,6 +192,35 @@ struct MobileTaskActionSection: View {
   }
 }
 
+/// Hand to Assistant and Take Back under a task's detail, as plain rows of
+/// their own section below the action tiles: each only while the task offers
+/// it (``LorvexTaskDelegationAction/available(for:)``), and no section at all
+/// for a task that is not open work.
+struct MobileTaskDelegationSection: View {
+  let task: LorvexTask
+  let isMutating: Bool
+  let delegate: (LorvexTaskDelegationAction) async -> Void
+
+  var body: some View {
+    let actions = LorvexTaskDelegationAction.available(for: task)
+    if !actions.isEmpty {
+      Section {
+        ForEach(actions, id: \.self) { action in
+          Button {
+            Task { await delegate(action) }
+          } label: {
+            Label(MobileTaskActionCopy.delegationAction(action), systemImage: action.systemImage)
+          }
+          .mobileAccentRowStyle()
+          .disabled(isMutating)
+          .accessibilityIdentifier(
+            action == .handToAssistant ? "task.detail.handToAssistant" : "task.detail.takeBack")
+        }
+      }
+    }
+  }
+}
+
 /// The one size the action tiles' names share: the text's own size while
 /// every word of every name fits a tile's width on one line, otherwise the
 /// size at which the widest word fits, down to ``minimumScale``. A name of

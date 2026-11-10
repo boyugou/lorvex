@@ -17,6 +17,9 @@ import SwiftUI
 ///   the host says the task's dependencies are still open.
 /// - on Today, the task's time leading the metadata line, and status chips the
 ///   host supplies ("Until 3:00 PM", "Pushed 4 times").
+/// - ahead of everything on the metadata line, the hand-off marker while the
+///   assistant holds the task ("With assistant") or has handed it back
+///   ("Assistant replied", in the accent) (``LorvexTaskDelegationMarker``).
 ///
 /// Priority is carried by the circle's tint (and, with Differentiate Without
 /// Color on, by a mark inside the ring) and status by its glyph, so the row
@@ -191,12 +194,15 @@ struct LorvexTaskRow: View {
   }
 
   /// What the row shows beyond the task's own fields, for VoiceOver, in the
-  /// row's order: the search excerpt, host chips, the blocked badge, the owning
-  /// list, and the day a hidden task comes back.
+  /// row's order: the search excerpt, host chips, the blocked badge, the
+  /// hand-off marker, the owning list, and the day a hidden task comes back.
   private var accessibilityDetails: [String] {
     var details = [searchMatch?.text].compactMap { $0 }
     details.append(contentsOf: chips.map(\.title))
     if isBlocked { details.append(TaskDisplayText.blocked) }
+    if let delegation = LorvexTaskDelegationMarker(task: task) {
+      details.append(TaskDisplayText.delegation(delegation))
+    }
     if let owningList { details.append(owningList.name) }
     if let hiddenLabel = task.hiddenUntilShortLabel(timeZone: productTimeZone) {
       details.append(TaskDisplayText.hiddenUntil(hiddenLabel))
@@ -217,11 +223,12 @@ struct LorvexTaskRow: View {
     return parts
   }
 
-  /// One inline metadata line: Today's time leads when the host supplies one, then the owning list, the "Hidden until" badge for a deferred-until
-  /// task, the due date (red when overdue, orange when due today or tomorrow), and finally estimate and tags. Rendered only when at least one piece
-  /// exists, so an empty row stays a clean title.
+  /// One inline metadata line: the hand-off marker leads while the assistant holds the task or has handed it back, then Today's time when the
+  /// host supplies one, the owning list, the "Hidden until" badge for a deferred-until task, the due date (red when overdue, orange when due
+  /// today or tomorrow), and finally estimate and tags. Rendered only when at least one piece exists, so an empty row stays a clean title.
   @ViewBuilder
   private var metadataLine: some View {
+    let delegation = LorvexTaskDelegationMarker(task: task)
     let dueLabel = task.cachedDueRelativeLabel(timeZone: productTimeZone)
     let isDueOverdue = task.isOverdue(timeZone: productTimeZone)
     let isDueSoon = !isDueOverdue && task.isDueSoon(timeZone: productTimeZone)
@@ -230,10 +237,18 @@ struct LorvexTaskRow: View {
     let hiddenLabel = task.hiddenUntilShortLabel(timeZone: productTimeZone)
     let calm = calmMetadata
     let repeats = task.recurrence != nil
-    if timeLabel != nil || owningList != nil || hiddenLabel != nil || dueLabel != nil
+    if delegation != nil || timeLabel != nil || owningList != nil || hiddenLabel != nil || dueLabel != nil
       || repeats || !calm.isEmpty
     {
       HStack(spacing: LorvexDesign.Spacing.sm) {
+        if let delegation {
+          // The hand-off leads: whether the assistant holds the task, or has
+          // replied and waits on the person, is the first thing to read.
+          delegationMarker(delegation)
+          if timeLabel != nil || owningList != nil || hiddenLabel != nil || dueLabel != nil || repeats {
+            Text("·").foregroundStyle(.tertiary)
+          }
+        }
         if let timeLabel {
           // The time leads: it is when the work happens today.
           HStack(spacing: LorvexDesign.Spacing.xs) {
@@ -296,8 +311,8 @@ struct LorvexTaskRow: View {
           // Short of room, the last tags drop whole rather than truncating.
           LorvexWholeLabelsLine(
             calm,
-            leadingSeparator: timeLabel != nil || owningList != nil || hiddenLabel != nil
-              || dueLabel != nil || repeats,
+            leadingSeparator: delegation != nil || timeLabel != nil || owningList != nil
+              || hiddenLabel != nil || dueLabel != nil || repeats,
             spacing: LorvexDesign.Spacing.sm)
         }
       }
@@ -306,6 +321,19 @@ struct LorvexTaskRow: View {
     }
   }
 
+  /// The hand-off marker: the sparkles glyph and its words, neutral while the
+  /// assistant holds the task and in the accent once it replied. It keeps its
+  /// whole width; the list name, the due date, and the tags give way first.
+  private func delegationMarker(_ marker: LorvexTaskDelegationMarker) -> some View {
+    HStack(spacing: LorvexDesign.Spacing.xs) {
+      Image(systemName: LorvexTaskDelegationMarker.systemImage).accessibilityHidden(true)
+      Text(TaskDisplayText.delegation(marker))
+    }
+    .foregroundStyle(marker.tint)
+    .fixedSize()
+    .layoutPriority(3)
+    .accessibilityIdentifier("task.row.delegation")
+  }
 }
 
 /// A task's owning-list label for ``LorvexTaskRow``'s metadata line: the list

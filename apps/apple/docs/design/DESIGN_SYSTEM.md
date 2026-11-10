@@ -22,7 +22,7 @@ red flag never argue about what red means.
 
 | Hue | Meaning | Tokens |
 |---|---|---|
-| accent (the system accent) | selection, the lead task's row, primary actions, links | `accent`, `selectionFill` |
+| accent (the system accent) | selection, the lead task's row, primary actions, links, a reply the assistant handed back | `accent`, `selectionFill` |
 | red | overdue, high priority, errors, destructive actions, the calendar now-line | `overdue`, `priorityHigh`, `error`, `destructive`, `nowIndicator` |
 | orange | due today or soon, warnings | `dueSoon`, `warning` |
 | green | completed, success, a habit finished today | `done`, `success` |
@@ -39,7 +39,15 @@ Rules that follow from the table:
   and say nothing.
 - A list's own color stays on its icon. On a task row the list's name is
   secondary text beside the tinted icon, so the only colored words on a row
-  are the ones that state a date's condition.
+  are the ones that state a date's condition, and the hand-off marker of a
+  task the assistant handed back.
+- A task handed to the assistant leads its metadata line with the sparkles
+  glyph and a marker (`LorvexTaskDelegationMarker`): "With assistant" in the
+  secondary style while the assistant holds it, since nothing waits on the
+  person, and "Assistant replied" in the accent once it handed the task back,
+  the one hand-off state that asks for attention. A task's detail shows the
+  same marker as a chip. Neither shows on a task that is done, cancelled,
+  parked, or in the Trash.
 - Counts and section leaders are neutral. A "3 planned" chip, a "Deferred"
   header, or a "Snoozed" header never borrows a status hue.
 - Warnings appear in Settings, diagnostics, editors, and banners, never on a
@@ -568,7 +576,7 @@ iPhone, and iPad share them with their own copy tables.
 | Part | What it is | Component |
 |---|---|---|
 | Ground | the page background itself; the header, the day strip, and the wells sit directly on it | — |
-| Task list | every task the day holds, in one list with no section headers; a timed task's time leads its metadata line, status chips ("Until 3:00 PM", "Started", "Pushed 3 times") sit under its title, and the lead task's row is tinted with the accent | `LorvexTaskRow` (macOS), `MobileActionTaskRow` (iOS), `LorvexTaskRowChip` |
+| Task list | every task the day holds, in one list with no section headers; a timed task's time leads its metadata line, after the hand-off marker of a task handed to the assistant, status chips ("Until 3:00 PM", "Started", "Pushed 3 times") sit under its title, and the lead task's row is tinted with the accent | `LorvexTaskRow` (macOS), `MobileActionTaskRow` (iOS), `LorvexTaskRowChip` |
 | Labels | a row's estimate and tags on one line; the last ones drop whole when the line runs out of room, never cut to "w…" | `LorvexWholeLabelsLine` |
 | Ring | a task's circle grown into a timer; it fills as a running time passes, and is also the Done control (the menu bar panel, the task detail) | `LorvexTaskRing` |
 | Well | one question for the user with one verb: today is overbooked ("Move to Tomorrow"), or suggested times wait ("Use These Times"); the button moves under the words where they would not fit beside it | `LorvexDecisionWell` |

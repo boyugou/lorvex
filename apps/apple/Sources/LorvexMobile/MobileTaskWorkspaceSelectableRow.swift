@@ -23,9 +23,9 @@ struct MobileTaskWorkspaceSelectableRow: View {
 
   /// What VoiceOver reads for the row: the task's own label, which names its
   /// priority, status, time, estimate, due day, and tags in words, then what
-  /// the row adds to the task's fields, the search excerpt and the blocked
-  /// badge. Left to itself, VoiceOver would speak the metadata's "·"
-  /// separators and leave out the priority and the estimate.
+  /// the row adds to the task's fields, the search excerpt, the blocked
+  /// badge, and the hand-off marker. Left to itself, VoiceOver would speak the
+  /// metadata's "·" separators and leave out the priority and the estimate.
   nonisolated static func spokenLabel(
     for task: LorvexTask, timeLabel: String?, isBlocked: Bool, searchMatch: LorvexTaskSearchMatch?,
     timeZone: TimeZone
@@ -33,7 +33,8 @@ struct MobileTaskWorkspaceSelectableRow: View {
     taskAccessibilityLabel(
       task, timeLabel: timeLabel,
       details: [searchMatch?.text].compactMap { $0 }
-        + (isBlocked ? [MobileTaskDisplayText.blocked] : []),
+        + (isBlocked ? [MobileTaskDisplayText.blocked] : [])
+        + MobileTaskRowContent.delegationDetails(for: task),
       timeZone: timeZone)
   }
 

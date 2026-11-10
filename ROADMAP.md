@@ -67,8 +67,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     filter on `list_tasks`, `delegation` on every task object (its `request`
     fenced as user text), two counts in `get_overview`'s compact stats, one
     line in the server instructions, and `routines` among `write_memory`'s
-    typical keys. Still to do: the Mac and iPhone action and row marker with
-    their strings in every language.
+    typical keys. The apps have the action ("Hand to Assistant", "Take
+    Back") in a task's menus and the marker ("With assistant", "Assistant
+    replied", the reply in the accent) on its row and in its detail, on the
+    Mac and the iPhone, in every language; a task the assistant handed back
+    opens with what it wrote. Not covered yet: the Mac's table mode, the menu
+    bar panel, widgets, and the Watch show no marker; the request can be set
+    only through the assistant, since the apps have no field for it; and the
+    two sample replies in the preview data are English in every language.
+    Nothing of this is released: the owner sees it first.
 - Undo an assistant's change: the tool shipped (`undo_ai_change`, 2026-10-13):
   an assistant takes back its own update to a task or a one-off calendar event
   from the `ai_changelog` snapshots, restoring only the fields that still hold

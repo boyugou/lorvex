@@ -47,8 +47,9 @@ public enum LorvexPreviewCoreFactory {
     /// canonical events here.
     ///
     /// `plannedDay` seeds the assistant's briefing for today, more of the day's
-    /// tasks (``seedTodayPool(_:)``), and, unless `untimed` is set, the times of
-    /// two of them. `untimed` leaves the day without times, the state of anyone
+    /// tasks (``seedTodayPool(_:text:)``), two of them handed to the assistant
+    /// (``seedDelegations(_:pool:text:)``), and, unless `untimed` is set, the
+    /// times of two of them. `untimed` leaves the day without times, the state of anyone
     /// who never schedules. `dayState` then moves the seeded day into one of the
     /// states it never reaches by itself (``LorvexPreviewDayState``). `stress`
     /// adds the content that breaks layouts on top of the whole day
@@ -94,7 +95,8 @@ public enum LorvexPreviewCoreFactory {
             key: text("work_rhythm"),
             content: text("Does deep work before lunch and keeps afternoons for meetings and email."))
         }
-        try await seedTodayPool(core, text: text)
+        let pool = try await seedTodayPool(core, text: text)
+        try await seedDelegations(core, pool: pool, text: text)
       }
       try seedAssistantSessions(core, now: previewWallClock())
       try await dayState?.apply(to: core, text: text)
@@ -106,16 +108,25 @@ public enum LorvexPreviewCoreFactory {
       return core
     }
 
+    /// The tasks ``seedTodayPool(_:text:)`` adds that the seeded day hands to
+    /// the assistant.
+    private struct TodayPool {
+      var catering: LorvexTask.ID
+      var budget: LorvexTask.ID
+    }
+
     /// More of the user's own tasks for today: one three days past its
     /// deadline, one due today, and one pushed to today three times, which is
     /// the count at which Today marks a task as pushed often.
-    private static func seedTodayPool(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
+    private static func seedTodayPool(
+      _ core: SwiftLorvexCoreService, text: LorvexSampleText
+    ) async throws -> TodayPool {
       let anchor = logicalDayAnchor()
       _ = try await core.createTask(
         TaskCreateDraft(
           title: text("Renew the car registration"), priority: .p2, estimatedMinutes: 20,
           dueDate: day(anchor, daysAgo: 3), tags: text(["home"])))
-      _ = try await core.createTask(
+      let catering = try await core.createTask(
         TaskCreateDraft(
           title: text("Reply to Maya about the catering quote"), priority: .p2, estimatedMinutes: 15,
           dueDate: day(anchor, daysAgo: 0), tags: text(["work"])))
@@ -123,9 +134,30 @@ public enum LorvexPreviewCoreFactory {
         TaskCreateDraft(
           title: text("Review the Q3 budget draft"), priority: .p3, estimatedMinutes: 45,
           tags: text(["work"])))
-      guard let today = day(anchor, daysAgo: 0) else { return }
-      for _ in 0..<3 {
-        _ = try await core.deferTask(id: budget.id, until: today, reason: "not_today", note: nil)
+      if let today = day(anchor, daysAgo: 0) {
+        for _ in 0..<3 {
+          _ = try await core.deferTask(id: budget.id, until: today, reason: "not_today", note: nil)
+        }
+      }
+      return TodayPool(catering: catering.id, budget: budget.id)
+    }
+
+    /// Two of today's tasks handed to the assistant, so the rows and the
+    /// inspector show both hand-off states: the budget review it still holds,
+    /// and the catering reply it handed back with a draft in its notes.
+    private static func seedDelegations(
+      _ core: SwiftLorvexCoreService, pool: TodayPool, text: LorvexSampleText
+    ) async throws {
+      _ = try await core.delegateTask(id: pool.budget, request: nil)
+      _ = try await core.delegateTask(id: pool.catering, request: nil)
+      try await SwiftLorvexCoreService.$currentInitiator.withValue(
+        SwiftLorvexCoreService.ChangelogInitiator.assistant
+      ) {
+        _ = try await core.returnDelegatedTask(
+          id: pool.catering,
+          result: text(
+            "Drafted a reply that accepts the quote and asks Maya to confirm the menu by Friday. It's in your Drafts folder."
+          ))
       }
     }
 

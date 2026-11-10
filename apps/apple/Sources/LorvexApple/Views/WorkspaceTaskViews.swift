@@ -223,6 +223,18 @@ struct WorkspaceTaskContextMenu: View {
     }
     .disabled(!(task.status.isResolved))
 
+    // Offered only while the task is open work; a context menu hides what it
+    // cannot do rather than graying it out.
+    ForEach(LorvexTaskDelegationAction.available(for: task), id: \.self) { action in
+      Button {
+        Task { await store.performDelegationAction(action, taskID: task.id) }
+      } label: {
+        Label(TaskDisplayText.delegationAction(action), systemImage: action.systemImage)
+      }
+      .accessibilityIdentifier(
+        action == .handToAssistant ? "task.handToAssistant.\(task.id)" : "task.takeBack.\(task.id)")
+    }
+
     if task.status == .someday {
       Button {
         store.selectedTaskID = task.id

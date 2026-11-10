@@ -355,13 +355,15 @@ extension StubCoreService {
     try await preview.undoAIChange(changelogID: changelogID)
   }
   func delegateTask(id: LorvexTask.ID, request: String?) async throws -> LorvexTask {
-    try await preview.delegateTask(id: id, request: request)
+    if let taskDelegationError { throw taskDelegationError }
+    return try await preview.delegateTask(id: id, request: request)
   }
   func returnDelegatedTask(id: LorvexTask.ID, result: String?) async throws -> LorvexTask {
     try await preview.returnDelegatedTask(id: id, result: result)
   }
   func clearTaskDelegation(id: LorvexTask.ID) async throws -> LorvexTask {
-    try await preview.clearTaskDelegation(id: id)
+    if let taskDelegationError { throw taskDelegationError }
+    return try await preview.clearTaskDelegation(id: id)
   }
   func delegatedTaskCount(state: LorvexTaskDelegation.State) async throws -> Int {
     try await preview.delegatedTaskCount(state: state)

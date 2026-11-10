@@ -2,9 +2,10 @@ import LorvexCore
 import SwiftUI
 
 /// What a task row can do on iPhone and iPad: complete the task, start or
-/// pause it, move it to a later day, and file it into another list. Hosts
-/// build it with ``MobileStore/rowActions(for:afterSuccess:)``, so every row
-/// surface offers the same actions.
+/// pause it, move it to a later day, file it into another list, and hand it
+/// to the assistant or take it back. Hosts build it with
+/// ``MobileStore/rowActions(for:afterSuccess:)``, so every row surface offers
+/// the same actions.
 struct MobileTaskRowActions {
   var complete: () async -> Void
   /// Returns a finished or cancelled task to the open list.
@@ -17,6 +18,8 @@ struct MobileTaskRowActions {
   var lists: [LorvexList]
   /// Files the task into the list with the given id.
   var moveToList: (LorvexList.ID) async -> Void
+  /// Hands the task to the assistant, or takes it back.
+  var delegate: (LorvexTaskDelegationAction) async -> Void
 }
 
 /// The days a task can be deferred by from a row's context menu or the task
@@ -118,12 +121,28 @@ enum MobileTaskActionCopy {
       localized: "task.action.move_to_list", defaultValue: "Move to List", table: "Localizable",
       bundle: MobileL10n.bundle)
   }
+
+  /// The title of a hand-off action.
+  static func delegationAction(_ action: LorvexTaskDelegationAction) -> String {
+    switch action {
+    case .handToAssistant:
+      String(
+        localized: "task.action.hand_to_assistant", defaultValue: "Hand to Assistant",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .takeBack:
+      String(
+        localized: "task.action.take_back", defaultValue: "Take Back", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    }
+  }
 }
 
 /// The shared row actions (``MobileTaskRowActions``): Start or Pause on the
 /// leading swipe; Complete (the full swipe) and Defer to tomorrow on the
 /// trailing swipe; and a context menu with Complete, Start or Pause, a Defer
-/// menu of days, and a Move to List menu. A finished or cancelled task has nothing to complete,
+/// menu of days, Hand to Assistant or Take Back while the task is open work
+/// (``LorvexTaskDelegationAction/available(for:)``), and a Move to List menu.
+/// A finished or cancelled task has nothing to complete,
 /// start, or defer, so its trailing swipe (the full swipe) and its context menu
 /// offer Reopen alone. Used by the plain action row and the batch-selectable
 /// workspace row; the latter passes `isBatchSelecting: true` to suppress the
@@ -189,6 +208,17 @@ private struct MobileTaskRowActionsModifier: ViewModifier {
               Label(MobileTaskActionCopy.deferTask, systemImage: "clock")
             }
             .disabled(isMutating)
+
+            ForEach(LorvexTaskDelegationAction.available(for: task), id: \.self) { action in
+              Button {
+                Task { await actions.delegate(action) }
+              } label: {
+                Label(MobileTaskActionCopy.delegationAction(action), systemImage: action.systemImage)
+              }
+              .disabled(isMutating)
+              .accessibilityIdentifier(
+                action == .handToAssistant ? "task.row.handToAssistant" : "task.row.takeBack")
+            }
 
             moveToListMenu
           }

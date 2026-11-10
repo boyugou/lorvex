@@ -108,6 +108,9 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   var addTaskChecklistItemError: LorvexCoreError?
   /// When set, `updateHabit` throws this in place of the write.
   var updateHabitError: LorvexCoreError?
+  /// When set, `delegateTask` and `clearTaskDelegation` throw this in place of
+  /// the write.
+  var taskDelegationError: LorvexCoreError?
   /// Optional async barrier invoked inside `upsertDailyReviewPreservingLinks`
   /// before the delegated write, so a test can hold a daily-review save
   /// mid-write.

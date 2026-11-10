@@ -64,6 +64,7 @@ struct MobileStoreTaskDetailView: View {
         cancel: cancel,
         cancelRecurring: cancelRecurring
       )
+      MobileTaskDelegationSection(task: task, isMutating: isMutating, delegate: actions.delegate)
     } paneActions: {
       paneStatusButton
       editButton

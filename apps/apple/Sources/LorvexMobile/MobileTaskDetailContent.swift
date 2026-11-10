@@ -101,9 +101,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
             .font(LorvexDesign.Typography.detailTitle)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
-          if let statusChip {
-            detailChip(statusChip.text, systemImage: statusChip.icon, tint: statusChip.tint)
-          }
+          statusChips
           if !task.notes.isEmpty {
             Text(userContent: task.notes)
               .font(LorvexDesign.Typography.primaryText)
@@ -310,6 +308,27 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
 
   // MARK: Status chip
 
+  /// The task's status, when it is not plain open work, and its hand-off to
+  /// the assistant, which leads as it leads the task's row. The two wrap onto
+  /// a second line rather than truncate.
+  @ViewBuilder
+  private var statusChips: some View {
+    let delegation = LorvexTaskDelegationMarker(task: task)
+    if statusChip != nil || delegation != nil {
+      LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
+        if let delegation {
+          detailChip(
+            MobileTaskDisplayText.delegation(delegation),
+            systemImage: LorvexTaskDelegationMarker.systemImage, tint: delegation.tint)
+            .accessibilityIdentifier("task.detail.delegation")
+        }
+        if let statusChip {
+          detailChip(statusChip.text, systemImage: statusChip.icon, tint: statusChip.tint)
+        }
+      }
+    }
+  }
+
   private func detailChip(_ text: String, systemImage: String, tint: Color) -> some View {
     // An explicit HStack, not a `Label`: a bare `Label` placed by the custom
     // `LorvexFlowLayout` renders icon-only (it still reports the title's width,
@@ -317,6 +336,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     HStack(spacing: 5) {
       Image(systemName: systemImage)
         .imageScale(.small)
+        .accessibilityHidden(true)
       Text(text)
         .lineLimit(1)
     }

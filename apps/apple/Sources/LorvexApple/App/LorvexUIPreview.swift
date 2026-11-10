@@ -147,45 +147,8 @@
               try? await Task.sleep(for: .seconds(0.5))
             }
           }
-          if selection == .tasks, let first = store.today.tasks.first {
-            store.selectedTaskID = first.id
-            try? await Task.sleep(for: .seconds(2.5))
-            await emitStop("tasks-inspector")
-            store.selectedTaskID = nil
-          }
-          if selection == .tasks, !usesEmptyStore {
-            // A task that waits on an unfinished task: Start stays in place
-            // but unavailable until that task is done.
-            store.selectedTaskID = LorvexPreviewSeedID.venueTask
-            try? await Task.sleep(for: .seconds(2.5))
-            if store.selectedTask != nil { await emitStop("tasks-inspector-waiting") }
-            store.selectedTaskID = nil
-          }
-          if selection == .tasks, LorvexStressSeed.isRequested {
-            // The stress seed's hardest tasks, one inspector each.
-            for (stop, titlePrefix) in LorvexStressSeed.inspectorTasks {
-              guard let task = store.taskWorkspaceOpenTasks.first(where: { $0.title.hasPrefix(titlePrefix) })
-              else { continue }
-              store.selectedTaskID = task.id
-              try? await Task.sleep(for: .seconds(2.5))
-              await emitStop(stop)
-            }
-            store.selectedTaskID = nil
-          }
-          if selection == .tasks, let list = Self.tourList(in: store) {
-            // The same workspace scoped to a list, as the sidebar opens it.
-            store.setTaskWorkspaceListScope(list.id)
-            try? await Task.sleep(for: .seconds(2.5))
-            await emitStop("tasks-list")
-            store.setTaskWorkspaceListScope(nil)
-          }
-          if selection == .tasks, !usesEmptyStore {
-            // A search whose matches sit in the notes: the rows quote the text
-            // around the word under each title that lacks it.
-            store.searchText = "team"
-            try? await Task.sleep(for: .seconds(2.5))
-            await emitStop("tasks-search")
-            store.searchText = ""
+          if selection == .tasks {
+            await emitTaskStops(store: store)
           }
           if selection == .calendar {
             await emitCalendarStops(store: store)
@@ -712,7 +675,7 @@
     /// The list the tour's list stops show: the first list that is not the
     /// Inbox, or, with the stress seed, the list with the very long name.
     @MainActor
-    private static func tourList(in store: AppStore) -> LorvexList? {
+    static func tourList(in store: AppStore) -> LorvexList? {
       let lists = store.lists?.lists ?? []
       if LorvexStressSeed.isRequested,
         let long = lists.first(where: { $0.name.hasPrefix(LorvexStressSeed.longListNamePrefix) })

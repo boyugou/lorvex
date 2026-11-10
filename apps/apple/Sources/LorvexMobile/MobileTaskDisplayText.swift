@@ -8,4 +8,18 @@ public enum MobileTaskDisplayText {
       localized: "task.status.blocked", defaultValue: "Blocked", table: "Localizable",
       bundle: MobileL10n.bundle)
   }
+
+  /// The words of a task's hand-off marker, on its row and in its detail.
+  public static func delegation(_ marker: LorvexTaskDelegationMarker) -> String {
+    switch marker {
+    case .withAssistant:
+      String(
+        localized: "task.delegation.with_assistant", defaultValue: "With assistant",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .assistantReplied:
+      String(
+        localized: "task.delegation.assistant_replied", defaultValue: "Assistant replied",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    }
+  }
 }

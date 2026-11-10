@@ -10,8 +10,10 @@ import SwiftUI
 ///   to two lines, or as many as it needs at accessibility text sizes;
 /// - chips for state that explains the row: Started, Blocked, and whatever the
 ///   host adds ("Until 3:00 PM", "Pushed 4 times");
-/// - the metadata (``MobileTaskMetadataLine``) — the task's time today when
-///   the host supplies it, the due date (red when overdue), a repeat glyph,
+/// - the metadata (``MobileTaskMetadataLine``) — the hand-off marker while the
+///   assistant holds the task or has replied (``LorvexTaskDelegationMarker``),
+///   the task's time today when the host supplies it, the due date (red when
+///   overdue), a repeat glyph,
 ///   then estimate and tags — on one line whose last tags drop whole when it
 ///   runs out of room, wrapping instead at accessibility text sizes; rendered
 ///   only when there's something to say.
@@ -55,7 +57,8 @@ struct MobileTaskRow: View, Equatable {
       taskAccessibilityLabel(
         task, timeLabel: timeLabel,
         details: [searchMatch?.text].compactMap { $0 } + chips.map(\.title)
-          + (isBlocked ? [MobileTaskDisplayText.blocked] : []),
+          + (isBlocked ? [MobileTaskDisplayText.blocked] : [])
+          + MobileTaskRowContent.delegationDetails(for: task),
         timeZone: timeZone))
     .accessibilityIdentifier("mobile.task.row.\(task.id)")
   }
@@ -201,14 +204,23 @@ struct MobileTaskRowContent: View, Equatable {
 
   @ViewBuilder
   private var metadataLine: some View {
+    let delegation = LorvexTaskDelegationMarker(task: task)
     let dueLabel = task.cachedDueRelativeLabel(timeZone: timeZone)
     let calm = calmMetadata
-    if timeLabel != nil || dueLabel != nil || task.recurrence != nil || !calm.isEmpty {
+    if delegation != nil || timeLabel != nil || dueLabel != nil || task.recurrence != nil
+      || !calm.isEmpty
+    {
       MobileTaskMetadataLine(
-        timeLabel: timeLabel, timeIsRunning: timeIsRunning, dueLabel: dueLabel,
-        isOverdue: task.isOverdue(timeZone: timeZone), isDueSoon: task.isDueSoon(timeZone: timeZone),
-        repeats: task.recurrence != nil, calmLabels: calm)
+        delegation: delegation, timeLabel: timeLabel, timeIsRunning: timeIsRunning,
+        dueLabel: dueLabel, isOverdue: task.isOverdue(timeZone: timeZone),
+        isDueSoon: task.isDueSoon(timeZone: timeZone), repeats: task.recurrence != nil,
+        calmLabels: calm)
     }
+  }
+
+  /// The hand-off marker's words for VoiceOver, when the row shows one.
+  nonisolated static func delegationDetails(for task: LorvexTask) -> [String] {
+    LorvexTaskDelegationMarker(task: task).map { [MobileTaskDisplayText.delegation($0)] } ?? []
   }
 }
 

@@ -221,6 +221,22 @@
             note: text("Groceries can wait for the evening"))
         }
       }
+      // Hand the sync refactor to the assistant, and have it hand back the
+      // investor reply with a draft in its notes, so Today's rows and the
+      // first task's detail show both hand-off states.
+      if created.count >= 3 {
+        _ = try? await core.delegateTask(id: created[2].id, request: nil)
+        _ = try? await core.delegateTask(id: created[0].id, request: nil)
+        await SwiftLorvexCoreService.$currentInitiator.withValue(
+          SwiftLorvexCoreService.ChangelogInitiator.assistant
+        ) {
+          _ = try? await core.returnDelegatedTask(
+            id: created[0].id,
+            result: text(
+              "Drafted a reply with this quarter's numbers. It's in your Drafts folder, ready for you to check and send."
+            ))
+        }
+      }
       // Park one as Someday.
       if let someday = created.last { _ = try? await core.markTaskSomeday(id: someday.id) }
       // A weekly task and a task that waits on the Someday one, so the task

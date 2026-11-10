@@ -1,18 +1,23 @@
 import LorvexCore
 import SwiftUI
 
-/// A task row's metadata in the footnote style: the task's time today, its
-/// due date (red once overdue, orange when due today or tomorrow), a repeat glyph, then the estimate and up to
-/// two tags, joined by dots.
+/// A task row's metadata in the footnote style: the hand-off marker, the
+/// task's time today, its due date (red once overdue, orange when due today or
+/// tomorrow), a repeat glyph, then the estimate and up to two tags, joined by
+/// dots.
 ///
-/// At standard text sizes it keeps to one line: the time and the due date
-/// always show, and the estimate and tags drop whole from the end when the
-/// line runs out of room. At accessibility sizes, where one line holds only a
-/// word or two, every item shows and the line wraps like a sentence, breaking
-/// between items after their dots, so a dot always follows the last word of
-/// its item and no line starts with one.
+/// At standard text sizes it keeps to one line: the marker, the time, and the
+/// due date always show, and the estimate and tags drop whole from the end
+/// when the line runs out of room. At accessibility sizes, where one line
+/// holds only a word or two, every item shows and the line wraps like a
+/// sentence, breaking between items after their dots, so a dot always follows
+/// the last word of its item and no line starts with one.
 struct MobileTaskMetadataLine: View {
-  /// The task's time today ("10:55 AM – 11:55 AM"), leading the line.
+  /// The task's hand-off to the assistant, leading the line: neutral while the
+  /// assistant holds the task, in the accent once it replied.
+  var delegation: LorvexTaskDelegationMarker? = nil
+  /// The task's time today ("10:55 AM – 11:55 AM"), leading the line after
+  /// the hand-off marker.
   let timeLabel: String?
   /// The time is running now ("Until 12:30 PM"), which tints it the accent color.
   var timeIsRunning: Bool = false
@@ -41,8 +46,23 @@ struct MobileTaskMetadataLine: View {
 
   private var oneLine: some View {
     HStack(spacing: 5) {
+      if let delegation {
+        // The hand-off leads: whether the assistant holds the task, or has
+        // replied and waits on the person, is the first thing to read. It
+        // keeps its whole width; the items after it give way first.
+        HStack(spacing: 4) {
+          Image(systemName: LorvexTaskDelegationMarker.systemImage).accessibilityHidden(true)
+          Text(MobileTaskDisplayText.delegation(delegation))
+        }
+        .foregroundStyle(delegation.tint)
+        .fixedSize()
+        .layoutPriority(2)
+        .accessibilityIdentifier("mobile.task.row.delegation")
+      }
       if let timeLabel {
-        // The time leads: on Today it is when the work happens.
+        if delegation != nil { separator }
+        // The time leads the task's own facts: on Today it is when the work
+        // happens.
         HStack(spacing: 4) {
           Image(systemName: "clock").accessibilityHidden(true)
           Text(verbatim: timeLabel).monospacedDigit()
@@ -51,7 +71,7 @@ struct MobileTaskMetadataLine: View {
         .layoutPriority(1)
       }
       if let dueLabel {
-        if timeLabel != nil { separator }
+        if delegation != nil || timeLabel != nil { separator }
         HStack(spacing: 4) {
           Image(systemName: dueSymbol).accessibilityHidden(true)
           Text(verbatim: dueLabel).monospacedDigit()
@@ -61,13 +81,15 @@ struct MobileTaskMetadataLine: View {
         .layoutPriority(1)
       }
       if repeats {
-        if timeLabel != nil || dueLabel != nil { separator }
+        if delegation != nil || timeLabel != nil || dueLabel != nil { separator }
         Image(systemName: "repeat").foregroundStyle(.secondary).accessibilityHidden(true)
       }
       if !calmLabels.isEmpty {
         // Short of room, the last tags drop whole rather than truncating.
         LorvexWholeLabelsLine(
-          calmLabels, leadingSeparator: timeLabel != nil || dueLabel != nil || repeats, spacing: 5)
+          calmLabels,
+          leadingSeparator: delegation != nil || timeLabel != nil || dueLabel != nil || repeats,
+          spacing: 5)
       }
     }
     .lineLimit(1)
@@ -79,6 +101,11 @@ struct MobileTaskMetadataLine: View {
   /// too long for a line of its own.
   private var wrappingLine: Text {
     var items: [Text] = []
+    if let delegation {
+      items.append(
+        glyphed(LorvexTaskDelegationMarker.systemImage, MobileTaskDisplayText.delegation(delegation))
+          .foregroundStyle(delegation.tint))
+    }
     if let timeLabel {
       items.append(glyphed("clock", timeLabel).foregroundStyle(timeStyle))
     }

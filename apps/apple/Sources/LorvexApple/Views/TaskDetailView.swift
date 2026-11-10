@@ -12,13 +12,17 @@ struct TaskDetailView: View {
     Group {
       if let task = store.selectedTask {
         InspectorScrollView {
+          // A task the assistant handed back is opened to read what it wrote,
+          // so that leads; otherwise the assistant's context closes the page.
+          let leadsWithReply = LorvexTaskDelegationMarker(task: task) == .assistantReplied
           VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
             headerSection(task: task)
             headerActions(task: task)
+            if leadsWithReply { assistantContextSection(task: task) }
             properties(task: task)
             checklistSection(task: task)
             notesSection(task: task)
-            assistantContextSection(task: task)
+            if !leadsWithReply { assistantContextSection(task: task) }
           }
         }
         .frame(minWidth: 0, maxWidth: .infinity)

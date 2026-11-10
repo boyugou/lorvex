@@ -133,9 +133,24 @@ extension TaskDetailView {
     }
   }
 
+  /// Hand to Assistant and Take Back, beside Complete: each only while the
+  /// task offers it (``LorvexTaskDelegationAction/available(for:)``).
+  private func delegationMenuItems(task: LorvexTask) -> some View {
+    ForEach(LorvexTaskDelegationAction.available(for: task), id: \.self) { action in
+      Button {
+        Task { await store.performDelegationAction(action, taskID: task.id) }
+      } label: {
+        Label(TaskDisplayText.delegationAction(action), systemImage: action.systemImage)
+      }
+      .accessibilityIdentifier(
+        action == .handToAssistant ? "task.detail.handToAssistant" : "task.detail.takeBack")
+    }
+  }
+
   private func moreActionsMenu(task: LorvexTask) -> some View {
     Menu {
       completionMenuItem
+      delegationMenuItems(task: task)
       Divider()
 
       TaskDeferMenu(store: store, onDefer: { date in

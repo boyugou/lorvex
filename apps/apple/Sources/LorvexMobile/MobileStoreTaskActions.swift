@@ -189,7 +189,27 @@ extension MobileStore {
       moveToList: { listID in
         guard await self.moveTasks([id], toListID: listID), let afterSuccess else { return }
         await afterSuccess()
+      },
+      delegate: { action in
+        guard await self.performDelegationAction(action, taskID: id), let afterSuccess else { return }
+        await afterSuccess()
       })
+  }
+
+  /// Hands task `id` to the person's assistant, or takes it back. The task's
+  /// own title and notes are what the assistant is asked to do. Every loaded
+  /// copy of the task takes the result; a refused write shows its error and
+  /// leaves them as they were. Returns whether the write committed.
+  @discardableResult
+  public func performDelegationAction(
+    _ action: LorvexTaskDelegationAction, taskID id: LorvexTask.ID
+  ) async -> Bool {
+    await mutateTaskReturningTask(id: id) {
+      switch action {
+      case .handToAssistant: try await core.delegateTask(id: id, request: nil)
+      case .takeBack: try await core.clearTaskDelegation(id: id)
+      }
+    }
   }
 
   /// Plan task `id` for the local day `day` falls on (a task dropped on a

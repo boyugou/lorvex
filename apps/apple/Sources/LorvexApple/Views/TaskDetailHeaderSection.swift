@@ -89,12 +89,22 @@ extension TaskDetailView {
 
   /// Facts about the task's current state, never editable fields. Priority lives
   /// in the property sentence; repeating it here would be the same value in two
-  /// places.
+  /// places. The hand-off marker leads, as it leads the task's row.
   @ViewBuilder
   private func statusPills(task: LorvexTask) -> some View {
     let isBlocked = store.isBlocked(task)
-    if store.taskDetailDueIsOverdue || isBlocked {
-      HStack(spacing: LorvexDesign.Spacing.xs) {
+    let delegation = LorvexTaskDelegationMarker(task: task)
+    if delegation != nil || store.taskDetailDueIsOverdue || isBlocked {
+      // Wraps rather than truncates when a long translation of three facts
+      // outgrows the inspector's width.
+      LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
+        if let delegation {
+          TaskDetailStatusPill(
+            text: TaskDisplayText.delegation(delegation),
+            systemImage: LorvexTaskDelegationMarker.systemImage,
+            tint: delegation.tint)
+            .accessibilityIdentifier("task.detail.delegation")
+        }
         if store.taskDetailDueIsOverdue {
           TaskDetailStatusPill(
             text: String(localized: "task_detail.pill.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle),
@@ -109,6 +119,7 @@ extension TaskDetailView {
         }
       }
       .padding(.top, 1)
+      .accessibilityElement(children: .contain)
       .accessibilityIdentifier("task.detail.header.pills")
     }
   }

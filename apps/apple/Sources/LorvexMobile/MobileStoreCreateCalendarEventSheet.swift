@@ -5,11 +5,20 @@ struct MobileStoreCreateCalendarEventSheet: View {
   @Bindable var store: MobileStore
   @Binding var isPresented: Bool
   @FocusState private var focusedField: Field?
+  /// The draft the sheet opened with, which its opener seeded with a day and
+  /// time; the sheet refuses a swipe-down while the draft differs from it.
+  @State private var openingDraft: MobileCalendarDraft
 
   private enum Field {
     case title
     case location
     case notes
+  }
+
+  init(store: MobileStore, isPresented: Binding<Bool>) {
+    self.store = store
+    _isPresented = isPresented
+    _openingDraft = State(initialValue: store.calendarDraft)
   }
 
   var body: some View {
@@ -96,6 +105,7 @@ struct MobileStoreCreateCalendarEventSheet: View {
         }
       }
     }
+    .interactiveDismissDisabled(store.calendarDraft.hasUnsavedChanges(opening: openingDraft))
     // The event form is a dense form, so it opens at full height.
     .mobileFullEditorSheetPresentation()
   }

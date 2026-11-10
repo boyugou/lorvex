@@ -175,6 +175,7 @@ private struct MobileHabitReminderTimeContext: Identifiable {
 /// A focused time-of-day picker sheet that commits an `HH:mm` string. Shared by
 /// the add-reminder and change-time flows.
 struct MobileHabitReminderTimeSheet: View {
+  let initialTime: String
   let isNew: Bool
   let commit: (String) async -> Void
 
@@ -183,6 +184,7 @@ struct MobileHabitReminderTimeSheet: View {
   @Environment(\.dismiss) private var dismiss
 
   init(initialTime: String, isNew: Bool, commit: @escaping (String) async -> Void) {
+    self.initialTime = initialTime
     self.isNew = isNew
     self.commit = commit
     _date = State(initialValue: MobileHabitReminderTime.date(from: initialTime))
@@ -228,6 +230,7 @@ struct MobileHabitReminderTimeSheet: View {
         }
       }
     }
+    .interactiveDismissDisabled(MobileHabitReminderTime.isChanged(date, from: initialTime))
   }
 }
 
@@ -243,6 +246,12 @@ enum MobileHabitReminderTime {
   }
 
   static func defaultTime() -> String { string(from: defaultDate()) }
+
+  /// Whether the picker's `date` names another minute than `initialTime`, the
+  /// `HH:mm` its sheet opened with: a time that dismissing the sheet would lose.
+  static func isChanged(_ date: Date, from initialTime: String) -> Bool {
+    string(from: date) != string(from: self.date(from: initialTime))
+  }
 
   private static func defaultDate() -> Date {
     Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()

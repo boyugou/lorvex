@@ -182,6 +182,22 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
       dependsOn: dependencies == originalDependencies ? nil : dependencies)
   }
 
+  /// Whether the sheet editing this draft holds an edit that dismissing it
+  /// would lose: a field ``coreUpdateDraft`` would write, or `pendingTag`, a
+  /// tag typed into the tag field but not yet added. Whitespace alone is no
+  /// edit: the title and notes compare with the task's with whitespace at
+  /// their ends ignored, and a blank pending tag is none.
+  public func hasUnsavedChanges(pendingTag: String = "") -> Bool {
+    var patch = coreUpdateDraft
+    if Self.trimmed(title) == Self.trimmed(originalTitle) { patch.title = nil }
+    if Self.trimmed(notes) == Self.trimmed(originalNotes) { patch.notes = nil }
+    return patch != TaskUpdateDraft(id: id) || !Self.trimmed(pendingTag).isEmpty
+  }
+
+  private static func trimmed(_ text: String) -> String {
+    text.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
   private static func patch<T: Equatable>(_ value: T?, comparedWith original: T?) -> Patch<T> {
     guard value != original else { return .unset }
     return value.map(Patch.set) ?? .clear

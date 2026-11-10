@@ -101,6 +101,7 @@ struct MobileStoreMemoryEditorSheet: View {
         }
       }
     }
+    .interactiveDismissDisabled(entry.isEdited(key: key, content: content))
     .mobileCompactEditorSheetPresentation()
   }
 
@@ -110,5 +111,15 @@ struct MobileStoreMemoryEditorSheet: View {
         dismiss()
       }
     }
+  }
+}
+
+extension MemoryEntry {
+  /// Whether an editor of this entry that holds `key` and `content` has an
+  /// edit that dismissing it would lose: either text differs from the entry's
+  /// with whitespace at its ends ignored, as saving trims both.
+  func isEdited(key: String, content: String) -> Bool {
+    func trimmed(_ text: String) -> String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
+    return trimmed(key) != trimmed(self.key) || trimmed(content) != trimmed(self.content)
   }
 }

@@ -49,6 +49,7 @@ struct MobileStoreEditListSheet: View {
         }
       }
     }
+    .interactiveDismissDisabled(store.listDraft.hasUnsavedChanges)
     // List editor detents: medium + large for quick naming or full descriptions.
     .mobileCompactEditorSheetPresentation()
   }

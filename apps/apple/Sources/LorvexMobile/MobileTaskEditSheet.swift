@@ -175,6 +175,7 @@ struct MobileTaskEditSheet: View {
         }
       }
     }
+    .interactiveDismissDisabled(draft.hasUnsavedChanges(pendingTag: pendingTag))
     // Task editor detents: large only because tags, dependencies, and notes need full-height editing.
     .mobileFullEditorSheetPresentation()
   }

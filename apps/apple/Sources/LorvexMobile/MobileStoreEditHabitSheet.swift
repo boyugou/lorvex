@@ -47,6 +47,7 @@ struct MobileStoreEditHabitSheet: View {
         }
       }
     }
+    .interactiveDismissDisabled(store.habitDraft.hasUnsavedChanges)
     // The habit form is a dense form, so it opens at full height.
     .mobileFullEditorSheetPresentation()
   }

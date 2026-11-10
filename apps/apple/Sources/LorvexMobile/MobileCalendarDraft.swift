@@ -66,8 +66,28 @@ public struct MobileCalendarDraft: Equatable, Sendable {
       location: event.location ?? "",
       notes: event.notes ?? ""
     )
-    baseline = Baseline(
-      title: trimmedTitle, timing: timing, location: trimmedLocation, notes: trimmedNotes)
+    baseline = savedFields
+  }
+
+  /// The draft's fields as a save reads them, text trimmed.
+  private var savedFields: Baseline {
+    Baseline(title: trimmedTitle, timing: timing, location: trimmedLocation, notes: trimmedNotes)
+  }
+
+  /// Whether the draft holds an edit that dismissing its sheet would lose: a
+  /// field that differs from the draft as the sheet opened, text compared
+  /// trimmed and the timing by the fields it stores
+  /// (``CalendarEventTiming/storesSameFields(as:)``). An edited event's draft
+  /// keeps how it opened as its ``baseline``. A new event's draft has none,
+  /// because each New Event affordance seeds its own day and time, so its
+  /// sheet passes the draft it opened with as `opening`; with neither, any
+  /// text is an edit and the timing is not.
+  public func hasUnsavedChanges(opening: MobileCalendarDraft? = nil) -> Bool {
+    let opened =
+      baseline ?? opening?.savedFields
+      ?? Baseline(title: "", timing: timing, location: "", notes: "")
+    return trimmedTitle != opened.title || trimmedLocation != opened.location
+      || trimmedNotes != opened.notes || !timing.storesSameFields(as: opened.timing)
   }
 
   public var trimmedTitle: String {

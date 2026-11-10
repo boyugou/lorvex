@@ -90,6 +90,7 @@ struct MobileTaskFieldEditor: View {
         }
       }
     }
+    .interactiveDismissDisabled(draft.hasUnsavedChanges(pendingTag: pendingTag))
     .mobileEditorSheetPresentation(opensFullHeight: field == .doOn || field == .due || field == .hideUntil)
   }
 

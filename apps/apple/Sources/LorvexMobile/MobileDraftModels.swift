@@ -78,6 +78,17 @@ public struct MobileListDraft: Equatable, Sendable {
   public var canSubmit: Bool {
     !trimmedName.isEmpty
   }
+
+  /// Whether the draft holds an edit that dismissing its sheet would lose: a
+  /// field that differs, text trimmed, from the draft as the sheet opened,
+  /// which is the edited list's ``baseline`` or, for a new list, an empty
+  /// draft.
+  public var hasUnsavedChanges: Bool {
+    let opened =
+      baseline ?? Baseline(storedName: "", name: "", description: "", color: nil, icon: nil)
+    return trimmedName != opened.name || trimmedDescription != opened.description
+      || color != opened.color || icon != opened.icon
+  }
 }
 
 /// The top-level rhythm segment shown in the habit cadence editor. Projects the
@@ -204,9 +215,24 @@ public struct MobileHabitDraft: Equatable, Sendable {
       self.timesPerWeek = 3
       self.dayOfMonth = 1
     }
-    self.baseline = Baseline(
+    self.baseline = savedValues
+  }
+
+  /// The values a save of the draft as it stands would write, in the shape of
+  /// its ``baseline``.
+  private var savedValues: Baseline {
+    Baseline(
       name: trimmedName, cue: trimmedCue, color: color, icon: icon,
       targetCount: resolvedTargetCount, cadence: cadenceInput, milestoneTarget: milestoneTarget)
+  }
+
+  /// Whether the draft holds an edit that dismissing its sheet would lose: a
+  /// save would write values other than the draft's as the sheet opened, which
+  /// are the edited habit's ``baseline`` or, for a new habit, an empty
+  /// draft's. A control whose value a save ignores, such as the weekdays
+  /// while the cadence is daily, changes nothing.
+  public var hasUnsavedChanges: Bool {
+    savedValues != (baseline ?? MobileHabitDraft().savedValues)
   }
 
   /// The wire `frequency_type` the current editor selections resolve to — used

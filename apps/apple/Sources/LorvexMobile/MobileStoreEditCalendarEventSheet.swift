@@ -92,6 +92,7 @@ struct MobileStoreEditCalendarEventSheet: View {
         ToolbarItem(placement: .confirmationAction) { saveButton }
       }
     }
+    .interactiveDismissDisabled(store.calendarDraft.hasUnsavedChanges())
     // The event form is a dense form, so it opens at full height.
     .mobileFullEditorSheetPresentation()
   }

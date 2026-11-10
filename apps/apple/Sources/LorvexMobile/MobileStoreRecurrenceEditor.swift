@@ -123,6 +123,7 @@ struct MobileStoreRecurrenceEditor: View {
         }
       }
     }
+    .interactiveDismissDisabled(store.taskDetailRecurrenceDraft.hasChanges)
   }
 
   private var frequencyBinding: Binding<TaskRecurrenceRule.Frequency> {

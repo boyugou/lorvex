@@ -15,7 +15,9 @@ extension StubCoreService {
     return try await preview.loadTask(id: id)
   }
   func addTaskChecklistItem(taskID: LorvexTask.ID, text: String) async throws -> LorvexTask {
-    try await preview.addTaskChecklistItem(taskID: taskID, text: text)
+    await addTaskChecklistItemGate?()
+    if let addTaskChecklistItemError { throw addTaskChecklistItemError }
+    return try await preview.addTaskChecklistItem(taskID: taskID, text: text)
   }
   func updateTaskChecklistItem(itemID: TaskChecklistItem.ID, text: String) async throws
     -> LorvexTask

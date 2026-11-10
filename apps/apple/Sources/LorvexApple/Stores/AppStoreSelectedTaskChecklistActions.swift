@@ -16,8 +16,11 @@ extension AppStore {
       syncSelectedTaskChecklistDrafts()
       errorMessage = nil
     } catch {
-      // Restore the unsaved text so the user can retry.
-      taskDetailNewChecklistText = text
+      // Put the text back so the user can retry, unless the field has since
+      // taken the next item or belongs to another task.
+      if taskDetailNewChecklistText.isEmpty, taskDetailDraftTaskID == taskID {
+        taskDetailNewChecklistText = text
+      }
       await presentUserFacingError(error)
     }
   }

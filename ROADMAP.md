@@ -215,8 +215,6 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Quit on the Mac does not cover a habit's name and cue, which live in the
     view and commit on blur: they are lost when ⌘Q is pressed with the cursor
     in them.
-  - The Mac checklist add puts its text back, after a failure, over whatever
-    was typed in the meantime.
   - Smaller: creating a memory entry under a key that exists replaces that
     entry without asking, and on the Mac Edit on a row replaces unsaved composer
     text; on the iPhone only the memory composer refuses a swipe-to-dismiss
@@ -230,7 +228,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   store back, and the app starts its observers on a background launch; a
   habit on chosen weekdays is reminded on each of them; the task entity
   queries take background access; a burst of calendar change notices runs one
-  refresh; a change of the device's time zone re-plans reminders. Found sound: reminder triggers as true instants and
+  refresh; a change of the device's time zone re-plans reminders; a widget
+  snapshot reloads the widgets only when it changes what they show. Found
+  sound: reminder triggers as true instants and
   the shared 60-request budget, the widget snapshot file (atomic write, lock,
   ordering), the Watch replica ordering and command journal, the bracketing of
   every intent runner, the Spotlight prune, and the EventKit permission and
@@ -263,8 +263,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Smaller: a Watch command the
     phone cannot decode is rejected on the watch after three tries without
     renumbering, and the phone then refuses every later command as a sequence
-    gap. Every snapshot publish reloads all widget timelines, also when the
-    write was refused as older, and the Mac publishes twice per local write.
+    gap.
 - Russian at the largest accessibility text size (iPhone, 2026-10-12) was
   captured for Today, Tasks, Habits, and the event detail: legible, hyphenated
   by the system, nothing overlapping.

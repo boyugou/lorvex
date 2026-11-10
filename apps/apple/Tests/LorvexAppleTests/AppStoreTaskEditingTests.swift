@@ -841,3 +841,37 @@ private func packageRoot() -> URL {
   }
   return url.appending(path: "apple")
 }
+
+/// A checklist add clears the field at once, so the next item can be typed
+/// while it is written. When the add fails, its text comes back only into an
+/// empty field: the next item already being typed stays.
+@MainActor
+@Test
+func aFailedChecklistAddDoesNotReplaceTheNextItemBeingTyped() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+  let task = try #require(store.today.tasks.first)
+  store.selectTaskFromList(task.id)
+  await store.loadSelectedTaskDetail()
+  core.addTaskChecklistItemError = .validation(field: "text", message: "Too long.")
+
+  let gate = ReviewGate()
+  core.addTaskChecklistItemGate = { await gate.hold() }
+  store.taskDetailNewChecklistText = "First item"
+  let add = Task { await store.addChecklistItemToSelectedTask() }
+  await gate.waitUntilHeld()
+  core.addTaskChecklistItemGate = nil
+  store.taskDetailNewChecklistText = "Second item"
+  await gate.release()
+  await add.value
+
+  #expect(store.taskDetailNewChecklistText == "Second item")
+  #expect(store.errorMessage != nil)
+
+  // With nothing typed since, the failed item comes back for a retry.
+  store.taskDetailNewChecklistText = "Third item"
+  await store.addChecklistItemToSelectedTask()
+  #expect(store.taskDetailNewChecklistText == "Third item")
+}
+

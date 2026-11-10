@@ -108,7 +108,6 @@ extension AppStore {
       {
         clearMemoryDraft()
       }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -132,7 +131,6 @@ extension AppStore {
       if memoryStorage.memoryEditingKey == entry.key {
         clearMemoryDraft()
       }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)

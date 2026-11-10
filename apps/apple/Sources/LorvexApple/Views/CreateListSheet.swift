@@ -20,8 +20,7 @@ struct CreateListSheet: View {
         cancel: { isPresented = false }
       ) {
         Task {
-          await store.createDraftList()
-          if store.errorMessage == nil {
+          if await store.finishesWithoutError({ await store.createDraftList() }) {
             isPresented = false
           }
         }

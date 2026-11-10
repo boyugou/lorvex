@@ -2,23 +2,33 @@ import Foundation
 import LorvexCore
 
 extension AppStore {
-  /// Run a mutating action, clearing ``errorMessage`` on success and presenting
-  /// the thrown error through ``presentUserFacingError(_:)`` on failure — so a
-  /// raw UUID / SQL / internal invariant never reaches the alert. This is the
-  /// shared form of the do/catch envelope the action extensions otherwise
-  /// repeat verbatim.
+  /// Run a mutating action, presenting the thrown error through
+  /// ``presentUserFacingError(_:)`` on failure — so a raw UUID / SQL /
+  /// internal invariant never reaches the alert. This is the shared form of
+  /// the do/catch envelope the action extensions otherwise repeat verbatim.
+  /// Success leaves ``errorMessage`` alone: an alert another action raised
+  /// stays up until the user acknowledges it.
   ///
-  /// Use it only where the catch path is exactly "show the error" and the
-  /// success path ends by clearing the error. Methods that need a distinct
-  /// failure path — a non-blocking ``toastMessage``, extra state cleanup, a
-  /// returned success flag, or a typed `catch` — keep their own do/catch.
+  /// Use it only where the catch path is exactly "show the error". Methods
+  /// that need a distinct failure path — a non-blocking ``toastMessage``,
+  /// extra state cleanup, a returned success flag, or a typed `catch` — keep
+  /// their own do/catch.
   func perform(_ body: () async throws -> Void) async {
     do {
       try await body()
-      errorMessage = nil
     } catch {
       await presentUserFacingError(error)
     }
+  }
+
+  /// Runs `action`, one of the store's actions that presents its own failure,
+  /// and returns whether it finished without presenting an error. A sheet that
+  /// closes on success asks this rather than reading ``errorMessage``, which
+  /// may still hold an earlier error the user has not acknowledged.
+  func finishesWithoutError(_ action: () async -> Void) async -> Bool {
+    let presentedBefore = presentedErrorCount
+    await action()
+    return presentedErrorCount == presentedBefore
   }
 
   /// Run only the canonical, transactional portion of a mutation and return its
@@ -32,9 +42,7 @@ extension AppStore {
     _ body: () async throws -> Result
   ) async -> Result? {
     do {
-      let result = try await body()
-      errorMessage = nil
-      return result
+      return try await body()
     } catch {
       await presentUserFacingError(error)
       return nil

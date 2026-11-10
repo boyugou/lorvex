@@ -257,7 +257,6 @@ extension AppStore {
     taskWorkspaceStorage.hasLoaded = true
     taskWorkspaceStorage.loadFailureMessage = nil
     pruneTaskWorkspaceSelection()
-    errorMessage = nil
   }
 
   /// Reloads the workspace once it has loaded, or retries a first load that
@@ -306,7 +305,6 @@ extension AppStore {
         return
       }
       appendTaskWorkspacePage(page, status: status)
-      errorMessage = nil
     } catch {
       await presentUserFacingError(error)
     }

@@ -35,7 +35,6 @@ extension MobileStore {
         }
         dayReviewEvidence = loadedEvidence
         reviewDraftDate = loadingDate
-        errorMessage = nil
       }
     } catch {
       guard token == reviewDraftLoadToken else { return }
@@ -110,7 +109,6 @@ extension MobileStore {
     let fromDay = LorvexDateFormatters.ymdUTCAddingDays(toDay, days: -6) ?? toDay
     do {
       weekReviewDigest = try await core.getReviewHistory(from: fromDay, to: toDay, limit: 7)
-      errorMessage = nil
     } catch {
       weekReviewDigest = []
       await presentUserFacingError(error)
@@ -171,7 +169,6 @@ extension MobileStore {
       // Week-scoped state is day-independent and always adopts the latest values.
       snapshot.weeklyReview = try await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
       await loadWeekReviewDigest(weekOf: weeklyReviewAnchor)
-      errorMessage = nil
       if playsFeedback { feedbackProvider.playFeedback(.contentSaved) }
       return true
     } catch {

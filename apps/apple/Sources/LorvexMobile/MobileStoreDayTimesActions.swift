@@ -17,7 +17,6 @@ extension MobileStore {
       let timed = try await core.unfinishedTaskTimes(on: date)
       proposedDayTimes = try await core.proposeDayTimes(date: date)
       timesWhenDayTimesWereSuggested = timed
-      errorMessage = nil
     } catch {
       await presentUserFacingError(error)
     }
@@ -88,7 +87,6 @@ extension MobileStore {
       proposedDayTimes = nil
       snapshot.today = try await core.loadToday()
       isSavingDayTimes = false
-      errorMessage = nil
     } catch {
       isSavingDayTimes = false
       await presentUserFacingError(error)

@@ -36,7 +36,6 @@ extension MobileStore {
           generatedAt: LorvexDateFormatters.iso8601.string(from: Date()))
         output = Data(string.utf8)
       }
-      errorMessage = nil
       return output
     } catch {
       await presentUserFacingError(error)

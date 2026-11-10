@@ -23,7 +23,6 @@ extension MobileStore {
         updates: scopedUpdatesFromDraft(for: event)
       )
       calendarDraft = MobileCalendarDraft(now: now)
-      errorMessage = nil
       await reloadCalendarWindowAfterScopedMutation()
       return true
     } catch {
@@ -50,7 +49,6 @@ extension MobileStore {
         occurrenceDate: occurrenceDate,
         scope: scope.rawValue
       )
-      errorMessage = nil
       await reloadCalendarWindowAfterScopedMutation()
       return true
     } catch {

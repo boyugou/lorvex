@@ -14,7 +14,6 @@ extension MobileStore {
       // `refreshSyncStatus()` performs, so adopt it into the shared
       // `syncStatus` rather than leaving a second, older depth on the store.
       syncStatus = diagnostics.sync
-      errorMessage = nil
     } catch {
       await presentUserFacingError(error)
     }

@@ -63,7 +63,6 @@ extension MobileStore {
       // OS, so the reminder controls come back first.
       isMutatingHabitReminder = false
       await rescheduleReminders()
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)

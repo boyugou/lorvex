@@ -21,8 +21,7 @@ struct EditListSheet: View {
         cancel: { isPresented = false }
       ) {
         Task {
-          await store.updateList(list)
-          if store.errorMessage == nil {
+          if await store.finishesWithoutError({ await store.updateList(list) }) {
             isPresented = false
           }
         }

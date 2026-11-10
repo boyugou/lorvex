@@ -236,7 +236,6 @@ extension MobileStore {
       habits = try await core.loadHabits(date: logicalTodayString)
       await refreshHabitDetailIfLoaded(id: habit.id)
       habitDraft = MobileHabitDraft()
-      errorMessage = nil
       // A cadence change re-arms a different set of days and a name/icon/color
       // change alters the widget; mirror `mutateHabit`'s tail so the reminder
       // plan and the App-Group snapshot reflect the edit immediately instead of
@@ -262,7 +261,6 @@ extension MobileStore {
       if selectedHabitID == habit.id {
         selectedHabitID = nil
       }
-      errorMessage = nil
       // The deleted habit is gone from the widget snapshot and its armed
       // reminders must be reaped. Do both here, as every other habit mutation
       // does, instead of waiting for the full refresh that the write's change
@@ -313,7 +311,6 @@ extension MobileStore {
       await presentUserFacingError(caught)
       return false
     }
-    errorMessage = nil
     return true
   }
 
@@ -409,7 +406,6 @@ extension MobileStore {
       )
       // A later read for this habit started while this one ran, so it holds newer data.
       if latestHabitDetailRead[id] == readNumber { habitDetailsByID[id] = detail }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -476,7 +472,6 @@ extension MobileStore {
       await presentUserFacingError(error)
       return false
     }
-    errorMessage = nil
     invalidateHabitDetailViews()
     await afterWrite()
     return true

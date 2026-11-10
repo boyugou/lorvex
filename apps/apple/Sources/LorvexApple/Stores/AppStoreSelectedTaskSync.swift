@@ -19,7 +19,6 @@ extension AppStore {
       if selectedTaskID == id, !selectedTaskHasUnsavedEditorState {
         syncSelectedTaskDraft(force: true)
       }
-      errorMessage = nil
     } catch {
       await presentUserFacingError(error)
       if selectedTaskID == id, selectedTask == nil {

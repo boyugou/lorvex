@@ -28,7 +28,6 @@ extension AppStore {
     }
     do {
       _ = try await core.setPreference(key: "working_hours", value: encoded)
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)

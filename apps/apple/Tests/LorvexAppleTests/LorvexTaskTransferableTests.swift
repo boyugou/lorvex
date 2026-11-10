@@ -108,17 +108,43 @@ func lorvexTaskRefWithCompanionsExportsOneTitlePerLine() async throws {
 
 // MARK: - AppStore drag-drop actions (integration with SwiftLorvexCoreService)
 
+/// An error alert stays up until the user acknowledges it: another action's
+/// success does not dismiss it unread, and that action still reports its own
+/// success to a sheet waiting on it.
 @MainActor
 @Test
-func appStoreMoveTaskClearsErrorOnSuccess() async throws {
+func appStoreSuccessLeavesAnotherActionsErrorUp() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
   await store.refresh()
-  store.errorMessage = "stale"
+  store.errorMessage = "Couldn't save the list."
 
   // The seeded preview store has LorvexPreviewSeedID.venueTask in "inbox"; move it to LorvexPreviewSeedID.appleNativeList.
-  await store.moveTasks(
-    ids: [LorvexPreviewSeedID.venueTask], toListID: LorvexPreviewSeedID.appleNativeList)
+  let moved = await store.finishesWithoutError {
+    await store.moveTasks(
+      ids: [LorvexPreviewSeedID.venueTask], toListID: LorvexPreviewSeedID.appleNativeList)
+  }
 
-  #expect(store.errorMessage == nil)
+  #expect(moved)
+  #expect(store.errorMessage == "Couldn't save the list.")
+}
+
+/// A sheet that closes on success learns from the action itself whether it
+/// failed.
+@MainActor
+@Test
+func finishesWithoutErrorReportsTheActionsOwnFailure() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let habit = try await preview.createHabit(name: "Stretch", cue: nil, targetCount: 1)
+  let core = StubCoreService(preview: preview)
+  let store = AppStore(core: core)
+  await store.refresh()
+  core.updateHabitError = .validation(field: "name", message: "Too long.")
+
+  let renamed = await store.finishesWithoutError {
+    await store.updateHabitFields(habit, name: "Stretch at noon")
+  }
+
+  #expect(!renamed)
+  #expect(store.errorMessage != nil)
 }
 

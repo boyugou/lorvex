@@ -320,8 +320,17 @@ final class AppStore {
   // MARK: - Error surface
 
   /// Drives the blocking alert in `ContentView`. Set for errors that require
-  /// explicit user acknowledgement (e.g. core write failures on mutation).
-  var errorMessage: String?
+  /// explicit user acknowledgement (e.g. core write failures on mutation), and
+  /// cleared only by that acknowledgement or by the failure it reports
+  /// recovering (``clearRefreshFailure()``): another action's success never
+  /// clears it, so an alert is not dismissed before it is read.
+  var errorMessage: String? {
+    didSet { if errorMessage != nil { presentedErrorCount &+= 1 } }
+  }
+
+  /// How many errors have been presented, so an action's caller can tell
+  /// whether that action presented one (``finishesWithoutError(_:)``).
+  @ObservationIgnored var presentedErrorCount = 0
 
   /// The message of the refresh failure already shown in the blocking alert. A
   /// refresh runs on its own (activation, sync, database change), so the same

@@ -126,7 +126,6 @@ extension AppStore {
         today = updatedToday
       }
       try await afterSelectedTaskMutation()
-      errorMessage = nil
       registerReopenUndo(id: id, undoManager: undoManager, actionName: TaskCommand.complete.title)
     } catch {
       await presentUserFacingError(error)
@@ -250,7 +249,6 @@ extension AppStore {
       today = try await core.cancelTask(id: id)
       try await afterSelectedTaskMutation()
       syncSelectedTaskDraft()
-      errorMessage = nil
       registerReopenUndo(id: id, undoManager: undoManager, actionName: TaskCommand.cancel.title)
     } catch {
       await presentUserFacingError(error)

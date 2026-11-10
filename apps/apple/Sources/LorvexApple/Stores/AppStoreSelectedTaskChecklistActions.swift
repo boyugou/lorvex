@@ -14,7 +14,6 @@ extension AppStore {
       let task = try await core.addTaskChecklistItem(taskID: taskID, text: text)
       replaceTask(task)
       syncSelectedTaskChecklistDrafts()
-      errorMessage = nil
     } catch {
       // Put the text back so the user can retry, unless the field has since
       // taken the next item or belongs to another task.

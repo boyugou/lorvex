@@ -11,7 +11,6 @@ extension MobileStore {
   ) async -> Result? {
     do {
       let result = try await body()
-      errorMessage = nil
       return result
     } catch {
       await presentUserFacingError(error)

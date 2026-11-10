@@ -10,7 +10,6 @@ extension MobileStore {
   public func refreshTaskForRoute(_ id: LorvexTask.ID) async -> Bool {
     do {
       replaceKnownTask(try await core.loadTask(id: id))
-      errorMessage = nil
       return true
     } catch let error as LorvexCoreError {
       switch error {

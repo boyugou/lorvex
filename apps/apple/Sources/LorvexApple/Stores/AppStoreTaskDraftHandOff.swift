@@ -112,7 +112,6 @@ extension AppStore {
       if selectedTaskID == taskID, dirtyTaskIDToPreserve(after: detail) != taskID {
         syncSelectedTaskDraft(force: true)
       }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)

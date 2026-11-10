@@ -219,9 +219,9 @@ struct CalendarEventSheet: View {
     } else {
       isSubmitting = true
       Task {
-        await store.createDraftCalendarEvent()
+        let saved = await store.finishesWithoutError { await store.createDraftCalendarEvent() }
         isSubmitting = false
-        if store.errorMessage == nil { dismiss() }
+        if saved { dismiss() }
       }
     }
   }
@@ -229,26 +229,30 @@ struct CalendarEventSheet: View {
   private func runSave(scope: CalendarEventEditScope?, event: CalendarTimelineEvent) {
     isSubmitting = true
     Task {
-      if let scope {
-        await store.saveScopedCalendarEvent(event, scope: scope)
-      } else {
-        await store.updateCalendarEvent(event)
+      let saved = await store.finishesWithoutError {
+        if let scope {
+          await store.saveScopedCalendarEvent(event, scope: scope)
+        } else {
+          await store.updateCalendarEvent(event)
+        }
       }
       isSubmitting = false
-      if store.errorMessage == nil { dismiss() }
+      if saved { dismiss() }
     }
   }
 
   private func runDelete(scope: CalendarEventEditScope?, event: CalendarTimelineEvent) {
     isSubmitting = true
     Task {
-      if let scope {
-        await store.deleteScopedCalendarEvent(event, scope: scope)
-      } else {
-        await store.deleteCalendarEvent(event)
+      let deleted = await store.finishesWithoutError {
+        if let scope {
+          await store.deleteScopedCalendarEvent(event, scope: scope)
+        } else {
+          await store.deleteCalendarEvent(event)
+        }
       }
       isSubmitting = false
-      if store.errorMessage == nil {
+      if deleted {
         store.clearSelectedCalendarEvent()
         dismiss()
       }

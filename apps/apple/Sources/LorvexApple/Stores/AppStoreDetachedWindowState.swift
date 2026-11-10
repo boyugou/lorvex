@@ -202,7 +202,6 @@ extension AppStore {
       guard detachedReloadIsCurrent(observerEpoch) else { return }
       replaceTask(task)
       syncSelectedTaskDraft(force: true)
-      errorMessage = nil
     } catch {
       guard detachedReloadIsCurrent(observerEpoch) else { return }
       await presentUserFacingError(error)
@@ -221,7 +220,6 @@ extension AppStore {
       guard detachedReloadIsCurrent(observerEpoch) else { return }
       lists = reloadedLists
       selectedListDetail = reloadedDetail
-      errorMessage = nil
     } catch {
       guard detachedReloadIsCurrent(observerEpoch) else { return }
       await presentUserFacingError(error)

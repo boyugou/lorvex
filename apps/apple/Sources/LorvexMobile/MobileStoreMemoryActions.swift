@@ -11,7 +11,6 @@ extension MobileStore {
   public func loadMemorySnapshot() async {
     do {
       memory = try await core.loadMemory()
-      errorMessage = nil
     } catch {
       await presentUserFacingError(error)
     }
@@ -54,7 +53,6 @@ extension MobileStore {
       // alphabetically-first entry instead of the one the user wrote.
       selectedMemoryKey = saved.id
       clearMemoryDraft()
-      errorMessage = nil
       feedbackProvider.playFeedback(.contentSaved)
       return true
     } catch {
@@ -87,7 +85,6 @@ extension MobileStore {
       }
       memory = try await core.loadMemory()
       selectedMemoryKey = saved.id
-      errorMessage = nil
       feedbackProvider.playFeedback(.contentSaved)
       return true
     } catch {
@@ -111,7 +108,6 @@ extension MobileStore {
       if memoryEditingKey == entry.key {
         clearMemoryDraft()
       }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -158,7 +154,6 @@ extension MobileStore {
       await presentUserFacingError(caught)
       return false
     }
-    errorMessage = nil
     return true
   }
 

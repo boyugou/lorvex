@@ -206,13 +206,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   Mac's inline quick add and the iPhone's checklist composer keep text whose
   write failed, accepting suggested times keeps a time set since they were
   suggested, and the list, habit, and event edit sheets write only the fields
-  the user changed, and Quit writes a habit's name or encouragement being
-  typed. Found sound:
+  the user changed, Quit writes a habit's name or encouragement being
+  typed, and an error alert on either platform stays up until it is
+  acknowledged instead of closing when another action succeeds. Found sound:
   the daily review on both platforms, capture, the Mac quit handshake for the
   drafts it covers, dirty-draft preservation across refreshes, and no write
   error swallowed with `try?`.
-  - On the Mac, any action that succeeds clears another action's error alert
-    (`perform`).
   - Smaller: creating a memory entry under a key that exists replaces that
     entry without asking, and on the Mac Edit on a row replaces unsaved composer
     text; on the iPhone only the memory composer refuses a swipe-to-dismiss

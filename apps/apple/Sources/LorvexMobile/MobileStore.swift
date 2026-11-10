@@ -199,6 +199,9 @@ public final class MobileStore {
   /// other primary tabs so a deep link / Handoff route to Review can push a
   /// detail onto its own stack in place.
   public var reviewRoutePath: [MobileRoute] = []
+  /// Drives the root alert. Cleared only when the user acknowledges it or the
+  /// failure it reports recovers (``clearRefreshFailure()``): another action's
+  /// success never clears it, so an alert is not dismissed before it is read.
   public var errorMessage: String?
 
   /// The message of the refresh failure already shown in the root alert. A

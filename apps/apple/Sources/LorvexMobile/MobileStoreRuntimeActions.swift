@@ -234,7 +234,6 @@ extension MobileStore {
       // resolve against the surfaces the user is left looking at.
       isPresentingCapture = false
       feedbackProvider.playFeedback(.captureSubmitted)
-      errorMessage = nil
       Task { await self.refresh() }
     } catch {
       await presentUserFacingError(error)
@@ -333,7 +332,6 @@ extension MobileStore {
       await publishMobileSyncSurfaces()
       await rescheduleReminders()
       await updateBadge()
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -372,7 +370,6 @@ extension MobileStore {
       await publishMobileSyncSurfaces()
       await rescheduleReminders()
       await updateBadge()
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)

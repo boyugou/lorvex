@@ -28,8 +28,9 @@ struct CreateHabitSheet: View {
         cancel: { isPresented = false },
         confirm: {
           Task {
-            await store.createDraftHabit()
-            if store.errorMessage == nil { isPresented = false }
+            if await store.finishesWithoutError({ await store.createDraftHabit() }) {
+              isPresented = false
+            }
           }
         }
       )

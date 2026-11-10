@@ -77,7 +77,6 @@ extension MobileStore {
       )
       lists = try await core.loadLists()
       listDraft = MobileListDraft()
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -97,7 +96,6 @@ extension MobileStore {
       removeRoutes(toList: list.id)
       archivedLists.removeAll { $0.id == list.id }
       lists = try await core.loadLists()
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -124,7 +122,6 @@ extension MobileStore {
       }
       lists = try await core.loadLists()
       await loadArchivedLists()
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -146,7 +143,6 @@ extension MobileStore {
     do {
       let reordered = try await core.reorderLists(orderedIDs: order)
       lorvexAnimated(.snappy(duration: 0.25)) { lists = reordered }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)

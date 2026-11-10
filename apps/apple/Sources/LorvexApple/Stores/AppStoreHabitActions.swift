@@ -167,7 +167,6 @@ extension AppStore {
       }
       feedbackProvider.playFeedback(.habitCompleted)
       celebrateMilestoneIfReached(habit, updated: updatedHabits)
-      errorMessage = nil
       await refreshHabitDetailIfLoaded(id: habit.id)
       await loadAllHabitStats()
       await republishSurfacesAfterLocalMutation()
@@ -183,7 +182,6 @@ extension AppStore {
         habits = updatedHabits
       }
       feedbackProvider.playFeedback(.habitReset)
-      errorMessage = nil
       await refreshHabitDetailIfLoaded(id: habit.id)
       await loadAllHabitStats()
       await republishSurfacesAfterLocalMutation()
@@ -224,7 +222,6 @@ extension AppStore {
         habits = updatedHabits
       }
       feedbackProvider.playFeedback(skipped ? .habitSkipped : .habitReset)
-      errorMessage = nil
       await refreshHabitDetailIfLoaded(id: habit.id)
       await loadAllHabitStats()
       await republishSurfacesAfterLocalMutation()
@@ -248,7 +245,6 @@ extension AppStore {
       // the core does not stamp with `justReached`; the helper falls back to a
       // currentMilestone increase so crossing a milestone here still celebrates.
       celebrateMilestoneIfReached(habit, updated: updatedHabits)
-      errorMessage = nil
       await refreshHabitDetailIfLoaded(id: habit.id)
       await loadAllHabitStats()
       await republishSurfacesAfterLocalMutation()
@@ -283,7 +279,6 @@ extension AppStore {
         }
         feedbackProvider.playFeedback(action == .uncomplete ? .habitReset : .habitCompleted)
         habits = try await core.loadHabits(date: logicalTodayDateString)
-        errorMessage = nil
         await refreshHabitDetailIfLoaded(id: habit.id)
         await loadAllHabitStats()
         await republishSurfacesAfterLocalMutation()

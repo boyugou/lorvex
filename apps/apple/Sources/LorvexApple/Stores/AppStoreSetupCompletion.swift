@@ -22,7 +22,6 @@ extension AppStore {
         workingHours: workingHours,
         defaultListID: nil,
         timezone: TimeZone.current.identifier)
-      errorMessage = nil
     } catch {
       // Onboarding itself is done; surface the sync failure without undoing it.
       await presentUserFacingError(error)

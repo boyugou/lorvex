@@ -117,7 +117,6 @@ extension MobileStore {
         calendarTimeline?.events[index] = updated
       }
       calendarDraft = MobileCalendarDraft(now: now)
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -168,7 +167,6 @@ extension MobileStore {
       if let index = calendarTimeline?.events.firstIndex(where: { $0.id == updated.id }) {
         calendarTimeline?.events[index] = updated
       }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -186,7 +184,6 @@ extension MobileStore {
     do {
       try await core.deleteCalendarEvent(id: event.eventID)
       calendarTimeline?.events.removeAll { $0.id == event.id }
-      errorMessage = nil
       return true
     } catch {
       await presentUserFacingError(error)
@@ -239,7 +236,6 @@ extension MobileStore {
       guard token == calendarTimelineLoadToken else { return }
       calendarTimeline = timeline
       calendarScheduledTasks = tasks
-      errorMessage = nil
     } catch {
       guard token == calendarTimelineLoadToken else { return }
       await presentUserFacingError(error)
@@ -284,7 +280,6 @@ extension MobileStore {
     calendarTimeline = timeline
     calendarScheduledTasks = tasks
     if let ingestError { throw ingestError }
-    errorMessage = nil
   }
 
   /// The user's events from the logical today through the next 30 days as
@@ -298,7 +293,6 @@ extension MobileStore {
 
     do {
       let ics = try await core.exportCalendarICS(from: nil, to: nil)
-      errorMessage = nil
       return ics
     } catch {
       await presentUserFacingError(error)

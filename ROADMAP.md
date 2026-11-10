@@ -192,8 +192,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Mac focus ring on task rows: a row that was clicked or reached with the
     arrow keys draws the system focus ring around its selection fill, which
     reads as a focused text field (owner's screenshot, 2026-11-10). A lighter
-    outline of its own needs a capture of a focused row, and the preview tour
-    never takes the keyboard focus.
+    outline of its own (a hairline in the accent drawn by the row, with the
+    system ring kept under Full Keyboard Access) was written and taken out
+    again unverified: it needs a capture of a focused row, the preview tour
+    never takes the keyboard focus, and a synthetic click from a script
+    missed because the preview window was not on the active desktop. The way
+    to prove it is a DEBUG launch option that makes the preview window key
+    and puts the focus on a row itself.
   - Polish: Settings > Diagnostics and the activity log show English changelog summaries; German
     Memory sheet titles truncated at 375 pt (rechecked 2026-10-12 at 402 pt:
     "Neuer Gedächtniseintrag" wraps to two lines in the title bar's three-step

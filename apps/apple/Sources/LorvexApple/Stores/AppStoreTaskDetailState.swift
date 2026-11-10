@@ -163,9 +163,18 @@ extension AppStore {
   /// its day) survives the save. A day's time belongs to its day: it is written
   /// when it changed and whenever the day changes while the draft keeps a time,
   /// because moving a task to another day would otherwise clear the time.
-  func taskDetailUpdateDraft(id: LorvexTask.ID) -> TaskUpdateDraft? {
+  ///
+  /// With `droppingBlankTitle`, a title the draft has emptied is left out of
+  /// the update rather than sent: a task cannot have an empty title, so a save
+  /// that cannot wait for the user to finish retyping it (the selection is
+  /// leaving the task, the app is quitting) keeps the stored title and still
+  /// writes the other edits.
+  func taskDetailUpdateDraft(
+    id: LorvexTask.ID, droppingBlankTitle: Bool = false
+  ) -> TaskUpdateDraft? {
     guard let stored = taskForDetailDraft(id: id) else { return nil }
-    let edited = taskDetailEditedFields(comparedTo: taskDetailDraftBaseline(for: stored))
+    var edited = taskDetailEditedFields(comparedTo: taskDetailDraftBaseline(for: stored))
+    if droppingBlankTitle, !taskDetailTitleIsValid { edited.remove(.title) }
     guard !edited.isEmpty else { return nil }
     let time = taskDetailPlannedTimeForSave
     let timePatch: Patch<Range<Int>>

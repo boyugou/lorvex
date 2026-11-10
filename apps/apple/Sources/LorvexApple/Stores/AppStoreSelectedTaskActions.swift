@@ -46,10 +46,15 @@ extension AppStore {
   }
 
   func saveTaskDetailDraft(id: LorvexTask.ID, preserveSelection: LorvexTask.ID?) async {
+    // Edits a selection change handed to the store are already being written;
+    // a caller that waits on this save waits on them too.
+    await waitForLeftBehindDraftWrites()
     let draftFingerprint = taskDetailDraftFingerprint
     // Only the fields the user edited are written (`taskDetailUpdateDraft`).
     guard taskDetailTitleIsValid, let draft = taskDetailUpdateDraft(id: id) else {
-      if selectedTaskID != preserveSelection {
+      // Nothing to write. The selection moves to its target unless the user
+      // has gone on to a third task, the same rule the write below follows.
+      if selectedTaskID == id, selectedTaskID != preserveSelection {
         selectedTaskID = preserveSelection
       }
       syncSelectedTaskDraft()
@@ -57,6 +62,7 @@ extension AppStore {
     }
     await perform {
       let updated = try await core.updateTask(draft)
+      lastSavedTaskDraft = (id, draftFingerprint)
       today = try await core.loadToday()
       replaceTask(updated)
       try await refreshListSurfaces()
@@ -75,7 +81,10 @@ extension AppStore {
         // The user kept editing this task while the save was in flight; keep
         // the newer draft (still bound to the task) instead of clobbering the
         // fields with the just-saved values — the next save picks it up.
-      } else {
+      } else if taskDetailDraftTaskID == id || taskDetailDraftTaskID == nil {
+        // The fields still hold what this save wrote (or nothing): fill them
+        // from the stored record. A draft that has since become another
+        // task's, with what the user typed there, is left alone.
         taskDetailDraftTaskID = nil
         syncSelectedTaskDraft()
       }
@@ -303,6 +312,7 @@ extension AppStore {
     // under heavy concurrency), which would silently no-op the reopen. The id is
     // all `reopenTask` needs.
     guard let id = selectedTaskID else { return }
+    let detail = taskDetailReloadSnapshot()
     await perform {
       let updatedToday = try await core.reopenTask(id: id)
       feedbackProvider.playFeedback(.taskReopened)
@@ -314,9 +324,12 @@ extension AppStore {
       await reloadCalendarTimelineIfShown()
       selectedTaskID = id
       await refreshSelectedTaskRecord()
-      taskDetailDraftTaskID = nil
       await republishSurfacesAfterLocalMutation()
-      syncSelectedTaskDraft()
+      // The editor takes the new status and dates unless it holds unsaved
+      // edits, which include text typed while the change was being written.
+      if dirtyTaskIDToPreserve(after: detail) != id {
+        syncSelectedTaskDraft(force: true)
+      }
     }
   }
 
@@ -326,6 +339,7 @@ extension AppStore {
   /// dependency-blocked start surfaces the core's typed error.
   func startSelectedTask() async {
     guard let id = selectedTaskID else { return }
+    let detail = taskDetailReloadSnapshot()
     await perform {
       let updatedToday = try await core.startTask(id: id)
       feedbackProvider.playFeedback(.taskReopened)
@@ -337,9 +351,12 @@ extension AppStore {
       await reloadCalendarTimelineIfShown()
       selectedTaskID = id
       await refreshSelectedTaskRecord()
-      taskDetailDraftTaskID = nil
       await republishSurfacesAfterLocalMutation()
-      syncSelectedTaskDraft()
+      // The editor takes the new status and dates unless it holds unsaved
+      // edits, which include text typed while the change was being written.
+      if dirtyTaskIDToPreserve(after: detail) != id {
+        syncSelectedTaskDraft(force: true)
+      }
     }
   }
 
@@ -348,6 +365,7 @@ extension AppStore {
   /// untouched.
   func pauseSelectedTask() async {
     guard let id = selectedTaskID else { return }
+    let detail = taskDetailReloadSnapshot()
     await perform {
       let updatedToday = try await core.pauseTask(id: id)
       feedbackProvider.playFeedback(.taskReopened)
@@ -359,9 +377,12 @@ extension AppStore {
       await reloadCalendarTimelineIfShown()
       selectedTaskID = id
       await refreshSelectedTaskRecord()
-      taskDetailDraftTaskID = nil
       await republishSurfacesAfterLocalMutation()
-      syncSelectedTaskDraft()
+      // The editor takes the new status and dates unless it holds unsaved
+      // edits, which include text typed while the change was being written.
+      if dirtyTaskIDToPreserve(after: detail) != id {
+        syncSelectedTaskDraft(force: true)
+      }
     }
   }
 

@@ -65,7 +65,14 @@ extension AppStore {
 
   /// Reset every loaded surface to its empty state after a refresh throws, so the
   /// UI shows a clean empty/error state rather than a half-stale mix.
+  ///
+  /// A task editor holding unsaved edits is the exception: the failure took
+  /// the lists, not what the user was typing, so the inspector stays on its
+  /// task with the draft as typed, and the next refresh that succeeds
+  /// reconciles it.
   func clearLoadedStateAfterRefreshFailure() {
+    // Read before the lists are cleared: the editor's task is found in them.
+    let editedTask = selectedTaskHasUnsavedEditorState ? selectedTask : nil
     today = .empty
     proposedDayTimes = nil
     dailyReview = nil
@@ -86,7 +93,11 @@ extension AppStore {
     // pacing / circuit-breaker state, or a transient local error would trigger an
     // immediate re-burst that bypasses backoff.
     lastPublishedWidgetSnapshot = nil
-    selectedTaskID = nil
-    taskDetailStorage.reset()
+    if let editedTask {
+      taskDetailStorage.loadedTasksByID = [editedTask.id: editedTask]
+    } else {
+      selectedTaskID = nil
+      taskDetailStorage.reset()
+    }
   }
 }

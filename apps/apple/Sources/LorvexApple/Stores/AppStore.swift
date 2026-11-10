@@ -66,6 +66,12 @@ final class AppStore {
   var selectedTaskID: LorvexTask.ID? {
     didSet {
       persistSelectedTaskID()
+      // The lines below replace the inspector's draft, and so do the callers
+      // that fill it for the next task; unsaved edits to the task being left
+      // are handed to the store first.
+      if selectedTaskID != oldValue {
+        saveTaskDraftLeftBehind(for: oldValue)
+      }
       if selectedTaskID == nil {
         clearSelectedTaskDraft()
       } else {
@@ -251,6 +257,19 @@ final class AppStore {
   /// holding them here keeps them running after the main window closes while the
   /// menu-bar extra keeps the app alive.
   @ObservationIgnored var lifetimeObserverTasks: [Task<Void, Never>] = []
+
+  /// Writes of inspector edits whose task the selection has left
+  /// (``saveTaskDraftLeftBehind(for:)``), until each finishes. Quit waits for
+  /// them, since their edits are no longer in the draft.
+  @ObservationIgnored var leftBehindDraftWrites: [UUID: Task<Void, Never>] = [:]
+
+  /// The fingerprint of the draft a failed write last put back in the editor
+  /// (``saveTaskDraftLeftBehind(for:)``), so the same text is put back once.
+  @ObservationIgnored var restoredLeftBehindDraftFingerprint: String?
+
+  /// The task whose draft ``saveTaskDetailDraft(id:preserveSelection:)`` last
+  /// wrote, with the draft's fingerprint as written.
+  @ObservationIgnored var lastSavedTaskDraft: (id: LorvexTask.ID, fingerprint: String)?
 
   /// One main-app-owned wake at midnight in the configured product timezone.
   /// Device-midnight notifications are insufficient when the Mac and synced

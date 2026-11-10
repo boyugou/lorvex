@@ -44,6 +44,17 @@ struct AppStoreTaskDetailStorage {
     resetDraft()
   }
 
+  /// Takes the editor's fields from `other`, keeping this storage's loaded
+  /// records: what puts back a draft whose write failed.
+  mutating func restoreDraft(from other: AppStoreTaskDetailStorage) {
+    let loaded = loadedTasksByID
+    let titles = dependencyTitlesByID
+    self = other
+    loadedTasksByID = loaded
+    dependencyTitlesByID = titles
+    isSavingTaskRecurrence = false
+  }
+
   mutating func resetDraft() {
     taskDetailTitle = ""
     taskDetailNotes = ""

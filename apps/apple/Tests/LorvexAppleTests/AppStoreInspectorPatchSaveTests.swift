@@ -60,10 +60,9 @@ func theAutosaveOnNavigationKeepsAnAssistantsChangeToAnUntouchedField() async th
   _ = try await core.updateTask(TaskUpdateDraft(id: id, priority: .p3))
   await store.refresh()
 
+  // The selection change itself hands the draft to the store.
   store.selectedTaskID = other.id
-  if store.taskDetailDraftHasChanges(for: id) {
-    await store.saveTaskDetailDraft(id: id, preserveSelection: other.id)
-  }
+  await store.waitForLeftBehindDraftWrites()
 
   let stored = try await core.loadTask(id: id)
   #expect(stored.notes == "Context for the launch note.")

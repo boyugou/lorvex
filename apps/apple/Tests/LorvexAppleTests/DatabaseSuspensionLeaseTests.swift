@@ -49,22 +49,23 @@ struct DatabaseSuspensionLeaseTests {
   /// locks until its thread has unwound, so a host waits for the operations in
   /// flight before it lets the system suspend the process.
   @Test
-  func suspendingWaitsForTheOperationsInFlight() async {
+  func suspendingWaitsForTheOperationsInFlight() {
     let state = DatabaseSuspension.State { _ in }
-    await DatabaseSuspension.$stateOverride.withValue(state) {
+    DatabaseSuspension.$stateOverride.withValue(state) {
       // Nothing in flight: no wait.
       #expect(DatabaseSuspension.suspend(waitingForOperations: 5))
       #expect(DatabaseSuspension.isSuspended)
       DatabaseSuspension.resume()
 
-      // One that ends while the suspension waits.
+      // One that ends while the suspension waits. The wait blocks this thread,
+      // so the operation ends on a thread of its own: a task would need the
+      // cooperative pool, which a full parallel run can keep busy past the bound.
       DatabaseSuspension.operationWillBegin()
-      let ending = Task {
-        try? await Task.sleep(for: .milliseconds(40))
-        DatabaseSuspension.operationDidEnd()
+      Thread.detachNewThread {
+        Thread.sleep(forTimeInterval: 0.04)
+        state.operations.leave()
       }
       #expect(DatabaseSuspension.suspend(waitingForOperations: 5))
-      await ending.value
       DatabaseSuspension.resume()
 
       // One that does not end: the wait gives up at its bound and says so.

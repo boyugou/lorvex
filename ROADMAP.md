@@ -245,9 +245,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     the assistant keeps its old copy in Apple Calendar, which Lorvex itself
     hides. The lookup reaches back 90 days, so editing an older event writes a
     second copy.
-  - iPhone widgets show "Open Lorvex to refresh" from midnight until the next
-    background wake or launch publishes a snapshot for the new day; no entry
-    for it is prepared ahead, and the system decides when the wake runs.
+  - The Watch complications show Today as unavailable from midnight until the
+    phone app publishes a snapshot for the new day (the Watch app asks the
+    phone for one when opened): the iPhone widgets rebuild their own file when
+    they reload, but that write never reaches the Watch.
   - A write from outside the app process changes no notification: a widget
     tap completes a task whose reminder still fires, and neither it nor a Focus
     filter change reaches the Watch until the phone app publishes.

@@ -131,26 +131,31 @@ struct LorvexTodayControlValue: Equatable, Sendable {
 }
 
 @available(iOS 18.0, macOS 26.0, *)
-private struct LorvexTodayControlProvider: ControlValueProvider {
+struct LorvexTodayControlProvider: ControlValueProvider {
   typealias Value = LorvexTodayControlValue
+
+  var dayRollover: WidgetSnapshotDayRollover = .live
 
   var previewValue: LorvexTodayControlValue {
     .preview
   }
 
   func currentValue() async throws -> LorvexTodayControlValue {
-    todayValue(from: LorvexWidgetConfiguration().resolvedSnapshotURL(), now: Date())
+    await value(snapshotURL: LorvexWidgetConfiguration().resolvedSnapshotURL())
   }
 
-  // MARK: Private
-
-  private func todayValue(from url: URL?, now: Date) -> LorvexTodayControlValue {
-    guard let url else {
+  /// The value for the snapshot at `snapshotURL`, rebuilt for the current day
+  /// first when the file on disk belongs to an earlier one.
+  func value(
+    snapshotURL: URL?,
+    now: @Sendable () -> Date = Date.init
+  ) async -> LorvexTodayControlValue {
+    await dayRollover.rollOverIfExpired(snapshotURL: snapshotURL)
+    guard let snapshotURL else {
       return .from(
         result: .fallback(.init(reason: .missingFile, detail: "app_group_unavailable")),
-        now: now)
+        now: now())
     }
-    let result = WidgetSnapshotLoader().loadSnapshot(at: url)
-    return .from(result: result, now: now)
+    return .from(result: WidgetSnapshotLoader().loadSnapshot(at: snapshotURL), now: now())
   }
 }

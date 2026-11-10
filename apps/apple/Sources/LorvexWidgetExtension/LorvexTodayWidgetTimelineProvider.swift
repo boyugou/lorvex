@@ -10,10 +10,16 @@ public struct LorvexTodayWidgetTimelineProvider: AppIntentTimelineProvider {
   public typealias Intent = LorvexTodayWidgetConfigurationIntent
 
   private let configuration: LorvexWidgetConfiguration
+  private let dayRollover: WidgetSnapshotDayRollover
   private let refreshPolicy = WidgetTimelineRefreshPolicy()
 
   public init(configuration: LorvexWidgetConfiguration = LorvexWidgetConfiguration()) {
+    self.init(configuration: configuration, dayRollover: .live)
+  }
+
+  init(configuration: LorvexWidgetConfiguration, dayRollover: WidgetSnapshotDayRollover) {
     self.configuration = configuration
+    self.dayRollover = dayRollover
   }
 
   public func placeholder(in context: Context) -> LorvexWidgetEntry {
@@ -54,11 +60,25 @@ public struct LorvexTodayWidgetTimelineProvider: AppIntentTimelineProvider {
     for configuration: LorvexTodayWidgetConfigurationIntent,
     in context: Context
   ) async -> Timeline<LorvexWidgetEntry> {
-    let family = Self.familyKind(for: context.family)
-    if let adapter = adapter(snapshotURL: self.configuration.resolvedSnapshotURL()) {
-      return adapter.timeline(family: family, listID: configuration.list?.id)
+    await timeline(
+      family: Self.familyKind(for: context.family),
+      listID: configuration.list?.id,
+      snapshotURL: self.configuration.resolvedSnapshotURL())
+  }
+
+  /// The timeline for the snapshot at `snapshotURL`, rebuilt for the current
+  /// day first when the file on disk belongs to an earlier one.
+  func timeline(
+    family: WidgetFamilyKind,
+    listID: String?,
+    snapshotURL: URL?
+  ) async -> Timeline<LorvexWidgetEntry> {
+    await dayRollover.rollOverIfExpired(snapshotURL: snapshotURL)
+    if let adapter = adapter(snapshotURL: snapshotURL) {
+      return adapter.timeline(family: family, listID: listID)
     }
-    let entry = placeholder(in: context)
+    let entry = LorvexWidgetTimelineAdapter.staticPlaceholder(
+      family: family, refreshPolicy: refreshPolicy)
     return Timeline(
       entries: [entry],
       policy: .after(

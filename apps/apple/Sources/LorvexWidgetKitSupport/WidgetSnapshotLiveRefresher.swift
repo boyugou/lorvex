@@ -35,14 +35,18 @@ public struct WidgetSnapshotLiveRefresher: Sendable {
   }
 
   public static func live(
-    configuration: LorvexWidgetConfiguration = LorvexWidgetConfiguration()
+    configuration: LorvexWidgetConfiguration = LorvexWidgetConfiguration(),
+    reloadTimelines: @escaping @Sendable () -> Void = {
+      GlanceSurfaceReloader.live.reloadAll()
+    }
   ) -> WidgetSnapshotLiveRefresher {
     let managedDatabasePath = try? SwiftLorvexCoreService.managedDatabasePath()
     let store = managedDatabasePath.map(FocusFilterStore.init(managedDatabasePath:))
     return WidgetSnapshotLiveRefresher(
       configuration: configuration,
       focusFilterStore: store,
-      managedDatabasePath: managedDatabasePath)
+      managedDatabasePath: managedDatabasePath,
+      reloadTimelines: reloadTimelines)
   }
 
   @discardableResult

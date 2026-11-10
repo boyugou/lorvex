@@ -314,7 +314,11 @@ A productivity app earns its home screen with more than one widget.
   once nothing is left; accessoryRectangular shows a small ring beside the
   lead's title, its line, and the task after it; accessoryInline shows one
   line — the lead's short line, then its title. A snapshot that cannot be
-  read shows an explicit unavailable glyph rather than stale data. ✅
+  read shows an explicit unavailable glyph rather than stale data. A widget
+  or the Today control that reloads after midnight, while the app that wrote
+  the snapshot is suspended, first rebuilds the snapshot for the new day from
+  the shared database (`WidgetSnapshotDayRollover`) instead of asking the user
+  to open Lorvex. ✅
 - ControlWidget (iOS and macOS) names the task at the top of Today — a
   task whose time is running, else the first task on Today — shows "All
   clear" with nothing left, and opens the app to Today when tapped. ✅

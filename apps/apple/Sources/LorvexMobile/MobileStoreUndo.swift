@@ -68,10 +68,13 @@ extension MobileStore {
   }
 
   /// Runs the offered undo and takes the banner down. The offer clears first,
-  /// so a second tap on the banner while the undo runs does nothing.
+  /// so a second tap on the banner while the undo runs does nothing. A task
+  /// write still running (another row completed a moment later) would make the
+  /// undo's own write refuse to start, so the undo waits for it to end.
   func performUndoOffer() async {
     guard let action = undoOfferAction else { return }
     dismissUndoOffer()
+    await waitUntilTaskMutationsSettle()
     await action()
   }
 

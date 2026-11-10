@@ -209,3 +209,29 @@ func mobileRootViewFloatsTheUndoBanner() throws {
   #expect(banner.contains("private static let tabBarClearance: CGFloat = 84"))
   #expect(!banner.contains("@ScaledMetric"))
 }
+
+@MainActor
+@Test("Undo tapped while another task's write runs waits for it, then reopens")
+func mobileUndoWaitsForAWriteInFlight() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  await store.refresh()
+  let undone = LorvexPreviewSeedID.agendaTask
+  let next = LorvexPreviewSeedID.venueTask
+
+  #expect(await store.completeTask(undone))
+  let gate = ReviewGate()
+  core.completeTaskGate = { await gate.hold() }
+  let completingNext = Task { await store.completeTask(next) }
+  await gate.waitUntilHeld()
+  #expect(store.isMutatingTask)
+
+  let undoing = Task { await store.performUndoOffer() }
+  await gate.release()
+  #expect(await completingNext.value)
+  await undoing.value
+
+  #expect(try await preview.loadTask(id: undone).status == .open)
+  #expect(try await preview.loadTask(id: next).status == .completed)
+}

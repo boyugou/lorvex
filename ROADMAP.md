@@ -208,15 +208,16 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   suggested, and the list, habit, and event edit sheets write only the fields
   the user changed, Quit writes a habit's name or encouragement being
   typed, and an error alert on either platform stays up until it is
-  acknowledged instead of closing when another action succeeds. Found sound:
+  acknowledged instead of closing when another action succeeds, and the
+  iPhone's Undo waits for another task's write to end instead of doing
+  nothing. Found sound:
   the daily review on both platforms, capture, the Mac quit handshake for the
   drafts it covers, dirty-draft preservation across refreshes, and no write
   error swallowed with `try?`.
   - Smaller: creating a memory entry under a key that exists replaces that
     entry without asking, and on the Mac Edit on a row replaces unsaved composer
     text; on the iPhone only the memory composer refuses a swipe-to-dismiss
-    with unsaved text; the iPhone Undo banner does nothing when another task
-    write is running.
+    with unsaved text.
 - Read-only audit of notifications, calendar mirroring, widgets, the Watch,
   and App Intents (2026-11-09), same standing: traced to the code, not
   reproduced. Fixed since: a push that reaches a locked iPhone re-plans the

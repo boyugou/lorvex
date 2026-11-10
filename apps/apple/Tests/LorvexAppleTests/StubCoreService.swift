@@ -143,6 +143,9 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   var scheduledTasksCallCount = 0
   var upcomingReminderTaskCallCount = 0
   var completeTaskDelayNanoseconds: UInt64 = 0
+  /// Optional async barrier invoked inside `completeTask` before the
+  /// delegated write.
+  var completeTaskGate: (@Sendable () async -> Void)?
   var batchCompleteTaskCallCount = 0
   var batchTaskDelayNanoseconds: UInt64 = 0
   var setTaskRecurrenceCallCount = 0

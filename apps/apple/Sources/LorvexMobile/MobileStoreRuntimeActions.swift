@@ -284,6 +284,20 @@ extension MobileStore {
     } else {
       unscopedTaskMutationCount = max(0, unscopedTaskMutationCount - 1)
     }
+    guard canBeginTaskMutation(id: nil), !taskMutationSettleWaiters.isEmpty else { return }
+    let waiters = taskMutationSettleWaiters
+    taskMutationSettleWaiters = []
+    for waiter in waiters { waiter.resume() }
+  }
+
+  /// Returns once no task mutation is in flight, so that work the user asked
+  /// for and the re-entrancy guard would refuse (an Undo tapped while another
+  /// task's write runs) can begin. Work started right after this returns, with
+  /// no suspension in between, begins before any other.
+  func waitUntilTaskMutationsSettle() async {
+    while !canBeginTaskMutation(id: nil) {
+      await withCheckedContinuation { taskMutationSettleWaiters.append($0) }
+    }
   }
 
   @discardableResult

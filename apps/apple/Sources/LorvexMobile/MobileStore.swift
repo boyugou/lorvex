@@ -261,6 +261,9 @@ public final class MobileStore {
   var undoOffer: MobileUndoOffer?
   /// What the banner's Undo button runs.
   @ObservationIgnored var undoOfferAction: (@MainActor () async -> Void)?
+  /// Work waiting for every task mutation to end
+  /// (``waitUntilTaskMutationsSettle()``), resumed when the last one does.
+  @ObservationIgnored var taskMutationSettleWaiters: [CheckedContinuation<Void, Never>] = []
   let taskReminderScheduler: any TaskReminderScheduling
   let habitReminderScheduler: any HabitReminderScheduling
   let widgetSnapshotPublisher: any MobileWidgetSnapshotPublishing

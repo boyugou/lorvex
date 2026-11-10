@@ -57,6 +57,7 @@ extension StubCoreService {
     if completeTaskDelayNanoseconds > 0 {
       try await Task.sleep(nanoseconds: completeTaskDelayNanoseconds)
     }
+    if let completeTaskGate { await completeTaskGate() }
     return try await preview.completeTask(id: id)
   }
   func cancelTask(id: LorvexTask.ID) async throws -> TodaySnapshot {

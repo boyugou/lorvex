@@ -26,7 +26,7 @@
 # list names, ten tags, a 25-item checklist, overlapping, all-day and overnight
 # events, a crowded day, long habit and memory text) on top of the seeded day.
 # It adds the stops tasks-inspector-tags, tasks-inspector-checklist,
-# tasks-inspector-dependencies, and habits-inspector-long, and points the list
+# tasks-inspector-dependencies, tasks-inspector-notes, and habits-inspector-long, and points the list
 # stops (tasks-list, list-window, palette-jump, sheet-editList) at the list with
 # the very long name. `-uiPreviewDumpAX` prints the accessibility tree that
 # VoiceOver reads at every stop, between `AXDUMP STOP <name>` and `AXDUMP END

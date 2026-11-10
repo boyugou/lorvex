@@ -106,6 +106,9 @@
           listID: launchList?.id, priority: .p1, estimatedMinutes: 180, dueDate: days.date(0),
           plannedDate: days.date(0), tags: manyTags),
         .init(
+          title: "Read the launch runbook", notes: notes, priority: .p2,
+          plannedDate: days.date(0)),
+        .init(
           title: "Renew the vehicle registration before the penalty period starts", priority: .p1,
           dueDate: days.date(-45)),
         .init(
@@ -428,11 +431,13 @@
     /// The tasks the macOS tour opens in the inspector, each as the tour stop
     /// that captures it and the start of the task's title: the task with ten
     /// tags and a title of five lines, the task with a 25-item checklist and
-    /// long notes, and the task that waits on three others.
+    /// long notes, the task that waits on three others, and the task with a
+    /// short title and long notes, whose Notes box shows the whole note.
     public static let inspectorTasks: [(stop: String, titlePrefix: String)] = [
       ("tasks-inspector-tags", "Prepare the quarterly business review deck"),
       ("tasks-inspector-checklist", "Write the launch checklist"),
       ("tasks-inspector-dependencies", "Announce the launch"),
+      ("tasks-inspector-notes", "Read the launch runbook"),
     ]
 
     /// The start of the very long list name, the list the tour's list stops

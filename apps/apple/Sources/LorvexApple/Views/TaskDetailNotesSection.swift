@@ -188,7 +188,8 @@ private struct TaskDetailNotesPanel: View {
       text: $notes,
       placeholder: String(localized: "task_detail.notes.empty_placeholder", defaultValue: "Add notes", table: "Localizable", bundle: LorvexL10n.bundle),
       minHeight: editorMinHeight,
-      fontSize: 14
+      fontSize: 14,
+      growsWithContent: true
     )
     .padding(.horizontal, LorvexDesign.Spacing.s)
     .padding(.vertical, LorvexDesign.Spacing.xs)

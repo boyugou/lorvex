@@ -410,7 +410,15 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   selected-task mutation ends in `afterSelectedTaskMutation()` or
   `finishBatchMutation(on:)`; read dirtiness before the record changes. iOS
   edits use a sheet whose `MobileTaskEditDraft` patches against its opening
-  baseline.
+  baseline. The list, habit, and event edit sheets do the same: the function
+  that fills a draft records a baseline, and Save sends nil or `.unset` for
+  every field that still equals it. Compare with the baseline, never with the
+  live record, which a refresh may have replaced while the sheet was open.
+- **A reorder writes the rows that have to move.** A list or a habit syncs as
+  one record, so a rewritten row replaces whatever another device changed in
+  it. `ReorderPositions.assign` keeps every position it can and places a moved
+  row between its neighbors; positions are spaced, not dense, and a row created
+  in a hand-ordered set goes after the last (`positionForNewRow`).
 - **The store saves a draft the selection leaves.** The draft autosaves only
   after typing pauses, and a change of `selectedTaskID` replaces it at once:
   cleared for nil, refilled by whoever opens the next task. A view's `onChange`

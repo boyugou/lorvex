@@ -155,15 +155,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   HLC lanes; the outbox coalescing; the task editors, which write only the
   fields the user changed; a habit day that holds both a skip and a check-in
   after a merge (reads count it as kept).
-  - Lists and habits merge as whole rows, and a reorder writes every shifted
-    row: `applyReorder` (`SwiftLorvexCoreService+Reorder.swift`) rewrites
-    `position` and sends each changed row whole at a new version, and
-    `ApplyList.applyListUpsert` and `ApplyHabit` take the whole row of the newer
-    version. A rename, an archive, or a target change made on another device
-    while it was offline is replaced by the reordering device's older copy of
-    that row. Tasks and calendar events merge field by field and are not
-    affected. Syncing the order as its own register, or as one order record,
-    would end it.
+  - Lists and habits merge as whole rows: `ApplyList.applyListUpsert` and
+    `ApplyHabit` take the whole row of the newer version, so when two devices
+    change different fields of one list or habit while apart, one change is
+    lost. A reorder no longer widens this: it writes only the rows that have to
+    move, one for a single drag (`ReorderPositions`). Tasks and calendar events
+    merge field by field. Giving lists and habits the same registers would end
+    it.
   - A set-aside database is not salvaged. When the open path quarantines a
     corrupt file (`LorvexStore.open`, `recoverManagedByQuarantine`), nothing
     readable is copied into the new database and the unsent outbox rows stay in
@@ -206,33 +204,22 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   (another row, a closed inspector, another workspace), Start, Pause, and
   Reopen keep them, a write that fails returns the editor to the task with the
   text, Quit writes edited checklist rows and does not stall on an emptied
-  title, a sticky note autosaves once typing pauses, and the Mac's inline
-  quick add and the iPhone's checklist composer keep text whose write failed.
-  Found sound:
+  title, a sticky note autosaves once typing pauses, a space typed at the end
+  of a title or a checklist row is not an edit and survives the autosave, the
+  Mac's inline quick add and the iPhone's checklist composer keep text whose
+  write failed, accepting suggested times keeps a time set since they were
+  suggested, and the list, habit, and event edit sheets write only the fields
+  the user changed. Found sound:
   the daily review on both platforms, capture, the Mac quit handshake for the
   drafts it covers, dirty-draft preservation across refreshes, and no write
   error swallowed with `try?`.
-  - On the Mac inspector: the title autosave stores the trimmed title and
-    refills the field, so a trailing space typed before a pause disappears
-    ("Buy milk" then "and eggs" joins); a checklist row committed with trailing
-    whitespace keeps the inspector counted as edited, and it stops taking the
-    task's changes from other devices until it is selected again; and any
-    action that succeeds clears another action's error alert (`perform`).
+  - On the Mac, any action that succeeds clears another action's error alert
+    (`perform`).
   - Quit on the Mac does not cover a habit's name and cue, which live in the
     view and commit on blur: they are lost when ⌘Q is pressed with the cursor
     in them.
-  - Accepting suggested times writes the suggestion as it was computed, on both
-    platforms (`acceptSuggestedDayTimes`): `saveDayTimes` takes the time off
-    every unfinished task timed that day that the suggestion does not list, so a
-    time set after Suggest (in the inspector, by a drag, by the assistant) is
-    removed, and an accept after midnight plans for the previous day.
   - The Mac checklist add puts its text back, after a failure, over whatever
     was typed in the meantime.
-  - Sheets that save the whole record from a draft filled when they opened
-    write back fields the user did not touch: list edit on both platforms, the
-    iPhone habit editor, and the event editor on both. A change made elsewhere
-    while the sheet was open is reverted. The task editors, the Mac habit
-    inspector, and calendar drags send only what changed.
   - Smaller: creating a memory entry under a key that exists replaces that
     entry without asking, and on the Mac Edit on a row replaces unsaved composer
     text; on the iPhone only the memory composer refuses a swipe-to-dismiss

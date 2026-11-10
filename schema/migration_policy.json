@@ -15,11 +15,16 @@
       "003": {
         "name": "003_habit_skips.sql",
         "sha256": "76d49e9d3d8871f7dc40cad8ea2ff754639761181754e83a6e3477f39b261e00"
+      },
+      "004": {
+        "name": "004_task_delegations.sql",
+        "sha256": "2bfd3e51c02be5d3d21f5ced58cc474c8bb41afa830a80c9ab324c13a059290e"
       }
     },
     "sync_payload_contracts": {
       "001": "8486a2ad7ce86060dde606245d51bbc8fd0c4ebbd8f097425d1693dc91f72a85",
-      "002": "f3c5c2ca7c7ef5bc21e7a34a9f6ca78d7595df54830424386637e43d1dd1ebce"
+      "002": "f3c5c2ca7c7ef5bc21e7a34a9f6ca78d7595df54830424386637e43d1dd1ebce",
+      "003": "2e1bdd6a6f975047835e1f866bfc803221830fc90c0128ae68dbf088d3108da7"
     }
   }
 }

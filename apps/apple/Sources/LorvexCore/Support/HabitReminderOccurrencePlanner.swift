@@ -167,6 +167,19 @@ public enum HabitReminderOccurrencePlanner {
     }
   }
 
+  /// The span one delivered reminder quiets. A goal that any day of the period
+  /// can meet (a month, a week counted in times) is nudged once per period, so
+  /// the span is the period. A habit set on chosen weekdays is due on each of
+  /// them: Monday's reminder says nothing about Wednesday, so the span is the
+  /// day, and each chosen day gets its own reminder until the week's goal is
+  /// met.
+  static func debounceBounds(cadence: HabitCadence, day: IsoDate.YMD) -> (String, String) {
+    if case let .weekly(days) = cadence, let days, !days.isEmpty {
+      return (day.canonicalString, day.canonicalString)
+    }
+    return periodBounds(cadence: cadence, day: day)
+  }
+
   private static func deliveredInSamePeriod(
     cadence: HabitCadence, lastDelivered: Date, day: IsoDate.YMD, zone: TimeZone
   ) -> Bool {
@@ -175,8 +188,8 @@ public enum HabitReminderOccurrencePlanner {
     guard case .success(let deliveredYmd) = IsoDate.parseIsoDate(deliveredString) else {
       return false
     }
-    return periodBounds(cadence: cadence, day: deliveredYmd).0
-      == periodBounds(cadence: cadence, day: day).0
+    return debounceBounds(cadence: cadence, day: deliveredYmd).0
+      == debounceBounds(cadence: cadence, day: day).0
   }
 
   private static func monthBounds(_ day: IsoDate.YMD) -> (String, String) {

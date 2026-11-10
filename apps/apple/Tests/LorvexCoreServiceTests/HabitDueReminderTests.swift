@@ -331,6 +331,29 @@ struct HabitDueReminderTests {
         == ["2026-03-31", "2026-04-01", "2026-04-02"])
   }
 
+  @Test("A reminder delivered on one chosen weekday leaves the week's other chosen days due")
+  func chosenWeekdaysAreNotDebouncedTogether() async throws {
+    let service = try makeService()
+    try await seedUTC(service)
+    // 2026-03-30 is a Monday, 2026-04-01 a Wednesday.
+    let habit = try await service.createHabit(
+      name: "Gym", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "weekly", weekdays: [0, 2]))
+    try await addPolicy(service, habitID: habit.id, habitName: habit.name, time: "09:00")
+    let policyID = try await service.getHabitReminderPolicies(id: habit.id)[0].id
+
+    // Monday 10:00: its 09:00 reminder was armed and has fired.
+    let now = iso("2026-03-30T10:00:00Z")
+    try await service.replaceArmedHabitReminders(
+      armedThroughByPolicyID: [policyID: now], asOf: now)
+    try await service.reconcileDeliveredHabitReminders(asOf: now, deviceZone: utc)
+
+    let occurrences = try await service.getDueHabitReminderOccurrences(
+      now: now, horizonDays: 4, deviceZone: utc)
+    // Monday's reminder says nothing about Wednesday, which is due on its own.
+    #expect(Set(occurrences.map { fireDayString($0.fireDate) }) == ["2026-04-01"])
+  }
+
   // MARK: - Enabled / debounce
 
   @Test("A disabled policy contributes no occurrences")

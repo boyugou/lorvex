@@ -129,6 +129,27 @@ final class TaskDelegationServiceTests: XCTestCase {
     }
   }
 
+  /// The limit counts code points, as the table's CHECK does: 1,200 flags are
+  /// 1,200 characters and 2,400 code points, and are refused with a validation
+  /// error rather than by the database.
+  func testTheRequestLimitCountsCodePoints() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let task = try await service.createTask(title: "Plan the trip", notes: "")
+    let flags = String(repeating: "\u{1F1EF}\u{1F1F5}", count: 1200)
+    XCTAssertEqual(flags.count, 1200)
+
+    do {
+      _ = try await service.delegateTask(id: task.id, request: flags)
+      XCTFail("a request over the limit in code points was accepted")
+    } catch LorvexCoreError.validation(let field, _) {
+      XCTAssertEqual(field, "request")
+    }
+
+    let fits = String(repeating: "\u{1F1EF}\u{1F1F5}", count: 1000)
+    let handed = try await service.delegateTask(id: task.id, request: fits)
+    XCTAssertEqual(handed.delegation?.request, fits)
+  }
+
   func testDeletingATaskTombstonesItsDelegation() async throws {
     let service = try SwiftLorvexCoreService.inMemory()
     let task = try await service.createTask(title: "Cancel the trial", notes: "")

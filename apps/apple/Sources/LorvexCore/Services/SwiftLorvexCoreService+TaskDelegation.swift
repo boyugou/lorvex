@@ -183,7 +183,10 @@ extension SwiftLorvexCoreService {
     let trimmed = UnicodeHygiene.sanitizeUserText(request)
       .trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty, !ValidationText.isVisuallyEmpty(trimmed) else { return nil }
-    guard trimmed.count <= TaskDelegationRecord.maxRequestLength else {
+    // The table's CHECK counts code points, as SQLite's `length` does, so the
+    // limit is counted the same way: a request of emoji sequences can hold
+    // fewer characters than code points.
+    guard trimmed.unicodeScalars.count <= TaskDelegationRecord.maxRequestLength else {
       throw LorvexCoreError.validation(
         field: "request",
         message:

@@ -215,7 +215,9 @@ enum ApplyEdge {
           + TaskDelegationState.allCases.map(\.rawValue).joined(separator: ", "))
     }
     let request = try ApplyJSON.optionalStr(val, "request", entity: "task_delegation")
-    if let request, request.isEmpty || request.count > TaskDelegationRecord.maxRequestLength {
+    if let request,
+      request.isEmpty || request.unicodeScalars.count > TaskDelegationRecord.maxRequestLength
+    {
       throw ApplyError.invalidPayload(
         "task_delegation payload.request must hold 1 to "
           + "\(TaskDelegationRecord.maxRequestLength) characters when present")

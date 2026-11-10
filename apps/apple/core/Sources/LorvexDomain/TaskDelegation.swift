@@ -52,6 +52,7 @@ public struct TaskDelegationRecord: Equatable, Sendable {
     self.updatedAt = updatedAt
   }
 
-  /// The longest `request` the table stores, in characters.
+  /// The longest `request` the table stores, in Unicode code points, which is
+  /// what the table's CHECK counts.
   public static let maxRequestLength = 2000
 }

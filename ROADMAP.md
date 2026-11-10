@@ -75,7 +75,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     bar panel, widgets, and the Watch show no marker; the request can be set
     only through the assistant, since the apps have no field for it; and the
     two sample replies in the preview data are English in every language.
-    Nothing of this is released: the owner sees it first.
+    The convergence simulation now hands tasks over, returns them, and takes
+    them back; soaks of 200 seeds from 2000 on the log transport and 120 from
+    3000 on the chaos transport (2026-11-10) ended with no `task_delegation`
+    row diverging, the divergences being the older classes below.
 - Undo an assistant's change: the tool shipped (`undo_ai_change`, 2026-10-13):
   an assistant takes back its own update to a task or a one-off calendar event
   from the `ai_changelog` snapshots, restoring only the fields that still hold

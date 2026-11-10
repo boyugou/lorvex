@@ -578,7 +578,34 @@ private final class SimulationRun {
     case 56..<62: await listOperation(replica)
     case 62..<70: await tagOperation(replica)
     case 70..<78: await memoryOperation(replica)
-    default: await habitOperation(replica)
+    case 78..<94: await habitOperation(replica)
+    default: await delegationOperation(replica)
+    }
+  }
+
+  /// Hands a task to the assistant, hands one back with a result, or takes one
+  /// back: the `task_delegation` edge and, on a return, the task's AI notes.
+  func delegationOperation(_ replica: Replica) async {
+    let service = replica.service
+    let delegated = ids(replica, "SELECT task_id FROM task_delegations ORDER BY task_id")
+    switch below(4) {
+    case 0, 1:
+      guard let task = pick(taskIDs(replica)) else { return }
+      let request = chance(50) ? "ask \(word())" : nil
+      await attempt(replica, "delegate \(task.prefix(8))") {
+        _ = try await service.delegateTask(id: task, request: request)
+      }
+    case 2:
+      guard let task = pick(delegated) else { return }
+      let result = chance(70) ? "did \(word())" : nil
+      await attempt(replica, "return \(task.prefix(8))") {
+        _ = try await service.returnDelegatedTask(id: task, result: result)
+      }
+    default:
+      guard let task = pick(delegated) else { return }
+      await attempt(replica, "take back \(task.prefix(8))") {
+        _ = try await service.clearTaskDelegation(id: task)
+      }
     }
   }
 

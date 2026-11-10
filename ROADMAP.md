@@ -229,7 +229,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   habit on chosen weekdays is reminded on each of them; the task entity
   queries take background access; a burst of calendar change notices runs one
   refresh; a change of the device's time zone re-plans reminders; a widget
-  snapshot reloads the widgets only when it changes what they show; on the
+  snapshot reloads the widgets only when it changes what they show; a widget
+  that reloads after midnight rebuilds the snapshot for the new day itself; a
+  task completed from a widget takes back its pending reminders and snooze, and
+  a habit met from one its later nudges that day; on the
   Mac a repeating Calendar series is mirrored from its first occurrence, so a
   series that ends after a count ends where Calendar ends it, and a series
   Calendar no longer has is removed once Calendar confirms it, as is a one-off
@@ -249,9 +252,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     phone app publishes a snapshot for the new day (the Watch app asks the
     phone for one when opened): the iPhone widgets rebuild their own file when
     they reload, but that write never reaches the Watch.
-  - A write from outside the app process changes no notification: a widget
-    tap completes a task whose reminder still fires, and neither it nor a Focus
-    filter change reaches the Watch until the phone app publishes.
+  - A widget's Complete only takes reminders back: a repeat's next occurrence
+    is not reminded, and the badge does not change, until the phone app next
+    runs, and neither the write nor a Focus filter change reaches the Watch
+    until the phone app publishes.
   - Smaller: a Watch command the
     phone cannot decode is rejected on the watch after three tries without
     renumbering, and the phone then refuses every later command as a sequence

@@ -39,8 +39,10 @@ public struct WidgetCompleteTaskIntent: LorvexWidgetActionIntent {
       core: core
     )
     // This intent runs in the widget extension process, outside the app's
-    // in-process invalidation configuration. Signal only after the mutation has
-    // committed so any open app window can re-read the shared App Group store.
+    // in-process invalidation configuration and its reminder re-plan. After the
+    // commit, take back the completed task's pending reminders, then signal so
+    // any open app window can re-read the shared App Group store.
+    await ReminderWithdrawal.live.withdrawTaskReminders(taskID: task.id)
     await WidgetIntentPostCommitCoordinator.live().finish(core: core)
     return .result(
       dialog: IntentDialog(

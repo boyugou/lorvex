@@ -46,6 +46,9 @@ public struct WidgetCompleteHabitIntent: LorvexWidgetActionIntent {
     let core = LorvexCoreRuntimeFactory.makeForWidget()
     let updated = try await LorvexSystemIntentRunner.completeHabit(
       id: habitID, date: nil, core: core)
+    // Outside the app's reminder re-plan: a check-in that meets the period's
+    // target takes back the habit's later nudges.
+    await ReminderWithdrawal.live.withdrawHabitReminders(habitID: habitID, core: core)
     await WidgetIntentPostCommitCoordinator.live().finish(core: core)
     return .result(
       dialog: IntentDialog(

@@ -21,7 +21,8 @@ actor WidgetSnapshotWriteSerializer {
   static let shared = WidgetSnapshotWriteSerializer()
 
   enum WriteResult: Sendable {
-    case written
+    /// The bytes were written; `previousData` is what the file held before.
+    case written(previousData: Data?)
     case rejected(currentData: Data)
   }
 
@@ -85,7 +86,7 @@ actor WidgetSnapshotWriteSerializer {
       return .rejected(currentData: existing)
     }
     try data.write(to: url, options: [.atomic])
-    return .written
+    return .written(previousData: existing)
   }
 
   /// Hold the same cross-process publish lock across the canonical storage
@@ -235,6 +236,20 @@ public struct WidgetSnapshotFileStore: Sendable {
     to url: URL,
     managedDatabasePath: String? = nil
   ) async throws -> WidgetSnapshot {
+    try await writeReportingChange(
+      snapshot, to: url, managedDatabasePath: managedDatabasePath
+    ).winner
+  }
+
+  /// ``write(_:to:managedDatabasePath:)``, also reporting whether the file now
+  /// shows something it did not before: false when the write was refused as
+  /// older, or when it replaced a snapshot that differs from it only in when
+  /// it was generated.
+  public func writeReportingChange(
+    _ snapshot: WidgetSnapshot,
+    to url: URL,
+    managedDatabasePath: String? = nil
+  ) async throws -> (winner: WidgetSnapshot, changed: Bool) {
     let data = try encoder.encode(snapshot)
     let result = try await WidgetSnapshotWriteSerializer.shared.write(
       data,
@@ -249,15 +264,18 @@ public struct WidgetSnapshotFileStore: Sendable {
       lockTimeout: lockTimeout,
       lockRetryInterval: lockRetryInterval)
     switch result {
-    case .written:
-      return snapshot
+    case .written(let previousData):
+      let previous = previousData.flatMap {
+        try? JSONDecoder().decode(WidgetSnapshot.self, from: $0)
+      }
+      return (snapshot, previous.map { !$0.showsTheSame(as: snapshot) } ?? true)
     case .rejected(let currentData):
       guard let current = try? JSONDecoder().decode(WidgetSnapshot.self, from: currentData),
         current.version == WidgetSnapshot.supportedVersion
       else {
         throw WidgetSnapshotFileStoreError.rejectedSnapshotUnreadable
       }
-      return current
+      return (current, false)
     }
   }
 
@@ -417,16 +435,20 @@ public struct WidgetSnapshotPublisher: Sendable {
       statsSource: statsSource
     )
     // The reload is posted only after a durable write succeeds, so a glance
-    // surface never reloads onto a stale or half-written file. A `nil` URL skips
-    // the write (local/unentitled builds) while still reloading and mirroring.
+    // surface never reloads onto a stale or half-written file, and only when
+    // the file now shows something new: WidgetKit grants each widget a limited
+    // number of reloads a day, and a write refused as older or one that repeats
+    // the last snapshot would spend one for nothing. A `nil` URL skips the
+    // write (local/unentitled builds) while still reloading and mirroring.
     let winner: WidgetSnapshot
+    let changed: Bool
     if let url = destination.snapshotURL {
-      winner = try await store.write(
+      (winner, changed) = try await store.writeReportingChange(
         snapshot, to: url, managedDatabasePath: destination.managedDatabasePath)
     } else {
-      winner = snapshot
+      (winner, changed) = (snapshot, true)
     }
-    destination.reload()
+    if changed { destination.reload() }
     await destination.mirror?(winner)
     return winner
   }

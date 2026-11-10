@@ -95,6 +95,54 @@ func fileWidgetSnapshotPublisherReloadsGlanceSurfacesOnlyAfterDurableWrite() asy
   #expect(snapshotExistedAtReload.value)
 }
 
+/// WidgetKit grants each widget a limited number of reloads a day. A publish
+/// that repeats the snapshot on disk (apart from when it was generated), or one
+/// refused as older, reloads nothing; one that changes what a widget shows does.
+@Test
+func fileWidgetSnapshotPublisherReloadsOnlyWhenTheSnapshotChanges() async throws {
+  let tempDirectory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("lorvex-widget-reload-change-\(UUID().uuidString)", isDirectory: true)
+  let snapshotURL =
+    tempDirectory
+    .appendingPathComponent("Lorvex", isDirectory: true)
+    .appendingPathComponent(WidgetSnapshotLoader.defaultSnapshotFileName)
+  defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+  let reloadCount = LockedBox(0)
+  let clock = LockedBox(Date(timeIntervalSince1970: 1_779_465_600))
+  let publisher = FileWidgetSnapshotPublisher(
+    snapshotURL: snapshotURL,
+    projector: WidgetSnapshotProjector(now: { clock.value }),
+    reloadTrigger: WidgetReloadTrigger { reloadCount.mutate { $0 += 1 } }
+  )
+  func today(_ title: String, sequence: Int) -> TodaySnapshot {
+    TodaySnapshot(
+      summary: "",
+      tasks: [
+        makePublisherWidgetTask(
+          id: "task-\(title)", title: title, priority: .p2, dueDate: nil, estimatedMinutes: nil)
+      ],
+      localChangeSequence: sequence)
+  }
+
+  _ = try await publisher.publish(source: publisherSource(today("Write", sequence: 2)))
+  #expect(reloadCount.value == 1)
+
+  // The same content a minute later: only the generation time differs.
+  clock.mutate { $0 += 60 }
+  _ = try await publisher.publish(source: publisherSource(today("Write", sequence: 2)))
+  #expect(reloadCount.value == 1)
+
+  // An older revision is refused, and the file keeps the newer one.
+  let winner = try await publisher.publish(source: publisherSource(today("Old", sequence: 1)))
+  #expect(winner.tasks.map(\.title) == ["Write"])
+  #expect(reloadCount.value == 1)
+
+  // New content reloads.
+  _ = try await publisher.publish(source: publisherSource(today("Review", sequence: 3)))
+  #expect(reloadCount.value == 2)
+}
+
 /// Minimal thread-safe box so the `@Sendable` reload closure can record what it
 /// observed without tripping Swift 6 concurrency capture rules.
 final class LockedBox<Value>: @unchecked Sendable {

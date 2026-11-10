@@ -356,7 +356,9 @@ struct WidgetSnapshotEngineTests {
     #expect(loaded == valid)
   }
 
-  @Test("a rejected stale projection reloads and mirrors the actual disk winner")
+  /// The newer file's own writer reloaded the widgets when it wrote it, so the
+  /// refused projection spends no reload; the Watch still gets the disk winner.
+  @Test("a rejected stale projection mirrors the actual disk winner without reloading")
   func rejectedProjectionPropagatesCurrentWinner() async throws {
     let tempDirectory = FileManager.default.temporaryDirectory
       .appendingPathComponent("lorvex-engine-winner-\(UUID().uuidString)", isDirectory: true)
@@ -397,7 +399,7 @@ struct WidgetSnapshotEngineTests {
 
     #expect(returned == newer)
     #expect(mirrored.value == newer)
-    #expect(reloadCount.value == 1)
+    #expect(reloadCount.value == 0)
   }
 
   /// An equal-or-newer snapshot still overwrites: the guard drops only strictly

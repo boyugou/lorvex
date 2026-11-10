@@ -55,6 +55,18 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
   /// widget narrows the shared snapshot as it reads it.
   public private(set) var scopeList: ListSummary? = nil
 
+  /// Whether `other` holds the same content, apart from when it was
+  /// generated, which no widget shows.
+  public func showsTheSame(as other: WidgetSnapshot) -> Bool {
+    version == other.version && storageGeneration == other.storageGeneration
+      && focusFilterRevision == other.focusFilterRevision
+      && workspaceInstanceID == other.workspaceInstanceID
+      && localChangeSequence == other.localChangeSequence && timezone == other.timezone
+      && logicalDay == other.logicalDay && stats == other.stats && briefing == other.briefing
+      && tasks == other.tasks && habits == other.habits && lists == other.lists
+      && listStats == other.listStats && scopeList == other.scopeList
+  }
+
   enum CodingKeys: String, CodingKey {
     case version
     case generatedAt = "generated_at"

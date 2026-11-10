@@ -788,4 +788,97 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
     let snapshot = try await service.loadCalendarTimeline(from: "2026-06-01", to: "2026-06-05")
     XCTAssertFalse(snapshot.events.contains { $0.source == "provider" })
   }
+
+  // MARK: - Reconciling a window with what Calendar returned
+
+  private func ingest(
+    _ service: SwiftLorvexCoreService, _ events: [EventKitFetchedEvent], from: String, to: String
+  ) throws {
+    _ = try service.ingestEventKitEvents(
+      EventKitIngest.providerRows(from: events, scope: "device", accessMode: .fullDetails),
+      builtAtMode: .fullDetails, windowStart: from, windowEnd: to)
+  }
+
+  private func mirroredKeys(_ service: SwiftLorvexCoreService) throws -> Set<String> {
+    try service.read { db in
+      Set(try String.fetchAll(db, sql: "SELECT provider_event_key FROM provider_calendar_events"))
+    }
+  }
+
+  /// A Monday-to-Friday all-day event, 2026-06-01 to 2026-06-05.
+  private func conference() -> EventKitFetchedEvent {
+    EventKitFetchedEvent(
+      key: "ek-conference", title: "Conference", notes: nil,
+      startDate: "2026-06-01", startTime: nil, endDate: "2026-06-05", endTime: nil,
+      allDay: true, location: nil, timezone: nil)
+  }
+
+  /// Deleted in Calendar on Wednesday: a window that starts on Wednesday no
+  /// longer gets it from Calendar, and the mirror drops it although it began
+  /// before the window.
+  func testAOneOffEventThatBeganBeforeTheWindowIsDroppedWhenCalendarNoLongerHasIt() async throws {
+    let service = try makeService()
+    try await optIntoFullDetailTier(service)
+    try ingest(service, [conference()], from: "2026-06-01", to: "2026-06-07")
+    XCTAssertEqual(try mirroredKeys(service), ["ek-conference"])
+
+    try ingest(service, [], from: "2026-06-03", to: "2026-06-10")
+
+    XCTAssertEqual(try mirroredKeys(service), [])
+    let snapshot = try await service.loadCalendarTimeline(from: "2026-06-03", to: "2026-06-05")
+    XCTAssertFalse(snapshot.events.contains { $0.source == "provider" })
+  }
+
+  func testAOneOffEventCalendarStillReturnsIsKept() async throws {
+    let service = try makeService()
+    try await optIntoFullDetailTier(service)
+    try ingest(service, [conference()], from: "2026-06-01", to: "2026-06-07")
+
+    try ingest(service, [conference()], from: "2026-06-03", to: "2026-06-10")
+
+    XCTAssertEqual(try mirroredKeys(service), ["ek-conference"])
+  }
+
+  /// An event that reaches only the window's first day may be one Calendar
+  /// placed outside the window's instants (its own zone against the
+  /// planner's), so not getting it back there is no proof it was deleted.
+  func testAnEventShownOnlyOnTheWindowsFirstDayIsKept() async throws {
+    let service = try makeService()
+    try await optIntoFullDetailTier(service)
+    try ingest(service, [conference()], from: "2026-06-01", to: "2026-06-07")
+
+    try ingest(service, [], from: "2026-06-05", to: "2026-06-12")
+
+    XCTAssertEqual(try mirroredKeys(service), ["ek-conference"])
+  }
+
+  func testAnEventEntirelyOutsideTheWindowIsKept() async throws {
+    let service = try makeService()
+    try await optIntoFullDetailTier(service)
+    try ingest(service, [conference()], from: "2026-06-01", to: "2026-06-07")
+
+    try ingest(service, [], from: "2026-06-08", to: "2026-06-14")
+
+    XCTAssertEqual(try mirroredKeys(service), ["ek-conference"])
+  }
+
+  /// A repeating series that began before the window is left alone even when
+  /// the window's fetch does not return it: the window may hold none of its
+  /// occurrences, or only one the user removed, and neither shows that the
+  /// whole series is gone.
+  func testARepeatingSeriesThatBeganBeforeTheWindowIsKept() async throws {
+    let service = try makeService()
+    try await optIntoFullDetailTier(service)
+    let standup = EventKitFetchedEvent(
+      key: "ek-standup", title: "Standup", notes: nil,
+      startDate: "2026-06-01", startTime: "09:00", endDate: "2026-06-01", endTime: "09:15",
+      allDay: false, location: nil, timezone: "America/Los_Angeles",
+      recurrence: #"{"FREQ":"DAILY","INTERVAL":1}"#)
+    try ingest(service, [standup], from: "2026-06-01", to: "2026-06-07")
+
+    try ingest(service, [], from: "2026-06-08", to: "2026-06-14")
+
+    XCTAssertEqual(try mirroredKeys(service), ["ek-standup"])
+  }
 }
+

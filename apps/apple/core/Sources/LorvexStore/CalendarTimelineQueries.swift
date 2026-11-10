@@ -437,6 +437,46 @@ public enum CalendarTimelineQueries {
     return items
   }
 
+  /// The keys of the one-off (non-repeating) mirrored events of
+  /// `(providerKind, providerScope)` that the timeline shows on some day of
+  /// `[from, to]`, projected exactly as the timeline projects them, including
+  /// those that began before `from`. Reads the mirror whatever the scope's
+  /// state, and expands nothing but these rows.
+  ///
+  /// The EventKit ingest uses it to find a one-off event that spans into the
+  /// window it fetched but that Calendar no longer returns (deleted or moved
+  /// out). A repeating series is left out: one window's fetch does not show
+  /// that the whole series is gone.
+  public static func oneOffProviderEventKeysShown(
+    _ db: Database, providerKind: String, providerScope: String,
+    from: String, to: String, anchorTimezone: String
+  ) throws -> Set<String> {
+    guard let fromDate = try? CalendarRecurrence.parseYmd(from),
+      let toDate = try? CalendarRecurrence.parseYmd(to), from <= to
+    else { return [] }
+    let fromWide = (fromDate.addingDays(-1) ?? fromDate).ymdString
+    let toWide = (toDate.addingDays(1) ?? toDate).ymdString
+    let rows = try Row.fetchAll(
+      db,
+      sql: """
+        SELECT \(Self.providerTimelineColumns) \
+        FROM provider_calendar_events pce \
+        WHERE pce.provider_kind = ?3 AND pce.provider_scope = ?4 \
+          AND pce.recurrence IS NULL AND pce.start_date <= ?2 \
+          AND COALESCE(pce.end_date, pce.start_date) >= ?1
+        """,
+      arguments: [fromWide, toWide, providerKind, providerScope])
+    var keys = Set<String>()
+    for row in rows {
+      let key: String = row[2]
+      guard let raw = parseProviderRow(row) else { continue }
+      var shown: [CalendarTimelineItem] = []
+      try extendWithTolerantExpansion(&shown, raw, fromDate, toDate, anchorTimezone)
+      if !shown.isEmpty { keys.insert(key) }
+    }
+    return keys
+  }
+
   static func parseProviderRow(_ row: Row) -> CalendarTimeline.RawCalendarRow? {
     let providerKind: String = row[0]
     let providerScope: String = row[1]

@@ -2,6 +2,7 @@ import Foundation
 import GRDB
 import LorvexDomain
 import LorvexStore
+import LorvexWorkflow
 
 /// EventKit provider-mirror + write-back facade beside `LorvexCoreServicing`
 /// (it does not modify the app-facing protocol). The app reaches it by
@@ -50,11 +51,16 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
 
   /// Upsert a batch of ingest-mapped EventKit rows for the `[windowStart,
   /// windowEnd]` date window and reconcile **within that window only**: rows
-  /// present in `events` are upserted; cached rows whose `start_date` falls in
-  /// the window but whose key is absent from `events` are deleted (the system
-  /// event was removed / moved out). Rows outside the window are left untouched
-  /// so a navigation to one week never wipes another window's mirror that a
-  /// different consumer (MCP timeline, export, intents) may read. The scope
+  /// present in `events` are upserted, and cached rows the window covers whose
+  /// key is absent from `events` are deleted (the system event was removed or
+  /// moved out). A row is covered when its `start_date` falls in the window,
+  /// or when it is a one-off event the mirror shows on a day strictly inside
+  /// the window: the rest of a multi-day event that began earlier, which
+  /// Calendar returns for any window it overlaps. Rows the window does not
+  /// cover are left untouched so a navigation to one week never wipes another
+  /// window's mirror that a different consumer (MCP timeline, export, intents)
+  /// may read. A repeating series that began before the window is not covered:
+  /// one window's fetch does not show that the series is gone. The scope
   /// runtime state is marked `enabled` + `refreshSuccess` so the timeline union
   /// includes the rows.
   ///
@@ -110,6 +116,15 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
           db, providerKind: ProviderKind.eventkit, providerScope: scope,
           providerEventKey: staleKey)
       }
+      // One-off events that began before the window and still show inside it.
+      let spanning = try Self.eventKitOneOffKeysShownInside(
+        db, windowStart: windowStart, windowEnd: windowEnd
+      ).subtracting(keepKeys)
+      for staleKey in spanning {
+        try ProviderRepo.deleteProviderEvent(
+          db, providerKind: ProviderKind.eventkit, providerScope: scope,
+          providerEventKey: staleKey)
+      }
       for event in events {
         _ = try ProviderRepo.upsertProviderEvent(db, event: event, now: now)
       }
@@ -118,6 +133,30 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
         transition: .refreshSuccess(now: now))
       return events.count
     }
+  }
+
+  /// The keys of the one-off EventKit rows the mirror shows on the days
+  /// strictly inside `[windowStart, windowEnd]`.
+  ///
+  /// The first and last day are left out on purpose. EventKit is asked for the
+  /// instants the window spans in the planner's zone, while an all-day event
+  /// belongs to a calendar day in its own; on an edge day the two can disagree
+  /// about whether an event is in the window, and an event EventKit did not
+  /// return for that reason must not be taken for a deleted one. A window too
+  /// short to have an inside yields nothing.
+  private static func eventKitOneOffKeysShownInside(
+    _ db: Database, windowStart: String, windowEnd: String
+  ) throws -> Set<String> {
+    guard case .success(let first) = IsoDate.parseIsoDate(windowStart),
+      case .success(let last) = IsoDate.parseIsoDate(windowEnd)
+    else { return [] }
+    let from = IsoDate.addingDays(first, 1).canonicalString
+    let to = IsoDate.addingDays(last, -1).canonicalString
+    guard from <= to else { return [] }
+    return try CalendarTimelineQueries.oneOffProviderEventKeysShown(
+      db, providerKind: ProviderKind.eventkit, providerScope: eventKitScope,
+      from: from, to: to,
+      anchorTimezone: try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier)
   }
 
   /// Flip the EventKit scope's availability. Disabling drops the scope out of

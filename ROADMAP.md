@@ -240,12 +240,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   privacy-tier checks. Four items of
   `apps/apple/docs/reference/apple-official/APPLE_NOTIFICATION_REMINDER_AUDIT.md` still
   stand (N5, N6, N8, N10).
-  - Calendar events deleted in Apple Calendar can stay in Lorvex. The ingest
-    removes stale rows only among those whose `start_date` is inside the window
-    (`ProviderRepo.getProviderEventKeys`), while the timeline shows rows that
-    started earlier: a Monday to Friday event deleted on Wednesday stays for
-    the rest of the week, and a repeating series deleted elsewhere keeps its
-    stored master once the window has moved past the master's start.
+  - A repeating Calendar series deleted elsewhere can stay in Lorvex. The ingest
+    drops a one-off event Calendar no longer returns for a window the event
+    reaches into, but a series that began before the window is kept, since
+    one window's fetch does not show that the whole series is gone. Looking
+    each such series up in `EKEventStore` by identifier and passing the ones
+    that come back nil to the ingest would close it, best together with the
+    next item, which also lives in series assembly.
   - A repeating calendar series is mirrored from the first occurrence in the
     window (`EventKitSeriesAssembly`: `group.first { !$0.isDetached }`), and
     its `COUNT` is copied as is: a ten-week series ingested at week nine shows

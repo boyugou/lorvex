@@ -431,6 +431,13 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   (`taskDetailDraftTaskID = nil`) and refill it without that check. In a test,
   drive the path the UI takes (`selectTaskFromList`, `dismissOpenInspector`),
   then `await store.waitForLeftBehindDraftWrites()`.
+- **A Mac field that saves on blur reports its text to the store.** ⌘Q asks
+  `applicationShouldTerminate` before any field loses focus, and Quit can only
+  write what the store holds, so view `@State` typed into a commit-on-blur field
+  is lost. The habit inspector's name and encouragement report each keystroke
+  (`noteHabitFieldDraft`) and save through `commitHabitField`, whose writes Quit
+  waits for (`flushHabitFieldDraftForTermination`); a new field of that kind
+  joins `hasPendingAutosaveDraftForTermination` the same way.
 - **Review pages follow the logical day.** State that holds "the day this page
   shows" either follows the logical day or names a deliberate past day, and
   state that follows today flushes dirty drafts before the day moves

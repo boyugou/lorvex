@@ -263,6 +263,14 @@ final class AppStore {
   /// them, since their edits are no longer in the draft.
   @ObservationIgnored var leftBehindDraftWrites: [UUID: Task<Void, Never>] = [:]
 
+  /// The habit inspector's name or encouragement while it is being typed
+  /// (``noteHabitFieldDraft(_:)``), so Quit can save what the field holds.
+  @ObservationIgnored var habitFieldDraft: HabitFieldDraft?
+
+  /// Writes of a habit's name or encouragement (``commitHabitField(_:)``),
+  /// until each finishes. Quit waits for them.
+  @ObservationIgnored var habitFieldWrites: [UUID: Task<Void, Never>] = [:]
+
   /// The fingerprint of the draft a failed write last put back in the editor
   /// (``saveTaskDraftLeftBehind(for:)``), so the same text is put back once.
   @ObservationIgnored var restoredLeftBehindDraftFingerprint: String?

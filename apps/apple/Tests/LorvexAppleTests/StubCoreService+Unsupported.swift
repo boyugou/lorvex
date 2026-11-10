@@ -225,7 +225,8 @@ extension StubCoreService {
     cadence: HabitCadenceInput?,
     milestoneTarget: Patch<Int>
   ) async throws -> LorvexHabit {
-    try await preview.updateHabit(
+    if let updateHabitError { throw updateHabitError }
+    return try await preview.updateHabit(
       id: id,
       name: name,
       cue: cue,

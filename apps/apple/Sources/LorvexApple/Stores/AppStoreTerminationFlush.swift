@@ -4,13 +4,15 @@ extension AppStore {
   /// Whether a normal macOS termination must wait for an in-memory autosave
   /// draft. Explicit, unsubmitted controls (a new checklist row or recurrence
   /// editor) remain drafts by design; scalar task edits, edited checklist rows,
-  /// sticky notes, and the daily journal are autosave surfaces and must reach
-  /// SQLite before Quit, and so must the edits a selection change has handed to
-  /// the store (``saveTaskDraftLeftBehind(for:)``). A title emptied in a draft
-  /// is not waited for: a task cannot be saved without one, so it keeps the
-  /// title it has.
+  /// sticky notes, the daily journal, and a habit's name and encouragement
+  /// are autosave surfaces and must reach SQLite before Quit, and so must the
+  /// edits a selection change has handed to the store
+  /// (``saveTaskDraftLeftBehind(for:)``). A title or habit name emptied in a
+  /// draft is not waited for: neither can be saved without one, so each keeps
+  /// the one it has.
   var hasPendingAutosaveDraftForTermination: Bool {
     if hasTaskDraftPendingForTermination { return true }
+    if hasHabitFieldDraftPendingForTermination { return true }
     if !dailyReviewDraftMatchesLoaded { return true }
     return detachedWindowStores.contains { $0.store?.hasTaskDraftPendingForTermination == true }
   }
@@ -24,10 +26,12 @@ extension AppStore {
 
   /// Flush every autosave surface owned by this app instance. The root store
   /// weakly tracks detached-window stores, so one termination barrier covers
-  /// the main inspector, daily review, task-detail windows, and sticky notes.
+  /// the main inspector, the habit inspector, daily review, task-detail
+  /// windows, and sticky notes.
   @discardableResult
   func flushPendingAutosaveDraftsForTermination() async -> Bool {
     await flushTaskDraftForTermination()
+    await flushHabitFieldDraftForTermination()
     await flushDailyReviewDraftIfNeeded()
 
     detachedWindowStores.removeAll { $0.store == nil }

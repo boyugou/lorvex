@@ -16,6 +16,8 @@ extension AppStore {
   /// habits, their stats, and an open inspector's detail reload, the habit
   /// reminders are planned again (their text carries the name, and the
   /// cadence picks their days), and the widgets and sync pick up the change.
+  /// Returns whether the write committed.
+  @discardableResult
   func updateHabitFields(
     _ habit: LorvexHabit,
     name: String? = nil,
@@ -25,7 +27,7 @@ extension AppStore {
     targetCount: Int? = nil,
     cadence: HabitCadenceInput? = nil,
     milestoneTarget: Patch<Int> = .unset
-  ) async {
+  ) async -> Bool {
     guard
       await performCanonicalMutation({
         try await core.updateHabit(
@@ -40,7 +42,7 @@ extension AppStore {
           milestoneTarget: milestoneTarget
         )
       }) != nil
-    else { return }
+    else { return false }
     await reconcileAfterCommittedMutation(source: "macos.habit.update.reconcile") {
       habits = try await core.loadHabits(date: logicalTodayDateString)
     }
@@ -48,6 +50,7 @@ extension AppStore {
     await refreshHabitDetailIfLoaded(id: habit.id)
     await rescheduleHabitReminders()
     await republishSurfacesAfterLocalMutation()
+    return true
   }
 
   /// Loads `habit`'s rhythm (its cadence and per-day count) into the habit

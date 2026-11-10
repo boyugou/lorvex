@@ -14,9 +14,10 @@ import SwiftUI
 /// closes.
 ///
 /// The name and the encouragement save when their field loses focus or on
-/// Return. An emptied name reverts to the stored one; an emptied
-/// encouragement removes it. While a field is not being edited, it follows the
-/// stored value, so an edit from another device or the assistant shows here.
+/// Return, and Quit saves the text a field holds (``HabitFieldDraft``). An
+/// emptied name reverts to the stored one; an emptied encouragement removes
+/// it. While a field is not being edited, it follows the stored value, so an
+/// edit from another device or the assistant shows here.
 struct HabitDetailHeader: View {
   let store: AppStore
   let habit: LorvexHabit
@@ -97,6 +98,12 @@ struct HabitDetailHeader: View {
     }
     .onChange(of: habit.cue) { _, stored in
       if focusedField != .cue { cue = stored ?? "" }
+    }
+    .onChange(of: name) { _, typed in
+      if focusedField == .name { store.noteHabitFieldDraft(draft(.name, typed)) }
+    }
+    .onChange(of: cue) { _, typed in
+      if focusedField == .cue { store.noteHabitFieldDraft(draft(.cue, typed)) }
     }
     .onChange(of: isChoosingAppearance) { _, isOpen in
       if isOpen {
@@ -188,20 +195,19 @@ struct HabitDetailHeader: View {
     }
   }
 
+  private func draft(_ field: HabitFieldDraft.Field, _ text: String) -> HabitFieldDraft {
+    HabitFieldDraft(habit: habit, field: field, text: text)
+  }
+
   private func commitName() {
-    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else {
+    store.commitHabitField(draft(.name, name))
+    if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
       name = habit.name
-      return
     }
-    guard trimmed != habit.name else { return }
-    Task { await store.updateHabitFields(habit, name: trimmed) }
   }
 
   private func commitCue() {
-    let trimmed = cue.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard trimmed != (habit.cue ?? "") else { return }
-    Task { await store.updateHabitFields(habit, cue: trimmed.isEmpty ? .clear : .set(trimmed)) }
+    store.commitHabitField(draft(.cue, cue))
   }
 
   private func commitAppearance() {

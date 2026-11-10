@@ -337,6 +337,10 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
       return try XCTUnwrap(
         PayloadLoaders.loadHabitSkipSyncPayload(
           db, habitId: spec.pkValues[0], skippedDate: spec.pkValues[1]))
+    case .taskDelegation:
+      return try XCTUnwrap(
+        PayloadLoaders.loadTaskDelegationSyncPayload(
+          db, taskId: spec.pkValues[0], assignee: spec.pkValues[1]))
     default:
       throw StoreError.invariant("\(spec.kind.asString) is not a composite edge probe")
     }
@@ -731,6 +735,17 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
         parents: [.habit]))
   }
 
+  func testRoundTripTaskDelegation() throws {
+    try runProbe(
+      ProbeSpec(
+        kind: .taskDelegation, entityId: "\(pTask):assistant", table: "task_delegations",
+        pkColumns: ["task_id", "assignee"], pkValues: [pTask, "assistant"], isEdge: true,
+        overrides: [
+          "task_id": .text(pTask), "assignee": .text("assistant"), "state": .text("returned"),
+        ],
+        parents: [.task]))
+  }
+
   // MARK: - Coverage guard
 
   /// Every syncable kind (except the device-local `ai_changelog` audit trail,
@@ -745,6 +760,7 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
       EntityName.taskReminder, EntityName.taskChecklistItem,
       EntityName.habitReminderPolicy, EdgeName.taskTag, EdgeName.taskDependency,
       EdgeName.taskCalendarEventLink, EdgeName.habitCompletion, EdgeName.habitSkip,
+      EdgeName.taskDelegation,
     ]
     let documentedExclusions: Set<String> = [EntityName.aiChangelog, EntityName.entityRedirect]
     for type in EntityKind.allSyncableTypes {

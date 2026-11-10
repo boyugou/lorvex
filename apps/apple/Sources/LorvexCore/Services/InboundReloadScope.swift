@@ -62,7 +62,7 @@ public enum InboundReloadScope {
         // land on the day's completion evidence, so its blast radius is every
         // task-bearing surface.
         domains.formUnion([.today, .tasks, .lists, .calendar, .reviews])
-      case .taskReminder, .taskChecklistItem, .taskTag, .taskDependency:
+      case .taskReminder, .taskChecklistItem, .taskTag, .taskDependency, .taskDelegation:
         // Task-child / task-edge data is rendered by both the task workspace and
         // the selected-list detail. Reminder rescheduling is folded into `.tasks`.
         domains.formUnion([.today, .tasks, .lists])

@@ -20,7 +20,7 @@ extension SwiftLorvexCoreService {
   /// can enqueue the parent `task` delete.
   ///
   /// SQLite cascades silently drop `task_tags`, `task_dependencies`,
-  /// `task_calendar_event_links`, `task_reminders`, and `task_checklist_items`
+  /// `task_calendar_event_links`, `task_delegations`, `task_reminders`, and `task_checklist_items`
   /// on a parent delete; without an explicit pre-delete tombstone a peer that
   /// missed the parent delete would keep the orphaned child. The engine ships no
   /// `tombstoneXForTaskDelete` cascade helper for these (unlike the
@@ -78,6 +78,24 @@ extension SwiftLorvexCoreService {
       try enqueueDelete(
         db, hlc: hlc, deviceId: deviceId, kind: .taskCalendarEventLink,
         entityId: "\(tId):\(eventId)", payload: payload)
+    }
+
+    // task_delegations (composite PK {task_id}:{assignee}).
+    let delegationRows = try Row.fetchAll(
+      db,
+      sql: """
+        SELECT task_id, assignee, state, request, version, created_at, updated_at
+        FROM task_delegations WHERE task_id = ?
+        """,
+      arguments: [taskId])
+    for row in delegationRows {
+      let tId: String = row["task_id"], assignee: String = row["assignee"]
+      let payload = PayloadLoaders.taskDelegationPayload(
+        taskId: tId, assignee: assignee, state: row["state"], request: row["request"],
+        version: row["version"], createdAt: row["created_at"], updatedAt: row["updated_at"])
+      try enqueueDelete(
+        db, hlc: hlc, deviceId: deviceId, kind: .taskDelegation,
+        entityId: "\(tId):\(assignee)", payload: payload)
     }
 
     // task_reminders (simple PK) — independent synced children.

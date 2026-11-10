@@ -51,10 +51,20 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Apps: one action beside Complete and Defer ("Hand to Assistant", "Take
     Back"), a marker on the row ("With assistant", "Assistant replied"), on
     the Mac and the iPhone; four new strings in every language.
-  - Not decided: the Mac running a script the person installed when a task
-    is handed over, so that a tap on the phone starts the agent at home. It
-    would change "no background automation" in the design philosophy, so it
-    waits for the owner.
+  - The assistant drives the lifecycle (owner, 2026-11-10): a personal
+    assistant is always on and wakes on its own to check mail, chat, and
+    apps, Lorvex among them. Lorvex never starts or calls an agent; it makes
+    "is anything waiting for me" one cheap read with stable states, so a
+    second wake does not redo work, and keeps the result on the task. The
+    tasks an assistant has handed back are the person's decisions to make.
+  - Done so far (unreleased): migration 004, payload manifest 003, the sync
+    appliers, merge, delete, and backfill paths, the service operations
+    (`delegateTask`, `returnDelegatedTask`, `clearTaskDelegation`,
+    `delegatedTaskCount`), and `delegation` on every task the core returns.
+    A backup leaves delegations out (`BackupWholeStoreRoundTripTests`): a
+    restored task is the person's own. Still to do: the MCP tools and the
+    `list_tasks` filter, the Mac and iPhone action and row marker with their
+    strings, and the docs (operating model, features, server instructions).
 - Undo an assistant's change: the tool shipped (`undo_ai_change`, 2026-10-13):
   an assistant takes back its own update to a task or a one-off calendar event
   from the `ai_changelog` snapshots, restoring only the fields that still hold

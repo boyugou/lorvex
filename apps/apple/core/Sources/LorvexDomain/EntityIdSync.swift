@@ -101,6 +101,19 @@ public enum SyncEntityId {
     }
   }
 
+  /// The identity of a task's delegation edge (`task_delegation`): the task's
+  /// canonical UUID and the assignee's name, a lowercase identifier of at most
+  /// 32 characters, joined by one colon.
+  private static func validateTaskAssigneeEdge(_ value: String) -> Result<Void, ValidationError> {
+    let expected = "canonical task UUID:assignee"
+    switch splitComposite(value, expected) {
+    case .failure(let e): return .failure(e)
+    case .success(let (taskId, assignee)):
+      if case .failure(let e) = validateCanonicalUuid(taskId) { return .failure(e) }
+      return TaskDelegationAssignee.isValid(assignee) ? .success(()) : .failure(invalid(expected, value))
+    }
+  }
+
   private static func validateRedirectIdentity(
     _ value: String
   ) -> Result<Void, ValidationError> {
@@ -138,6 +151,8 @@ public enum SyncEntityId {
       return validateUuidUuidEdge(entityId, "canonical task UUID:calendar event UUID")
     case .habitCompletion, .habitSkip:
       return validateHabitDayEdge(entityId)
+    case .taskDelegation:
+      return validateTaskAssigneeEdge(entityId)
     case .entityRedirect:
       return validateRedirectIdentity(entityId)
     case .deviceState, .importSession, .dailySchedule:

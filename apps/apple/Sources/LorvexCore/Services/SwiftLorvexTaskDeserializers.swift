@@ -96,7 +96,21 @@ enum SwiftLorvexTaskDeserializers {
       createdAt: object["created_at"] as? String,
       updatedAt: object["updated_at"] as? String,
       completedAt: object["completed_at"] as? String,
-      archivedAt: object["archived_at"] as? String)
+      archivedAt: object["archived_at"] as? String,
+      delegation: try delegation(from: object["delegation"]))
+  }
+
+  /// The `delegation` object of a task response, or nil when the task is not
+  /// handed over (JSON null or absent).
+  static func delegation(from value: Any?) throws -> LorvexTaskDelegation? {
+    guard let object = value as? [String: Any] else { return nil }
+    let stateText = try requiredString(object, key: "state", path: "task.delegation.state")
+    guard let state = LorvexTaskDelegation.State(rawValue: stateText) else {
+      throw LorvexCoreError.malformedCoreData(
+        path: "task.delegation.state", reason: "unknown state \"\(stateText)\"")
+    }
+    return LorvexTaskDelegation(
+      state: state, request: object["request"] as? String, since: object["since"] as? String)
   }
 
   /// Decode the `planned_start_time` / `planned_end_time` pair (`HH:MM`, the

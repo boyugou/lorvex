@@ -14,7 +14,7 @@ import LorvexWorkflow
 /// ``ApplyFk/checkFkDependencies(_:entityType:entityId:payload:)``.
 ///
 /// Covers `task_tag`, `task_calendar_event_link`, `habit_completion`,
-/// `habit_skip`, and `task_dependency` including the cycle-break upsert path.
+/// `habit_skip`, `task_delegation`, and `task_dependency` including the cycle-break upsert path.
 enum ApplyEdge {
 
   private static func splitCompositeId(_ entityId: String) throws -> (String, String) {
@@ -191,6 +191,58 @@ enum ApplyEdge {
     try ApplyLww.lwwGatedDelete(
       db, table: "habit_skips", pkColumns: ["habit_id", "skipped_date"],
       pkValues: [habitId, skippedDate], incomingVersion: version)
+  }
+
+  // MARK: - task_delegation
+
+  static func applyTaskDelegationUpsert(
+    _ db: Database, entityId: String, payload: String, version: String, tieBreak: LwwTieBreak
+  ) throws {
+    let (taskId, assignee) = try splitCompositeId(entityId)
+    let val = try ApplyJSON.parseObject(payload)
+    // This relay binds the peer's values verbatim, so each is checked against
+    // the table's CHECK constraints first: a hostile or corrupt envelope drops
+    // as a typed InvalidPayload skip with a clear reason instead of tripping a
+    // constraint at bind time.
+    guard TaskDelegationAssignee.isValid(assignee) else {
+      throw ApplyError.invalidPayload(
+        "task_delegation assignee must be a lowercase identifier of at most 32 characters")
+    }
+    let state = try ApplyJSON.requiredStr(val, "state", entity: "task_delegation")
+    guard TaskDelegationState(rawValue: state) != nil else {
+      throw ApplyError.invalidPayload(
+        "task_delegation payload.state must be one of "
+          + TaskDelegationState.allCases.map(\.rawValue).joined(separator: ", "))
+    }
+    let request = try ApplyJSON.optionalStr(val, "request", entity: "task_delegation")
+    if let request, request.isEmpty || request.count > TaskDelegationRecord.maxRequestLength {
+      throw ApplyError.invalidPayload(
+        "task_delegation payload.request must hold 1 to "
+          + "\(TaskDelegationRecord.maxRequestLength) characters when present")
+    }
+    let createdAt = try ApplyJSON.requiredStr(val, "created_at", entity: "task_delegation")
+    let updatedAt = try ApplyJSON.requiredStr(val, "updated_at", entity: "task_delegation")
+
+    let sql = LwwUpsertSpec(
+      table: "task_delegations",
+      columns: SyncEntityDescriptor.require(.taskDelegation).plainColumns,
+      conflict: ["task_id", "assignee"], tieBreak: tieBreak
+    ).buildSQL()
+    do {
+      try db.execute(
+        sql: sql,
+        arguments: [
+          "task_id": taskId, "assignee": assignee, "state": state, "request": request,
+          "created_at": createdAt, "updated_at": updatedAt, "version": version,
+        ])
+    } catch { throw ApplyError.lift(error) }
+  }
+
+  static func applyTaskDelegationDelete(_ db: Database, entityId: String, version: String) throws {
+    let (taskId, assignee) = try splitCompositeId(entityId)
+    try ApplyLww.lwwGatedDelete(
+      db, table: "task_delegations", pkColumns: ["task_id", "assignee"],
+      pkValues: [taskId, assignee], incomingVersion: version)
   }
 
   // MARK: - task_dependency
@@ -529,6 +581,26 @@ public struct TaskDependencyApplier: EntityApplier {
     -> EntityApplyOutcome
   {
     try ApplyEdge.applyTaskDependencyDelete(
+      db, entityId: envelope.entityId, version: envelope.version.description)
+    return .applied
+  }
+}
+
+public struct TaskDelegationApplier: EntityApplier {
+  public init() {}
+  public var handledEntityTypes: [String] { [EntityKind.taskDelegation.asString] }
+  public func applyUpsert(
+    _ db: Database, envelope: SyncEnvelope, tieBreak: LwwTieBreak, applyTs: String
+  ) throws -> EntityApplyOutcome {
+    try ApplyEdge.applyTaskDelegationUpsert(
+      db, entityId: envelope.entityId, payload: envelope.payload,
+      version: envelope.version.description, tieBreak: tieBreak)
+    return .applied
+  }
+  public func applyDelete(_ db: Database, envelope: SyncEnvelope, applyTs: String) throws
+    -> EntityApplyOutcome
+  {
+    try ApplyEdge.applyTaskDelegationDelete(
       db, entityId: envelope.entityId, version: envelope.version.description)
     return .applied
   }

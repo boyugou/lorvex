@@ -236,6 +236,31 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   /// string clears the block.
   func setTaskAINotes(taskID: LorvexTask.ID, notes: String) async throws -> LorvexTask
 
+  // MARK: - Delegation
+  //
+  // A task handed to the person's assistant (``LorvexTaskDelegation``).
+
+  /// Hands the task to the assistant, with what the person asked for
+  /// (`request`, nil when the task itself says it). Only an open task that is
+  /// not in the Trash can be handed over. Handing over a task the assistant
+  /// handed back gives it to the assistant again; repeating a hand-over with
+  /// the same request writes nothing. Returns the updated task.
+  func delegateTask(id: LorvexTask.ID, request: String?) async throws -> LorvexTask
+
+  /// The assistant hands the task back. A non-empty `result` replaces the
+  /// task's AI notes in the same transaction; nil leaves them as they are.
+  /// Fails with a validation error when the task was not handed over. Returns
+  /// the updated task.
+  func returnDelegatedTask(id: LorvexTask.ID, result: String?) async throws -> LorvexTask
+
+  /// Takes the task back: removes its delegation, whichever state it is in.
+  /// A task that is not handed over is returned unchanged.
+  func clearTaskDelegation(id: LorvexTask.ID) async throws -> LorvexTask
+
+  /// How many open tasks, outside the Trash, are handed to the assistant in
+  /// `state`.
+  func delegatedTaskCount(state: LorvexTaskDelegation.State) async throws -> Int
+
   // MARK: - Checklist
   //
   // Per-task checklist item CRUD + reordering.

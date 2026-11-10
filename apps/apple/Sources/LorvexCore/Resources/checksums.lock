@@ -10,5 +10,9 @@
   "003": {
     "name": "003_habit_skips.sql",
     "sha256": "76d49e9d3d8871f7dc40cad8ea2ff754639761181754e83a6e3477f39b261e00"
+  },
+  "004": {
+    "name": "004_task_delegations.sql",
+    "sha256": "2bfd3e51c02be5d3d21f5ced58cc474c8bb41afa830a80c9ab324c13a059290e"
   }
 }

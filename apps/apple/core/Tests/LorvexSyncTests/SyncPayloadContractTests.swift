@@ -504,6 +504,8 @@ final class SyncPayloadContractTests: XCTestCase {
           entityID = "\(uuid(1000 + index)):\(uuid(2000 + index))"
         case .habitCompletion, .habitSkip:
           entityID = "\(uuid(1000 + index)):2026-07-14"
+        case .taskDelegation:
+          entityID = "\(uuid(1000 + index)):assistant"
         default: entityID = uuid(1000 + index)
         }
         try OutboxEnqueue.enqueuePayloadDelete(

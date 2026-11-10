@@ -35,6 +35,20 @@ extension PayloadLoaders {
     }
   }
 
+  public static func loadTaskDelegationsForTask(
+    _ db: Database, taskId: String
+  ) throws -> [(String, JSONValue)] {
+    let rows = try Row.fetchAll(
+      db,
+      sql: "SELECT \(taskDelegationSelectColumns) FROM task_delegations WHERE task_id = ?1",
+      arguments: [taskId])
+    return rows.map { row in
+      let t: String = row[0]
+      let a: String = row[1]
+      return ("\(t):\(a)", taskDelegationPayloadFromRow(row))
+    }
+  }
+
   public static func loadTaskDependenciesForTask(
     _ db: Database, taskId: String
   ) throws -> [(String, JSONValue)] {

@@ -206,6 +206,18 @@ extension SwiftLorvexCoreService {
       entityId: "\(habitId):\(skippedDate)", payload: payload)
   }
 
+  /// Enqueue an Upsert for one `task_delegations` edge (`{task_id}:{assignee}`),
+  /// building the payload from the live row.
+  func enqueueTaskDelegationUpsert(
+    _ db: Database, hlc: HlcSession, deviceId: String, taskId: String, assignee: String
+  ) throws {
+    let payload = try PayloadLoaders.loadTaskDelegationSyncPayload(
+      db, taskId: taskId, assignee: assignee)
+    try enqueueEdgeUpsert(
+      db, hlc: hlc, deviceId: deviceId, kind: .taskDelegation,
+      entityId: "\(taskId):\(assignee)", payload: payload)
+  }
+
   /// Enqueue an Upsert for one `task_calendar_event_links` edge
   /// (`{task_id}:{calendar_event_id}`), building the payload from the live row.
   func enqueueTaskCalendarEventLinkUpsert(

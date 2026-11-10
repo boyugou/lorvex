@@ -109,6 +109,8 @@ public enum TaskResponse {
     let enrichments = try TaskEnrichment.computeEnrichments(
       db, dates: dateEntries, today: today)
     let remindersByTask = try PayloadLoaders.loadTaskRemindersForTasks(db, taskIds: taskIds)
+    let delegations = try TaskDelegationRepo.delegations(
+      db, assignee: TaskDelegationAssignee.assistant)
 
     var out: [JSONValue] = []
     out.reserveCapacity(rows.count)
@@ -118,6 +120,7 @@ public enum TaskResponse {
       }
       applyEnrichment(&map, enrichments[taskId] ?? Enrichment())
       map["reminders"] = sortedReminders(remindersByTask[taskId] ?? [])
+      map["delegation"] = delegationJSON(delegations[taskId])
       out.append(.object(map))
     }
     return out
@@ -197,8 +200,8 @@ public enum TaskResponse {
   }
 
   /// Mutate `task` in place by appending the five enrichment slots
-  /// `tags`, `depends_on`, `checklist_items`, `lateness_state`, and
-  /// `reminders`.
+  /// `tags`, `depends_on`, `checklist_items`, `lateness_state`,
+  /// `reminders`, and `delegation`.
   static func enrichTaskJSON(_ db: Database, task: inout JSONValue) throws {
     guard case .object(var map) = task else {
       throw StoreError.invariant("task response JSON must be an object")
@@ -223,8 +226,24 @@ public enum TaskResponse {
 
     let reminders = try PayloadLoaders.loadTaskRemindersForTask(db, taskId: taskId)
     map["reminders"] = sortedReminders(reminders)
+    map["delegation"] = delegationJSON(
+      try TaskDelegationRepo.delegation(
+        db, taskId: taskId, assignee: TaskDelegationAssignee.assistant))
 
     task = .object(map)
+  }
+
+  /// A task's hand-off to the assistant as the response carries it: `state`
+  /// (`assistant` while the assistant holds the task, `returned` once it handed
+  /// it back), `request` (what the person asked for, or null), and `since`
+  /// (when the task was handed over). Null for a task that is not handed over.
+  static func delegationJSON(_ record: TaskDelegationRecord?) -> JSONValue {
+    guard let record else { return .null }
+    return .object([
+      "state": .string(record.state.rawValue),
+      "request": record.request.map(JSONValue.string) ?? .null,
+      "since": .string(record.createdAt),
+    ])
   }
 
   /// Fold the four ``Enrichment`` derivations (`tags`, `depends_on`,

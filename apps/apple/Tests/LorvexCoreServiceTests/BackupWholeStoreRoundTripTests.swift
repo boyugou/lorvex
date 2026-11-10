@@ -33,13 +33,16 @@ final class BackupWholeStoreRoundTripTests: XCTestCase {
 
   /// Tables a backup deliberately leaves out: sync, audit and idempotency
   /// bookkeeping, device-local runtime state, provider (EventKit) mirrors and
-  /// links whose identity is specific to one device, and search indexes the
-  /// store rebuilds from the rows above.
+  /// links whose identity is specific to one device, search indexes the
+  /// store rebuilds from the rows above, and a task's hand-off to the
+  /// assistant (`task_delegations`), which is the state of work in progress:
+  /// a restored task is the person's own, and what the assistant wrote stays
+  /// in the task's AI notes.
   private static let localTables: Set<String> = [
     "task_provider_event_links", "provider_calendar_events", "provider_scope_runtime_state",
     "device_state", "task_reminder_delivery_state", "habit_reminder_delivery_state",
     "error_logs", "schema_migrations", "mcp_idempotency", "ai_changelog",
-    "ai_changelog_entities",
+    "ai_changelog_entities", "task_delegations",
   ]
 
   private static let localTablePrefixes = ["sync_", "audit_", "local_", "tasks_fts", "calendar_events_fts"]

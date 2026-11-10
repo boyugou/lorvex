@@ -101,6 +101,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
   case taskCalendarEventLink = "task_calendar_event_link"
   case habitCompletion = "habit_completion"
   case habitSkip = "habit_skip"
+  case taskDelegation = "task_delegation"
   // Local-only (not in allSyncableTypes / topologicalEntityOrder).
   case deviceState = "device_state"
   case importSession = "import_session"
@@ -157,10 +158,11 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     }
   }
 
-  /// `true` for the 5 edge kinds (composite-PK relationships).
+  /// `true` for the 6 edge kinds (composite-PK relationships).
   public var isEdge: Bool {
     switch self {
-    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion, .habitSkip:
+    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion, .habitSkip,
+      .taskDelegation:
       return true
     default: return false
     }
@@ -205,6 +207,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     case .taskCalendarEventLink: return "task_calendar_event_links"
     case .habitCompletion: return "habit_completions"
     case .habitSkip: return "habit_skips"
+    case .taskDelegation: return "task_delegations"
     case .entityRedirect: return "sync_entity_redirects"
     case .deviceState: return "device_state"
     case .aiChangelog: return "ai_changelog"
@@ -233,7 +236,8 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     case .taskChecklistItem: return ("task_checklist_items", "id")
     case .habitReminderPolicy: return ("habit_reminder_policies", "id")
     case .aiChangelog, .entityRedirect, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .habitSkip, .deviceState, .importSession, .dailySchedule:
+      .habitCompletion, .habitSkip, .taskDelegation, .deviceState, .importSession,
+      .dailySchedule:
       return nil
     }
   }
@@ -275,6 +279,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     EdgeName.taskCalendarEventLink,
     EdgeName.habitCompletion,
     EdgeName.habitSkip,
+    EdgeName.taskDelegation,
   ]
 
   /// Fixed topological order for batch sync and import. Rows are applied in
@@ -299,6 +304,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     EdgeName.taskCalendarEventLink,
     EdgeName.habitCompletion,
     EdgeName.habitSkip,
+    EdgeName.taskDelegation,
     // Independent children
     EntityName.taskReminder,
     EntityName.taskChecklistItem,

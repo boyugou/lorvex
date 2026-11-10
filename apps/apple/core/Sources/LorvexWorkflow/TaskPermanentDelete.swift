@@ -94,6 +94,9 @@ public enum TaskPermanentDelete {
       EdgeName.taskCalendarEventLink,
       try PayloadLoaders.loadTaskCalendarEventLinksForTask(db, taskId: taskIdStr)))
     deleteSyncs.append(contentsOf: tagged(
+      EdgeName.taskDelegation,
+      try PayloadLoaders.loadTaskDelegationsForTask(db, taskId: taskIdStr)))
+    deleteSyncs.append(contentsOf: tagged(
       EdgeName.taskDependency,
       try PayloadLoaders.loadTaskDependenciesForTask(db, taskId: taskIdStr)))
 

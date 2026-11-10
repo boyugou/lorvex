@@ -8,6 +8,7 @@ public enum EdgeName {
   public static let taskCalendarEventLink = "task_calendar_event_link"
   public static let habitCompletion = "habit_completion"
   public static let habitSkip = "habit_skip"
+  public static let taskDelegation = "task_delegation"
 
   /// All edge type names in declaration order. Parent-owned collection tables
   /// are excluded — they are not independent sync entities.
@@ -17,5 +18,6 @@ public enum EdgeName {
     taskCalendarEventLink,
     habitCompletion,
     habitSkip,
+    taskDelegation,
   ]
 }

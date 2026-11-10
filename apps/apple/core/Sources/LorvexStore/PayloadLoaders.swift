@@ -326,6 +326,49 @@ public enum PayloadLoaders {
     ).map(habitSkipPayloadFromRow)
   }
 
+  // MARK: - task_delegation
+
+  public static let taskDelegationSelectColumns =
+    "task_id, assignee, state, request, version, created_at, updated_at"
+
+  public static func taskDelegationPayload(
+    taskId: String, assignee: String, state: String, request: String?, version: String,
+    createdAt: String, updatedAt: String
+  ) -> JSONValue {
+    .object([
+      "task_id": .string(taskId),
+      "assignee": .string(assignee),
+      "state": .string(state),
+      "request": request.map(JSONValue.string) ?? .null,
+      "version": .string(version),
+      "created_at": .string(createdAt),
+      "updated_at": .string(updatedAt),
+    ])
+  }
+
+  static func taskDelegationPayloadFromRow(_ row: Row) -> JSONValue {
+    .object([
+      "task_id": str(row, 0),
+      "assignee": str(row, 1),
+      "state": str(row, 2),
+      "request": optStr(row, 3),
+      "version": str(row, 4),
+      "created_at": str(row, 5),
+      "updated_at": str(row, 6),
+    ])
+  }
+
+  public static func loadTaskDelegationSyncPayload(
+    _ db: Database, taskId: String, assignee: String
+  ) throws -> JSONValue? {
+    try Row.fetchOne(
+      db,
+      sql:
+        "SELECT \(taskDelegationSelectColumns) FROM task_delegations WHERE task_id = ?1 AND assignee = ?2",
+      arguments: [taskId, assignee]
+    ).map(taskDelegationPayloadFromRow)
+  }
+
   // MARK: - habit_reminder_policy
 
   public static let habitReminderPolicySelectColumns =

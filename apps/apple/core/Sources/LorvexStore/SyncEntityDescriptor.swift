@@ -243,6 +243,7 @@ extension SyncEntityDescriptor {
     taskCalendarEventLink,
     habitCompletion,
     habitSkip,
+    taskDelegation,
     // Child-bearing aggregates. Their OUTBOUND stays on the dedicated builders
     // (the ``PayloadBuild`` aggregate composer / the habit loader) because their
     // wire shape embeds child collections the generic reader cannot see. habit
@@ -398,6 +399,13 @@ extension SyncEntityDescriptor {
   static let habitSkip = allColumns(
     .habitSkip,
     ["habit_id", "skipped_date", "created_at", "updated_at", "version"],
+    outbound: .edgeInline, inbound: .lwwColumns)
+
+  /// `task_delegation` edge: a task handed to an assignee, with where it
+  /// stands (`state`) and what the person asked for (`request`).
+  static let taskDelegation = allColumns(
+    .taskDelegation,
+    ["task_id", "assignee", "state", "request", "created_at", "updated_at", "version"],
     outbound: .edgeInline, inbound: .lwwColumns)
 
   /// `habit` — aggregate root whose weekly `weekdays` set lives in the

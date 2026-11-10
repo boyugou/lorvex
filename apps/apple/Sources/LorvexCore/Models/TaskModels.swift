@@ -163,6 +163,9 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
   /// ISO-8601 Trash timestamp from the `tasks.archived_at` column. Non-nil
   /// means the task row is soft-deleted and hidden from active task surfaces.
   public var archivedAt: String?
+  /// The task's hand-off to the person's assistant; nil while the task is
+  /// the person's own.
+  public var delegation: LorvexTaskDelegation?
 
   public init(
     id: String,
@@ -192,7 +195,8 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     createdAt: String? = nil,
     updatedAt: String? = nil,
     completedAt: String? = nil,
-    archivedAt: String? = nil
+    archivedAt: String? = nil,
+    delegation: LorvexTaskDelegation? = nil
   ) {
     self.id = id
     self.title = title
@@ -222,6 +226,35 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     self.updatedAt = updatedAt
     self.completedAt = completedAt
     self.archivedAt = archivedAt
+    self.delegation = delegation
+  }
+}
+
+/// A task handed to the person's assistant.
+///
+/// The assistant works on a task it holds with its other tools and hands it
+/// back with what it did, written into the task's AI notes; the person then
+/// confirms, completes, or hands it over again. Taking the task back removes
+/// the delegation.
+public struct LorvexTaskDelegation: Equatable, Sendable {
+  public enum State: String, Sendable, CaseIterable {
+    /// The assistant holds the task.
+    case assistant
+    /// The assistant handed the task back; it waits for the person.
+    case returned
+  }
+
+  public var state: State
+  /// What the person asked the assistant to do, in their words; nil when the
+  /// task itself says it.
+  public var request: String?
+  /// The sync timestamp of the hand-over.
+  public var since: String?
+
+  public init(state: State, request: String? = nil, since: String? = nil) {
+    self.state = state
+    self.request = request
+    self.since = since
   }
 }
 

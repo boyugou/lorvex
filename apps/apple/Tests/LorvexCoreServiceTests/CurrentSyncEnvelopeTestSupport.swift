@@ -131,7 +131,8 @@ enum CurrentSyncEnvelopeTestSupport {
       object["key"] = .string(entityId)
     case .dailyReview, .dailyBriefing:
       object["date"] = .string(entityId)
-    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion, .habitSkip:
+    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion, .habitSkip,
+      .taskDelegation:
       guard case .success(let pair) = CompositeEdge.splitCompositeEdgeId(entityId) else { return }
       switch entityType {
       case .taskTag:
@@ -149,6 +150,9 @@ enum CurrentSyncEnvelopeTestSupport {
       case .habitSkip:
         object["habit_id"] = .string(pair.0)
         object["skipped_date"] = .string(pair.1)
+      case .taskDelegation:
+        object["task_id"] = .string(pair.0)
+        object["assignee"] = .string(pair.1)
       default:
         break
       }

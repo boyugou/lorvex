@@ -347,6 +347,13 @@ extension Outbox {
       ) { db, a, b, _ in
         try PayloadLoaders.loadHabitSkipSyncPayload(db, habitId: a, skippedDate: b)
       }
+    case .taskDelegation:
+      try backfillEdgeRows(
+        db, kind: kind, deviceId: deviceId, into: &report,
+        sql: "SELECT task_id AS a, assignee AS b, version FROM task_delegations"
+      ) { db, a, b, _ in
+        try PayloadLoaders.loadTaskDelegationSyncPayload(db, taskId: a, assignee: b)
+      }
     default:
       return
     }
@@ -432,6 +439,18 @@ extension Outbox {
         try reassert(.taskChecklistItem, entityId: itemId, stored: row["version"]) {
           try OutboxEnqueue.readEntityPayloadSnapshot(
             db, entityType: EntityKind.taskChecklistItem.asString, entityId: itemId)
+        }
+      }
+      for row in try Row.fetchAll(
+        db, sql: "SELECT assignee AS a, version FROM task_delegations WHERE task_id = ?",
+        arguments: [parentId])
+      {
+        let assignee: String = row["a"]
+        try reassert(
+          .taskDelegation, entityId: "\(parentId):\(assignee)", stored: row["version"]
+        ) {
+          try PayloadLoaders.loadTaskDelegationSyncPayload(
+            db, taskId: parentId, assignee: assignee)
         }
       }
     default:

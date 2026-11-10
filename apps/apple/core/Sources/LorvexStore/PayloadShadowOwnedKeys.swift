@@ -48,7 +48,8 @@ extension PayloadShadow {
     case .list, .tag, .taskReminder, .taskChecklistItem, .habitReminderPolicy, .memory,
       .calendarSeriesCutover,
       .preference, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .habitSkip, .habit, .calendarEvent, .dailyReview, .dailyBriefing:
+      .habitCompletion, .habitSkip, .taskDelegation, .habit, .calendarEvent, .dailyReview,
+      .dailyBriefing:
       return SyncEntityDescriptor.require(kind).wireKeys
     case .deviceState, .importSession, .dailySchedule:
       return []
@@ -71,7 +72,8 @@ extension PayloadShadow {
     case .list, .tag, .taskReminder, .taskChecklistItem, .habitReminderPolicy, .memory,
       .calendarSeriesCutover,
       .preference, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .habitSkip, .habit, .calendarEvent, .dailyReview, .dailyBriefing:
+      .habitCompletion, .habitSkip, .taskDelegation, .habit, .calendarEvent, .dailyReview,
+      .dailyBriefing:
       return SyncEntityDescriptor.require(kind).syntheticKeys
     case .deviceState, .importSession, .dailySchedule:
       return []
@@ -114,7 +116,8 @@ extension PayloadShadow {
     case .list, .tag, .taskReminder, .taskChecklistItem, .habitReminderPolicy, .memory,
       .calendarSeriesCutover,
       .preference, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .habitSkip, .habit, .calendarEvent, .dailyReview, .dailyBriefing:
+      .habitCompletion, .habitSkip, .taskDelegation, .habit, .calendarEvent, .dailyReview,
+      .dailyBriefing:
       // Migrated to ``SyncEntityDescriptor``: served by the descriptor consult
       // above, so these arms are unreachable at runtime. Kept (deriving from the
       // same descriptor) purely so the switch stays exhaustive and a NEW

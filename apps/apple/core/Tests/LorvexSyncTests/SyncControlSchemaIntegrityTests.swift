@@ -170,6 +170,7 @@ final class SyncControlSchemaIntegrityTests: XCTestCase {
         "tags.version",
         "task_calendar_event_links.version",
         "task_checklist_items.version",
+        "task_delegations.version",
         "task_dependencies.version",
         "task_reminders.version",
         "task_tags.version",

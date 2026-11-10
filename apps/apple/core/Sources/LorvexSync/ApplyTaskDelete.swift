@@ -100,6 +100,10 @@ extension ApplyTask {
       selectSQL: "SELECT calendar_event_id, version FROM task_calendar_event_links WHERE task_id = ?",
       parentId: taskId, entityType: EdgeName.taskCalendarEventLink,
       composeId: { "\(taskId):\($0)" }, version: version, deletedAt: deletedAt)
+    try ApplyAggregate.tombstoneCompositeEdges(
+      db, selectSQL: "SELECT assignee, version FROM task_delegations WHERE task_id = ?",
+      parentId: taskId, entityType: EdgeName.taskDelegation,
+      composeId: { "\(taskId):\($0)" }, version: version, deletedAt: deletedAt)
     try ApplyAggregate.tombstoneChildRows(
       db, selectSQL: "SELECT id, version FROM task_reminders WHERE task_id = ?",
       parentId: taskId, entityType: EntityName.taskReminder, version: version,

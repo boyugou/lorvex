@@ -23,8 +23,8 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   maintenance".
 - watchOS / Widgets design audits (need on-device).
 
-- Hand a task to the assistant (owner approved the idea 2026-11-10; in
-  progress, not released). A task can be handed to the user's own assistant,
+- Hand a task to the assistant (owner approved the idea 2026-11-10;
+  released in build 141). A task can be handed to the user's own assistant,
   which works on it with its other tools and hands it back with what it did;
   the list becomes a queue the person and the assistant share. Decisions:
   - Storage is a new synced edge, `task_delegation`, keyed `(task_id,

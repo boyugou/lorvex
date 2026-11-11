@@ -293,7 +293,9 @@ checks the toolchain and the credentials before anything builds.
    build number, and prints the two delivery ids. `upload` does both in one
    run. Each channel stops at its first failing step, and a step that fails
    with a transient network error (a lost connection, a 502, 503, or 504) runs
-   once more first. Credentials are masked in every log.
+   once more first. Credentials are masked in every log. Keep the Mac on AC
+   power: an upload cut off by a low-battery sleep fails when the Mac wakes,
+   and `deliver` then has to be run again.
 5. `script/release_testflight.sh poll <ios-id> <mac-id> <log-dir>` waits until
    both builds have `"import-status" : "VALID"` and a build status of
    `VALID`, `VALID_BINARY`, or `BETA_INTERNAL_TESTING`. `VALID_BINARY` can sit
@@ -415,7 +417,7 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 140 went up on
+- **TestFlight builds expire 90 days after upload.** Build 141 went up on
   2026-11-10, so it stops installing around 2027-02-08. Upload a fresh build by
   2027-01-25 (the steps above), even without a product change, while testers
   still use TestFlight.

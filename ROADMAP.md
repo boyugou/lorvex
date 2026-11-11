@@ -21,7 +21,8 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - Standing maintenance and its dates (TestFlight build expiry, certificates,
   toolchain, dependencies): `apps/apple/docs/release.md`, "Standing
   maintenance".
-- watchOS / Widgets design audits (need on-device).
+- watchOS / Widgets design audits on hardware (the Watch read-through of
+  2026-11-11 below used the simulator).
 
 - Hand a task to the assistant (owner approved the idea 2026-11-10;
   released in build 141). A task can be handed to the user's own assistant,
@@ -324,6 +325,52 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     phone cannot decode is rejected on the watch after three tries without
     renumbering, and the phone then refuses every later command as a sequence
     gap.
+- Read-through of the Apple Watch app, its complication, and the phone's side
+  of the link (2026-11-11): every source file read, the five preview pages
+  captured on the simulator from the build of 2026-10-12 (the Mac was on
+  battery, so no rebuild; the pages' layout code has not changed since, the
+  priority and habit colors have). Traced to the code, not reproduced on a
+  watch. Found sound: the replica's workspace fence, ordering, and atomic
+  file; the command journal (never evicts, writes before it reports success);
+  first-in-first-out delivery with ACKs bound to a command's identity and
+  checksum; the phone's ledger, which applies a command once across retries
+  and restarts; the size bounds on everything the phone sends; titles redacted
+  on a locked face; the product day and its time zone carried by the replica
+  rather than computed on the wrist. Open:
+  - A habit checked on the wrist while the phone is out of reach reads as
+    unchecked again at the next refresh, which every wrist raise runs:
+    `reapplyPendingTaskCommands` leaves habit check-ins out, since adding one
+    to a replica that already holds it would count it twice. A habit counted
+    several times a day then invites a second tap, and the phone applies both.
+    A check-in journaled after the replica on disk was received cannot be in
+    it; both times are the watch's own clock (the journal's `createdAt`, the
+    replica file's modification date), so that case can be re-applied exactly,
+    once `LorvexWatchReplicaStore.accept` stops rewriting identical bytes.
+  - `LorvexWatchRootView` replaces the whole page stack with a spinner while
+    `isLoading` is true and Today is empty. On a cleared day every habit
+    check-in and every capture tears the pages down and rebuilds them (the
+    habits page scrolls back to its top), and the first frame after launch
+    reads "All clear" before the first refresh has run. The spinner belongs
+    only before the first refresh finishes.
+  - A rejected action reads "Action 37 wasn’t applied": the journal's sequence
+    number, with neither the action nor the task named (only a capture shows
+    its title).
+  - A failed action is explained only on Today. The habits and capture pages
+    give the failure haptic alone, a capture refused because the watch has no
+    replica yet leaves its text with no reason, and on an empty Today a failed
+    capture or check-in reads "Couldn’t load Today".
+  - Nothing on the wrist takes back a completed task or a habit check-in, and
+    the wire has no reopen or uncheck. A few seconds' grace before the command
+    is journaled would cover a mistaken tap with no protocol change.
+  - An error the phone does not classify (`StoreError.invariant`,
+    `StoreError.staleVersion`) is answered as retryable without limit, so one
+    such command holds every later one back with no way out on the watch;
+    related to the sequence gap above.
+  - Smaller: the list shown at midnight stays until the app is next
+    activated; the watch asks the phone for a replica only when it has none or
+    one from an earlier day; the phone answers that request only after its
+    full refresh, the iCloud pass included; the "Synced" line on the capture
+    page is drawn as a row that looks tappable.
 - Russian at the largest accessibility text size (iPhone, 2026-10-12) was
   captured for Today, Tasks, Habits, and the event detail: legible, hyphenated
   by the system, nothing overlapping.

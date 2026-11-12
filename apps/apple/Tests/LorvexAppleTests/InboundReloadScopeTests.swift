@@ -153,7 +153,7 @@ struct InboundReloadScopeTests {
     #expect(InboundReloadScope.republishesWidget([.tasks]))
     #expect(InboundReloadScope.republishesWidget([.habits]))
     #expect(InboundReloadScope.republishesWidget([.lists]))
-    #expect(InboundReloadScope.republishesWidget([.calendar]) == false)
+    #expect(InboundReloadScope.republishesWidget([.calendar]), "the large Today widget lists the day's events")
     #expect(InboundReloadScope.republishesWidget([.reviews]) == false)
   }
 }

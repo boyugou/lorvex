@@ -94,7 +94,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     the app shows, carried as an optional `events` key, titled "Busy" while
     titles are hidden, left out of a list-configured widget and the Watch
     replica, and the timeline redraws at each event's start and end, so a
-    finished meeting leaves without a reload. Medium has no room for them
+    finished meeting leaves without a reload. A change to the calendar alone
+    republishes the widget: a Lorvex event the person or the assistant
+    writes (the database-change signal's full refresh), one that arrives
+    through sync (the calendar now counts among the widget's domains), and
+    the EventKit mirror, which writes without that signal, so each app
+    republishes after mirroring a window that holds today; a mirrored event
+    alone changes no revision, and the reload check compares the events.
+    Medium has no room for them
     beside its two rows; whether it should show the next event in place of
     a row is open, to settle with the widgets in use.
 

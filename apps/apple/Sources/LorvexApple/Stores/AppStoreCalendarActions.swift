@@ -342,6 +342,13 @@ extension AppStore {
         lastImportedCalendarEventCount = 0
         lastCalendarImportReport = .failed(operation: "eventkit-import", error: error)
       }
+      // The mirror feeds the Today widget's events, and an ingest writes it,
+      // clears it, or removes rows without the database-change signal that
+      // republishes the widget after any other write. Republish here when the
+      // window holds today; the widget reloads only if what it shows changed.
+      if from <= logicalTodayDateString, logicalTodayDateString <= to {
+        try? await publishWidgetSnapshot()
+      }
     }
     async let loadedTimeline = core.loadCalendarTimeline(from: from, to: to)
     async let loadedTasks = core.getScheduledTasks(

@@ -1,5 +1,7 @@
 import Foundation
 import LorvexCore
+import LorvexDomain
+import LorvexStore
 import Testing
 
 @testable import LorvexMobile
@@ -112,6 +114,75 @@ struct WidgetTodayEventsTests {
     #expect(replica.events.isEmpty, "the watch draws no events, so its replica carries none")
   }
 
+  /// A Calendar event mirrored from EventKit moves no task and leaves the
+  /// database's change sequence where it was, so nothing but the event says
+  /// the file is out of date: the next publish must still write it and reload
+  /// the widgets.
+  @Test("a publish after a mirrored event alone changed rewrites the file and reloads the widgets")
+  func aMirroredEventAloneRewritesTheFile() async throws {
+    let core = try await makeSeededInMemoryCore()
+    let directory = FileManager.default.temporaryDirectory
+      .appending(path: "widget-events-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appending(path: "widget-snapshot.json")
+    let reloads = Counter()
+    let publisher = WidgetSnapshotPublisher(
+      destination: .init(snapshotURL: url, reload: { reloads.increment() }))
+
+    _ = try await publisher.refresh(core: core)
+    let before = reloads.value
+    _ = try await publisher.refresh(core: core)
+    #expect(reloads.value == before, "a publish that changes nothing spends no reload")
+
+    let source = try await core.loadWidgetSnapshotSource(date: nil)
+    let day = source.logicalDay
+    _ = try await core.setPreference(
+      key: PreferenceKeys.devCalendarAiAccessMode,
+      value: CalendarAiAccessMode.fullDetails.asString)
+    // Setting the preference is a write of its own; publish it first.
+    _ = try await publisher.refresh(core: core)
+    let sequence = try await core.loadWidgetSnapshotSource(date: nil).today.localChangeSequence
+    let settled = reloads.value
+    _ = try core.ingestEventKitEvents(
+      EventKitIngest.providerRows(
+        from: [
+          EventKitFetchedEvent(
+            key: "ek-review", title: "Design review", notes: nil, startDate: day,
+            startTime: "23:00", endDate: day, endTime: "23:30", allDay: false, location: nil,
+            timezone: nil)
+        ],
+        scope: "device", accessMode: .fullDetails),
+      builtAtMode: .fullDetails, windowStart: day, windowEnd: day)
+    #expect(
+      try await core.loadWidgetSnapshotSource(date: nil).today.localChangeSequence == sequence,
+      "the mirror is device-local and leaves the change sequence alone")
+    _ = try await publisher.refresh(core: core)
+
+    let written = try JSONDecoder().decode(WidgetSnapshot.self, from: Data(contentsOf: url))
+    #expect(written.events.contains { $0.title == "Design review" })
+    #expect(reloads.value == settled + 1)
+  }
+
+  /// The EventKit mirror is written without the database-change signal that
+  /// republishes the widget after every other write, so each place that
+  /// ingests it republishes the widget itself when its window holds today.
+  @Test("both apps republish the widget after mirroring a window that holds today")
+  func eventKitIngestRepublishes() throws {
+    let sources = URL(filePath: #filePath)
+      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+      .appending(path: "Sources")
+    let mac = try String(
+      contentsOf: sources.appending(path: "LorvexApple/Stores/AppStoreCalendarActions.swift"),
+      encoding: .utf8)
+    let phone = try String(
+      contentsOf: sources.appending(path: "LorvexMobile/MobileStoreEventKitSettingsActions.swift"),
+      encoding: .utf8)
+    #expect(mac.contains(
+      "if from <= logicalTodayDateString, logicalTodayDateString <= to {\n        try? await publishWidgetSnapshot()"))
+    #expect(phone.contains(
+      "if fromDay <= logicalTodayString, logicalTodayString <= throughDay {\n      _ = try? await publishWidgetSnapshot()"))
+  }
+
   @Test("hidden titles hide the events' titles too")
   func hiddenTitles() {
     let event = CalendarTimelineEvent(
@@ -167,4 +238,11 @@ struct WidgetTodayEventsTests {
     let minutes = dates.map { calendar.component(.hour, from: $0) * 60 + calendar.component(.minute, from: $0) }
     #expect(minutes == [840, 900])
   }
+}
+
+private final class Counter: @unchecked Sendable {
+  private let lock = NSLock()
+  private var count = 0
+  var value: Int { lock.withLock { count } }
+  func increment() { lock.withLock { count += 1 } }
 }

@@ -159,6 +159,13 @@ extension MobileStore {
       windowStart: fromDay,
       windowEnd: throughDay,
       requestAccess: requestAccess)
+    // The mirror feeds the Today widget's events, and an ingest writes it,
+    // clears it, or removes rows without the database-change signal that
+    // republishes the widget after any other write. Republish here when the
+    // window holds today; the widget reloads only if what it shows changed.
+    if fromDay <= logicalTodayString, logicalTodayString <= throughDay {
+      _ = try? await publishWidgetSnapshot()
+    }
   }
 
   /// The calendar AI-access tier the EventKit ingest should mirror at, read from

@@ -137,9 +137,9 @@ public enum InboundReloadScope {
   }
 
   /// Whether a selective reload of `domains` should republish the widget snapshot,
-  /// which reads today, habits, and lists.
+  /// which reads today, habits, lists, and the day's calendar events.
   public static func republishesWidget(_ domains: Set<InboundReloadDomain>) -> Bool {
-    !domains.isDisjoint(with: [.today, .tasks, .habits, .lists])
+    !domains.isDisjoint(with: [.today, .tasks, .habits, .lists, .calendar])
   }
 
   /// Whether a selective reload of `domains` should make an open review page

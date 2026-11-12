@@ -54,7 +54,9 @@ struct LorvexWatchTodayPage: View {
   @ViewBuilder
   private func content(ordered: [LorvexTask], nowMinutes: Int) -> some View {
     if ordered.isEmpty {
-      if store.error != nil {
+      // Today could not load; an action that failed on an emptied day is
+      // not that, and the day says what it holds with the failure above it.
+      if store.error != nil, !store.errorIsFromAction {
         LorvexWatchErrorNote(store: store)
       } else {
         emptyDay
@@ -63,12 +65,9 @@ struct LorvexWatchTodayPage: View {
       List {
         // An action that failed while tasks are listed: the haptic alone is
         // easy to miss.
-        if store.error != nil {
-          Label(LorvexWatchCalmCopy.actionFailed, systemImage: "exclamationmark.triangle.fill")
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(LorvexDesign.Palette.warning)
+        if let failure = store.actionFailureText {
+          LorvexWatchActionFailureLine(text: failure)
             .listRowBackground(Color.clear)
-            .accessibilityIdentifier("watch.today.actionError")
         }
         if let lead = ordered.first, let time = store.runningTime(of: lead, at: nowMinutes) {
           runningLead(lead, time: time, nowMinutes: nowMinutes)
@@ -190,6 +189,10 @@ struct LorvexWatchTodayPage: View {
 
   private var emptyDay: some View {
     VStack(spacing: LorvexDesign.Spacing.xs) {
+      if let failure = store.actionFailureText {
+        LorvexWatchActionFailureLine(text: failure)
+          .padding(.bottom, LorvexDesign.Spacing.xs)
+      }
       Image(systemName: store.completedTodayCount > 0 ? "checkmark.circle.fill" : "checkmark.circle")
         .font(LorvexDesign.Typography.sectionHeader)
         .foregroundStyle(store.completedTodayCount > 0 ? LorvexDesign.Palette.done : .secondary)

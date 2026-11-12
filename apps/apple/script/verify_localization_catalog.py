@@ -1015,7 +1015,6 @@ NON_COUNT_INTEGER_ARGUMENTS: dict[str, dict[int, str]] = {
     "system.entity.habit.progress.today": {1: _RATIO, 2: _RATIO},
     "system.list.health.read.item": {2: _LABEL_VALUE},
     "task_detail.notes.character_limit": {1: _NUMERATOR},
-    "watch.delivery.rejected": {1: _IDENTIFIER},
     "widget.habits.circular.a11y": {1: _NUMERATOR},
     "widget.habits.row.progress.a11y": {2: _RATIO, 3: _RATIO},
     "widget.progress.a11y": {1: _NUMERATOR},

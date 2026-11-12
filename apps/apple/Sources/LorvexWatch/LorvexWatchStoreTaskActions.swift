@@ -51,7 +51,7 @@ extension LorvexWatchStore {
         _ = try await core.completeHabit(id: id, date: date)
       }
     } catch {
-      self.error = error
+      failAction(error)
     }
   }
 
@@ -64,7 +64,7 @@ extension LorvexWatchStore {
         _ = try await core.deferTask(id: id, until: tomorrow)
       }
     } catch {
-      self.error = error
+      failAction(error)
     }
   }
 
@@ -113,16 +113,16 @@ extension LorvexWatchStore {
         _ = try await core.createTask(title: trimmedTitle, notes: "")
         captureTitle = ""
       } catch {
-        self.error = error
+        failAction(error)
       }
     case .snapshot, .snapshotUnavailable:
       guard !isLoading else { return }
       guard let forwarder = mutationForwarder else {
-        error = LorvexCoreError.unsupportedOperation(
+        failAction(LorvexCoreError.unsupportedOperation(
           String(
             localized: "watch.error.capture_forwarder_required", defaultValue: "Open Lorvex on iPhone to capture new tasks.",
             table: "Localizable", bundle: WatchL10n.bundle)
-        )
+        ))
         return
       }
       // The production forwarder returns only after the command is durably
@@ -141,9 +141,15 @@ extension LorvexWatchStore {
           captureTitle = ""
         }
       } catch {
-        self.error = error
+        failAction(error)
       }
     }
+  }
+
+  /// Records a failed action (``errorIsFromAction``).
+  func failAction(_ error: Error) {
+    self.error = error
+    errorIsFromAction = true
   }
 
   // MARK: - Shared dispatch
@@ -164,15 +170,15 @@ extension LorvexWatchStore {
         try await coreOperation(core)
         await refresh()
       } catch {
-        self.error = error
+        failAction(error)
       }
     case .snapshot, .snapshotUnavailable:
       guard let forwarder = mutationForwarder else {
-        error = LorvexCoreError.unsupportedOperation(
+        failAction(LorvexCoreError.unsupportedOperation(
           String(
             localized: "watch.error.forwarder_required", defaultValue: "Open Lorvex on iPhone to apply this action.",
             table: "Localizable", bundle: WatchL10n.bundle)
-        )
+        ))
         return
       }
       isLoading = true
@@ -185,7 +191,7 @@ extension LorvexWatchStore {
         // this optimistic state when it arrives.
         applyOptimisticUpdate(for: mutation)
       } catch {
-        self.error = error
+        failAction(error)
       }
     }
   }

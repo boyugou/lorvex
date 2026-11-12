@@ -363,13 +363,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   envelope and needs a compatibility plan. The root view's
   spinner, which on a cleared day took the pages down on every check-in and
   capture, now shows only before the first refresh finishes. Open:
-  - A rejected action reads "Action 37 wasn’t applied": the journal's sequence
-    number, with neither the action nor the task named (only a capture shows
-    its title).
-  - A failed action is explained only on Today. The habits and capture pages
-    give the failure haptic alone, a capture refused because the watch has no
-    replica yet leaves its text with no reason, and on an empty Today a failed
-    capture or check-in reads "Couldn’t load Today".
+  - Fixed 2026-11-11: a rejected action read "Action 37 wasn’t applied" (the
+    journal's sequence number); it now names the action ("Couldn’t
+    complete") and what it was for (the task's title or habit's name from
+    the replicas seen since launch, or the captured text). A failed action
+    was explained only on Today, and on an empty Today read "Couldn’t load
+    Today"; it is now said on the page where it was taken, Today keeps its
+    empty-day message under it, and an action tried before the first replica
+    says to open Lorvex on the iPhone first. The failure states are covered
+    by tests, not by a capture: the preview has no journal.
   - Nothing on the wrist takes back a completed task or a habit check-in, and
     the wire has no reopen or uncheck. A few seconds' grace before the command
     is journaled would cover a mistaken tap with no protocol change.

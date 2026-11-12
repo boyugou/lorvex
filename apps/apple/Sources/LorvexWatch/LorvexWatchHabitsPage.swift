@@ -25,6 +25,9 @@ struct LorvexWatchHabitsPage: View {
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
           .foregroundStyle(.secondary)
           .accessibilityAddTraits(.isHeader)
+        if let failure = store.actionFailureText {
+          LorvexWatchActionFailureLine(text: failure)
+        }
         Grid(horizontalSpacing: LorvexDesign.Spacing.s, verticalSpacing: LorvexDesign.Spacing.m) {
           ForEach(Array(stride(from: 0, to: store.habits.count, by: columns)), id: \.self) { start in
             GridRow {

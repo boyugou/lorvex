@@ -48,6 +48,8 @@ struct LorvexWatchCaptureSection: View {
           .accessibilityLabel(String(format: String(
             localized: "watch.capture.pending.a11y", defaultValue: "Pending task: %@",
             table: "Localizable", bundle: WatchL10n.bundle), title))
+      } else if let failure = store.actionFailureText {
+        LorvexWatchActionFailureLine(text: failure)
       } else if let reason = store.captureUnavailableReason {
         Text(reason)
           .font(.caption2)

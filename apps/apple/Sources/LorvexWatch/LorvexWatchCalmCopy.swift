@@ -28,6 +28,49 @@ enum LorvexWatchCalmCopy {
       table: "Localizable", bundle: WatchL10n.bundle)
   }
 
+  /// An action that cannot save until the iPhone has sent the watch its first
+  /// copy of Today.
+  static var openPhoneFirst: String {
+    String(
+      localized: "watch.error.open_phone_first",
+      defaultValue: "Open Lorvex on your iPhone first, then try again.",
+      table: "Localizable", bundle: WatchL10n.bundle)
+  }
+
+  /// The headline of an action the iPhone did not apply, naming the action.
+  static func notApplied(_ mutation: LorvexWatchMutation) -> String {
+    switch mutation {
+    case .completeTask:
+      String(
+        localized: "watch.delivery.rejected.complete", defaultValue: "Couldn’t complete",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    case .startTask:
+      String(
+        localized: "watch.delivery.rejected.start", defaultValue: "Couldn’t start",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    case .pauseTask:
+      String(
+        localized: "watch.delivery.rejected.pause", defaultValue: "Couldn’t pause",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    case .deferTaskToTomorrow:
+      String(
+        localized: "watch.delivery.rejected.tomorrow", defaultValue: "Couldn’t move to tomorrow",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    case .cancelTask:
+      String(
+        localized: "watch.delivery.rejected.cancel", defaultValue: "Couldn’t cancel",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    case .captureTask:
+      String(
+        localized: "watch.delivery.rejected.capture", defaultValue: "Couldn’t add task",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    case .completeHabit:
+      String(
+        localized: "watch.delivery.rejected.habit", defaultValue: "Couldn’t check in",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    }
+  }
+
   static var overdue: String {
     String(localized: "watch.task.overdue", defaultValue: "Overdue", table: "Localizable", bundle: WatchL10n.bundle)
   }

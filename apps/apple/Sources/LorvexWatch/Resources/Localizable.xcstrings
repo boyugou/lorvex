@@ -4056,188 +4056,1304 @@
         }
       }
     },
-    "watch.delivery.rejected": {
-      "comment": "Title for a rejected watch command; %lld is its monotonic sequence",
+    "watch.delivery.rejected.cancel": {
+      "comment": "Watch delivery: headline of a task cancel the iPhone did not apply; the task's title follows",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لم يتم تطبيق الإجراء %lld"
+            "value": "تعذّر الإلغاء"
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "অ্যাকশন %lld প্রয়োগ করা যায়নি"
+            "value": "বাতিল করা যায়নি"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aktion %lld wurde nicht angewendet"
+            "value": "Konnte nicht abgebrochen werden"
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Η ενέργεια %lld δεν εφαρμόστηκε"
+            "value": "Δεν ήταν δυνατή η ακύρωση"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Action %lld wasn’t applied"
+            "value": "Couldn’t cancel"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se aplicó la acción %lld"
+            "value": "No se pudo cancelar"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "اقدام %lld اعمال نشد"
+            "value": "لغو انجام نشد"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’action %lld n’a pas été appliquée"
+            "value": "Impossible d’annuler"
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "פעולה %lld לא הוחלה"
+            "value": "לא ניתן לבטל"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "कार्रवाई %lld लागू नहीं हुई"
+            "value": "रद्द नहीं किया जा सका"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tindakan %lld tidak diterapkan"
+            "value": "Tidak dapat dibatalkan"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’azione %lld non è stata applicata"
+            "value": "Impossibile annullare"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "操作%lldは適用されませんでした"
+            "value": "キャンセルできません"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "적용되지 않은 동작 %lld"
+            "value": "취소할 수 없음"
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "कृती %lld लागू झाली नाही"
+            "value": "रद्द करता आले नाही"
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tindakan %lld tidak diterapkan"
+            "value": "Tidak dapat dibatalkan"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actie %lld is niet toegepast"
+            "value": "Kon niet worden geannuleerd"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie zastosowano akcji %lld"
+            "value": "Nie udało się anulować"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A ação %lld não foi aplicada"
+            "value": "Não foi possível cancelar"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acțiunea %lld nu a fost aplicată"
+            "value": "Nu s-a putut anula"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Действие %lld не применено"
+            "value": "Не удалось отменить"
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "செயல் %lld செயல்படுத்தப்படவில்லை"
+            "value": "ரத்துசெய்ய முடியவில்லை"
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "చర్య %lld వర్తింపజేయబడలేదు"
+            "value": "రద్దు చేయడం వీలుపడలేదు"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่ได้ใช้การดำเนินการที่ %lld"
+            "value": "ไม่สามารถยกเลิกได้"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld numaralı eylem uygulanmadı"
+            "value": "İptal edilemedi"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дію %lld не застосовано"
+            "value": "Не вдалося скасувати"
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "اقدام %lld لاگو نہیں ہوا"
+            "value": "منسوخ نہیں ہو سکا"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Thao tác %lld chưa được áp dụng"
+            "value": "Không thể hủy"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "操作 %lld 未应用"
+            "value": "无法取消"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "操作 %lld 未套用"
+            "value": "無法取消"
+          }
+        }
+      }
+    },
+    "watch.delivery.rejected.capture": {
+      "comment": "Watch delivery: headline of a captured task the iPhone did not add; its title follows",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت إضافة المهمة"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক যোগ করা যায়নি"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe konnte nicht hinzugefügt werden"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δεν ήταν δυνατή η προσθήκη εργασίας"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t add task"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo añadir la tarea"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افزودن کار انجام نشد"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’ajouter la tâche"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן להוסיף משימה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य नहीं जोड़ा जा सका"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat menambahkan tugas"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile aggiungere l’attività"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タスクを追加できません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "할 일을 추가할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य जोडता आले नाही"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat menambah tugas"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taak kon niet worden toegevoegd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się dodać zadania"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível adicionar a tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a putut adăuga sarcina"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось добавить задачу"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணியைச் சேர்க்க முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌ను జోడించడం వీలుపడలేదు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถเพิ่มงานได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görev eklenemedi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося додати завдання"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کام شامل نہیں ہو سکا"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể thêm nhiệm vụ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法添加任务"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法新增任務"
+          }
+        }
+      }
+    },
+    "watch.delivery.rejected.complete": {
+      "comment": "Watch delivery: headline of a task completion the iPhone did not apply; the task's title follows",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الإكمال"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সম্পূর্ণ করা যায়নি"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konnte nicht erledigt werden"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δεν ήταν δυνατή η ολοκλήρωση"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t complete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo completar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل انجام نشد"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de terminer"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן להשלים"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पूर्ण नहीं किया जा सका"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat diselesaikan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile completare"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完了できません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पूर्ण करता आले नाही"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat diselesaikan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon niet worden voltooid"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się ukończyć"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível concluir"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a putut finaliza"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось выполнить"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிறைவுசெய்ய முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తి చేయడం వీలుపడలేదు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถทำเสร็จได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamlanamadı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося виконати"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مکمل نہیں ہو سکا"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể hoàn thành"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法完成"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法完成"
+          }
+        }
+      }
+    },
+    "watch.delivery.rejected.habit": {
+      "comment": "Watch delivery: headline of a habit check-in the iPhone did not record; the habit's name follows",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر التسجيل"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চেক-ইন করা যায়নি"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konnte nicht abgehakt werden"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δεν ήταν δυνατή η καταγραφή"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t check in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo registrar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثبت انجام نشد"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de valider"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן לסמן"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "चेक-इन नहीं किया जा सका"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat check-in"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile registrare"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "チェックインできません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "체크인할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "चेक-इन करता आले नाही"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat check-in"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon niet worden afgevinkt"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się odhaczyć"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível registrar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a putut bifa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось отметить"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "செக்-இன் செய்ய முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చెక్ ఇన్ చేయడం వీలుపడలేదు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถเช็คอินได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşaretlenemedi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося позначити"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چیک اِن نہیں ہو سکا"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể điểm danh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法打卡"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法打卡"
+          }
+        }
+      }
+    },
+    "watch.delivery.rejected.pause": {
+      "comment": "Watch delivery: headline of a task pause the iPhone did not apply; the task's title follows",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الإيقاف المؤقت"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পজ করা যায়নি"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konnte nicht pausiert werden"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δεν ήταν δυνατή η παύση"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t pause"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo pausar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مکث انجام نشد"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de mettre en pause"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן להשהות"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "रोका नहीं जा सका"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat dijeda"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile mettere in pausa"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止できません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일시 정지할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पॉज करता आले नाही"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat dijeda"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon niet worden gepauzeerd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wstrzymać"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível pausar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a putut suspenda"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось приостановить"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இடைநிறுத்த முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పాజ్ చేయడం వీలుపడలేదు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถหยุดพักได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklatılamadı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося призупинити"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موقوف نہیں ہو سکا"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể tạm dừng"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法暂停"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法暫停"
+          }
+        }
+      }
+    },
+    "watch.delivery.rejected.start": {
+      "comment": "Watch delivery: headline of a task start the iPhone did not apply; the task's title follows",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر البدء"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুরু করা যায়নি"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konnte nicht gestartet werden"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δεν ήταν δυνατή η έναρξη"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t start"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo iniciar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع انجام نشد"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de démarrer"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן להתחיל"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शुरू नहीं किया जा सका"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat dimulai"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile iniziare"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開始できません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시작할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुरू करता आले नाही"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat dimulakan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon niet worden gestart"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się rozpocząć"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível iniciar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a putut începe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось начать"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடங்க முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభించడం వీలుపడలేదు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถเริ่มได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlatılamadı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося почати"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع نہیں ہو سکا"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể bắt đầu"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法开始"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法開始"
+          }
+        }
+      }
+    },
+    "watch.delivery.rejected.tomorrow": {
+      "comment": "Watch delivery: headline of a move to tomorrow the iPhone did not apply; the task's title follows",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر النقل إلى الغد"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আগামীকালে সরানো যায়নি"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konnte nicht auf morgen verschoben werden"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δεν ήταν δυνατή η μετακίνηση για αύριο"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t move to tomorrow"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo mover a mañana"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتقال به فردا انجام نشد"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de reporter à demain"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן להעביר למחר"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कल पर नहीं ले जाया जा सका"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat dipindah ke besok"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile spostare a domani"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明日に移動できません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내일로 옮길 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "उद्यावर नेता आले नाही"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak dapat dialihkan ke esok"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon niet naar morgen worden verplaatst"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się przenieść na jutro"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível mover para amanhã"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a putut muta pentru mâine"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось перенести на завтра"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நாளைக்கு நகர்த்த முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రేపటికి మార్చడం వీలుపడలేదు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถย้ายไปพรุ่งนี้ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yarına taşınamadı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося перенести на завтра"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آئندہ کل پر منتقل نہیں ہو سکا"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể chuyển sang ngày mai"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法移到明天"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法移到明天"
           }
         }
       }
@@ -6842,6 +7958,192 @@
           "stringUnit": {
             "state": "translated",
             "value": "無法載入今天"
+          }
+        }
+      }
+    },
+    "watch.error.open_phone_first": {
+      "comment": "Watch: an action cannot save until the iPhone has sent the watch its first copy of Today",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح Lorvex على iPhone أولاً، ثم أعد المحاولة."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রথমে আপনার iPhone-এ Lorvex খুলুন, তারপর আবার চেষ্টা করুন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne zuerst Lorvex auf deinem iPhone und versuche es dann erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ανοίξτε πρώτα το Lorvex στο iPhone σας και δοκιμάστε ξανά."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex on your iPhone first, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre primero Lorvex en tu iPhone y vuelve a intentarlo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابتدا Lorvex را در iPhone خود باز کنید و دوباره تلاش کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez d’abord Lorvex sur votre iPhone, puis réessayez."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לפתוח קודם את Lorvex ב-iPhone ולנסות שוב."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पहले अपने iPhone पर Lorvex खोलें, फिर दोबारा कोशिश करें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka Lorvex di iPhone Anda terlebih dahulu, lalu coba lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri prima Lorvex su iPhone, poi riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先にiPhoneでLorvexを開いてから、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "먼저 iPhone에서 Lorvex를 연 후 다시 시도하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "प्रथम तुमच्या iPhone वर Lorvex उघडा, नंतर पुन्हा प्रयत्न करा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka Lorvex pada iPhone anda dahulu, kemudian cuba lagi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex eerst op je iPhone en probeer het daarna opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw otwórz Lorvex na iPhonie, a potem spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abra o Lorvex no seu iPhone primeiro e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți mai întâi Lorvex pe iPhone, apoi reîncercați."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала откройте Lorvex на iPhone, а затем повторите попытку."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "முதலில் உங்கள் iPhoneஇல் Lorvexஐத் திறந்து, பிறகு மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ముందుగా మీ iPhoneలో Lorvexను తెరవండి, ఆపై మళ్ళీ ప్రయత్నించండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด Lorvex บน iPhone ก่อน แล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce iPhone’unuzda Lorvex’i açın, sonra yeniden deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спершу відкрийте Lorvex на iPhone, а потім повторіть спробу."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پہلے اپنے iPhone پر Lorvex کھولیں، پھر دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy mở Lorvex trên iPhone trước, rồi thử lại."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请先在 iPhone 上打开 Lorvex，然后重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請先在 iPhone 上開啟 Lorvex，然後重試。"
           }
         }
       }

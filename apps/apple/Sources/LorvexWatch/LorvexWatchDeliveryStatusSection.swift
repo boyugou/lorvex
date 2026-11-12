@@ -25,17 +25,14 @@ struct LorvexWatchDeliveryStatusSection: View {
         ForEach(store.deliveryStatus.rejectedCommands) { command in
           VStack(alignment: .leading, spacing: 5) {
             Label(
-              String(
-                localized: "watch.delivery.rejected",
-                defaultValue: "Action \(command.sequence) wasn’t applied",
-                table: "Localizable", bundle: WatchL10n.bundle),
+              LorvexWatchCalmCopy.notApplied(command.mutation),
               systemImage: "exclamationmark.circle"
             )
             .font(.caption.weight(.medium))
             .foregroundStyle(LorvexDesign.Palette.warning)
 
-            if case .captureTask(let title) = command.mutation {
-              Text(title)
+            if let subject = store.subject(of: command) {
+              Text(userContent: subject)
                 .font(.caption)
                 .lineLimit(2)
             }

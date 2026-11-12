@@ -58,6 +58,16 @@ public final class LorvexWatchStore {
   /// The last error from a refresh or complete call, if any.
   public internal(set) var error: Error?
 
+  /// True when ``error`` came from an action (a task action, a habit
+  /// check-in, a capture) rather than from loading Today: the pages then say
+  /// the change did not save, not that Today could not load.
+  public internal(set) var errorIsFromAction = false
+
+  /// Titles of the tasks and names of the habits the watch has listed since
+  /// launch, by id, so a rejected action can name what it was for after the
+  /// item has left the list.
+  public internal(set) var knownTitles: [String: String] = [:]
+
   /// Human-readable source status for compact watch surfaces.
   public internal(set) var snapshotStatusText: String = String(
     localized: "watch.status.not_refreshed", defaultValue: "Not refreshed",
@@ -170,7 +180,12 @@ public final class LorvexWatchStore {
 
   private func performRefresh() async {
     error = nil
-    defer { hasLoaded = true }
+    errorIsFromAction = false
+    defer {
+      hasLoaded = true
+      for task in tasks { knownTitles[task.id] = task.title }
+      for habit in habits { knownTitles[habit.id] = habit.name }
+    }
     do {
       switch backend {
       case .core(let core):

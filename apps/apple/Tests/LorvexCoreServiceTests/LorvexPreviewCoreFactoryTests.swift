@@ -97,6 +97,20 @@ struct LorvexPreviewCoreFactoryTests {
     #expect(abs(walk.completionRate30d - 8.0 / 30.0) < 0.02)
   }
 
+  /// At 23:30 on 2026-11-11 in Los Angeles, ten days after clocks went back,
+  /// stepping back in 24-hour steps put the 10th and 11th days before both on
+  /// November 1, so the seed logged 11 check-ins where it meant 12.
+  @Test("seeded check-in days are calendar days, across a clock change")
+  func seedDaysAreCalendarDays() throws {
+    let zone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+    let now = try #require(ISO8601DateFormatter().date(from: "2026-11-12T07:30:00Z"))
+    let days = (0...11).map { LorvexPreviewCoreFactory.seedDay(daysAgo: $0, now: now, timeZone: zone) }
+    #expect(days.first == "2026-11-11")
+    #expect(days[10] == "2026-11-01")
+    #expect(days[11] == "2026-10-31")
+    #expect(Set(days).count == days.count)
+  }
+
   @Test("seeded calendar event renders in its timeline window")
   func seededCalendar() async throws {
     let core = try await LorvexPreviewCoreFactory.makeSeeded()

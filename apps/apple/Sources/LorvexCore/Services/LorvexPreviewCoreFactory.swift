@@ -441,8 +441,23 @@ public enum LorvexPreviewCoreFactory {
   }
 
   private static func ymd(daysAgo: Int) -> String {
-    LorvexDateFormatters.ymd.string(
-      from: Date().addingTimeInterval(TimeInterval(-daysAgo) * 86_400))
+    seedDay(daysAgo: daysAgo)
+  }
+
+  /// The `yyyy-MM-dd` day `daysAgo` calendar days before the day `now` falls
+  /// on in `timeZone`. Counted in days, not in 24-hour steps: in the weeks
+  /// after clocks go back, an instant in the last hour before midnight and
+  /// the one 24 hours earlier fall on the same day, which seeded two of a
+  /// habit's check-ins on one day, so the second added nothing.
+  static func seedDay(
+    daysAgo: Int, now: Date = Date(), timeZone: TimeZone = .autoupdatingCurrent
+  ) -> String {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = timeZone
+    let parts = calendar.dateComponents([.year, .month, .day], from: now)
+    let today = String(
+      format: "%04d-%02d-%02d", parts.year ?? 1970, parts.month ?? 1, parts.day ?? 1)
+    return LorvexDateFormatters.ymdUTCAddingDays(today, days: -daysAgo) ?? today
   }
 
   /// `daysAgo` days before `anchor`, the UTC midnight of the seed's logical day.

@@ -4,6 +4,7 @@ import LorvexCore
 import LorvexWidgetIntents
 import LorvexWidgetKitSupport
 import SwiftUI
+import WidgetKit
 
 /// A task row's height at the default text size: the height of its circle's
 /// hit target, so rows stack with no gap between them.
@@ -174,19 +175,22 @@ struct WidgetTaskRowView: View {
   let row: WidgetTaskRenderRow
   var leadRingDiameter: CGFloat?
   @LorvexDifferentiateWithoutColor private var differentiateWithoutColor
+  @Environment(\.widgetRenderingMode) private var renderingMode
 
   var body: some View {
     // 12pt after a lead-width column is the lead block's ring-to-title gap.
     HStack(spacing: leadRingDiameter == nil ? 0 : 12) {
       WidgetActionButton(
         intent: WidgetCompleteTaskIntent(taskID: row.id, title: row.title),
-        systemName: (row.priority ?? .p3).circleGlyph(differentiating: differentiateWithoutColor),
+        systemName: WidgetPriorityMarking.circleGlyph(
+          row.priority, differentiateWithoutColor: differentiateWithoutColor,
+          renderingMode: renderingMode),
         accessibilityLabel: String(
           localized: "widget.action.complete.a11y",
           defaultValue: "Complete \(row.title)",
           table: "Localizable",
           bundle: WidgetL10n.bundle),
-        tint: (row.priority ?? .p2).priorityTint,
+        tint: WidgetPriorityMarking.tint(row.priority),
         width: leadRingDiameter,
         alignment: leadRingDiameter == nil ? .leading : .center
       )

@@ -29,7 +29,40 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   the Watch complications, and a read of the widget code, against the
   design language ("a row is neutral until something on it needs
   attention"); then the findings, and changes. UI is delegated; new
-  capabilities go to the owner as a proposal first.
+  capabilities go to the owner as a proposal first. First round
+  (2026-11-11), captured on the iPhone gallery (light, dark, XXXL, German,
+  Thai) and the Mac gallery:
+  - Fixed: no widget read `widgetRenderingMode`. The Mac desktop renders
+    its widgets desaturated whenever a window is in front, as the tinted
+    iPhone Home Screen and StandBy at night do, and there a High task's red
+    circle, the only mark of its priority, read as Normal. Outside full color
+    a circle now carries the priority's mark, as with Differentiate Without
+    Color (`WidgetPriorityMarking`); a task with no recorded priority reads
+    as Normal, where its glyph had read as Low. Habit tiles and the
+    progress ring already tell done, partial, open, and skipped apart by
+    shape. The gallery cannot show the system's desaturation; it is covered
+    by tests.
+  - Fixed: the small Today widget with no lead listed two tasks whose
+    titles kept about eight characters on an iPhone. Its titles now take up
+    to two lines, the circle beside the first, with a gap between tasks; the
+    day's count, which the rows and the foot already say, gave way. Where
+    two such rows do not fit (Thai, XXXL) one readable task is shown.
+  - Left as is: habit names in the tiles lose two to six characters on the
+    small and medium widgets. The tile keeps every name at one size and
+    tightens before truncating, two-line names do not fit two rows of
+    tiles, and the habit's symbol and color name it too.
+  - Open, an architecture item: a widget's Complete runs in the widget
+    extension, which cannot read the badge setting (the app's own
+    defaults), plan the next repeat's reminders (the app's planner), or
+    reach the Watch (no WatchConnectivity in an extension); all three wait
+    for the app's next run (see the audit entry below).
+  - Proposed to the owner, waiting for a decision: today's calendar events
+    in the Today widget (the large widget's empty lower half on a light day)
+    or a separate day-timeline widget; a capture button on the Home Screen
+    widgets; the delegation marker on widget rows. Each adds optional fields
+    to `WidgetSnapshot` without a version bump, so a Watch on an older build
+    still reads its replica; the Watch projector drops them, and the
+    publisher's changed-content check must cover them.
 
 - Hand a task to the assistant (owner approved the idea 2026-11-10;
   released in build 141). A task can be handed to the user's own assistant,

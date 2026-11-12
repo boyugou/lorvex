@@ -130,15 +130,22 @@ func everyTaskRowCirclePassesThroughTheSharedView() throws {
 
 @Test
 func theWidgetAndWatchCirclesFollowTheSetting() throws {
-  for (directory, file, uses) in [
-    ("Sources/LorvexWidgetViews", "LorvexWidgetTaskRowView.swift", 1),
-    ("Sources/LorvexWidgetViews", "LorvexWidgetSmallView.swift", 1),
-    ("Sources/LorvexWatch", "LorvexWatchTaskRow.swift", 1),
-  ] {
-    let source = try #require(try swiftSources(under: directory).first { $0.path == file })
+  let watch = try #require(
+    try swiftSources(under: "Sources/LorvexWatch").first { $0.path == "LorvexWatchTaskRow.swift" })
+  #expect(watch.text.contains("@LorvexDifferentiateWithoutColor private var differentiateWithoutColor"))
+  #expect(
+    watch.text.components(separatedBy: "circleGlyph(differentiating: differentiateWithoutColor)").count == 2)
+
+  // A widget's circle also marks priority in shape wherever the system drops
+  // its colors (WidgetPriorityMarking), so it reads the setting and the
+  // rendering mode together.
+  for file in ["LorvexWidgetTaskRowView.swift", "LorvexWidgetSmallView.swift"] {
+    let source = try #require(
+      try swiftSources(under: "Sources/LorvexWidgetViews").first { $0.path == file })
     #expect(source.text.contains("@LorvexDifferentiateWithoutColor private var differentiateWithoutColor"), "\(file)")
+    #expect(source.text.contains("@Environment(\\.widgetRenderingMode) private var renderingMode"), "\(file)")
     #expect(
-      source.text.components(separatedBy: "circleGlyph(differentiating: differentiateWithoutColor)").count
-        == uses + 1, "\(file)")
+      source.text.components(separatedBy: "WidgetPriorityMarking.circleGlyph(").count == 2, "\(file)")
+    #expect(!source.text.contains("circleGlyph(differentiating:"), "\(file)")
   }
 }

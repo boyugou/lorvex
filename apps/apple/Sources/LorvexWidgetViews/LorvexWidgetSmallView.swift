@@ -2,6 +2,7 @@ import LorvexCore
 import LorvexWidgetIntents
 import LorvexWidgetKitSupport
 import SwiftUI
+import WidgetKit
 
 /// The `systemSmall` Today widget: the lead task alone — its circle (the Done
 /// control, a filling ring while its time runs) beside the line that says
@@ -74,13 +75,17 @@ struct SmallSystemWidgetView: View {
   }
 
   /// Tasks left, none leading: the widget's name with the work left at its
-  /// trailing edge, as the Habits widget carries its count, how many tasks
-  /// are left under them, then the top tasks, each with its circle; the rows
-  /// drop their metadata column, which the small tile is too narrow for. The
-  /// work shares the name's line so an iPhone's small tile keeps two rows,
-  /// and gives way where the two do not fit on it (a long list name, a larger
-  /// text size), since the name says which widget this is. Where both rows do
-  /// not fit one is shown, and the foot line counts the other.
+  /// trailing edge, as the Habits widget carries its count, then the top
+  /// tasks, each with its circle and a title of up to two lines, and the foot
+  /// line counting the rest. The rows drop their metadata column, which the
+  /// small tile is too narrow for, and the day's count, which the rows and the
+  /// foot line already say: on an iPhone's small tile a title on one line kept
+  /// about eight characters. The work gives way where it and the name do not
+  /// fit one line (a long list name, a larger text size), since the name says
+  /// which widget this is. Where two rows of two lines do not fit (a larger
+  /// text size, a script with tall lines), one row is shown, its title on two
+  /// lines and then on one, and the foot line counts the rest: one readable
+  /// title beats two cut to a word.
   private var dayContent: some View {
     VStack(alignment: .leading, spacing: 0) {
       ViewThatFits(in: .horizontal) {
@@ -96,17 +101,11 @@ struct SmallSystemWidgetView: View {
         }
         nameLabel
       }
-      if let dayLeft = model.dayLeftUnderTitle {
-        Text(dayLeft)
-          .font(WidgetType.title)
-          .foregroundStyle(Color.primary)
-          .lineLimit(1)
-          .padding(.top, 2)
-      }
       ViewThatFits(in: .vertical) {
-        rowsAndFoot(showing: min(2, model.taskRows.count))
-        rowsAndFoot(showing: min(1, model.taskRows.count))
-        rowsAndFoot(showing: 0)
+        rowsAndFoot(showing: min(2, model.taskRows.count), titleLines: 2)
+        rowsAndFoot(showing: min(1, model.taskRows.count), titleLines: 2)
+        rowsAndFoot(showing: min(1, model.taskRows.count), titleLines: 1)
+        rowsAndFoot(showing: 0, titleLines: 1)
       }
       .padding(.top, 4)
     }
@@ -124,13 +123,16 @@ struct SmallSystemWidgetView: View {
   /// Static branches rather than `ForEach`: each candidate of the
   /// `ViewThatFits` above may be evaluated off the main thread, where a
   /// `ForEach` content closure trips Swift 6's isolation check.
-  private func rowsAndFoot(showing count: Int) -> some View {
+  private func rowsAndFoot(showing count: Int, titleLines: Int) -> some View {
     VStack(alignment: .leading, spacing: 0) {
       if count > 0, let first = model.taskRows.first {
-        SmallTaskRow(row: first)
+        SmallTaskRow(row: first, titleLines: titleLines)
       }
       if count > 1, model.taskRows.count > 1 {
-        SmallTaskRow(row: model.taskRows[1])
+        // A title on two lines fills its row, so the next row keeps a gap to
+        // read as another task.
+        SmallTaskRow(row: model.taskRows[1], titleLines: titleLines)
+          .padding(.top, titleLines > 1 ? 4 : 0)
       }
       Spacer(minLength: 0)
       WidgetFootLine(model: model, shownRowCount: count)
@@ -173,22 +175,28 @@ struct SmallSystemWidgetView: View {
 }
 
 /// A row of the small widget: the task's circle, which completes it, and its
-/// title, a link into the task. No metadata column; the tile is too narrow.
+/// title of up to `titleLines` lines, a link into the task. No metadata
+/// column; the tile is too narrow.
 private struct SmallTaskRow: View {
   let row: WidgetTaskRenderRow
+  let titleLines: Int
   @LorvexDifferentiateWithoutColor private var differentiateWithoutColor
+  @Environment(\.widgetRenderingMode) private var renderingMode
 
   var body: some View {
-    HStack(spacing: 0) {
+    // The circle stands beside the title's first line, as a checkbox does.
+    HStack(alignment: .firstTextBaseline, spacing: 0) {
       WidgetActionButton(
         intent: WidgetCompleteTaskIntent(taskID: row.id, title: row.title),
-        systemName: (row.priority ?? .p3).circleGlyph(differentiating: differentiateWithoutColor),
+        systemName: WidgetPriorityMarking.circleGlyph(
+          row.priority, differentiateWithoutColor: differentiateWithoutColor,
+          renderingMode: renderingMode),
         accessibilityLabel: String(
           localized: "widget.action.complete.a11y",
           defaultValue: "Complete \(row.title)",
           table: "Localizable",
           bundle: WidgetL10n.bundle),
-        tint: (row.priority ?? .p2).priorityTint,
+        tint: WidgetPriorityMarking.tint(row.priority),
         alignment: .leading)
       title
     }
@@ -199,7 +207,9 @@ private struct SmallTaskRow: View {
     let text = Text(row.title)
       .font(WidgetType.row)
       .foregroundStyle(Color.primary)
-      .lineLimit(1)
+      .lineLimit(titleLines)
+      .multilineTextAlignment(.leading)
+      .fixedSize(horizontal: false, vertical: true)
       .privacySensitive()
     if let url = row.url {
       Link(destination: url) { text }

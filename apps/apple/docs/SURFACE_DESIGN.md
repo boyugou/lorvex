@@ -301,9 +301,11 @@ A productivity app earns its home screen with more than one widget.
   estimate at the trailing edge. Large opens with the widget's name and the
   assistant's briefing in its serif voice, then the lead and the tasks after
   it, and closes with how much got done today. When no task leads (nothing
-  runs, is started, or is timed later today), every size names the widget,
-  says how many tasks are left and the work they hold, and lists Today from
-  its top; small names the top two. A widget configured with a list is
+  runs, is started, or is timed later today), every size names the widget
+  and the work the tasks left hold, and lists Today from its top; medium
+  and large also say how many are left. Small names the top two, each title
+  on up to two lines, and its foot counts the rest: a title kept to one line
+  there held about eight characters. A widget configured with a list is
   titled with the list's name. Where a size cannot hold every row (a larger
   text size, a long briefing), the last rows give way to an "N more today"
   line that counts them. The Mac desktop widgets set the same layouts in

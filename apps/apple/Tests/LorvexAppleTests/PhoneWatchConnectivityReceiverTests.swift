@@ -1,7 +1,7 @@
 import Foundation
-import LorvexCore
 import Testing
 
+@testable import LorvexCore
 @testable import LorvexMobile
 
 #if canImport(WatchConnectivity)
@@ -135,6 +135,35 @@ import Testing
 
 @Suite("Phone Watch receiver contracts")
 struct PhoneWatchConnectivityReceiverContractTests {
+  /// A newer watch build's action this phone cannot read gets a rejection
+  /// bound to the command, not silence, so the watch's next command is not
+  /// held behind it; data with no verifiable identity still gets nothing.
+  @Test("a verified command whose action this build cannot read is rejected")
+  func unreadableActionIsRejected() async throws {
+    let service = try await makeSeededInMemoryCore()
+    var object: [String: Any] = [
+      "protocol_version": LorvexWatchCommand.currentProtocolVersion,
+      "workspace_instance_id": try await service.currentWatchWorkspaceInstanceID(),
+      "source_install_id": UUID().uuidString.lowercased(),
+      "sequence": 1,
+      "command_id": UUID().uuidString.lowercased(),
+      "created_at": "2026-07-16T12:00:00.000Z",
+      "mutation": ["type": "snooze_task", "minutes": 10],
+    ]
+    object["payload_checksum"] = try LorvexWatchWire.checksum(object)
+    let data = try LorvexWatchWire.jsonData(object)
+
+    let ack = try #require(
+      await PhoneWatchCommandApplication.acknowledgement(for: data, service: service))
+
+    #expect(ack.outcome == .rejected)
+    #expect(ack.code == LorvexWatchCommandAck.unreadableActionCode)
+    #expect(ack.commandID == object["command_id"] as? String)
+    #expect(
+      await PhoneWatchCommandApplication.acknowledgement(
+        for: Data("not-json".utf8), service: service) == nil)
+  }
+
   @Test("terminal outcomes refresh the replica while retryable outcomes remain pending")
   func replicaRefreshPolicyMatchesCommandTerminality() {
     #expect(PhoneWatchReplicaRefreshPolicy.shouldRefresh(after: .applied))

@@ -328,16 +328,20 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     is not reminded, and the badge does not change, until the phone app next
     runs, and neither the write nor a Focus filter change reaches the Watch
     until the phone app publishes.
-  - Smaller: a Watch command the
-    phone cannot decode is rejected on the watch after three tries without
-    renumbering, and the phone then refuses every later command as a sequence
-    gap.
+  - Smaller: a Watch command the phone cannot verify at all (bytes that do
+    not match their checksum, another protocol version) is rejected on the
+    watch after three tries without renumbering, and the phone then refuses
+    every later command as a sequence gap. Since 2026-11-11 the case that
+    version skew produces, a verified command whose action the phone cannot
+    read, is rejected by the phone at its sequence (`unreadable_action`), so
+    the stream moves on; what remains takes corrupted bytes or a protocol
+    change.
 - Read-through of the Apple Watch app, its complication, and the phone's side
   of the link (2026-11-11): every source file read, the five preview pages
-  captured on the simulator from the build of 2026-10-12 (the Mac was on
-  battery, so no rebuild; the pages' layout code has not changed since, the
-  priority and habit colors have). Traced to the code, not reproduced on a
-  watch. Found sound: the replica's workspace fence, ordering, and atomic
+  captured on the simulator (first from the build of 2026-10-12, the Mac being
+  on battery, then from the build with the fixes below, which draws a
+  normal-priority circle neutral). Traced to the code, not reproduced on a
+  watch; the captures show layout only, since the preview has no journal. Found sound: the replica's workspace fence, ordering, and atomic
   file; the command journal (never evicts, writes before it reports success);
   first-in-first-out delivery with ACKs bound to a command's identity and
   checksum; the phone's ledger, which applies a command once across retries
@@ -349,7 +353,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   several times a day; a pending check-in journaled after the replica on
   screen was received is now put back over it (both times by the watch's
   clock; the replica file keeps its date when the same bytes arrive again),
-  and one older than the replica is left to the phone. The root view's
+  and one older than the replica is left to the phone. One window remains:
+  on reconnect the system first delivers a replica the phone published while
+  out of reach, received after the check-in, so the ring reads unchecked
+  until the phone applies the command and sends its next replica. Exact
+  either way would need the replica to carry the phone's applied sequence for
+  this watch (`local_watch_command_streams.last_terminal_sequence`), so the
+  watch re-applies exactly the pending commands above it; that changes the
+  envelope and needs a compatibility plan. The root view's
   spinner, which on a cleared day took the pages down on every check-in and
   capture, now shows only before the first refresh finishes. Open:
   - A rejected action reads "Action 37 wasn’t applied": the journal's sequence
@@ -362,10 +373,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - Nothing on the wrist takes back a completed task or a habit check-in, and
     the wire has no reopen or uncheck. A few seconds' grace before the command
     is journaled would cover a mistaken tap with no protocol change.
-  - An error the phone does not classify (`StoreError.invariant`,
-    `StoreError.staleVersion`) is answered as retryable without limit, so one
-    such command holds every later one back with no way out on the watch;
-    related to the sequence gap above.
+  - Fixed 2026-11-11: `StoreError.invariant` and `.serialization`, which a
+    retry of the same command cannot change, were answered as retryable
+    without limit and held every later command back; they are now rejected
+    (`invalid_state`). A concurrent write's `staleVersion` and database
+    errors stay retryable.
   - Smaller: the list shown at midnight stays until the app is next
     activated; the watch asks the phone for a replica only when it has none or
     one from an earlier day; the phone answers that request only after its

@@ -18,19 +18,32 @@ public struct LorvexWatchCommandAck: Sendable, Equatable {
   public let code: String?
   public let message: String?
 
+  /// The phone's rejection code for a command whose action this build cannot
+  /// read (``LorvexWatchCommand/identityOfUnreadableAction(in:)``).
+  public static let unreadableActionCode = "unreadable_action"
+
   public init(
     command: LorvexWatchCommand,
     outcome: Outcome,
     code: String? = nil,
     message: String? = nil
   ) throws {
+    try self.init(identity: command.identity, outcome: outcome, code: code, message: message)
+  }
+
+  public init(
+    identity: LorvexWatchCommandIdentity,
+    outcome: Outcome,
+    code: String? = nil,
+    message: String? = nil
+  ) throws {
     try Self.validate(outcome: outcome, code: code, message: message)
-    protocolVersion = command.protocolVersion
-    workspaceInstanceID = command.workspaceInstanceID
-    sourceInstallID = command.sourceInstallID
-    sequence = command.sequence
-    commandID = command.commandID
-    payloadChecksum = command.payloadChecksum
+    protocolVersion = identity.protocolVersion
+    workspaceInstanceID = identity.workspaceInstanceID
+    sourceInstallID = identity.sourceInstallID
+    sequence = identity.sequence
+    commandID = identity.commandID
+    payloadChecksum = identity.payloadChecksum
     self.outcome = outcome
     self.code = code
     self.message = message
@@ -39,13 +52,13 @@ public struct LorvexWatchCommandAck: Sendable, Equatable {
   /// Nonthrowing fail-safe used only when a locally stored receipt cannot be
   /// represented by the validated public initializer. It deliberately carries
   /// no data from that corrupt receipt.
-  init(trustedReceiptCorruptFor command: LorvexWatchCommand) {
-    protocolVersion = command.protocolVersion
-    workspaceInstanceID = command.workspaceInstanceID
-    sourceInstallID = command.sourceInstallID
-    sequence = command.sequence
-    commandID = command.commandID
-    payloadChecksum = command.payloadChecksum
+  init(trustedReceiptCorruptFor identity: LorvexWatchCommandIdentity) {
+    protocolVersion = identity.protocolVersion
+    workspaceInstanceID = identity.workspaceInstanceID
+    sourceInstallID = identity.sourceInstallID
+    sequence = identity.sequence
+    commandID = identity.commandID
+    payloadChecksum = identity.payloadChecksum
     outcome = .retryable
     code = "receipt_corrupt"
     message = nil

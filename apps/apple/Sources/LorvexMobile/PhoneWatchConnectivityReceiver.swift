@@ -32,6 +32,41 @@ public struct PhoneWatchDatabaseAccess: Sendable {
   public static let unmanaged = PhoneWatchDatabaseAccess(begin: {}, end: {})
 }
 
+/// Turns one command's wire data into the phone's ACK. Platform-neutral, so
+/// the host test suite exercises the same path the WatchConnectivity receiver
+/// runs.
+enum PhoneWatchCommandApplication {
+  private static let log = Logger(subsystem: "com.lorvex.mobile", category: "watch-connectivity")
+
+  /// Strictly decodes and applies one trusted command. A command whose
+  /// identity and checksum verify but whose action this build cannot read (a
+  /// newer watch build) is rejected through the ledger, so the watch's later
+  /// commands are not held behind it. Any other malformed, unsupported, or
+  /// checksum-invalid payload yields no ACK: without a fully validated
+  /// identity the phone must not fabricate a rejection that could cause the
+  /// Watch to delete its durable journal entry.
+  static func acknowledgement(
+    for data: Data, service: any LorvexWatchCommandServicing
+  ) async -> LorvexWatchCommandAck? {
+    let command: LorvexWatchCommand
+    do {
+      command = try LorvexWatchCommand.decodeWireData(data)
+    } catch {
+      if let identity = LorvexWatchCommand.identityOfUnreadableAction(in: data) {
+        log.notice(
+          "Watch command \(identity.sequence, privacy: .public) carries an action this build cannot read; rejecting it"
+        )
+        return await service.rejectWatchCommandWithUnreadableAction(identity)
+      }
+      log.error(
+        "Rejected untrusted Watch command data before apply: \(String(describing: error), privacy: .public)"
+      )
+      return nil
+    }
+    return await service.applyWatchCommand(command)
+  }
+}
+
 #if canImport(WatchConnectivity)
   @preconcurrency import WatchConnectivity
 
@@ -99,21 +134,10 @@ public struct PhoneWatchDatabaseAccess: Sendable {
       session.activate()
     }
 
-    /// Strictly decode and apply one trusted command. A malformed, unsupported,
-    /// or checksum-invalid payload yields no ACK: without a fully validated
-    /// identity the phone must not fabricate a rejection that could cause the
-    /// Watch to delete its durable journal entry.
+    /// Strictly decode and apply one trusted command
+    /// (``PhoneWatchCommandApplication/acknowledgement(for:service:)``).
     nonisolated func applyCommandData(_ data: Data) async -> LorvexWatchCommandAck? {
-      let command: LorvexWatchCommand
-      do {
-        command = try LorvexWatchCommand.decodeWireData(data)
-      } catch {
-        Self.log.error(
-          "Rejected untrusted Watch command data before apply: \(String(describing: error), privacy: .public)"
-        )
-        return nil
-      }
-      return await commandService.applyWatchCommand(command)
+      await PhoneWatchCommandApplication.acknowledgement(for: data, service: commandService)
     }
 
     /// Encode a validated Core ACK. Failure is observable and leaves the Watch

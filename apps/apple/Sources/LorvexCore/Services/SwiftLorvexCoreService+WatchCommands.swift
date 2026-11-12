@@ -15,11 +15,12 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
   }
 
   public func applyWatchCommand(
-    _ command: LorvexWatchCommand
+    _ watchCommand: LorvexWatchCommand
   ) async -> LorvexWatchCommandAck {
+    let command = watchCommand.identity
     do {
-      let terminal = try await Self.$currentWatchCommand.withValue(command) {
-        try await applyWatchMutation(command.mutation)
+      let terminal = try await Self.$currentWatchCommand.withValue(watchCommand) {
+        try await applyWatchMutation(watchCommand.mutation)
         // Every command passes through one ordinary write transaction, which
         // commits this receipt atomically with its domain effect or no-op check.
         return WatchCommandTerminalReceipt(outcome: .applied, code: nil, message: nil)
@@ -45,7 +46,7 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
     } catch WatchCommandLedgerError.invalidTerminalReceipt {
       return LorvexWatchCommandAck(trustedReceiptCorruptFor: command)
     } catch {
-      if let rejection = deterministicWatchRejection(for: error) {
+      if let rejection = Self.deterministicWatchRejection(for: error) {
         do {
           let terminal = try ensureWatchTerminal(command, desired: rejection)
           return makeWatchAck(command: command, terminal: terminal)
@@ -63,11 +64,32 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
     }
   }
 
+  public func rejectWatchCommandWithUnreadableAction(
+    _ command: LorvexWatchCommandIdentity
+  ) async -> LorvexWatchCommandAck {
+    do {
+      let terminal = try ensureWatchTerminal(
+        command,
+        desired: WatchCommandTerminalReceipt(
+          outcome: .rejected, code: LorvexWatchCommandAck.unreadableActionCode,
+          message: "This phone cannot read the command's action."))
+      return makeWatchAck(command: command, terminal: terminal)
+    } catch let signal as WatchCommandGateSignal {
+      return makeWatchAck(command: command, gate: signal.gate)
+    } catch WatchCommandLedgerError.invalidTerminalReceipt {
+      return LorvexWatchCommandAck(trustedReceiptCorruptFor: command)
+    } catch {
+      return makeWatchAck(
+        command: command,
+        gate: .retryable(code: "receipt_write_failed", message: nil))
+    }
+  }
+
   // MARK: - Write-funnel hooks
 
   func preflightCurrentWatchCommand(_ db: Database) throws {
     guard let command = Self.currentWatchCommand else { return }
-    let gate = try WatchCommandLedger.preflight(db, command: ledgerCommand(command))
+    let gate = try WatchCommandLedger.preflight(db, command: ledgerCommand(command.identity))
     guard gate == .apply else { throw WatchCommandGateSignal(gate: gate) }
   }
 
@@ -75,7 +97,7 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
     guard let command = Self.currentWatchCommand else { return }
     _ = try WatchCommandLedger.recordTerminal(
       db,
-      command: ledgerCommand(command),
+      command: ledgerCommand(command.identity),
       receipt: WatchCommandTerminalReceipt(outcome: .applied, code: nil, message: nil))
   }
 
@@ -106,7 +128,7 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
   }
 
   private func ensureWatchTerminal(
-    _ command: LorvexWatchCommand,
+    _ command: LorvexWatchCommandIdentity,
     desired: WatchCommandTerminalReceipt
   ) throws -> WatchCommandTerminalReceipt {
     try withWatchCommandMaintenanceWrite { db in
@@ -127,7 +149,7 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
     }
   }
 
-  private func ledgerCommand(_ command: LorvexWatchCommand) -> WatchCommandLedgerCommand {
+  private func ledgerCommand(_ command: LorvexWatchCommandIdentity) -> WatchCommandLedgerCommand {
     WatchCommandLedgerCommand(
       sourceInstallID: command.sourceInstallID,
       workspaceInstanceID: command.workspaceInstanceID,
@@ -139,7 +161,12 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
 
   // MARK: - Outcome mapping
 
-  private func deterministicWatchRejection(
+  /// The rejection for an error that retrying the same command cannot change,
+  /// or nil for one that may pass on a later attempt (a busy or suspended
+  /// database, a concurrent write's newer version). A deterministic error
+  /// answered as retryable would hold every later command from the same watch
+  /// behind it for good.
+  static func deterministicWatchRejection(
     for error: Error
   ) -> WatchCommandTerminalReceipt? {
     let code: String
@@ -162,6 +189,8 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
       (code, message) = ("not_found", "The target no longer exists.")
     case StoreError.validation:
       (code, message) = ("validation_failed", "The command is no longer valid.")
+    case StoreError.invariant, StoreError.serialization:
+      (code, message) = ("invalid_state", "The data this command changes is inconsistent.")
     default:
       return nil
     }
@@ -169,7 +198,7 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
   }
 
   private func makeWatchAck(
-    command: LorvexWatchCommand,
+    command: LorvexWatchCommandIdentity,
     terminal: WatchCommandTerminalReceipt
   ) -> LorvexWatchCommandAck {
     switch terminal.outcome {
@@ -183,7 +212,7 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
   }
 
   private func makeWatchAck(
-    command: LorvexWatchCommand,
+    command: LorvexWatchCommandIdentity,
     gate: WatchCommandLedgerGate
   ) -> LorvexWatchCommandAck {
     switch gate {
@@ -205,14 +234,14 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
   }
 
   private func validatedWatchAck(
-    command: LorvexWatchCommand,
+    command: LorvexWatchCommandIdentity,
     outcome: LorvexWatchCommandAck.Outcome,
     code: String? = nil,
     message: String? = nil
   ) -> LorvexWatchCommandAck {
     do {
       return try LorvexWatchCommandAck(
-        command: command, outcome: outcome, code: code, message: message)
+        identity: command, outcome: outcome, code: code, message: message)
     } catch {
       // Never bypass validation with receipt-controlled fields. A corrupt local
       // row yields one fixed retryable ACK and remains available for diagnosis.

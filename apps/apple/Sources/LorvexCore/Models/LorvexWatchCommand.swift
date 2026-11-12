@@ -41,6 +41,14 @@ public struct LorvexWatchCommand: Sendable, Equatable {
     payloadChecksum = try LorvexWatchWire.checksum(Self.payloadObject(fields))
   }
 
+  /// The fields that identify this command and bind its ACK.
+  public var identity: LorvexWatchCommandIdentity {
+    LorvexWatchCommandIdentity(
+      protocolVersion: protocolVersion, workspaceInstanceID: workspaceInstanceID,
+      sourceInstallID: sourceInstallID, sequence: sequence, commandID: commandID,
+      createdAt: createdAt, payloadChecksum: payloadChecksum)
+  }
+
   public func wireData() throws -> Data {
     var object = Self.payloadObject(Self.Fields(self))
     object["payload_checksum"] = payloadChecksum
@@ -49,13 +57,7 @@ public struct LorvexWatchCommand: Sendable, Equatable {
 
   public static func decodeWireData(_ data: Data) throws -> Self {
     let object = try LorvexWatchWire.object(from: data, name: "command")
-    try LorvexWatchWire.requireExactKeys(
-      object,
-      [
-        "protocol_version", "workspace_instance_id", "source_install_id", "sequence",
-        "command_id", "created_at", "mutation", "payload_checksum",
-      ],
-      name: "command")
+    try LorvexWatchWire.requireExactKeys(object, commandKeys, name: "command")
     let mutation = try decodeMutation(object["mutation"])
     let fields = try validatedFields(
       protocolVersion: Int(try LorvexWatchWire.integer(object, "protocol_version")),
@@ -72,6 +74,51 @@ public struct LorvexWatchCommand: Sendable, Equatable {
     }
     return Self(fields: fields, payloadChecksum: supplied)
   }
+
+  /// The identity of a command whose action this build cannot read: a newer
+  /// Watch build sent an action, or a field of one, that this phone predates.
+  /// Every field but the action must be valid, and the checksum, computed over
+  /// the action exactly as sent, must match, so the identity is the sender's
+  /// own and the bytes are intact. Nil when the action reads (the command is
+  /// then applied or refused as usual) or anything else fails.
+  ///
+  /// With a verified identity the phone records a rejection for the command's
+  /// sequence and answers it, so the Watch's later commands are not held back
+  /// behind one this phone can never apply.
+  public static func identityOfUnreadableAction(in data: Data) -> LorvexWatchCommandIdentity? {
+    guard let object = try? LorvexWatchWire.object(from: data, name: "command"),
+      (try? LorvexWatchWire.requireExactKeys(object, commandKeys, name: "command")) != nil,
+      (try? decodeMutation(object["mutation"])) == nil,
+      object["mutation"] is [String: Any],
+      let protocolVersion = try? LorvexWatchWire.integer(object, "protocol_version"),
+      protocolVersion == Int64(currentProtocolVersion),
+      let sequence = try? LorvexWatchWire.integer(object, "sequence"), sequence > 0,
+      let workspace = try? LorvexWatchWire.canonicalUUID(
+        LorvexWatchWire.string(object, "workspace_instance_id"), field: "workspace_instance_id"),
+      let source = try? LorvexWatchWire.canonicalUUID(
+        LorvexWatchWire.string(object, "source_install_id"), field: "source_install_id"),
+      let commandID = try? LorvexWatchWire.canonicalUUID(
+        LorvexWatchWire.string(object, "command_id"), field: "command_id"),
+      let createdAt = try? LorvexWatchWire.canonicalTimestamp(
+        LorvexWatchWire.string(object, "created_at"), field: "created_at"),
+      let supplied = try? LorvexWatchWire.string(object, "payload_checksum"),
+      (try? LorvexWatchWire.requireChecksumShape(supplied)) != nil
+    else { return nil }
+    var payload = object
+    payload.removeValue(forKey: "payload_checksum")
+    guard let computed = try? LorvexWatchWire.checksum(payload), computed == supplied else {
+      return nil
+    }
+    return LorvexWatchCommandIdentity(
+      protocolVersion: currentProtocolVersion, workspaceInstanceID: workspace,
+      sourceInstallID: source, sequence: sequence, commandID: commandID, createdAt: createdAt,
+      payloadChecksum: supplied)
+  }
+
+  private static let commandKeys: Set<String> = [
+    "protocol_version", "workspace_instance_id", "source_install_id", "sequence",
+    "command_id", "created_at", "mutation", "payload_checksum",
+  ]
 
   private struct Fields {
     let protocolVersion: Int
@@ -252,4 +299,16 @@ public struct LorvexWatchCommand: Sendable, Equatable {
         date: try LorvexWatchWire.canonicalDate(date, field: "mutation.date"))
     }
   }
+}
+
+/// The fields that identify one Watch command on the wire, without its action:
+/// what the phone's ledger records and an ACK echoes.
+public struct LorvexWatchCommandIdentity: Sendable, Equatable {
+  public let protocolVersion: Int
+  public let workspaceInstanceID: String
+  public let sourceInstallID: String
+  public let sequence: Int64
+  public let commandID: String
+  public let createdAt: String
+  public let payloadChecksum: String
 }

@@ -42,7 +42,7 @@ enum LorvexWatchDeliveryRejectionText {
         localized: "watch.delivery.workspace_replaced",
         defaultValue: "The iPhone workspace was replaced before this action was applied.",
         table: "Localizable", bundle: WatchL10n.bundle)
-    case unreadableCode:
+    case unreadableCode, LorvexWatchCommandAck.unreadableActionCode:
       return String(
         localized: "watch.delivery.rejection.unreadable",
         defaultValue: "Your iPhone couldn’t read this action. Update Lorvex on both devices.",

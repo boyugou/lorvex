@@ -237,6 +237,133 @@ final class SwiftLorvexCoreServiceWatchCommandTests: XCTestCase {
     XCTAssertEqual(statusAfterReplay, .open)
   }
 
+  /// A newer watch build can send an action this phone does not know. The
+  /// phone used to answer it with no ACK; the watch then rejected it locally
+  /// after three tries, and the phone, whose high-water never passed it,
+  /// refused every later command as a sequence gap, so the watch could never
+  /// write again. A verified unreadable action is now rejected and recorded
+  /// at its sequence, and the next command applies.
+  func testAnUnreadableActionIsRejectedAtItsSequenceAndTheNextCommandApplies() async throws {
+    let fixture = try Fixture()
+    defer { fixture.remove() }
+    let service = fixture.open()
+    let workspace = try await service.currentWatchWorkspaceInstanceID()
+    let first = try command(
+      workspace: workspace, sequence: 7,
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      mutation: .captureTask(title: "Before"))
+    let unreadable = try unreadableActionData(
+      workspace: workspace, sequence: 8, id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd")
+    let next = try command(
+      workspace: workspace, sequence: 9,
+      id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      mutation: .captureTask(title: "After"))
+
+    let firstAck = await service.applyWatchCommand(first)
+    XCTAssertEqual(firstAck.outcome, .applied)
+    XCTAssertThrowsError(try LorvexWatchCommand.decodeWireData(unreadable))
+    let identity = try XCTUnwrap(LorvexWatchCommand.identityOfUnreadableAction(in: unreadable))
+    XCTAssertEqual(identity.sequence, 8)
+
+    let rejection = await service.rejectWatchCommandWithUnreadableAction(identity)
+    XCTAssertEqual(rejection.outcome, .rejected)
+    XCTAssertEqual(rejection.code, LorvexWatchCommandAck.unreadableActionCode)
+    XCTAssertEqual(rejection.commandID, identity.commandID)
+    XCTAssertEqual(rejection.payloadChecksum, identity.payloadChecksum)
+    // A retry replays the recorded rejection.
+    let replay = await service.rejectWatchCommandWithUnreadableAction(identity)
+    XCTAssertEqual(replay, rejection)
+
+    let nextAck = await service.applyWatchCommand(next)
+    XCTAssertEqual(nextAck.outcome, .applied)
+    XCTAssertEqual(try taskCount(service, title: "After"), 1)
+    XCTAssertEqual(try receiptCount(service), 3)
+  }
+
+  /// The ledger's ordering holds for an unreadable action as for any command:
+  /// one that arrives ahead of an earlier command waits for it.
+  func testAnUnreadableActionAheadOfAnEarlierCommandWaitsForIt() async throws {
+    let fixture = try Fixture()
+    defer { fixture.remove() }
+    let service = fixture.open()
+    let workspace = try await service.currentWatchWorkspaceInstanceID()
+    let first = try command(
+      workspace: workspace, sequence: 7,
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      mutation: .captureTask(title: "Before"))
+    let identity = try XCTUnwrap(
+      LorvexWatchCommand.identityOfUnreadableAction(
+        in: try unreadableActionData(
+          workspace: workspace, sequence: 9, id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd")))
+
+    let firstAck = await service.applyWatchCommand(first)
+    XCTAssertEqual(firstAck.outcome, .applied)
+    let ack = await service.rejectWatchCommandWithUnreadableAction(identity)
+    XCTAssertEqual(ack.outcome, .retryable)
+    XCTAssertEqual(ack.code, WatchCommandLedger.sequenceGapCode)
+    XCTAssertEqual(try receiptCount(service), 1)
+  }
+
+  func testOnlyAVerifiedCommandWithAnUnreadableActionHasAnIdentity() throws {
+    let workspace = "ffffffff-ffff-4fff-8fff-ffffffffffff"
+    // A command this build reads is never rejected as unreadable.
+    let readable = try command(
+      workspace: workspace, sequence: 3,
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      mutation: .captureTask(title: "Readable"))
+    XCTAssertNil(LorvexWatchCommand.identityOfUnreadableAction(in: try readable.wireData()))
+
+    // A known action with a field this build does not know is unreadable too.
+    let extraField = try unreadableActionData(
+      workspace: workspace, sequence: 3, id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      mutation: ["type": "capture_task", "title": "With a list", "list_id": "inbox"])
+    XCTAssertNotNil(LorvexWatchCommand.identityOfUnreadableAction(in: extraField))
+
+    // Bytes that do not match their checksum have no trustworthy identity.
+    let valid = try unreadableActionData(
+      workspace: workspace, sequence: 3, id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc")
+    var object = try XCTUnwrap(JSONSerialization.jsonObject(with: valid) as? [String: Any])
+    object["sequence"] = 4
+    let tampered = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])
+    XCTAssertNil(LorvexWatchCommand.identityOfUnreadableAction(in: tampered))
+  }
+
+  /// An error that a retry of the same command cannot change must end the
+  /// command, or it holds every later command from the watch behind it.
+  func testDeterministicStoreErrorsRejectAndTransientOnesRetry() {
+    XCTAssertEqual(
+      SwiftLorvexCoreService.deterministicWatchRejection(for: StoreError.invariant("x"))?.code,
+      "invalid_state")
+    XCTAssertEqual(
+      SwiftLorvexCoreService.deterministicWatchRejection(for: StoreError.serialization("x"))?
+        .outcome, .rejected)
+    XCTAssertNil(
+      SwiftLorvexCoreService.deterministicWatchRejection(
+        for: StoreError.staleVersion(entity: "task", id: "t")))
+    XCTAssertNil(
+      SwiftLorvexCoreService.deterministicWatchRejection(
+        for: DatabaseError(resultCode: .SQLITE_BUSY)))
+  }
+
+  /// Wire data for a command whose action this build cannot read, with a
+  /// valid identity and checksum, as a newer watch build would send it.
+  private func unreadableActionData(
+    workspace: String, sequence: Int64, id: String,
+    mutation: [String: Any] = ["type": "snooze_task", "minutes": 10]
+  ) throws -> Data {
+    var object: [String: Any] = [
+      "protocol_version": LorvexWatchCommand.currentProtocolVersion,
+      "workspace_instance_id": workspace,
+      "source_install_id": source,
+      "sequence": sequence,
+      "command_id": id,
+      "created_at": "2026-07-16T12:00:00.000Z",
+      "mutation": mutation,
+    ]
+    object["payload_checksum"] = try LorvexWatchWire.checksum(object)
+    return try LorvexWatchWire.jsonData(object)
+  }
+
   private func command(
     workspace: String,
     sequence: Int64,

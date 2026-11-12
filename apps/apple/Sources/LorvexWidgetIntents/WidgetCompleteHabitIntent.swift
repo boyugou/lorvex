@@ -47,7 +47,8 @@ public struct WidgetCompleteHabitIntent: LorvexWidgetActionIntent {
     let updated = try await LorvexSystemIntentRunner.completeHabit(
       id: habitID, date: nil, core: core)
     // Outside the app's reminder re-plan: a check-in that meets the period's
-    // target takes back the habit's later nudges.
+    // target takes back the habit's later nudges, which holds even when the
+    // coordinator's re-plan cannot read the store.
     await ReminderWithdrawal.live.withdrawHabitReminders(habitID: habitID, core: core)
     await WidgetIntentPostCommitCoordinator.live().finish(core: core)
     return .result(

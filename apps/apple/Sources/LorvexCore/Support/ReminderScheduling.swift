@@ -238,12 +238,27 @@ public struct UserNotificationTaskReminderScheduler: TaskReminderScheduling {
   /// carries no string catalog, so each host injects its localized copy.
   let fallbackBody: String
 
+  /// The app's scheduler: it registers the notification categories, whose
+  /// action buttons carry `actionTitles`.
   public init(
     fallbackBody: String = "Lorvex task reminder",
     actionTitles: LorvexNotificationActionTitles = LorvexNotificationActionTitles()
   ) {
     self.fallbackBody = fallbackBody
     registerLorvexNotificationCategories(UNUserNotificationCenter.current(), titles: actionTitles)
+  }
+
+  /// A scheduler for a process other than the app, such as the widget
+  /// extension. It leaves the notification categories alone: registering
+  /// replaces the app's whole set, and the app registered it with action
+  /// titles in its own language. Its reminders name the same category, so
+  /// they keep the app's buttons.
+  public static func outsideTheApp(fallbackBody: String) -> Self {
+    Self(leavingCategoriesWithFallbackBody: fallbackBody)
+  }
+
+  private init(leavingCategoriesWithFallbackBody fallbackBody: String) {
+    self.fallbackBody = fallbackBody
   }
 
   public func candidates(for tasks: [LorvexTask], includeNotes: Bool) -> [ScheduledTaskReminder] {

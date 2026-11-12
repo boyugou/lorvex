@@ -9,8 +9,7 @@ import LorvexDomain
 /// fallback copy unless the user opts in on this device.
 extension MobileStore {
   func loadShowTaskNotesInNotificationsPreference() async -> Bool {
-    let raw = try? await core.getPreference(key: PreferenceKeys.prefNotificationShowTaskNotes)
-    return raw == "true"
+    await ReminderReplan.includesTaskNotes(core: core)
   }
 
   @discardableResult

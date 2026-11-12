@@ -4,21 +4,24 @@ import LorvexWidgetKitSupport
 /// Finishes the derived work that follows a committed interactive-widget
 /// mutation without changing that mutation's outcome.
 ///
-/// The database commit is the application result. Snapshot publication and
-/// timeline reload are derived, retryable projections; a failure there must not
-/// turn an already-applied habit increment into a failed App Intent that invites
-/// the user to apply it again.
+/// The database commit is the application result. Snapshot publication, the
+/// timeline reload, and the reminder re-plan are derived, retryable
+/// projections; a failure there must not turn an already-applied habit
+/// increment into a failed App Intent that invites the user to apply it again.
 public struct WidgetIntentPostCommitCoordinator: Sendable {
   private let refresh: @Sendable (any LorvexCoreServicing) async throws -> Void
+  private let replanReminders: @Sendable (any LorvexCoreServicing) async -> Void
   private let broadcast: @Sendable () -> Void
 
   public init(
     refresh: @escaping @Sendable (any LorvexCoreServicing) async throws -> Void,
+    replanReminders: @escaping @Sendable (any LorvexCoreServicing) async -> Void,
     broadcast: @escaping @Sendable () -> Void = {
       DatabaseChangeSignal.broadcastCommittedChange()
     }
   ) {
     self.refresh = refresh
+    self.replanReminders = replanReminders
     self.broadcast = broadcast
   }
 
@@ -26,6 +29,9 @@ public struct WidgetIntentPostCommitCoordinator: Sendable {
     WidgetIntentPostCommitCoordinator(
       refresh: { core in
         _ = try await WidgetSnapshotLiveRefresher.live().refresh(core: core)
+      },
+      replanReminders: { core in
+        await WidgetReminderReplan.live.run(core: core)
       })
   }
 
@@ -46,5 +52,8 @@ public struct WidgetIntentPostCommitCoordinator: Sendable {
         message: "Widget snapshot refresh failed after a committed mutation.",
         details: String(describing: error))
     }
+    // After the snapshot, which the timeline reload waits on. The pass logs
+    // its own failures and never throws.
+    await replanReminders(core)
   }
 }

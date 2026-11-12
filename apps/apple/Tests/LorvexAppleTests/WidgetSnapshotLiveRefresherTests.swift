@@ -108,6 +108,10 @@ struct WidgetSnapshotLiveRefresherTests {
       let source = try String(contentsOfFile: path, encoding: .utf8)
       #expect(source.contains("WidgetIntentPostCommitCoordinator.live().finish(core: core)"))
     }
+    let coordinator = try String(
+      contentsOfFile: "Sources/LorvexWidgetIntents/WidgetIntentPostCommitCoordinator.swift",
+      encoding: .utf8)
+    #expect(coordinator.contains("await WidgetReminderReplan.live.run(core: core)"))
   }
 
   @Test("a post-commit snapshot failure cannot turn an applied habit increment into an error")
@@ -122,8 +126,10 @@ struct WidgetSnapshotLiveRefresherTests {
     _ = try await core.completeHabit(id: habit.id, date: date)
 
     let broadcastCount = LockedBox(0)
+    let replanCount = LockedBox(0)
     let finisher = WidgetIntentPostCommitCoordinator(
       refresh: { _ in throw SnapshotFailure() },
+      replanReminders: { _ in replanCount.mutate { $0 += 1 } },
       broadcast: { broadcastCount.mutate { $0 += 1 } })
 
     // Nonthrowing by contract: the App Intent must return the already-applied
@@ -133,6 +139,8 @@ struct WidgetSnapshotLiveRefresherTests {
     let stats = try await core.getHabitStats(id: habit.id)
     #expect(stats.totalCompletions == 1)
     #expect(broadcastCount.value == 1)
+    // The reminders are re-planned whatever became of the snapshot.
+    #expect(replanCount.value == 1)
     let logs = try await core.loadRecentLogs(
       limit: 20, offset: 0, since: nil, levels: nil,
       sources: ["error_log"], redact: false)

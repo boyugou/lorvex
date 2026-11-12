@@ -10,8 +10,7 @@ import LorvexDomain
 /// the user opts in on this Mac.
 extension AppStore {
   func loadShowTaskNotesInNotificationsPreference() async -> Bool {
-    let raw = try? await core.getPreference(key: PreferenceKeys.prefNotificationShowTaskNotes)
-    return raw == "true"
+    await ReminderReplan.includesTaskNotes(core: core)
   }
 
   @discardableResult

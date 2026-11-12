@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 import UserNotifications
 
 /// One re-plan of this device's task and habit reminder notifications: the
@@ -164,6 +165,15 @@ public enum ReminderReplan {
         source: diagnosticSource)
     }
     return Outcome(taskReport: taskReport, habitReport: habitReport)
+  }
+
+  /// Whether this device lets a task's notes become its reminder's body, the
+  /// local `notification_show_task_notes` preference: off unless the person
+  /// turned it on, and off when it cannot be read, since notes can hold text
+  /// not meant for a lock screen.
+  public static func includesTaskNotes(core: any LorvexCoreServicing) async -> Bool {
+    let raw = try? await core.getPreference(key: PreferenceKeys.prefNotificationShowTaskNotes)
+    return raw == "true"
   }
 
   private static func log(

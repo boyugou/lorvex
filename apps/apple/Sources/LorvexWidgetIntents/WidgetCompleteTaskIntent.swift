@@ -40,8 +40,10 @@ public struct WidgetCompleteTaskIntent: LorvexWidgetActionIntent {
     )
     // This intent runs in the widget extension process, outside the app's
     // in-process invalidation configuration and its reminder re-plan. After the
-    // commit, take back the completed task's pending reminders, then signal so
-    // any open app window can re-read the shared App Group store.
+    // commit, take back the completed task's pending reminders, which holds even
+    // when the re-plan below cannot read the store; the coordinator then signals
+    // any open app window, publishes the snapshot, and re-plans the reminders,
+    // arming a repeat's next occurrence.
     await ReminderWithdrawal.live.withdrawTaskReminders(taskID: task.id)
     await WidgetIntentPostCommitCoordinator.live().finish(core: core)
     return .result(

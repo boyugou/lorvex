@@ -25,10 +25,10 @@ public struct PendingReminderRequest: Equatable, Sendable {
 /// but an interactive widget's intent runs in the widget extension, and an
 /// iPhone app stays suspended through it: without this, a task completed from a
 /// widget still fires its reminder, and a habit met from one still nudges later
-/// that day. This only removes requests. It arms nothing, writes nothing to the
-/// store, and never constructs the app's schedulers, whose setup registers the
-/// notification actions in the app's language; the app's next pass arms what
-/// the write added, such as a repeat's next occurrence.
+/// that day. This only removes requests. It runs before the widget's own
+/// re-plan (`WidgetReminderReplan`), which arms what the write added, such as a
+/// repeat's next occurrence, but which keeps every pending request when its
+/// task read fails and runs only once notifications are allowed.
 ///
 /// Every step is best effort: a read that fails withdraws nothing, which keeps
 /// a reminder rather than losing one the user still wants.

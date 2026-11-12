@@ -51,11 +51,16 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     small and medium widgets. The tile keeps every name at one size and
     tightens before truncating, two-line names do not fit two rows of
     tiles, and the habit's symbol and color name it too.
-  - Open, an architecture item: a widget's Complete runs in the widget
-    extension, which cannot read the badge setting (the app's own
-    defaults), plan the next repeat's reminders (the app's planner), or
-    reach the Watch (no WatchConnectivity in an extension); all three wait
-    for the app's next run (see the audit entry below).
+  - Fixed 2026-11-12: a widget's Complete and check-in ran in the widget
+    extension, and a repeat's next occurrence had no reminder until the app
+    next ran. The widget now re-plans the reminders itself with the app's
+    pass (`WidgetReminderReplan` over `ReminderReplan`: one budget, the armed
+    and delivered stamps), once notifications are allowed, without
+    re-registering the app's notification categories. Still open, an
+    architecture item: the extension cannot read the badge setting (the
+    app's own defaults) or reach the Watch (no WatchConnectivity in an
+    extension); both wait for the app's next run (see the audit entry
+    below).
   - Proposed to the owner, waiting for a decision: today's calendar events
     in the Today widget (the large widget's empty lower half on a light day)
     or a separate day-timeline widget; a capture button on the Home Screen
@@ -357,10 +362,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     phone app publishes a snapshot for the new day (the Watch app asks the
     phone for one when opened): the iPhone widgets rebuild their own file when
     they reload, but that write never reaches the Watch.
-  - A widget's Complete only takes reminders back: a repeat's next occurrence
-    is not reminded, and the badge does not change, until the phone app next
-    runs, and neither the write nor a Focus filter change reaches the Watch
-    until the phone app publishes.
+  - A widget's Complete re-plans the reminders since 2026-11-12, a repeat's
+    next occurrence included, but the badge does not change until the phone
+    app next runs, and neither the write nor a Focus filter change reaches
+    the Watch until the phone app publishes.
   - Smaller: a Watch command the phone cannot verify at all (bytes that do
     not match their checksum, another protocol version) is rejected on the
     watch after three tries without renumbering, and the phone then refuses

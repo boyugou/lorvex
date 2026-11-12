@@ -52,22 +52,49 @@ struct WidgetReminderReplanTests {
     calendar.date(bySettingHour: hour, minute: 0, second: 0, of: clock()) ?? clock()
   }
 
-  /// 08:00 in the seed's time zone on `day`, or on today when `day` is nil.
-  private static func morningClock(on day: String?) -> @Sendable () -> Date {
-    guard let day else { return seedMorningWallClock() }
-    let parts = day.split(separator: "-").compactMap { Int($0) }
-    let morning =
-      calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 8))
-      ?? Date()
+  /// A day the pass runs on. Both lie ahead of the real clock: the core reads
+  /// the device's clock for which reminders are still upcoming, so a reminder
+  /// earlier today would already have passed when the suite runs late.
+  enum Day: CaseIterable, Sendable {
+    /// Tomorrow.
+    case ordinary
+    /// The next day before the clocks go forward, when the next day's 10:00
+    /// is 23 hours away.
+    case beforeClocksGoForward
+
+    /// 08:00 in the seed's time zone on this day.
+    var morning: Date {
+      let calendar = WidgetReminderReplanTests.calendar
+      let tomorrow = calendar.date(
+        byAdding: .day, value: 1,
+        to: calendar.date(bySettingHour: 8, minute: 0, second: 0, of: Date()) ?? Date()) ?? Date()
+      switch self {
+      case .ordinary:
+        return tomorrow
+      case .beforeClocksGoForward:
+        for offset in 0..<400 {
+          guard let day = calendar.date(byAdding: .day, value: offset, to: tomorrow),
+            let next = calendar.dateInterval(of: .day, for: day.addingTimeInterval(24 * 60 * 60))
+          else { continue }
+          if next.duration < 24 * 60 * 60 { return day }
+        }
+        return tomorrow
+      }
+    }
+  }
+
+  /// 08:00 in the seed's time zone on `day`.
+  private static func morningClock(on day: Day) -> @Sendable () -> Date {
+    let morning = day.morning
     return { morning }
   }
 
-  /// Today, and the day before the clocks go forward, when the next day's
-  /// 10:00 is 23 hours away: the next occurrence keeps the wall-clock time.
+  /// On an ordinary day and on the day before the clocks go forward, the
+  /// next occurrence keeps the wall-clock time.
   @Test(
     "a repeat completed from a widget has its next occurrence's reminder armed",
-    arguments: [nil, "2027-03-13"] as [String?])
-  func aRepeatCompletedFromAWidgetArmsItsNextOccurrence(day: String?) async throws {
+    arguments: Day.allCases)
+  func aRepeatCompletedFromAWidgetArmsItsNextOccurrence(day: Day) async throws {
     let clock = Self.morningClock(on: day)
     let core = try await makeSeededInMemoryCore(wallClock: clock)
     let repeating = try await core.createTask(
@@ -99,7 +126,7 @@ struct WidgetReminderReplanTests {
 
   @Test("a task's notes become the reminder's body only where this device allows it")
   func notesFollowThisDevicesPreference() async throws {
-    let clock = seedMorningWallClock()
+    let clock = Self.morningClock(on: .ordinary)
     let core = try await makeSeededInMemoryCore(wallClock: clock)
     let task = try await core.createTask(title: "Renew passport", notes: "Bring the old one")
     _ = try await core.setTaskReminders(

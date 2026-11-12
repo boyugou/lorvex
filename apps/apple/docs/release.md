@@ -417,9 +417,9 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 141 went up on
-  2026-11-10, so it stops installing around 2027-02-08. Upload a fresh build by
-  2027-01-25 (the steps above), even without a product change, while testers
+- **TestFlight builds expire 90 days after upload.** Build 142 went up on
+  2026-11-12, so it stops installing around 2027-02-10. Upload a fresh build by
+  2027-01-27 (the steps above), even without a product change, while testers
   still use TestFlight.
 - **Signing material.** The Apple Distribution and Mac installer certificates,
   and every iOS and Mac App Store profile that embeds them, expire on

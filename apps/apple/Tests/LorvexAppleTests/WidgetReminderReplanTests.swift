@@ -41,16 +41,34 @@ struct WidgetReminderReplanTests {
       now: now)
   }
 
-  /// `hour` o'clock on the day `clock` reads, in the seed's time zone.
-  private static func time(_ hour: Int, on clock: () -> Date) -> Date {
+  private static var calendar: Calendar {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = zone
-    return calendar.date(bySettingHour: hour, minute: 0, second: 0, of: clock()) ?? clock()
+    return calendar
   }
 
-  @Test("a repeat completed from a widget has its next occurrence's reminder armed")
-  func aRepeatCompletedFromAWidgetArmsItsNextOccurrence() async throws {
-    let clock = seedMorningWallClock()
+  /// `hour` o'clock on the day `clock` reads, in the seed's time zone.
+  private static func time(_ hour: Int, on clock: () -> Date) -> Date {
+    calendar.date(bySettingHour: hour, minute: 0, second: 0, of: clock()) ?? clock()
+  }
+
+  /// 08:00 in the seed's time zone on `day`, or on today when `day` is nil.
+  private static func morningClock(on day: String?) -> @Sendable () -> Date {
+    guard let day else { return seedMorningWallClock() }
+    let parts = day.split(separator: "-").compactMap { Int($0) }
+    let morning =
+      calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 8))
+      ?? Date()
+    return { morning }
+  }
+
+  /// Today, and the day before the clocks go forward, when the next day's
+  /// 10:00 is 23 hours away: the next occurrence keeps the wall-clock time.
+  @Test(
+    "a repeat completed from a widget has its next occurrence's reminder armed",
+    arguments: [nil, "2027-03-13"] as [String?])
+  func aRepeatCompletedFromAWidgetArmsItsNextOccurrence(day: String?) async throws {
+    let clock = Self.morningClock(on: day)
     let core = try await makeSeededInMemoryCore(wallClock: clock)
     let repeating = try await core.createTask(
       TaskCreateDraft(
@@ -76,7 +94,7 @@ struct WidgetReminderReplanTests {
     #expect(armed.contains { $0.taskID == other.id })
     #expect(!armed.contains { $0.taskID == repeating.id })
     let next = try #require(armed.first { $0.title == "Water the plants" })
-    #expect(next.fireDate == Self.time(10, on: clock).addingTimeInterval(24 * 60 * 60))
+    #expect(next.fireDate == Self.calendar.date(byAdding: .day, value: 1, to: Self.time(10, on: clock)))
   }
 
   @Test("a task's notes become the reminder's body only where this device allows it")

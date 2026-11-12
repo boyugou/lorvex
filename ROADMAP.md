@@ -51,14 +51,21 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     small and medium widgets. The tile keeps every name at one size and
     tightens before truncating, two-line names do not fit two rows of
     tiles, and the habit's symbol and color name it too.
-  - Fixed 2026-11-12: a widget's Complete and check-in ran in the widget
-    extension, and a repeat's next occurrence had no reminder until the app
-    next ran. The widget now re-plans the reminders itself with the app's
-    pass (`WidgetReminderReplan` over `ReminderReplan`: one budget, the armed
-    and delivered stamps), once notifications are allowed, without
-    re-registering the app's notification categories. Still open, an
-    architecture item: the extension cannot read the badge setting (the
-    app's own defaults) or reach the Watch (no WatchConnectivity in an
+  - Fixed 2026-11-12, verified by tests with stand-in schedulers and four
+    mutation checks, not yet on a device: a widget's Complete and check-in
+    ran in the widget extension, and a repeat's next occurrence had no
+    reminder until the app next ran. The widget now re-plans the reminders
+    itself with the app's pass (`WidgetReminderReplan` over `ReminderReplan`:
+    one budget, the armed and delivered stamps), once notifications are
+    allowed, without re-registering the app's notification categories. It
+    and the earlier withdrawal assume the extension's notification center is
+    the app's; if it were not, the pass would read the permission as
+    unanswered and do nothing. The pass removes every pending reminder
+    before arming up to 60 again, so an extension stopped midway leaves
+    none until the app runs; adding first (the same identifiers replace in
+    place) and then removing only the stale ones would close that. Still
+    open, an architecture item: the extension cannot read the badge setting
+    (the app's own defaults) or reach the Watch (no WatchConnectivity in an
     extension); both wait for the app's next run (see the audit entry
     below).
   - Proposed to the owner, waiting for a decision: today's calendar events
@@ -444,7 +451,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   table row drag), undo, context menus, Full Keyboard Access, the Quick
   Capture hotkey, Open at Login, the Control Center capture control,
   real-finger calendar swipes, watch checks on hardware, iPad hardware
-  keyboard shortcuts, and permanent delete on an iPhone.
+  keyboard shortcuts, permanent delete on an iPhone, and a repeating task
+  completed from a widget on an iPhone whose app is suspended, which should
+  arm the next occurrence's reminder at once.
 - Waiting on the owner's decision: the App Store listing (on hold), dark and
   tinted app-icon art, a Share extension, and the App Store "Differentiate
   Without Color Alone" claim.

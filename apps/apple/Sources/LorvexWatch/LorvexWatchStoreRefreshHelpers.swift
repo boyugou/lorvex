@@ -36,6 +36,10 @@ extension LorvexWatchStore {
     let reader = LorvexWatchSnapshotReader(url: url)
     let refreshDate = now()
     let (result, tasks) = reader.read(at: refreshDate)
+    // Read after the file's contents: if a newer replica replaced the file in
+    // between, the later date goes with the older contents, which only holds a
+    // pending check-in back until the refresh that replica triggers.
+    replicaReceivedAt = LorvexWatchReplicaFile.receivedDate(at: url)
     switch result {
     case .snapshot(let snapshot):
       guard let snapshotDay = Self.logicalDay(for: snapshot, at: refreshDate) else {

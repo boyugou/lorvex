@@ -86,11 +86,18 @@ public struct LorvexWatchPendingCommand: Identifiable, Equatable, Sendable {
   public let id: String
   public let sequence: Int64
   public let mutation: LorvexWatchMutation
+  /// When the watch journaled the command, by the watch's clock. A command
+  /// whose time is unknown reads as the distant past, which is older than any
+  /// replica.
+  public let createdAt: Date
 
-  public init(id: String, sequence: Int64, mutation: LorvexWatchMutation) {
+  public init(
+    id: String, sequence: Int64, mutation: LorvexWatchMutation, createdAt: Date = .distantPast
+  ) {
     self.id = id
     self.sequence = sequence
     self.mutation = mutation
+    self.createdAt = createdAt
   }
 }
 

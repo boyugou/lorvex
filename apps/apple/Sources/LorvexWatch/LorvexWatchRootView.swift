@@ -59,7 +59,10 @@ public struct LorvexWatchRootView: View {
   /// and sync status. The habits page is left out when there are none.
   @ViewBuilder
   private var content: some View {
-    if store.isLoading && store.tasks.isEmpty && store.error == nil {
+    // Only before the first refresh has finished. `isLoading` is also true
+    // while an action is journaled; a spinner then would rebuild the pages
+    // under the finger on a day with no tasks left.
+    if !store.hasLoaded {
       ProgressView()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     } else {

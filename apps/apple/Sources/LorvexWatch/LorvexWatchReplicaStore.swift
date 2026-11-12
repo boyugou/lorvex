@@ -73,6 +73,16 @@ enum LorvexWatchReplicaFile {
     return (envelope, snapshot)
   }
 
+  /// When the replica at `url` was received: the file's modification date,
+  /// which `LorvexWatchReplicaStore.accept` sets by replacing the file and
+  /// leaves alone when the same bytes arrive again. It is read fresh each time
+  /// (a `URL` caches its resource values) and by the watch's own clock, the
+  /// clock that stamps a journaled command.
+  static func receivedDate(at url: URL) -> Date? {
+    let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+    return attributes?[.modificationDate] as? Date
+  }
+
   static func load(at url: URL) -> WidgetSnapshotLoadResult {
     do {
       if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize,
@@ -152,11 +162,17 @@ public actor LorvexWatchReplicaStore {
     let incoming = try LorvexWatchReplicaFile.decode(wireData)
     let url = try replicaURL(containerURL: override)
 
-    if let existingData = try? Data(contentsOf: url, options: [.mappedIfSafe]),
-      let existing = try? LorvexWatchReplicaFile.decode(existingData),
-      WidgetSnapshotOrdering.isStrictlyOlder(incoming.snapshot, than: existing.snapshot)
-    {
-      return false
+    if let existingData = try? Data(contentsOf: url, options: [.mappedIfSafe]) {
+      // The replica already on disk, offered again (every launch offers the
+      // session's last application context): nothing changes, and the file
+      // keeps the date it was received, which decides whether a pending habit
+      // check-in is newer than it (`LorvexWatchReplicaFile.receivedDate(at:)`).
+      if existingData == wireData { return false }
+      if let existing = try? LorvexWatchReplicaFile.decode(existingData),
+        WidgetSnapshotOrdering.isStrictlyOlder(incoming.snapshot, than: existing.snapshot)
+      {
+        return false
+      }
     }
 
     try fileManagerBox.value.createDirectory(

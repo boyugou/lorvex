@@ -23,6 +23,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   maintenance".
 - watchOS / Widgets design audits on hardware (the Watch read-through of
   2026-11-11 below used the simulator).
+- Widget sprint (owner, 2026-11-11: the widgets' design, design language,
+  UI/UX, user experience, and what they should do). Begins with a capture of
+  every family on iPhone, iPad, the Mac, the Lock Screen, Control Center, and
+  the Watch complications, and a read of the widget code, against the
+  design language ("a row is neutral until something on it needs
+  attention"); then the findings, and changes. UI is delegated; new
+  capabilities go to the owner as a proposal first.
 
 - Hand a task to the assistant (owner approved the idea 2026-11-10;
   released in build 141). A task can be handed to the user's own assistant,
@@ -336,22 +343,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   checksum; the phone's ledger, which applies a command once across retries
   and restarts; the size bounds on everything the phone sends; titles redacted
   on a locked face; the product day and its time zone carried by the replica
-  rather than computed on the wrist. Open:
-  - A habit checked on the wrist while the phone is out of reach reads as
-    unchecked again at the next refresh, which every wrist raise runs:
-    `reapplyPendingTaskCommands` leaves habit check-ins out, since adding one
-    to a replica that already holds it would count it twice. A habit counted
-    several times a day then invites a second tap, and the phone applies both.
-    A check-in journaled after the replica on disk was received cannot be in
-    it; both times are the watch's own clock (the journal's `createdAt`, the
-    replica file's modification date), so that case can be re-applied exactly,
-    once `LorvexWatchReplicaStore.accept` stops rewriting identical bytes.
-  - `LorvexWatchRootView` replaces the whole page stack with a spinner while
-    `isLoading` is true and Today is empty. On a cleared day every habit
-    check-in and every capture tears the pages down and rebuilds them (the
-    habits page scrolls back to its top), and the first frame after launch
-    reads "All clear" before the first refresh has run. The spinner belongs
-    only before the first refresh finishes.
+  rather than computed on the wrist. Fixed since (2026-11-11): a habit
+  checked on the wrist while the phone was out of reach read as unchecked
+  again at the next refresh, which invited a second tap on a habit counted
+  several times a day; a pending check-in journaled after the replica on
+  screen was received is now put back over it (both times by the watch's
+  clock; the replica file keeps its date when the same bytes arrive again),
+  and one older than the replica is left to the phone. The root view's
+  spinner, which on a cleared day took the pages down on every check-in and
+  capture, now shows only before the first refresh finishes. Open:
   - A rejected action reads "Action 37 wasn’t applied": the journal's sequence
     number, with neither the action nor the task named (only a capture shows
     its title).

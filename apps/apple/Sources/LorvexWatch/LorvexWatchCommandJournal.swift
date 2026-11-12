@@ -169,7 +169,9 @@ actor LorvexWatchCommandJournal {
       return LorvexWatchPendingCommand(
         id: entry.command.id,
         sequence: entry.command.sequence,
-        mutation: entry.command.mutation)
+        mutation: entry.command.mutation,
+        createdAt: LorvexDateFormatters.iso8601Fractional.date(from: entry.command.createdAt)
+          ?? .distantPast)
     }
     let rejected = document.entries.compactMap { entry -> LorvexWatchRejectedCommand? in
       guard entry.disposition == .rejected, let code = entry.rejectionCode else { return nil }

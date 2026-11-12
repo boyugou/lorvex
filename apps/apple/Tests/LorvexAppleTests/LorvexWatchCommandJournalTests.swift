@@ -31,6 +31,22 @@ struct LorvexWatchCommandJournalTests {
     #expect(await restarted.nextSequence() == 3)
   }
 
+  @Test("a pending command reports when the watch journaled it")
+  func pendingCommandCarriesItsJournalTime() async throws {
+    let url = makeJournalURL()
+    defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+    let journal = try LorvexWatchCommandJournal(fileURL: url, newInstallID: watchInstallID)
+    _ = try await journal.enqueue(
+      mutation: .completeTask(id: task1),
+      workspaceInstanceID: workspaceA,
+      createdAt: "2026-07-16T12:00:00.250Z")
+
+    let pending = await journal.deliveryStatus().pendingCommands
+    #expect(
+      pending.map(\.createdAt)
+        == [LorvexDateFormatters.iso8601Fractional.date(from: "2026-07-16T12:00:00.250Z")])
+  }
+
   @Test("corrupt journal fails closed without replacing bytes")
   func corruptJournalFailsClosed() throws {
     let url = makeJournalURL()

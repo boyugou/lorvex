@@ -171,6 +171,34 @@ struct LorvexWatchStoreMutationForwardingTests {
     #expect(!store.isLoading)
   }
 
+  /// The root view shows its spinner only until `hasLoaded`. On a day with no
+  /// tasks left an action being journaled must not bring the spinner back: it
+  /// would take the pages down and rebuild them under the finger.
+  @Test("hasLoaded turns true with the first refresh and stays true while an action is journaled")
+  func hasLoadedSurvivesAnActionInFlight() async {
+    let forwarder = BlockingMutationForwarder()
+    let store = LorvexWatchStore(
+      snapshotUnavailable: .init(reason: .missingFile, detail: "test"),
+      mutationForwarder: forwarder)
+    #expect(!store.hasLoaded)
+
+    // A refresh that fails has still finished: the page shows why.
+    await store.refresh()
+    #expect(store.hasLoaded)
+    #expect(store.error != nil)
+
+    store.captureTitle = "On an empty day"
+    let capture = Task { await store.captureTask() }
+    await forwarder.waitUntilForwardStarted()
+    #expect(store.isLoading)
+    #expect(store.tasks.isEmpty)
+    #expect(store.error == nil)
+    #expect(store.hasLoaded)
+
+    await forwarder.release()
+    await capture.value
+  }
+
   @Test("pending capture label derives only from authoritative journal status")
   func pendingCaptureTitleFollowsDeliveryStatus() {
     let store = LorvexWatchStore(

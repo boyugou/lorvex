@@ -32,14 +32,24 @@ extension LorvexWatchStore {
     }
   }
 
-  /// Re-applies the task actions still waiting for the phone's ACK over a
-  /// freshly read replica, so a task completed on the wrist does not reappear
-  /// on the next refresh while the phone has yet to apply it. Every task action
-  /// is idempotent over a replica that already includes it. Habit check-ins are
-  /// left out: adding one again could count a check-in the replica already has.
-  func reapplyPendingTaskCommands() {
+  /// Re-applies the actions still waiting for the phone's ACK over a freshly
+  /// read replica, so a task completed or a habit checked on the wrist does not
+  /// come back on the next refresh while the phone has yet to apply it.
+  ///
+  /// Every task action is idempotent over a replica that already includes it.
+  /// A habit check-in is not: adding one to a replica that already holds it
+  /// would count it twice. It is re-applied only when the watch journaled it
+  /// after it received the replica on screen, which therefore cannot include
+  /// it, and only for the day on screen. Both times are read from the watch's
+  /// own clock. A check-in older than the replica is left to the phone's next
+  /// replica.
+  func reapplyPendingCommands() {
     for command in deliveryStatus.pendingCommands {
-      if case .completeHabit = command.mutation { continue }
+      if case .completeHabit(_, let date) = command.mutation {
+        guard date == logicalDay, let replicaReceivedAt,
+          command.createdAt > replicaReceivedAt
+        else { continue }
+      }
       applyOptimisticUpdate(for: command.mutation)
     }
   }

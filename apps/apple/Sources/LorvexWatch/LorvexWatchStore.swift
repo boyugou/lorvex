@@ -76,6 +76,16 @@ public final class LorvexWatchStore {
   /// commands remain visible until explicitly dismissed.
   public internal(set) var deliveryStatus: LorvexWatchDeliveryStatus = .empty
 
+  /// True once a refresh has finished, whether it loaded a day or failed. The
+  /// root view shows its spinner only before that: `isLoading` is also true
+  /// while an action is being journaled, and a spinner then would take the
+  /// pages down under the finger.
+  public internal(set) var hasLoaded = false
+
+  /// When the replica on screen was received, by the watch's clock; nil on the
+  /// core backend and when no replica could be read.
+  @ObservationIgnored var replicaReceivedAt: Date?
+
   /// True while a `refresh()` fan-out is in flight. A second caller that arrives
   /// mid-refresh does not start a parallel run; it records `refreshPending` so
   /// the in-flight refresh reruns once when it finishes. Serializing the bodies
@@ -160,6 +170,7 @@ public final class LorvexWatchStore {
 
   private func performRefresh() async {
     error = nil
+    defer { hasLoaded = true }
     do {
       switch backend {
       case .core(let core):
@@ -194,12 +205,13 @@ public final class LorvexWatchStore {
           table: "Localizable", bundle: WatchL10n.bundle)
       case .snapshot(let url):
         try refreshFromSnapshot(url: url)
-        reapplyPendingTaskCommands()
+        reapplyPendingCommands()
       case .snapshotUnavailable(let fallback):
         throw LorvexWatchSnapshotError.unavailable(fallback)
       }
     } catch {
       logicalDay = nil
+      replicaReceivedAt = nil
       staleAgeLabel = nil
       tasks = []
       moreCount = 0

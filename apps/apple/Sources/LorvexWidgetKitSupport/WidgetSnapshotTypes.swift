@@ -160,6 +160,12 @@ public extension WidgetSnapshot {
     /// key reads as waiting on nothing (``isBlocked``), so a reader or writer
     /// that does not know the key exchanges the same tasks.
     private let blocked: Bool?
+    /// The task's hand-off to the assistant as its state's raw value
+    /// (``LorvexTaskDelegation/State``), absent for a task that is the
+    /// person's own. Like `blocked`, a reader that does not know the key reads
+    /// the task as the person's own, and a value it does not know reads the
+    /// same way (``delegationMarker``).
+    private let delegation: String?
 
     enum CodingKeys: String, CodingKey {
       case id
@@ -172,6 +178,7 @@ public extension WidgetSnapshot {
       case scheduledStart = "scheduled_start"
       case scheduledEnd = "scheduled_end"
       case blocked
+      case delegation
     }
 
     public init(
@@ -184,7 +191,8 @@ public extension WidgetSnapshot {
       estimatedMinutes: Int?,
       scheduledStart: String? = nil,
       scheduledEnd: String? = nil,
-      isBlocked: Bool = false
+      isBlocked: Bool = false,
+      delegation: LorvexTaskDelegationMarker? = nil
     ) {
       self.id = id
       self.title = title
@@ -196,11 +204,27 @@ public extension WidgetSnapshot {
       self.scheduledStart = scheduledStart
       self.scheduledEnd = scheduledEnd
       self.blocked = isBlocked ? true : nil
+      self.delegation = delegation.map {
+        switch $0 {
+        case .withAssistant: LorvexTaskDelegation.State.assistant.rawValue
+        case .assistantReplied: LorvexTaskDelegation.State.returned.rawValue
+        }
+      }
     }
 
     /// True when the task waits on an unfinished task, so it cannot be
     /// started: glances say "Blocked", and the watch offers no Start.
     public var isBlocked: Bool { blocked == true }
+
+    /// The task's hand-off marker: the assistant holds it, or it handed it
+    /// back and the task waits on the person; nil for the person's own task.
+    public var delegationMarker: LorvexTaskDelegationMarker? {
+      switch delegation.flatMap(LorvexTaskDelegation.State.init(rawValue:)) {
+      case .assistant: .withAssistant
+      case .returned: .assistantReplied
+      case nil: nil
+      }
+    }
 
     /// True when the task is actionable (`open` or `in_progress`). Widgets,
     /// complications, and the watch keep a started task visible just like the

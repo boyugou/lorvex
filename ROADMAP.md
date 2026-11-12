@@ -28,8 +28,8 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   every family on iPhone, iPad, the Mac, the Lock Screen, Control Center, and
   the Watch complications, and a read of the widget code, against the
   design language ("a row is neutral until something on it needs
-  attention"); then the findings, and changes. UI is delegated; new
-  capabilities go to the owner as a proposal first. First round
+  attention"); then the findings, and changes. Design and development,
+  new capabilities included, are delegated (owner, 2026-11-12). First round
   (2026-11-11), captured on the iPhone gallery (light, dark, XXXL, German,
   Thai) and the Mac gallery:
   - Fixed: no widget read `widgetRenderingMode`. The Mac desktop renders
@@ -68,13 +68,24 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     (the app's own defaults) or reach the Watch (no WatchConnectivity in an
     extension); both wait for the app's next run (see the audit entry
     below).
-  - Proposed to the owner, waiting for a decision: today's calendar events
-    in the Today widget (the large widget's empty lower half on a light day)
-    or a separate day-timeline widget; a capture button on the Home Screen
-    widgets; the delegation marker on widget rows. Each adds optional fields
-    to `WidgetSnapshot` without a version bump, so a Watch on an older build
-    still reads its replica; the Watch projector drops them, and the
-    publisher's changed-content check must cover them.
+  - Done 2026-11-12: a task handed to the assistant carries its marker on
+    the widget rows and the lead's line, as on the app's rows: the sparkles
+    glyph, neutral while the assistant holds the task, and "Replied" in the
+    accent once it handed the task back, which reads before the task's time
+    (a running time still reads first). The word, not only the tint, tells
+    a reply apart, so it survives the desktop's and the tinted Home Screen's
+    desaturation. The snapshot carries it as an optional `delegation` key
+    on a task, absent for the person's own; the Watch replica leaves it out.
+    The small widget's rows and the Lock Screen show no glyph.
+  - Decided against: a capture button on the Home Screen widgets. Capture
+    is already one tap away in Control Center, on the Lock Screen, on the
+    Action button, and in the app icon's quick action; a ＋ on a glance would
+    repeat it (rule 12 of `apps/apple/CLAUDE.md`) and add chrome to a
+    surface that stays neutral until something needs attention.
+  - Next: today's calendar events in the Today widget, ordered with the
+    timed tasks the way the menu bar panel orders them
+    (`LorvexTodayTimeline`), read in the same transaction as the rest of
+    the snapshot, aging out as each one ends, and kept off the Watch.
 
 - Hand a task to the assistant (owner approved the idea 2026-11-10;
   released in build 141). A task can be handed to the user's own assistant,
@@ -125,7 +136,8 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     replied", the reply in the accent) on its row and in its detail, on the
     Mac and the iPhone, in every language; a task the assistant handed back
     opens with what it wrote. Not covered yet: the Mac's table mode, the menu
-    bar panel, widgets, and the Watch show no marker; the request can be set
+    bar panel and the Watch show no marker (the widgets show it since
+    2026-11-12, see the widget sprint); the request can be set
     only through the assistant, since the apps have no field for it; and the
     two sample replies in the preview data are English in every language.
     The convergence simulation now hands tasks over, returns them, and takes

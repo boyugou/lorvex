@@ -73,7 +73,8 @@ public struct WidgetSnapshotProjector: Sendable {
         estimatedMinutes: task.estimatedMinutes,
         scheduledStart: time.map { lorvexStoredClockTime(minutes: $0.lowerBound) },
         scheduledEnd: time.map { lorvexStoredClockTime(minutes: $0.upperBound) },
-        isBlocked: today.blockedTaskIDs.contains(task.id)
+        isBlocked: today.blockedTaskIDs.contains(task.id),
+        delegation: LorvexTaskDelegationMarker(task: task)
       )
     }
 

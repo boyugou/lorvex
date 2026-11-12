@@ -10,7 +10,7 @@ import LorvexCore
 /// met, one part-way through a count of three, and two not yet started. The lead task's
 /// saved time is placed around `now` — it started twenty minutes ago and has
 /// twenty-five to go — so the gallery shows its ring mid-fill; the rows after
-/// it show a started task, an estimate, and an overdue task.
+/// it show a started task, an overdue task, and a task the assistant holds.
 public enum WidgetPreviewSnapshot {
   public static func make(
     now: Date = Date(),
@@ -24,11 +24,13 @@ public enum WidgetPreviewSnapshot {
 
     func task(
       _ id: String, _ title: String, status: LorvexTask.Status = .open, due: String? = nil,
-      priority: Int? = nil, minutes: Int? = nil, start: String? = nil, end: String? = nil
+      priority: Int? = nil, minutes: Int? = nil, start: String? = nil, end: String? = nil,
+      delegation: LorvexTaskDelegationMarker? = nil
     ) -> WidgetSnapshot.TodayTask {
       WidgetSnapshot.TodayTask(
         id: id, title: title, status: status.rawValue, dueDate: due, priority: priority,
-        listID: listID, estimatedMinutes: minutes, scheduledStart: start, scheduledEnd: end)
+        listID: listID, estimatedMinutes: minutes, scheduledStart: start, scheduledEnd: end,
+        delegation: delegation)
     }
 
     let tasks = [
@@ -56,7 +58,7 @@ public enum WidgetPreviewSnapshot {
         String(
           localized: "widget.preview.task.flights", defaultValue: "Book flights",
           table: "Localizable", bundle: WidgetSupportL10n.bundle),
-        priority: 3, minutes: 30),
+        priority: 3, minutes: 30, delegation: .withAssistant),
     ]
     let stats = WidgetSnapshot.Stats(
       todayCount: tasks.count, overdueCount: 1, dueTodayCount: 1, completedTodayCount: 2)

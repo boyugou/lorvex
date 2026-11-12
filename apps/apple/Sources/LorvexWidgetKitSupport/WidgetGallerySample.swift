@@ -15,15 +15,15 @@
     public static let earlyClock = 8 * 60 + 40
 
     public static var snapshot: WidgetSnapshot {
-      // Title, status, saved time, estimate, priority tier.
-      let day: [(String, String, String?, String?, Int?, Int)] = [
-        ("Review the Q3 planning doc", "in_progress", "09:45", "10:30", 45, 1),
-        ("Refactor the sync layer", "open", "11:00", "12:30", 90, 2),
-        ("Reply to the investor update email", "open", "14:00", "14:30", 30, 1),
-        ("Read the GRPO paper", "open", nil, nil, 40, 3),
-        ("Renew passport", "open", nil, nil, nil, 2),
-        ("Plan the team offsite", "open", nil, nil, 60, 3),
-        ("Pay the electricity bill", "open", nil, nil, 5, 3),
+      // Title, status, saved time, estimate, priority tier, hand-off.
+      let day: [(String, String, String?, String?, Int?, Int, LorvexTaskDelegationMarker?)] = [
+        ("Review the Q3 planning doc", "in_progress", "09:45", "10:30", 45, 1, nil),
+        ("Refactor the sync layer", "open", "11:00", "12:30", 90, 2, nil),
+        ("Reply to the investor update email", "open", "14:00", "14:30", 30, 1, nil),
+        ("Read the GRPO paper", "open", nil, nil, 40, 3, .assistantReplied),
+        ("Renew passport", "open", nil, nil, nil, 2, nil),
+        ("Plan the team offsite", "open", nil, nil, 60, 3, .withAssistant),
+        ("Pay the electricity bill", "open", nil, nil, 5, 3, nil),
       ]
       return WidgetSnapshot(
         generatedAt: "2026-06-30T12:00:00Z",
@@ -34,7 +34,8 @@
         tasks: day.enumerated().map { index, row in
           .init(
             id: "task-\(index)", title: row.0, status: row.1, dueDate: nil, priority: row.5,
-            listID: nil, estimatedMinutes: row.4, scheduledStart: row.2, scheduledEnd: row.3)
+            listID: nil, estimatedMinutes: row.4, scheduledStart: row.2, scheduledEnd: row.3,
+            delegation: row.6)
         },
         habits: habits)
     }
@@ -53,13 +54,13 @@
 
     /// A day with tasks left but none leading: nothing timed, nothing started.
     public static func openDayModel(_ family: WidgetFamilyKind) -> WidgetRenderModel {
-      // Title, estimate, priority tier.
-      let day: [(String, Int?, Int)] = [
-        ("Read the GRPO paper", 40, 1),
-        ("Renew passport", nil, 2),
-        ("Draft the offsite agenda", 90, 3),
-        ("Book the dentist", 10, 3),
-        ("Clean up the photo library", 30, 3),
+      // Title, estimate, priority tier, hand-off.
+      let day: [(String, Int?, Int, LorvexTaskDelegationMarker?)] = [
+        ("Read the GRPO paper", 40, 1, .assistantReplied),
+        ("Renew passport", nil, 2, nil),
+        ("Draft the offsite agenda", 90, 3, .withAssistant),
+        ("Book the dentist", 10, 3, nil),
+        ("Clean up the photo library", 30, 3, nil),
       ]
       let open = WidgetSnapshot(
         generatedAt: "2026-06-30T12:00:00Z", timezone: TimeZone.current.identifier,
@@ -68,7 +69,8 @@
         tasks: day.enumerated().map { index, row in
           .init(
             id: "open-\(index)", title: row.0, status: "open", dueDate: nil, priority: row.2,
-            listID: nil, estimatedMinutes: row.1, scheduledStart: nil, scheduledEnd: nil)
+            listID: nil, estimatedMinutes: row.1, scheduledStart: nil, scheduledEnd: nil,
+            delegation: row.3)
         })
       return model(open, family: family, at: runningClock)
     }

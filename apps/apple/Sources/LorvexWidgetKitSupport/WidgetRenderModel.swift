@@ -70,10 +70,14 @@ public struct WidgetLeadRender: Equatable, Sendable {
   public let minutesLeft: Int?
   public let isOverdue: Bool
   public let urlString: String
+  /// The task's hand-off to the assistant, which leads its line; nil for the
+  /// person's own task.
+  public let delegation: LorvexTaskDelegationMarker?
 
   public init(
     id: String, title: String, line: String?, shortLine: String?,
-    progress: Double, isRunning: Bool, minutesLeft: Int?, isOverdue: Bool, urlString: String
+    progress: Double, isRunning: Bool, minutesLeft: Int?, isOverdue: Bool, urlString: String,
+    delegation: LorvexTaskDelegationMarker? = nil
   ) {
     self.id = id
     self.title = title
@@ -84,36 +88,42 @@ public struct WidgetLeadRender: Equatable, Sendable {
     self.minutesLeft = minutesLeft
     self.isOverdue = isOverdue
     self.urlString = urlString
+    self.delegation = delegation
   }
 }
 
 /// One task under the lead.
 public struct WidgetTaskRenderRow: Equatable, Sendable, Identifiable {
   /// How the metadata column reads: plain secondary text (also for a task
-  /// that waits on an unfinished one), the accent for a running time or a
-  /// started task, or red for a missed deadline.
+  /// that waits on an unfinished one), the accent for a running time, a
+  /// started task, or the assistant's reply, or red for a missed deadline.
   public enum Tone: Equatable, Sendable {
     case plain
     case running
     case started
     case overdue
+    case replied
   }
 
   public let id: String
   public let title: String
-  /// "Until" and the end while the task's time runs, else the time's start as
-  /// a clock label, else "Overdue", else "Blocked" while it waits on an
-  /// unfinished task, else "Started", else the estimate, else nil.
+  /// "Until" and the end while the task's time runs, else "Replied" once the
+  /// assistant handed the task back, else the time's start as a clock label,
+  /// else "Overdue", else "Blocked" while it waits on an unfinished task, else
+  /// "Started", else the estimate, else nil.
   public let metadata: String?
   public let tone: Tone
   public let urlString: String?
   /// The task's priority, which tints its circle as the app's rows do; nil
   /// draws the quiet low-priority tint.
   public let priority: LorvexTask.Priority?
+  /// The task's hand-off to the assistant, whose glyph leads the metadata
+  /// column; nil for the person's own task.
+  public let delegation: LorvexTaskDelegationMarker?
 
   public init(
     id: String, title: String, metadata: String?, tone: Tone = .plain, urlString: String? = nil,
-    priority: LorvexTask.Priority? = nil
+    priority: LorvexTask.Priority? = nil, delegation: LorvexTaskDelegationMarker? = nil
   ) {
     self.id = id
     self.title = title
@@ -121,6 +131,7 @@ public struct WidgetTaskRenderRow: Equatable, Sendable, Identifiable {
     self.tone = tone
     self.urlString = urlString
     self.priority = priority
+    self.delegation = delegation
   }
 }
 

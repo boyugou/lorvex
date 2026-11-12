@@ -64,6 +64,7 @@ struct WatchReplicaSnapshotProjector: Sendable {
         estimatedMinutes: task.estimatedMinutes,
         scheduledStart: time?.start,
         scheduledEnd: time?.end,
+        // The hand-off marker stays on the phone: the Watch draws none.
         isBlocked: task.isBlocked)
     }
     let habits = try source.habits.prefix(Self.maximumVisibleHabits).map { habit in

@@ -178,20 +178,26 @@ public struct WidgetRenderModelBuilder: Sendable {
       isRunning: glance.isLeadRunning,
       minutesLeft: glance.minutesLeft,
       isOverdue: isOverdue,
-      urlString: Self.taskURLString(taskID: item.id))
+      urlString: Self.taskURLString(taskID: item.id),
+      delegation: task.delegationMarker)
   }
 
-  /// A row under the lead: "Until" and the end while its time runs, else its
-  /// time's start, else "Overdue", else "Blocked" while it waits on an
-  /// unfinished task, else "Started", else its estimate.
+  /// A row under the lead: "Until" and the end while its time runs, else
+  /// "Replied" once the assistant handed the task back, since the reply waits
+  /// on the person, else its time's start, else "Overdue", else "Blocked"
+  /// while it waits on an unfinished task, else "Started", else its estimate.
   private func taskRow(
     _ item: WidgetTodayGlance.Item, nowMinutes: Int, logicalDay: String?
   ) -> WidgetTaskRenderRow {
     var metadata: String?
     var tone = WidgetTaskRenderRow.Tone.plain
+    let delegation = item.task.delegationMarker
     if let time = item.time, time.contains(nowMinutes) {
       metadata = Self.until(time.upperBound)
       tone = .running
+    } else if delegation == .assistantReplied {
+      metadata = Self.replied
+      tone = .replied
     } else if let time = item.time {
       metadata = Self.clock(time.lowerBound)
     } else if Self.isOverdue(item.task, logicalDay: logicalDay) {
@@ -211,7 +217,8 @@ public struct WidgetRenderModelBuilder: Sendable {
       metadata: metadata,
       tone: tone,
       urlString: Self.taskURLString(taskID: item.id),
-      priority: item.task.priority.flatMap(LorvexTask.Priority.init(tier:)))
+      priority: item.task.priority.flatMap(LorvexTask.Priority.init(tier:)),
+      delegation: delegation)
   }
 
   /// A due date before the snapshot's day. Both are `YYYY-MM-DD` keys, so they
@@ -236,6 +243,13 @@ public struct WidgetRenderModelBuilder: Sendable {
   private static var started: String {
     String(
       localized: "widget.task.started", defaultValue: "Started",
+      table: "Localizable", bundle: WidgetSupportL10n.bundle)
+  }
+
+  /// A row's word for a task the assistant handed back to the person.
+  private static var replied: String {
+    String(
+      localized: "widget.task.assistant_replied", defaultValue: "Replied",
       table: "Localizable", bundle: WidgetSupportL10n.bundle)
   }
 

@@ -81,21 +81,55 @@ struct WidgetLeadLine: View {
   var wraps = false
 
   var body: some View {
-    Group {
-      if wraps {
-        WidgetSpaceWrappedText(line)
-      } else {
-        Text(line).lineLimit(1)
+    HStack(alignment: .firstTextBaseline, spacing: 3) {
+      if let delegation = lead.delegation {
+        WidgetDelegationGlyph(marker: delegation)
       }
+      Group {
+        if wraps {
+          WidgetSpaceWrappedText(line)
+        } else {
+          Text(line).lineLimit(1)
+        }
+      }
+      .foregroundStyle(color)
     }
     .font(WidgetType.meta)
-    .foregroundStyle(color)
     .monospacedDigit()
   }
 
   private var color: Color {
     if lead.isOverdue { return LorvexDesign.Palette.overdue }
     return lead.isRunning ? LorvexDesign.Palette.accent : Color.secondary
+  }
+}
+
+/// The sparkles glyph of a task handed to the assistant, as the app's rows
+/// lead their metadata with it: neutral while the assistant holds the task,
+/// in the accent once it replied. VoiceOver reads the marker's words.
+struct WidgetDelegationGlyph: View {
+  let marker: LorvexTaskDelegationMarker
+
+  var body: some View {
+    Image(systemName: LorvexTaskDelegationMarker.systemImage)
+      .imageScale(.small)
+      .foregroundStyle(marker.tint)
+      .widgetAccentable()
+      .accessibilityLabel(Self.words(marker))
+  }
+
+  /// The marker's words: "With assistant" or "Assistant replied".
+  static func words(_ marker: LorvexTaskDelegationMarker) -> String {
+    switch marker {
+    case .withAssistant:
+      String(
+        localized: "task.delegation.with_assistant", defaultValue: "With assistant",
+        table: "Localizable", bundle: WidgetL10n.bundle)
+    case .assistantReplied:
+      String(
+        localized: "task.delegation.assistant_replied", defaultValue: "Assistant replied",
+        table: "Localizable", bundle: WidgetL10n.bundle)
+    }
   }
 }
 
@@ -218,17 +252,34 @@ struct WidgetTaskRowView: View {
         .lineLimit(1)
         .privacySensitive()
       Spacer(minLength: 0)
-      if let metadata = row.metadata {
-        Text(metadata)
-          .font(WidgetType.meta)
-          .foregroundStyle(metadataColor)
-          .monospacedDigit()
-          .lineLimit(1)
-          .fixedSize()
+      if row.delegation != nil || row.metadata != nil {
+        HStack(alignment: .firstTextBaseline, spacing: 3) {
+          if let delegation = row.delegation {
+            WidgetDelegationGlyph(marker: delegation)
+          }
+          if let metadata = row.metadata {
+            Text(metadata)
+              .foregroundStyle(metadataColor)
+              .lineLimit(1)
+          }
+        }
+        .font(WidgetType.meta)
+        .monospacedDigit()
+        .fixedSize()
       }
     }
     .accessibilityElement(children: .combine)
-    .accessibilityLabel([row.title, row.metadata].compactMap { $0 }.joined(separator: ", "))
+    .accessibilityLabel(accessibilityText)
+  }
+
+  /// The title, the hand-off marker's words, and the metadata, which a
+  /// reply's "Replied" only repeats.
+  private var accessibilityText: String {
+    [
+      row.title,
+      row.delegation.map(WidgetDelegationGlyph.words),
+      row.tone == .replied ? nil : row.metadata,
+    ].compactMap { $0 }.joined(separator: ", ")
   }
 }
 
@@ -236,7 +287,7 @@ extension WidgetTaskRowView {
   private var metadataColor: Color {
     switch row.tone {
     case .plain: Color.secondary
-    case .running, .started: LorvexDesign.Palette.accent
+    case .running, .started, .replied: LorvexDesign.Palette.accent
     case .overdue: LorvexDesign.Palette.overdue
     }
   }

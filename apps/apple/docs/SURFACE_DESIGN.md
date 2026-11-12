@@ -300,7 +300,14 @@ A productivity app earns its home screen with more than one widget.
   Today's order, each with its own circle on the ring's axis and its time or
   estimate at the trailing edge. Large opens with the widget's name and the
   assistant's briefing in its serif voice, then the lead and the tasks after
-  it, and closes with how much got done today. When no task leads (nothing
+  it, then up to three of the day's calendar events still ahead (an all-day
+  event first, then by start), each with a bar in its calendar's color where
+  a task has its circle and its time at the trailing edge ("Until 3:00 PM"
+  in the accent while it runs), and closes with how much got done today.
+  The events stay while two tasks fit above them, so the tasks after the
+  second give way first; a widget configured with a list shows none. A task
+  handed to the assistant leads its time with the sparkles glyph, and reads
+  "Replied" in the accent once the assistant handed it back. When no task leads (nothing
   runs, is started, or is timed later today), every size names the widget
   and the work the tasks left hold, and lists Today from its top; medium
   and large also say how many are left. Small names the top two, each title
@@ -310,7 +317,8 @@ A productivity app earns its home screen with more than one widget.
   text size, a long briefing), the last rows give way to an "N more today"
   line that counts them. The Mac desktop widgets set the same layouts in
   macOS's larger text styles (`WidgetType`). The timeline carries an entry at every saved time's edge and every ten minutes
-  inside one, so the ring advances between snapshot refreshes. The Lock
+  inside one, and at each event's start and end, so the ring advances and a
+  finished event leaves between snapshot refreshes. The Lock
   Screen accessoryCircular fills the lead's ring and holds its minutes left
   while its time runs, else holds how many tasks are left, with a checkmark
   once nothing is left; accessoryRectangular shows a small ring beside the

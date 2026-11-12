@@ -71,6 +71,8 @@ public struct WidgetRenderModelBuilder: Sendable {
       lead: lead,
       taskRows: rows,
       upcomingCount: upcomingCount,
+      eventRows: snapshot.events.filter { !$0.hasEnded(at: nowMinutes) }
+        .prefix(family.maxEventRows).map { Self.eventRow($0, nowMinutes: nowMinutes) },
       dayLeft: remainingCount > 0 ? Self.dayLeft(remainingCount) : nil,
       dayWork: remainingCount > 0 ? Self.dayWork(glance.workMinutes) : nil,
       urlString: family == .accessoryInline
@@ -219,6 +221,29 @@ public struct WidgetRenderModelBuilder: Sendable {
       urlString: Self.taskURLString(taskID: item.id),
       priority: item.task.priority.flatMap(LorvexTask.Priority.init(tier:)),
       delegation: delegation)
+  }
+
+  /// An event under the tasks: "Until" and its end while it runs or when it
+  /// began on an earlier day, else its start, else "All day".
+  private static func eventRow(
+    _ event: WidgetSnapshot.TodayEvent, nowMinutes: Int
+  ) -> WidgetEventRenderRow {
+    let running = event.isRunning(at: nowMinutes)
+    let timeLabel: String
+    if let start = event.startMinutes {
+      if let end = event.endMinutes, running || event.isCarriedOver {
+        timeLabel = until(end)
+      } else {
+        timeLabel = clock(start)
+      }
+    } else {
+      timeLabel = String(
+        localized: "calendar.all_day_short", defaultValue: "All day",
+        table: "Localizable", bundle: WidgetSupportL10n.bundle)
+    }
+    return WidgetEventRenderRow(
+      id: event.id, title: event.title, timeLabel: timeLabel,
+      tone: running ? .running : .plain, color: event.color)
   }
 
   /// A due date before the snapshot's day. Both are `YYYY-MM-DD` keys, so they

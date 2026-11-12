@@ -4,7 +4,7 @@ import LorvexCore
 /// The App-Group snapshot the host app writes for widgets/complications to read.
 ///
 /// Codable is synthesized and strict for the v4 fields: every field
-/// except the nullable `timezone`, `logicalDay`, and `briefing` must be present,
+/// except the nullable `timezone`, `logicalDay`, `briefing`, and `events` must be present,
 /// so a snapshot must carry `version` and all
 /// data arrays (empty arrays, never omitted). `WidgetSnapshotLoader` owns compat:
 /// it gates on `version == supportedVersion` and turns any decode failure into a
@@ -49,6 +49,13 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
   public let lists: [ListSummary]
   /// Per-list stats for configurable widgets (empty when none).
   public let listStats: [ListStats]
+  /// The day's calendar events in the order the day's schedule reads them:
+  /// all-day events and the days long events fill first, then by start. The
+  /// file leaves the key out when the day has none, so a file written before
+  /// it existed reads as a day without events. Only the Today widget's large
+  /// family draws them; the Watch replica leaves them out.
+  public var events: [TodayEvent] { storedEvents ?? [] }
+  private let storedEvents: [TodayEvent]?
   /// The list this snapshot was narrowed to by ``scoped(toList:)``, so a
   /// widget configured with a list can name it; nil for the whole day, and
   /// when the configured list is no longer in ``lists``. Not encoded: a
@@ -64,7 +71,7 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
       && localChangeSequence == other.localChangeSequence && timezone == other.timezone
       && logicalDay == other.logicalDay && stats == other.stats && briefing == other.briefing
       && tasks == other.tasks && habits == other.habits && lists == other.lists
-      && listStats == other.listStats && scopeList == other.scopeList
+      && listStats == other.listStats && events == other.events && scopeList == other.scopeList
   }
 
   enum CodingKeys: String, CodingKey {
@@ -82,6 +89,7 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     case habits
     case lists
     case listStats = "list_stats"
+    case storedEvents = "events"
   }
 
   public init(
@@ -99,6 +107,7 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     habits: [HabitSummary] = [],
     lists: [ListSummary] = [],
     listStats: [ListStats] = [],
+    events: [TodayEvent] = [],
     scopeList: ListSummary? = nil
   ) {
     self.version = version
@@ -115,6 +124,7 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     self.habits = habits
     self.lists = lists
     self.listStats = listStats
+    self.storedEvents = events.isEmpty ? nil : events
     self.scopeList = scopeList
   }
 

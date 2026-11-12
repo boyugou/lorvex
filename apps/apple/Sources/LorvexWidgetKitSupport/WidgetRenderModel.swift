@@ -43,6 +43,14 @@ public enum WidgetFamilyKind: Equatable, Sendable {
   }
 }
 
+extension WidgetFamilyKind {
+  /// How many of the day's calendar events still ahead the family lists
+  /// under its tasks, at most: only the large family has room for them.
+  public var maxEventRows: Int {
+    self == .systemLarge ? 3 : 0
+  }
+}
+
 public enum WidgetRenderState: Equatable, Sendable {
   case content
   case empty
@@ -135,6 +143,34 @@ public struct WidgetTaskRenderRow: Equatable, Sendable, Identifiable {
   }
 }
 
+/// One of the day's calendar events under the tasks: a bar in the event's
+/// color where a task has its circle, since an event is not the person's to
+/// complete, its title, and its time.
+public struct WidgetEventRenderRow: Equatable, Sendable, Identifiable {
+  /// How the time reads: secondary, or the accent while the event runs.
+  public enum Tone: Equatable, Sendable {
+    case plain
+    case running
+  }
+
+  public let id: String
+  public let title: String
+  /// "Until" and the end while the event runs or when it began on an
+  /// earlier day, else its start as a clock label, else "All day".
+  public let timeLabel: String
+  public let tone: Tone
+  /// The event's `#RRGGBB` color, nil when it has none.
+  public let color: String?
+
+  public init(id: String, title: String, timeLabel: String, tone: Tone = .plain, color: String? = nil) {
+    self.id = id
+    self.title = title
+    self.timeLabel = timeLabel
+    self.tone = tone
+    self.color = color
+  }
+}
+
 public struct WidgetRenderModel: Equatable, Sendable {
   public let family: WidgetFamilyKind
   public let state: WidgetRenderState
@@ -159,6 +195,9 @@ public struct WidgetRenderModel: Equatable, Sendable {
   /// Every task after `lead`, uncapped, so a family without rows can still say
   /// "2 more today".
   public let upcomingCount: Int
+  /// The day's calendar events the clock has not cleared, in the agenda's
+  /// order, capped at the family's ``WidgetFamilyKind/maxEventRows``.
+  public let eventRows: [WidgetEventRenderRow]
   /// How many tasks are left ("4 left today"), for a family that has tasks
   /// left but no lead to show.
   public let dayLeft: String?
@@ -179,6 +218,7 @@ public struct WidgetRenderModel: Equatable, Sendable {
     lead: WidgetLeadRender? = nil,
     taskRows: [WidgetTaskRenderRow] = [],
     upcomingCount: Int = 0,
+    eventRows: [WidgetEventRenderRow] = [],
     dayLeft: String? = nil,
     dayWork: String? = nil,
     urlString: String? = nil
@@ -194,6 +234,7 @@ public struct WidgetRenderModel: Equatable, Sendable {
     self.lead = lead
     self.taskRows = taskRows
     self.upcomingCount = max(0, upcomingCount)
+    self.eventRows = eventRows
     self.dayLeft = dayLeft
     self.dayWork = dayWork
     self.urlString = urlString

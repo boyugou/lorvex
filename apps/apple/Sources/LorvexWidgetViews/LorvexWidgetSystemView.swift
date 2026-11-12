@@ -39,7 +39,9 @@ enum SystemWidgetLayout {
 /// today. The briefing keeps up to three lines, whole where it fits them; the
 /// rows are as many as the height left holds, and the ones that give way (to
 /// the briefing or to a larger text size) are counted by the foot line's "N
-/// more today" instead of the foot line being clipped.
+/// more today" instead of the foot line being clipped. Under its tasks, large
+/// lists the day's calendar events still ahead, which give way to the first
+/// two tasks but not to the ones after them.
 struct SystemWidgetView: View {
   let model: WidgetRenderModel
   let layout: SystemWidgetLayout
@@ -48,6 +50,10 @@ struct SystemWidgetView: View {
   /// draws (``WidgetFamilyKind/maxTaskRowsWithoutLead`` of `systemLarge`).
   /// The rows are static branches up to this count, never a `ForEach`.
   static let rowCapacity = 7
+
+  /// The most event rows the view draws: ``WidgetFamilyKind/maxEventRows``
+  /// of `systemLarge`, drawn as static branches like the task rows.
+  static let eventCapacity = 3
 
   var body: some View {
     let metrics = LorvexWidgetViewMetrics.metrics(for: model.family)
@@ -102,7 +108,23 @@ struct SystemWidgetView: View {
       // thread, where a `ForEach` content closure trips Swift 6's isolation
       // check. Counts below zero draw no rows, so the last candidates repeat.
       let rowCount = model.taskRows.count
+      let events = model.eventRows.count
       ViewThatFits(in: .vertical) {
+        if events > 0 {
+          // The day's events stay while two tasks fit above them: tasks past
+          // the second give way first, counted by the foot line, since an
+          // event is a fixed commitment and those tasks come later in
+          // Today's order. Then the events give way, one and then all.
+          let kept = min(rowCount, 2)
+          nextRowsAndFoot(showing: rowCount, events: events)
+          nextRowsAndFoot(showing: max(kept, rowCount - 1), events: events)
+          nextRowsAndFoot(showing: max(kept, rowCount - 2), events: events)
+          nextRowsAndFoot(showing: max(kept, rowCount - 3), events: events)
+          nextRowsAndFoot(showing: max(kept, rowCount - 4), events: events)
+          nextRowsAndFoot(showing: max(kept, rowCount - 5), events: events)
+          nextRowsAndFoot(showing: kept, events: events - 1)
+          nextRowsAndFoot(showing: kept, events: 1)
+        }
         nextRowsAndFoot(showing: rowCount)
         nextRowsAndFoot(showing: rowCount - 1)
         nextRowsAndFoot(showing: rowCount - 2)
@@ -130,8 +152,9 @@ struct SystemWidgetView: View {
   /// natural height, and on medium two rows fit with only a few points to
   /// spare. The rows need no gap between them; each is as tall as its
   /// complete button.
-  private func nextRowsAndFoot(showing requested: Int) -> some View {
+  private func nextRowsAndFoot(showing requested: Int, events requestedEvents: Int = 0) -> some View {
     let count = max(0, min(requested, model.taskRows.count, Self.rowCapacity))
+    let events = max(0, min(requestedEvents, model.eventRows.count, Self.eventCapacity))
     return VStack(alignment: .leading, spacing: 0) {
       taskRow(0, shownRowCount: count)
       taskRow(1, shownRowCount: count)
@@ -140,9 +163,28 @@ struct SystemWidgetView: View {
       taskRow(4, shownRowCount: count)
       taskRow(5, shownRowCount: count)
       taskRow(6, shownRowCount: count)
+      if events > 0 {
+        // The events open a block of their own, set off from the tasks
+        // above by a gap rather than a rule.
+        VStack(alignment: .leading, spacing: 0) {
+          eventRow(0, shownEventCount: events)
+          eventRow(1, shownEventCount: events)
+          eventRow(2, shownEventCount: events)
+        }
+        .padding(.top, count > 0 ? 6 : 0)
+      }
       Spacer(minLength: 0)
       WidgetFootLine(model: model, showsDone: layout == .large, shownRowCount: count)
         .padding(.top, 2)
+    }
+  }
+
+  @ViewBuilder
+  private func eventRow(_ index: Int, shownEventCount: Int) -> some View {
+    if index < shownEventCount {
+      WidgetEventRowView(
+        row: model.eventRows[index],
+        leadRingDiameter: model.lead == nil ? nil : layout.ringDiameter)
     }
   }
 

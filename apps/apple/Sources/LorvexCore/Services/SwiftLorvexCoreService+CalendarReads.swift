@@ -11,22 +11,30 @@ extension SwiftLorvexCoreService {
     -> CalendarTimelineSnapshot
   {
     try read { db in
-      let anchorTimezone = try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
-      // Honor the effective calendar AI-access tier so a busy/off read redacts
-      // provider detail even if a full-detail row somehow survives at rest —
-      // defense in depth behind ingest-time redaction + downgrade purge. Read
-      // inside the same transaction; a malformed persisted tier fails the read
-      // (fail closed) rather than leaking full detail.
-      let accessMode = try DeviceStateRepo.readCalendarAiAccessMode(db)
-      let items = try CalendarTimelineQueries.getCalendarTimeline(
-        db, from: from, to: to, accessMode: accessMode, anchorTimezone: anchorTimezone)
-      return CalendarTimelineSnapshot(
+      CalendarTimelineSnapshot(
         from: from,
         to: to,
-        events: items.map(SwiftLorvexCalendarDeserializers.event),
+        events: try Self.calendarTimelineEvents(db, from: from, to: to),
         truncated: false,
         nextOffset: nil)
     }
+  }
+
+  /// The events between `from` and `to` (`YYYY-MM-DD`, inclusive), read
+  /// inside the caller's transaction, as every calendar surface reads them.
+  static func calendarTimelineEvents(
+    _ db: Database, from: String, to: String
+  ) throws -> [CalendarTimelineEvent] {
+    let anchorTimezone = try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+    // Honor the effective calendar AI-access tier so a busy/off read redacts
+    // provider detail even if a full-detail row somehow survives at rest —
+    // defense in depth behind ingest-time redaction + downgrade purge. Read
+    // inside the same transaction; a malformed persisted tier fails the read
+    // (fail closed) rather than leaking full detail.
+    let accessMode = try DeviceStateRepo.readCalendarAiAccessMode(db)
+    let items = try CalendarTimelineQueries.getCalendarTimeline(
+      db, from: from, to: to, accessMode: accessMode, anchorTimezone: anchorTimezone)
+    return items.map(SwiftLorvexCalendarDeserializers.event)
   }
 
   public func searchCalendarEvents(

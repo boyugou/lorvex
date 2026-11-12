@@ -102,6 +102,7 @@ struct WatchReplicaSnapshotProjector: Sendable {
         tasks: Array(tasks.prefix(taskCount)),
         habits: Array(habits.prefix(habitCount)),
         lists: [],
+        // The Watch draws no events.
         listStats: [])
       let data = try JSONEncoder().encode(projected)
       if data.count <= LorvexWatchReplicaEnvelope.maximumSnapshotBytes {

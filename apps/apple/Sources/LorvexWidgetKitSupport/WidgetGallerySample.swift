@@ -37,7 +37,22 @@
             listID: nil, estimatedMinutes: row.4, scheduledStart: row.2, scheduledEnd: row.3,
             delegation: row.6)
         },
-        habits: habits)
+        habits: habits,
+        events: events)
+    }
+
+    /// The day's events: one all-day, a standup the running clock has
+    /// cleared, and two meetings ahead, one in a calendar's color and one
+    /// made in Lorvex.
+    public static var events: [WidgetSnapshot.TodayEvent] {
+      [
+        .init(id: "e0", title: "Sam's birthday", color: "#AF52DE", startMinutes: nil, endMinutes: nil),
+        .init(id: "e1", title: "Standup", color: "#3B82F6", startMinutes: 9 * 60, endMinutes: 9 * 60 + 15),
+        .init(
+          id: "e2", title: "Design review", color: "#3B82F6", startMinutes: 11 * 60 + 30,
+          endMinutes: 12 * 60 + 15),
+        .init(id: "e3", title: "Lunch with Ana", color: nil, startMinutes: 13 * 60, endMinutes: 14 * 60),
+      ]
     }
 
     /// Today at `clock` minutes past midnight in the device zone.
@@ -71,7 +86,8 @@
             id: "open-\(index)", title: row.0, status: "open", dueDate: nil, priority: row.2,
             listID: nil, estimatedMinutes: row.1, scheduledStart: nil, scheduledEnd: nil,
             delegation: row.3)
-        })
+        },
+        events: events)
       return model(open, family: family, at: runningClock)
     }
 

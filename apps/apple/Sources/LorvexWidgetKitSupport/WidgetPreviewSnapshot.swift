@@ -10,7 +10,8 @@ import LorvexCore
 /// met, one part-way through a count of three, and two not yet started. The lead task's
 /// saved time is placed around `now` — it started twenty minutes ago and has
 /// twenty-five to go — so the gallery shows its ring mid-fill; the rows after
-/// it show a started task, an overdue task, and a task the assistant holds.
+/// it show a started task, an overdue task, and a task the assistant holds,
+/// and a meeting an hour ahead follows them.
 public enum WidgetPreviewSnapshot {
   public static func make(
     now: Date = Date(),
@@ -99,7 +100,20 @@ public enum WidgetPreviewSnapshot {
             table: "Localizable", bundle: WidgetSupportL10n.bundle),
           icon: "figure.walk", completedToday: 0, target: 1),
       ],
-      listStats: listID.map { [.init(id: $0, stats: stats)] } ?? []
+      listStats: listID.map { [.init(id: $0, stats: stats)] } ?? [],
+      // A list-configured widget shows no events (``WidgetSnapshot/scoped(toList:)``).
+      events: listID != nil
+        ? []
+        : [
+          .init(
+            id: "widget-preview-event-review",
+            title: String(
+              localized: "widget.preview.event.design_review", defaultValue: "Design review",
+              table: "Localizable", bundle: WidgetSupportL10n.bundle),
+            color: "#AF52DE",
+            startMinutes: min(nowMinutes + 60, 23 * 60),
+            endMinutes: min(nowMinutes + 105, 24 * 60))
+        ]
     )
   }
 

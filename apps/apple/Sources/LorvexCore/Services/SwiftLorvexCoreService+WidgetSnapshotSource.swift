@@ -9,8 +9,8 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
   /// Captures every database-backed widget input under one immediate
   /// transaction and one managed-storage shared cutover lease. The transaction
   /// seeds/reads workspace identity, so the returned generation, workspace,
-  /// sequence, rows, counts, briefing, and task times all describe the same
-  /// physical store revision.
+  /// sequence, rows, counts, briefing, task times, and calendar events all
+  /// describe the same physical store revision.
   public func loadWidgetSnapshotSource(date: String?) async throws -> WidgetSnapshotSource {
     try withWatchCommandMaintenanceWrite { db in
       // Capture the logical day only after entering the SQLite transaction.
@@ -27,6 +27,9 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
       let lists = ListCatalogSnapshot(
         lists: listRows.map(SwiftLorvexListDeserializers.list))
       let stats = try Self.loadWidgetStatsSource(db, date: logicalDay)
+      let events = try Self.calendarTimelineEvents(db, from: logicalDay, to: logicalDay)
+        .filter { $0.occurs(on: logicalDay) }
+        .sortedForAgenda(on: logicalDay)
       let managedPath = self.openedManagedDatabasePathSnapshot()
       let storageGeneration = managedPath
         .flatMap { ManagedStorageGeneration.read(forDatabase: $0) } ?? 0
@@ -38,7 +41,8 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
         today: today,
         habits: habits,
         lists: lists,
-        stats: stats)
+        stats: stats,
+        events: events)
     }
   }
 

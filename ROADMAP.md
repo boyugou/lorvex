@@ -82,10 +82,21 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
     Action button, and in the app icon's quick action; a ＋ on a glance would
     repeat it (rule 12 of `apps/apple/CLAUDE.md`) and add chrome to a
     surface that stays neutral until something needs attention.
-  - Next: today's calendar events in the Today widget, ordered with the
-    timed tasks the way the menu bar panel orders them
-    (`LorvexTodayTimeline`), read in the same transaction as the rest of
-    the snapshot, aging out as each one ends, and kept off the Watch.
+  - Done 2026-11-12: the large Today widget lists up to three of the day's
+    calendar events still ahead under its tasks, in the agenda's order (an
+    all-day event first, then by start), each with a bar in its calendar's
+    color where a task has its circle and its time at the trailing edge
+    ("Until" its end, in the accent, while it runs). The events stay while
+    two tasks fit above them, so the third task onward gives way first,
+    counted by the foot line; at the largest text sizes the events give way
+    too. They are read in the same transaction as the rest of the snapshot,
+    through the same read as the app's calendar, so the widget shows what
+    the app shows, carried as an optional `events` key, titled "Busy" while
+    titles are hidden, left out of a list-configured widget and the Watch
+    replica, and the timeline redraws at each event's start and end, so a
+    finished meeting leaves without a reload. Medium has no room for them
+    beside its two rows; whether it should show the next event in place of
+    a row is open, to settle with the widgets in use.
 
 - Hand a task to the assistant (owner approved the idea 2026-11-10;
   released in build 141). A task can be handed to the user's own assistant,

@@ -419,7 +419,8 @@ public struct WidgetSnapshotPublisher: Sendable {
     timezone: String? = nil,
     habitCatalog: HabitCatalogSnapshot? = nil,
     lists: ListCatalogSnapshot? = nil,
-    statsSource: WidgetStatsSource? = nil
+    statsSource: WidgetStatsSource? = nil,
+    events: [CalendarTimelineEvent] = []
   ) async throws -> WidgetSnapshot {
     let focusState = try await destination.focusFilterStore?.loadState() ?? .inactive
     let snapshot = projector.snapshot(
@@ -432,7 +433,8 @@ public struct WidgetSnapshotPublisher: Sendable {
       focusFilter: focusState.configuration,
       habitCatalog: habitCatalog,
       listCatalog: lists,
-      statsSource: statsSource
+      statsSource: statsSource,
+      events: events
     )
     // The reload is posted only after a durable write succeeds, so a glance
     // surface never reloads onto a stale or half-written file, and only when
@@ -465,7 +467,8 @@ public struct WidgetSnapshotPublisher: Sendable {
       timezone: source.timezone,
       habitCatalog: source.habits,
       lists: source.lists,
-      statsSource: source.stats)
+      statsSource: source.stats,
+      events: source.events)
   }
 
   /// Publishes a snapshot loaded fresh from `core`, like the interactive

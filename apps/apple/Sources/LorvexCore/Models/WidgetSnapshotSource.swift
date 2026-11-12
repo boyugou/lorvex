@@ -21,6 +21,10 @@ public struct WidgetSnapshotSource: Sendable, Equatable {
   public let habits: HabitCatalogSnapshot?
   public let lists: ListCatalogSnapshot?
   public let stats: WidgetStatsSource?
+  /// The calendar events that occur on ``logicalDay``, in the order of the
+  /// day's agenda (``Swift/Sequence/sortedForAgenda(on:)``), read as the
+  /// app's calendar reads them.
+  public let events: [CalendarTimelineEvent]
 
   public init(
     storageGeneration: Int,
@@ -29,7 +33,8 @@ public struct WidgetSnapshotSource: Sendable, Equatable {
     today: TodaySnapshot,
     habits: HabitCatalogSnapshot?,
     lists: ListCatalogSnapshot?,
-    stats: WidgetStatsSource?
+    stats: WidgetStatsSource?,
+    events: [CalendarTimelineEvent] = []
   ) {
     self.storageGeneration = max(0, storageGeneration)
     self.logicalDay = logicalDay
@@ -38,6 +43,7 @@ public struct WidgetSnapshotSource: Sendable, Equatable {
     self.habits = habits
     self.lists = lists
     self.stats = stats
+    self.events = events
   }
 }
 

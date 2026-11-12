@@ -37,7 +37,8 @@ public struct WidgetSnapshotProjector: Sendable {
     focusFilter: FocusFilterConfiguration = .inactive,
     habitCatalog: HabitCatalogSnapshot? = nil,
     listCatalog: ListCatalogSnapshot? = nil,
-    statsSource: WidgetStatsSource? = nil
+    statsSource: WidgetStatsSource? = nil,
+    events: [CalendarTimelineEvent] = []
   ) -> WidgetSnapshot {
     // The day's list as every glance shows it: Today's order, narrowed to the
     // Focus filter's lists while one is active.
@@ -168,8 +169,38 @@ public struct WidgetSnapshotProjector: Sendable {
       lists: listCatalog?.lists.map {
         WidgetSnapshot.ListSummary(id: $0.id, name: $0.name, icon: $0.icon)
       } ?? [],
-      listStats: listStats
+      listStats: listStats,
+      events: Self.todayEvents(events, on: todayYmd, hideTitles: hideTitles)
     )
+  }
+
+  /// The most events a snapshot carries: more than any widget draws, so the
+  /// ones that end first can age out while later ones take their place.
+  static let maximumEvents = 12
+
+  /// `events` that occur on `day` as the widget draws them, in the order of
+  /// the day's agenda: each event's share of the day's clock, and "Busy" for
+  /// its title while titles are hidden. A Focus filter keeps them: it narrows
+  /// the day's lists, and an event belongs to none.
+  static func todayEvents(
+    _ events: [CalendarTimelineEvent], on day: String, hideTitles: Bool
+  ) -> [WidgetSnapshot.TodayEvent] {
+    let busy = String(
+      localized: "today.schedule.busy", defaultValue: "Busy",
+      table: "Localizable", bundle: WidgetSupportL10n.bundle)
+    return events.filter { $0.occurs(on: day) }.sortedForAgenda(on: day)
+      .prefix(maximumEvents)
+      .map { event in
+        let span = event.clockSpan(on: day)
+        return WidgetSnapshot.TodayEvent(
+          id: event.id,
+          title: hideTitles ? busy : event.title,
+          // A color is a `#RRGGBB` token; anything longer is not one.
+          color: event.color.flatMap { $0.utf8.count <= 16 ? $0 : nil },
+          startMinutes: span?.start,
+          endMinutes: span?.end,
+          isCarriedOver: span != nil && event.dayPart(on: day) == .lastDay)
+      }
   }
 
   private static func calendar(timezoneName: String?, fallback: Calendar) -> Calendar {

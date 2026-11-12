@@ -241,6 +241,68 @@ public extension WidgetSnapshot {
     }
   }
 
+  /// One of the day's calendar events as the Today widget draws it, measured
+  /// on the snapshot's day (``WidgetSnapshot/logicalDay``): its share of that
+  /// day's clock (``CalendarTimelineEvent/clockSpan(on:)``), or none for an
+  /// all-day event and a day the event fills.
+  struct TodayEvent: Codable, Equatable, Sendable, Identifiable {
+    /// The occurrence's id; each occurrence of a repeating event has its own.
+    public let id: String
+    public let title: String
+    /// The event's `#RRGGBB` color, nil when it has none.
+    public let color: String?
+    /// Minutes since midnight where the event's share of the day starts, nil
+    /// for an all-day event and a day the event fills.
+    public let startMinutes: Int?
+    /// Minutes since midnight where its share ends: 1440 for a share that
+    /// runs to midnight, nil when the event has no end time.
+    public let endMinutes: Int?
+    /// `true` on the last day of an event that began on an earlier day, whose
+    /// share starts at midnight, and absent otherwise.
+    private let carriedOver: Bool?
+
+    enum CodingKeys: String, CodingKey {
+      case id, title, color
+      case startMinutes = "start_minutes"
+      case endMinutes = "end_minutes"
+      case carriedOver = "carried_over"
+    }
+
+    public init(
+      id: String, title: String, color: String?, startMinutes: Int?, endMinutes: Int?,
+      isCarriedOver: Bool = false
+    ) {
+      self.id = id
+      self.title = title
+      self.color = color
+      self.startMinutes = startMinutes
+      self.endMinutes = startMinutes == nil ? nil : endMinutes
+      self.carriedOver = isCarriedOver ? true : nil
+    }
+
+    /// The event began on an earlier day, so it reads "Until" its end rather
+    /// than a start of its own.
+    public var isCarriedOver: Bool { carriedOver == true }
+
+    /// The event has no place on the day's clock: it is all-day, or it fills
+    /// the day.
+    public var isAllDay: Bool { startMinutes == nil }
+
+    /// Whether the clock at `nowMinutes` has cleared the event: its end, or
+    /// its start when it has no end, is not after the clock. An all-day event
+    /// never ends within its day.
+    public func hasEnded(at nowMinutes: Int) -> Bool {
+      guard let startMinutes else { return false }
+      return (endMinutes ?? startMinutes) <= nowMinutes
+    }
+
+    /// Whether the event is under way at `nowMinutes`.
+    public func isRunning(at nowMinutes: Int) -> Bool {
+      guard let startMinutes, let endMinutes else { return false }
+      return startMinutes <= nowMinutes && nowMinutes < endMinutes
+    }
+  }
+
   /// Actionable tasks in Today's order. The single definition every widget,
   /// watch, and complication consumer reads, so none of them silently drops a
   /// started task after projection.

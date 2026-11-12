@@ -107,11 +107,14 @@ public struct WidgetTodayGlance: Equatable, Sendable {
   }
 
   /// The instants after `date` and not after `until` at which a glance built
-  /// from `tasks` changes: every saved time's start and end still ahead (the
-  /// lead can change at each), plus a tick every `tickMinutes` inside each time
-  /// so a running ring keeps filling. Sorted, unique, at most `limit` dates.
+  /// from `tasks` and `events` changes: every saved time's start and end
+  /// still ahead (the lead can change at each), plus a tick every
+  /// `tickMinutes` inside each time so a running ring keeps filling, and each
+  /// event's start and end still ahead, where its time turns to "Until" and
+  /// where it leaves. Sorted, unique, at most `limit` dates.
   public static func changeDates(
     tasks: [WidgetSnapshot.TodayTask],
+    events: [WidgetSnapshot.TodayEvent] = [],
     from date: Date,
     until: Date,
     timezoneName: String?,
@@ -131,6 +134,12 @@ public struct WidgetTodayGlance: Equatable, Sendable {
         minute += tickMinutes
       }
       if time.upperBound > nowMinutes { marks.insert(time.upperBound) }
+    }
+    for event in events {
+      for minute in [event.startMinutes, event.endMinutes].compactMap({ $0 })
+      where minute > nowMinutes {
+        marks.insert(minute)
+      }
     }
     let startOfDay = calendar.startOfDay(for: date)
     let dates = marks.sorted().compactMap { minute -> Date? in

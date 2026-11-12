@@ -112,15 +112,17 @@ public struct WidgetTimelineProviderSupport {
   }
 
   /// The entry for now followed by one entry at each instant the Today glance
-  /// changes before the reload point — a saved time's start or end, and a tick
-  /// every ten minutes inside one — so the lead, its ring, and its line advance
-  /// between reloads without spending the widget's refresh budget. A snapshot
-  /// without saved times yields the single entry.
+  /// changes before the reload point — a saved time's start or end, a tick
+  /// every ten minutes inside one, and an event's start or end — so the lead,
+  /// its ring, its line, and the events advance between reloads without
+  /// spending the widget's refresh budget. A snapshot without saved times or
+  /// timed events yields the single entry.
   public func timelineEntries(listID: String? = nil) -> [WidgetTimelineEntry] {
     let first = timelineEntry(listID: listID)
     guard case .snapshot(let snapshot, let freshness) = first.state else { return [first] }
     let dates = WidgetTodayGlance.changeDates(
       tasks: snapshot.tasks,
+      events: snapshot.events,
       from: first.date,
       until: first.refreshAfter,
       timezoneName: snapshot.timezone,

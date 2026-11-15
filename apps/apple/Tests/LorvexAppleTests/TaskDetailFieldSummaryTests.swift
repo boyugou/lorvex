@@ -33,6 +33,75 @@ func taskDetailDueSummaryNamesItsOwnDayEvenOnThePlannedDay() async throws {
   #expect(store.taskDetailDueSummary == "tomorrow")
 }
 
+/// A Mac east of UTC: the day pickers lay days out at local midnights, which
+/// are still the previous day in UTC. A picked day reads as the day picked,
+/// and a picked hide-until day stays in the sentence.
+@MainActor
+@Test
+func aDayPickedEastOfUTCReadsAsTheDayPicked() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  let task = try await core.createTask(TaskCreateDraft(title: "Renew the lease", notes: ""))
+  await store.refresh()
+  store.selectTaskFromList(task.id)
+  let shanghai = try #require(TimeZone(identifier: "Asia/Shanghai"))
+  store.taskDetailStorage.taskDetailPickerTimeZone = shanghai
+  let today = store.logicalTodayDateString
+  let tomorrow = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: 1))
+  // What the picker hands back for a day: its midnight in the picker's zone.
+  func picked(_ day: String) throws -> Date {
+    try #require(PlannedDayBridge.displayDate(forLogicalDay: day, timeZone: shanghai))
+  }
+
+  store.setTaskDetailHasDueDate(true)
+  store.taskDetailDueDatePickerDate = try picked(tomorrow)
+  #expect(store.taskDetailDueSummary == "tomorrow")
+  #expect(!store.taskDetailDueIsOverdue)
+  #expect(store.taskDetailDueDateForSave == PlannedDayBridge.storageDate(forLogicalDay: tomorrow))
+
+  store.taskDetailDueDatePickerDate = try picked(today)
+  #expect(store.taskDetailDueSummary == "today")
+  #expect(!store.taskDetailDueIsOverdue)
+
+  store.setTaskDetailHasPlannedDate(true)
+  store.taskDetailPlannedDatePickerDate = try picked(tomorrow)
+  // Tomorrow, after today's deadline.
+  #expect(store.taskDetailDoOnSummary == LorvexDayPhrase.afterDeadline("Tomorrow"))
+
+  store.setTaskDetailHasAvailableFrom(true)
+  store.taskDetailAvailableFromPickerDate = try picked(tomorrow)
+  #expect(store.taskDetailHideUntilSummary == "tomorrow")
+  // The picker shows the day it was given back.
+  #expect(store.taskDetailAvailableFromPickerDate == (try picked(tomorrow)))
+}
+
+/// The draft names stored days, so a change of the device's zone under an
+/// open draft moves neither what it shows nor what it saves.
+@MainActor
+@Test
+func anOpenDraftKeepsItsDaysWhenTheDevicesZoneChanges() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  let today = store.logicalTodayDateString
+  var draft = TaskCreateDraft(title: "Ship the deck", notes: "")
+  draft.plannedDate = try store.storageDate(daysFromLogicalToday: 2)
+  draft.dueDate = try store.storageDate(daysFromLogicalToday: 3)
+  let task = try await core.createTask(draft)
+  await store.refresh()
+  store.taskDetailStorage.taskDetailPickerTimeZone = try #require(TimeZone(identifier: "Asia/Tokyo"))
+  store.selectTaskFromList(task.id)
+  let fingerprint = store.taskDetailDraftFingerprint
+
+  store.taskDetailStorage.taskDetailPickerTimeZone = try #require(
+    TimeZone(identifier: "America/Los_Angeles"))
+
+  #expect(store.taskDetailDraftFingerprint == fingerprint, "the draft reads as untouched")
+  #expect(store.taskDetailPlannedDateForSave == PlannedDayBridge.storageDate(forLogicalDay: today, addingDays: 2))
+  #expect(store.taskDetailDueDateForSave == PlannedDayBridge.storageDate(forLogicalDay: today, addingDays: 3))
+}
+
 /// The When row says when the plan would finish the task late, and stops
 /// saying it once the planned day is back on the deadline.
 @MainActor

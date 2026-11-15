@@ -21,9 +21,9 @@ extension TaskDetailView {
   /// planned time and due day (``TaskDetailReminderPreset/presets(plannedDay:plannedTime:dueDay:now:timeZone:pickerTimeZone:)``).
   func reminderPresets(now: Date = Date()) -> [TaskDetailReminderPreset] {
     TaskDetailReminderPreset.presets(
-      plannedDay: store.taskDetailHasPlannedDate ? store.taskDetailPlannedDatePickerDate : nil,
+      plannedDay: store.taskDetailHasPlannedDate ? store.taskDetailPlannedDay : nil,
       plannedTime: store.taskDetailPlannedTime,
-      dueDay: store.taskDetailHasDueDate ? store.taskDetailDueDatePickerDate : nil,
+      dueDay: store.taskDetailHasDueDate ? store.taskDetailDueDay : nil,
       now: now,
       timeZone: store.logicalTimeZone)
   }
@@ -43,27 +43,22 @@ struct TaskDetailReminderPreset: Identifiable {
   ///
   /// Clock times are wall-clock times in `timeZone`, the product zone
   /// reminders are composed in, and "tomorrow" is the day after `now` there.
-  /// `plannedDay` and `dueDay` are day pickers' values: midnights in
-  /// `pickerTimeZone`, this device's zone. Each is read as the day it names in
-  /// that zone, and the time is set on the same day in `timeZone`; setting the
-  /// hour on the picker's instant directly would land a day early whenever the
-  /// product zone is west of the device's.
+  /// `plannedDay` and `dueDay` are stored days (their UTC midnights); the time
+  /// is set on the day each names, in `timeZone`.
   static func presets(
     plannedDay: Date?,
     plannedTime: Range<Int>?,
     dueDay: Date?,
     now: Date,
-    timeZone: TimeZone,
-    pickerTimeZone: TimeZone = .current
+    timeZone: TimeZone
   ) -> [TaskDetailReminderPreset] {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = timeZone
     func at(_ day: Date, minutes: Int) -> Date? {
       calendar.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: day)
     }
-    func at(pickerDay: Date, minutes: Int) -> Date? {
-      let label = PlannedDayBridge.storageDate(forLocalInstant: pickerDay, timeZone: pickerTimeZone)
-      return at(PlannedDayBridge.displayDate(forStorageDate: label, timeZone: timeZone), minutes: minutes)
+    func at(storedDay: Date, minutes: Int) -> Date? {
+      at(PlannedDayBridge.displayDate(forStorageDate: storedDay, timeZone: timeZone), minutes: minutes)
     }
     var presets: [TaskDetailReminderPreset] = []
     func offer(_ id: String, _ title: String, _ date: Date?) {
@@ -74,13 +69,13 @@ struct TaskDetailReminderPreset: Identifiable {
       offer(
         "start",
         String(localized: "task_detail.reminders.preset.start", defaultValue: "When it starts", table: "Localizable", bundle: LorvexL10n.bundle),
-        at(pickerDay: plannedDay, minutes: plannedTime.lowerBound))
+        at(storedDay: plannedDay, minutes: plannedTime.lowerBound))
     }
     if let dueDay {
       offer(
         "due",
         String(localized: "task_detail.reminders.preset.due_morning", defaultValue: "Due day morning", table: "Localizable", bundle: LorvexL10n.bundle),
-        at(pickerDay: dueDay, minutes: 9 * 60))
+        at(storedDay: dueDay, minutes: 9 * 60))
     }
     offer(
       "hour",

@@ -22,7 +22,7 @@ extension AppStore {
   var taskDetailDoOnSummary: String? {
     guard taskDetailHasPlannedDate else { return nil }
     let day = LorvexDayPhrase.phrase(
-      for: taskDetailPlannedDatePickerDate, logicalDay: logicalTodayDateString, position: .leading)
+      for: taskDetailPlannedDay, logicalDay: logicalTodayDateString, position: .leading)
     let when: String
     if let time = taskDetailPlannedTime {
       let range = lorvexWholeSpan(
@@ -42,7 +42,7 @@ extension AppStore {
   var taskDetailPlannedIsAfterDeadline: Bool {
     guard taskDetailIsActive, taskDetailHasPlannedDate, taskDetailHasDueDate else { return false }
     return LorvexDayPhrase.isPlannedAfterDeadline(
-      planned: taskDetailPlannedDatePickerDate, due: taskDetailDueDatePickerDate,
+      planned: taskDetailPlannedDay, due: taskDetailDueDay,
       logicalDay: logicalTodayDateString)
   }
 
@@ -54,7 +54,7 @@ extension AppStore {
   var taskDetailDueSummary: String? {
     guard taskDetailHasDueDate else { return nil }
     return LorvexDayPhrase.due(
-      taskDetailDueDatePickerDate, plannedDay: nil, logicalDay: logicalTodayDateString,
+      taskDetailDueDay, plannedDay: nil, logicalDay: logicalTodayDateString,
       countsLateness: taskDetailIsActive)
   }
 
@@ -67,7 +67,7 @@ extension AppStore {
   /// Whether the open task's deadline has passed and the task is not finished.
   var taskDetailDueIsOverdue: Bool {
     guard taskDetailIsActive, taskDetailHasDueDate,
-      let offset = lorvexDayOffset(from: logicalTodayDateString, to: taskDetailDueDatePickerDate)
+      let offset = lorvexDayOffset(from: logicalTodayDateString, to: taskDetailDueDay)
     else { return false }
     return offset < 0
   }
@@ -77,10 +77,10 @@ extension AppStore {
   /// unset and the sentence offers the field again.
   var taskDetailHideUntilSummary: String? {
     guard taskDetailHasAvailableFrom,
-      (lorvexDayOffset(from: logicalTodayDateString, to: taskDetailAvailableFromPickerDate) ?? 1) > 0
+      (lorvexDayOffset(from: logicalTodayDateString, to: taskDetailAvailableFromDay) ?? 1) > 0
     else { return nil }
     return LorvexDayPhrase.phrase(
-      for: taskDetailAvailableFromPickerDate, logicalDay: logicalTodayDateString, position: .inline)
+      for: taskDetailAvailableFromDay, logicalDay: logicalTodayDateString, position: .inline)
   }
 
   var taskDetailEstimateSummary: String? {

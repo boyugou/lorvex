@@ -25,7 +25,7 @@ private func makeStoreWithTimedSelection() async throws -> (AppStore, LorvexTask
   store.selectedTaskID = task.id
   store.syncSelectedTaskDraft()
   store.taskDetailHasPlannedDate = true
-  store.taskDetailPlannedDate = PlannedDayBridge.displayDate(forStorageDate: storageDay)
+  store.taskDetailPlannedDate = storageDay
   store.taskDetailPlannedTime = 600..<660
   #expect(store.selectedTaskCanSave)
   await store.saveSelectedTaskDraft()
@@ -49,7 +49,7 @@ func taskDetailSavesATimeOnThePlannedDay() async throws {
 func taskDetailMovingTheDayKeepsTheTime() async throws {
   let (store, id) = try await makeStoreWithTimedSelection()
 
-  store.taskDetailPlannedDate = PlannedDayBridge.displayDate(forStorageDate: storageNextDay)
+  store.taskDetailPlannedDate = storageNextDay
   await store.saveSelectedTaskDraft()
 
   let moved = try await store.core.loadTask(id: id)

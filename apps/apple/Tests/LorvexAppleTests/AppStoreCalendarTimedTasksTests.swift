@@ -76,7 +76,7 @@ func taskDetailDoOnSummaryReadsTheDayThenTheTime() async throws {
   store.selectTaskFromList(task.id)
 
   let day = LorvexDayPhrase.phrase(
-    for: store.taskDetailPlannedDatePickerDate, logicalDay: today, position: .leading)
+    for: store.taskDetailPlannedDay, logicalDay: today, position: .leading)
   let range = lorvexClockRangeLabel(startMinutes: 9 * 60 + 45, endMinutes: 10 * 60 + 45)
   // The time stays whole, so a value too wide for the inspector wraps after the day.
   #expect(store.taskDetailDoOnSummary == "\(day), \(lorvexWholeSpan(range))")

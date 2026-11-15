@@ -103,12 +103,12 @@ extension AppStore {
       String(describing: taskDetailPriority),
       taskDetailEstimatedMinutesText,
       String(taskDetailHasPlannedDate),
-      String(taskDetailPlannedDatePickerDate.timeIntervalSinceReferenceDate),
+      String(taskDetailPlannedDay.timeIntervalSinceReferenceDate),
       taskDetailPlannedTime.map { "\($0.lowerBound)-\($0.upperBound)" } ?? "",
       String(taskDetailHasDueDate),
-      String(taskDetailDueDatePickerDate.timeIntervalSinceReferenceDate),
+      String(taskDetailDueDay.timeIntervalSinceReferenceDate),
       String(taskDetailHasAvailableFrom),
-      String(taskDetailAvailableFromPickerDate.timeIntervalSinceReferenceDate),
+      String(taskDetailAvailableFromDay.timeIntervalSinceReferenceDate),
       taskDetailTagsText,
       taskDetailDependsOnText,
       taskDetailRecurrenceDraft.fingerprint,
@@ -231,10 +231,7 @@ extension AppStore {
 
   var taskDetailPlannedDateForSave: Date? {
     guard taskDetailHasPlannedDate else { return nil }
-    // The picker hands back local-midnight instants; the service layer
-    // formats in UTC, so re-anchor or an east-of-UTC save lands on the
-    // previous day.
-    return taskDetailPlannedDate.map { PlannedDayBridge.storageDate(forLocalInstant: $0) }
+    return taskDetailPlannedDate
   }
 
   /// The time to persist: the draft's time while the draft has a planned day,
@@ -243,43 +240,80 @@ extension AppStore {
     taskDetailHasPlannedDate ? taskDetailPlannedTime : nil
   }
 
+  /// The draft's planned day in the storage frame, whether or not the field
+  /// is on: the day the draft holds, else the last one it held, else the
+  /// planner's today, which a turned-on field starts at.
+  var taskDetailPlannedDay: Date {
+    taskDetailPlannedDate ?? taskDetailStorage.taskDetailPlannedDayStash ?? taskDetailLogicalToday
+  }
+
+  /// ``taskDetailPlannedDay`` as the day picker works with it: midnight of
+  /// that day in the picker's zone (this device's), converted back to the
+  /// storage frame when set. The picker works in the device's zone; the draft
+  /// never does.
   var taskDetailPlannedDatePickerDate: Date {
-    get { taskDetailPlannedDate ?? taskDetailStorage.taskDetailPlannedDatePickerDate }
+    get {
+      PlannedDayBridge.displayDate(
+        forStorageDate: taskDetailPlannedDay, timeZone: taskDetailStorage.taskDetailPickerTimeZone)
+    }
     set {
-      taskDetailStorage.taskDetailPlannedDatePickerDate = newValue
-      taskDetailPlannedDate = newValue
+      taskDetailPlannedDate = PlannedDayBridge.storageDate(
+        forLocalInstant: newValue, timeZone: taskDetailStorage.taskDetailPickerTimeZone)
     }
   }
 
-  /// The due date to persist: the chosen day re-anchored from local midnight to
-  /// UTC for the service layer (a due date is a day, like the planned date), or
-  /// `nil` when no due date is set.
+  /// The planner's today in the storage frame, where a day field the draft
+  /// has never held starts.
+  var taskDetailLogicalToday: Date {
+    PlannedDayBridge.storageDate(forLogicalDay: logicalTodayDateString)
+      ?? PlannedDayBridge.storageDate(forLocalInstant: Date())
+  }
+
+  /// The due date to persist, or `nil` when no due date is set.
   var taskDetailDueDateForSave: Date? {
     guard taskDetailHasDueDate else { return nil }
-    return taskDetailDueDate.map { PlannedDayBridge.storageDate(forLocalInstant: $0) }
+    return taskDetailDueDate
   }
 
+  /// The draft's due day in the storage frame, as ``taskDetailPlannedDay``.
+  var taskDetailDueDay: Date {
+    taskDetailDueDate ?? taskDetailStorage.taskDetailDueDayStash ?? taskDetailLogicalToday
+  }
+
+  /// ``taskDetailDueDay`` as the day picker works with it.
   var taskDetailDueDatePickerDate: Date {
-    get { taskDetailDueDate ?? taskDetailStorage.taskDetailDueDatePickerDate }
+    get {
+      PlannedDayBridge.displayDate(
+        forStorageDate: taskDetailDueDay, timeZone: taskDetailStorage.taskDetailPickerTimeZone)
+    }
     set {
-      taskDetailStorage.taskDetailDueDatePickerDate = newValue
-      taskDetailDueDate = newValue
+      taskDetailDueDate = PlannedDayBridge.storageDate(
+        forLocalInstant: newValue, timeZone: taskDetailStorage.taskDetailPickerTimeZone)
     }
   }
 
-  /// The defer-until (`available_from`) day to persist: the chosen day
-  /// re-anchored from local midnight to UTC for the service layer (a hide-until
-  /// date is a day, like the planned date), or `nil` when it is not set.
+  /// The hide-until (`available_from`) day to persist, or `nil` when it is not
+  /// set.
   var taskDetailAvailableFromForSave: Date? {
     guard taskDetailHasAvailableFrom else { return nil }
-    return taskDetailAvailableFrom.map { PlannedDayBridge.storageDate(forLocalInstant: $0) }
+    return taskDetailAvailableFrom
   }
 
+  /// The draft's hide-until day in the storage frame, as ``taskDetailPlannedDay``.
+  var taskDetailAvailableFromDay: Date {
+    taskDetailAvailableFrom ?? taskDetailStorage.taskDetailAvailableFromDayStash
+      ?? taskDetailLogicalToday
+  }
+
+  /// ``taskDetailAvailableFromDay`` as the day picker works with it.
   var taskDetailAvailableFromPickerDate: Date {
-    get { taskDetailAvailableFrom ?? taskDetailStorage.taskDetailAvailableFromPickerDate }
+    get {
+      PlannedDayBridge.displayDate(
+        forStorageDate: taskDetailAvailableFromDay, timeZone: taskDetailStorage.taskDetailPickerTimeZone)
+    }
     set {
-      taskDetailStorage.taskDetailAvailableFromPickerDate = newValue
-      taskDetailAvailableFrom = newValue
+      taskDetailAvailableFrom = PlannedDayBridge.storageDate(
+        forLocalInstant: newValue, timeZone: taskDetailStorage.taskDetailPickerTimeZone)
     }
   }
 
@@ -334,7 +368,7 @@ extension AppStore {
   func setTaskDetailHasPlannedDate(_ enabled: Bool) {
     taskDetailHasPlannedDate = enabled
     if enabled, taskDetailPlannedDate == nil {
-      taskDetailPlannedDate = taskDetailStorage.taskDetailPlannedDatePickerDate
+      taskDetailPlannedDate = taskDetailPlannedDay
     }
     if !enabled { taskDetailPlannedTime = nil }
   }
@@ -342,14 +376,14 @@ extension AppStore {
   func setTaskDetailHasDueDate(_ enabled: Bool) {
     taskDetailHasDueDate = enabled
     if enabled, taskDetailDueDate == nil {
-      taskDetailDueDate = taskDetailStorage.taskDetailDueDatePickerDate
+      taskDetailDueDate = taskDetailDueDay
     }
   }
 
   func setTaskDetailHasAvailableFrom(_ enabled: Bool) {
     taskDetailHasAvailableFrom = enabled
     if enabled, taskDetailAvailableFrom == nil {
-      taskDetailAvailableFrom = taskDetailStorage.taskDetailAvailableFromPickerDate
+      taskDetailAvailableFrom = taskDetailAvailableFromDay
     }
   }
 

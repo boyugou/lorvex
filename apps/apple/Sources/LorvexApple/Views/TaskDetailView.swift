@@ -233,7 +233,7 @@ struct TaskDetailView: View {
   /// never on a finished task.
   private var dueTint: Color? {
     guard store.taskDetailIsActive, store.taskDetailHasDueDate,
-      let offset = lorvexDayOffset(from: store.logicalTodayDateString, to: store.taskDetailDueDatePickerDate)
+      let offset = lorvexDayOffset(from: store.logicalTodayDateString, to: store.taskDetailDueDay)
     else { return nil }
     if offset < 0 { return LorvexDesign.Palette.overdue }
     if offset <= 1 { return LorvexDesign.Palette.dueSoon }
@@ -274,7 +274,7 @@ struct TaskDetailView: View {
           defaultLength: LorvexNumberInput.integer(from: store.taskDetailEstimatedMinutesText),
           nowMinutes: store.nowMinutesInProductDay,
           isToday: lorvexDayOffset(
-            from: store.logicalTodayDateString, to: store.taskDetailPlannedDatePickerDate) == 0,
+            from: store.logicalTodayDateString, to: store.taskDetailPlannedDay) == 0,
           onChange: { store.taskDetailPlannedTime = $0 }))
     case "due":
       TaskDetailDayPicker(

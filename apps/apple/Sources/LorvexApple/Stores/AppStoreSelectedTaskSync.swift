@@ -72,32 +72,14 @@ extension AppStore {
     taskDetailNotes = task.notes
     taskDetailPriority = task.priority
     taskDetailEstimatedMinutesText = task.estimatedMinutes.map { LorvexNumberInput.text(for: $0) } ?? ""
-    // The stored planned date is a UTC-midnight day anchor; the picker is a
-    // local-calendar control, so re-anchor to local midnight or the picker
-    // shows the previous day west of UTC.
-    let pickerDate = task.plannedDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) }
-    taskDetailPlannedDate = pickerDate
-    if let pickerDate {
-      taskDetailStorage.taskDetailPlannedDatePickerDate = pickerDate
-    }
+    // The draft holds the stored days as they are (UTC midnights); the day
+    // pickers convert at their own edge.
+    taskDetailPlannedDate = task.plannedDate
     taskDetailHasPlannedDate = task.plannedDate != nil
     taskDetailPlannedTime = task.plannedTime
-    // Due date is a day anchor too — re-anchor the same way as the planned date.
-    let duePickerDate = task.dueDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) }
-    taskDetailDueDate = duePickerDate
-    if let duePickerDate {
-      taskDetailStorage.taskDetailDueDatePickerDate = duePickerDate
-    }
+    taskDetailDueDate = task.dueDate
     taskDetailHasDueDate = task.dueDate != nil
-    // Available-from (defer-until) is a UTC-midnight day anchor too — re-anchor
-    // to local midnight for the picker the same way as the planned/due dates.
-    let availablePickerDate = task.availableFrom.map {
-      PlannedDayBridge.displayDate(forStorageDate: $0)
-    }
-    taskDetailAvailableFrom = availablePickerDate
-    if let availablePickerDate {
-      taskDetailStorage.taskDetailAvailableFromPickerDate = availablePickerDate
-    }
+    taskDetailAvailableFrom = task.availableFrom
     taskDetailHasAvailableFrom = task.availableFrom != nil
     taskDetailTagsText = task.tags.joined(separator: ", ")
     taskDetailDependsOnText = task.dependsOn.joined(separator: ", ")

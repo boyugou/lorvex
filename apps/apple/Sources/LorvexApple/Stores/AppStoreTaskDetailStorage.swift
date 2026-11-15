@@ -13,17 +13,27 @@ struct AppStoreTaskDetailStorage {
   var taskDetailNotes = ""
   var taskDetailPriority: LorvexTask.Priority = .p2
   var taskDetailEstimatedMinutesText = ""
+  /// The draft's planned, due, and hide-until days in the storage frame: the
+  /// stored day's UTC midnight, as `LorvexTask` holds them. A day picker's
+  /// local midnight would name another day once the device's zone changed
+  /// under an open draft, so the picker converts at its own edge
+  /// (``AppStore/taskDetailPlannedDatePickerDate``).
   var taskDetailPlannedDate: Date?
-  var taskDetailPlannedDatePickerDate = Date()
+  /// The last planned day the draft held, kept while the field is off so
+  /// turning it back on restores it; nil starts it at the planner's today.
+  var taskDetailPlannedDayStash: Date?
   var taskDetailHasPlannedDate = false
   /// The task's time on its planned day, in minutes since midnight.
   var taskDetailPlannedTime: Range<Int>?
   var taskDetailDueDate: Date?
-  var taskDetailDueDatePickerDate = Date()
+  var taskDetailDueDayStash: Date?
   var taskDetailHasDueDate = false
   var taskDetailAvailableFrom: Date?
-  var taskDetailAvailableFromPickerDate = Date()
+  var taskDetailAvailableFromDayStash: Date?
   var taskDetailHasAvailableFrom = false
+  /// The zone the inspector's day pickers lay their days out in: this
+  /// device's, followed as it changes. Not part of the draft; a test pins it.
+  var taskDetailPickerTimeZone: TimeZone = .autoupdatingCurrent
   var taskDetailTagsText = ""
   var taskDetailDependsOnText = ""
   var taskDetailNewChecklistText = ""
@@ -61,14 +71,14 @@ struct AppStoreTaskDetailStorage {
     taskDetailPriority = .p2
     taskDetailEstimatedMinutesText = ""
     taskDetailPlannedDate = nil
-    taskDetailPlannedDatePickerDate = Date()
+    taskDetailPlannedDayStash = nil
     taskDetailHasPlannedDate = false
     taskDetailPlannedTime = nil
     taskDetailDueDate = nil
-    taskDetailDueDatePickerDate = Date()
+    taskDetailDueDayStash = nil
     taskDetailHasDueDate = false
     taskDetailAvailableFrom = nil
-    taskDetailAvailableFromPickerDate = Date()
+    taskDetailAvailableFromDayStash = nil
     taskDetailHasAvailableFrom = false
     taskDetailTagsText = ""
     taskDetailDependsOnText = ""

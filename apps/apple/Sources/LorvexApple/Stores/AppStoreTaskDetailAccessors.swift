@@ -27,7 +27,7 @@ extension AppStore {
     set {
       taskDetailStorage.taskDetailPlannedDate = newValue
       if let newValue {
-        taskDetailStorage.taskDetailPlannedDatePickerDate = newValue
+        taskDetailStorage.taskDetailPlannedDayStash = newValue
       }
     }
   }
@@ -47,7 +47,7 @@ extension AppStore {
     set {
       taskDetailStorage.taskDetailDueDate = newValue
       if let newValue {
-        taskDetailStorage.taskDetailDueDatePickerDate = newValue
+        taskDetailStorage.taskDetailDueDayStash = newValue
       }
     }
   }
@@ -62,7 +62,7 @@ extension AppStore {
     set {
       taskDetailStorage.taskDetailAvailableFrom = newValue
       if let newValue {
-        taskDetailStorage.taskDetailAvailableFromPickerDate = newValue
+        taskDetailStorage.taskDetailAvailableFromDayStash = newValue
       }
     }
   }

@@ -114,7 +114,7 @@ func appStoreEditsSelectedPreviewTaskDetail() async throws {
   // for the stored day, and assert the saved due date in the storage frame.
   let storagePlannedDate = Date(timeIntervalSince1970: 1_779_494_400)
   store.taskDetailHasPlannedDate = true
-  store.taskDetailPlannedDate = PlannedDayBridge.displayDate(forStorageDate: storagePlannedDate)
+  store.taskDetailPlannedDate = storagePlannedDate
   #expect(store.selectedTaskCanSave)
   await store.saveSelectedTaskDraft()
 
@@ -144,7 +144,7 @@ func appStoreEditsSelectedTaskDueDate() async throws {
   // like the planned date). Set it in the picker frame; assert the storage frame.
   let storageDueDate = Date(timeIntervalSince1970: 1_779_494_400)
   store.taskDetailHasDueDate = true
-  store.taskDetailDueDate = PlannedDayBridge.displayDate(forStorageDate: storageDueDate)
+  store.taskDetailDueDate = storageDueDate
   #expect(store.taskDetailDueDateForSave == storageDueDate)
   #expect(store.selectedTaskCanSave)
   await store.saveSelectedTaskDraft()
@@ -235,11 +235,12 @@ func taskDetailPlannedDatePickerUsesStableDraftDate() async throws {
   #expect(store.taskDetailPlannedDatePickerDate == initialPickerDate)
   #expect(store.taskDetailPlannedDate == nil)
 
-  let editedDate = Date(timeIntervalSince1970: 1_780_012_800)
+  // The picker works in local midnights; the draft keeps the stored day.
+  let editedDate = try #require(PlannedDayBridge.displayDate(forLogicalDay: "2026-05-29"))
   store.taskDetailPlannedDatePickerDate = editedDate
 
   #expect(store.taskDetailPlannedDatePickerDate == editedDate)
-  #expect(store.taskDetailPlannedDate == editedDate)
+  #expect(store.taskDetailPlannedDate == PlannedDayBridge.storageDate(forLogicalDay: "2026-05-29"))
 }
 
 @Test

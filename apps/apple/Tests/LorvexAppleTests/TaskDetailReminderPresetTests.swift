@@ -10,11 +10,10 @@ struct TaskDetailReminderPresetTests {
     try #require(TimeZone(identifier: identifier))
   }
 
-  private static func midnight(_ year: Int, _ month: Int, _ day: Int, in zone: TimeZone) throws
-    -> Date
-  {
+  /// A stored day: its UTC midnight, as the draft holds it.
+  private static func storedDay(_ year: Int, _ month: Int, _ day: Int) throws -> Date {
     var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = zone
+    calendar.timeZone = .gmt
     return try #require(calendar.date(from: DateComponents(year: year, month: month, day: day)))
   }
 
@@ -22,20 +21,17 @@ struct TaskDetailReminderPresetTests {
     try #require(ISO8601DateFormatter().date(from: iso))
   }
 
-  /// A device in New York shows a product zone of Los Angeles: the pickers'
-  /// days are New York midnights, which are still the evening before in Los
-  /// Angeles. The reminders stay on the days the pickers name.
+  /// The reminders land on the stored days in the product zone, whichever
+  /// side of the device's zone it lies on.
   @Test
-  func presetsKeepThePickedDaysWhenTheProductZoneIsWestOfTheDevice() throws {
-    let newYork = try Self.zone("America/New_York")
+  func presetsLandOnTheStoredDaysInAProductZoneWestOfUTC() throws {
     let losAngeles = try Self.zone("America/Los_Angeles")
     let presets = TaskDetailReminderPreset.presets(
-      plannedDay: try Self.midnight(2026, 10, 5, in: newYork),
+      plannedDay: try Self.storedDay(2026, 10, 5),
       plannedTime: 14 * 60..<15 * 60,
-      dueDay: try Self.midnight(2026, 10, 6, in: newYork),
+      dueDay: try Self.storedDay(2026, 10, 6),
       now: try Self.instant("2026-10-03T19:00:00Z"),
-      timeZone: losAngeles,
-      pickerTimeZone: newYork)
+      timeZone: losAngeles)
     let dates = Dictionary(uniqueKeysWithValues: presets.map { ($0.id, $0.date) })
 
     #expect(presets.map(\.id) == ["start", "due", "hour", "tomorrow"])
@@ -47,16 +43,14 @@ struct TaskDetailReminderPresetTests {
   }
 
   @Test
-  func presetsKeepThePickedDaysWhenTheProductZoneIsEastOfTheDevice() throws {
-    let losAngeles = try Self.zone("America/Los_Angeles")
+  func presetsLandOnTheStoredDaysInAProductZoneEastOfUTC() throws {
     let tokyo = try Self.zone("Asia/Tokyo")
     let presets = TaskDetailReminderPreset.presets(
-      plannedDay: try Self.midnight(2026, 10, 5, in: losAngeles),
+      plannedDay: try Self.storedDay(2026, 10, 5),
       plannedTime: 14 * 60..<15 * 60,
       dueDay: nil,
       now: try Self.instant("2026-10-03T03:00:00Z"),
-      timeZone: tokyo,
-      pickerTimeZone: losAngeles)
+      timeZone: tokyo)
 
     #expect(presets.first?.id == "start")
     // 2 PM in Tokyo on October 5.
@@ -69,12 +63,11 @@ struct TaskDetailReminderPresetTests {
   func presetsOfferOnlyTimesStillAheadAndEachTimeOnce() throws {
     let berlin = try Self.zone("Europe/Berlin")
     let presets = TaskDetailReminderPreset.presets(
-      plannedDay: try Self.midnight(2026, 10, 2, in: berlin),
+      plannedDay: try Self.storedDay(2026, 10, 2),
       plannedTime: 9 * 60..<10 * 60,
-      dueDay: try Self.midnight(2026, 10, 1, in: berlin),
+      dueDay: try Self.storedDay(2026, 10, 1),
       now: try Self.instant("2026-10-01T10:00:00Z"),
-      timeZone: berlin,
-      pickerTimeZone: berlin)
+      timeZone: berlin)
 
     // The due day's 9 AM has passed; tomorrow's 9 AM is the start time.
     #expect(presets.map(\.id) == ["start", "hour"])

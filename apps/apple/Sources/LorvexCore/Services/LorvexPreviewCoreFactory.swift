@@ -440,8 +440,11 @@ public enum LorvexPreviewCoreFactory {
     }
   }
 
+  /// The seed's day `daysAgo` days back, counted in ``previewTimezone``, the
+  /// planner zone the seed writes: counted in the device's zone, a device
+  /// ahead of it checked the habits in a day late, on the seed's today.
   private static func ymd(daysAgo: Int) -> String {
-    seedDay(daysAgo: daysAgo)
+    seedDay(daysAgo: daysAgo, timeZone: TimeZone(identifier: previewTimezone) ?? .autoupdatingCurrent)
   }
 
   /// The `yyyy-MM-dd` day `daysAgo` calendar days before the day `now` falls

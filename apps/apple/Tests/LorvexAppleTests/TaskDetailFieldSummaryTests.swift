@@ -102,6 +102,31 @@ func anOpenDraftKeepsItsDaysWhenTheDevicesZoneChanges() async throws {
   #expect(store.taskDetailDueDateForSave == PlannedDayBridge.storageDate(forLogicalDay: today, addingDays: 3))
 }
 
+/// A save reloads Today, whose day can differ from the one the store held
+/// (before its first load, the device's day stands in for the planner's).
+/// The draft's fields that hold no day must not read as edited because of
+/// it, or the save keeps the draft instead of taking the saved task back.
+@MainActor
+@Test
+func aSaveTakesTheSavedTaskBackWhenTodaysDayMovesUnderIt() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  let task = try await core.createTask(TaskCreateDraft(title: "Return the books", notes: ""))
+  await store.refresh()
+  store.selectTaskFromList(task.id)
+  let today = store.logicalTodayDateString
+  store.today.logicalDay = "2001-01-01"
+
+  store.setTaskDetailHasAvailableFrom(true)
+  store.taskDetailAvailableFrom = PlannedDayBridge.storageDate(forLogicalDay: today, addingDays: 20)
+  await store.saveSelectedTaskDraft()
+
+  #expect(try await core.loadTask(id: task.id).availableFrom != nil)
+  #expect(store.taskDetailStorage.taskDetailDraftSource?.availableFrom != nil, "the draft took the saved task back")
+  #expect(!store.selectedTaskDraftHasChanges)
+}
+
 /// The When row says when the plan would finish the task late, and stops
 /// saying it once the planned day is back on the deadline.
 @MainActor

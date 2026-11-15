@@ -92,6 +92,10 @@ extension AppStore {
     return draft.trimmingCharacters(in: .whitespacesAndNewlines) != stored
   }
 
+  private static func fingerprintDay(_ day: Date?) -> String {
+    day.map { String($0.timeIntervalSinceReferenceDate) } ?? ""
+  }
+
   /// One value that changes with any edit to the task-detail draft fields.
   /// Snapshotted around a save so an in-flight save can tell whether the user
   /// kept typing — in which case the post-save re-sync must not clobber the
@@ -102,13 +106,16 @@ extension AppStore {
       taskDetailNotes,
       String(describing: taskDetailPriority),
       taskDetailEstimatedMinutesText,
+      // The days the draft holds, not the planner's today a field without
+      // one falls back to: that moves when a save reloads Today, and the save
+      // would then take the draft for one still being edited.
       String(taskDetailHasPlannedDate),
-      String(taskDetailPlannedDay.timeIntervalSinceReferenceDate),
+      Self.fingerprintDay(taskDetailPlannedDate),
       taskDetailPlannedTime.map { "\($0.lowerBound)-\($0.upperBound)" } ?? "",
       String(taskDetailHasDueDate),
-      String(taskDetailDueDay.timeIntervalSinceReferenceDate),
+      Self.fingerprintDay(taskDetailDueDate),
       String(taskDetailHasAvailableFrom),
-      String(taskDetailAvailableFromDay.timeIntervalSinceReferenceDate),
+      Self.fingerprintDay(taskDetailAvailableFrom),
       taskDetailTagsText,
       taskDetailDependsOnText,
       taskDetailRecurrenceDraft.fingerprint,

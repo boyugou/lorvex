@@ -338,6 +338,13 @@ Failures and what they mean:
   key. `productbuild --sign` raised one; the package is signed with
   `productsign`, which does not. If another tool ever raises it, approve it once
   with Always Allow.
+- `Extracted no relevant App Intents symbols` with a successful processor exit:
+  const-value extraction is module-scoped. Extract the linked intent-owning
+  modules and merge their static metadata, keeping the App Shortcuts provider
+  in the primary pass. `extract_app_intents_metadata.py` handles this and
+  rejects missing output, stale output, and missing Shortcut phrases before
+  signing a package. The current Mac payload carries 80 app intents and 10
+  App Shortcuts; the widget carries its configuration plus four actions.
 - `altool --build-status` can hang for several minutes on its first call or
   report that `Defaults.properties` could not be opened. Neither is a
   credential failure; stop that process and poll again.

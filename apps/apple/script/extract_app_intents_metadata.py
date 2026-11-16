@@ -16,8 +16,9 @@ For the executable target named by `--target` it:
    target-dependency closure from `swift package describe`. Only their
    `.swiftconstvalues` files and sources reach the processor, because it
    records every conformance it is given, linked or not.
-2. Runs `appintentsmetadataprocessor` over the staged binary, writing
-   `Metadata.appintents` into `--resources`.
+2. Extracts each intent-owning module and merges static dependencies into the
+   bundle's `Metadata.appintents`. The primary pass owns the App Shortcuts
+   provider, which a static dependency merge alone does not retain.
 3. Writes every string the metadata names (a `key` in a `table`) into the
    bundle's own `<language>.lproj/<table>.strings`, taken from the linked
    targets' String Catalogs. The system resolves metadata strings in the bundle
@@ -36,6 +37,7 @@ from __future__ import annotations
 import argparse
 import json
 import plistlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -79,6 +81,66 @@ def const_value_files(bin_path: Path, package: str, module: str) -> list[Path]:
             if build_dir.is_dir():
                 files.extend(sorted(build_dir.rglob("*.swiftconstvalues")))
     return files
+
+
+def metadata_module_order(module_files: dict[str, list[Path]]) -> list[str]:
+    """Intent-owning modules, keeping the App Shortcuts provider in the primary pass.
+
+    The processor filters const values by module name. Passing an executable's
+    name over its libraries' const values produces no declarations. Static
+    dependency metadata merges actions, but not the App Shortcuts provider.
+    """
+    active: list[str] = []
+    providers: list[str] = []
+    for module, files in module_files.items():
+        declarations = []
+        for path in files:
+            values = json.loads(path.read_text())
+            if not isinstance(values, list):
+                raise SystemExit(f"extract_app_intents_metadata: invalid const values for {module}")
+            declarations.extend(values)
+        if declarations:
+            active.append(module)
+        if any(
+            protocol in {"AppIntents.AppShortcutsProvider", "AppShortcutsProvider"}
+            for value in declarations for protocol in value.get("conformances", [])
+        ):
+            providers.append(module)
+    if len(providers) > 1:
+        raise SystemExit("extract_app_intents_metadata: App Shortcuts providers span multiple modules")
+    if not active:
+        raise SystemExit("extract_app_intents_metadata: no App Intents declarations were extracted")
+    if providers:
+        active.remove(providers[0])
+        active.insert(0, providers[0])
+    return active
+
+
+def process_metadata(command: list[str], module: str, output: Path) -> Path:
+    """Require fresh metadata even when the processor exits successfully."""
+    metadata_dir = output / "Metadata.appintents"
+    if metadata_dir.exists():
+        shutil.rmtree(metadata_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    processed = subprocess.run(command, capture_output=True, text=True)
+    actions_data = metadata_dir / "extract.actionsdata"
+    if processed.returncode != 0 or not actions_data.is_file():
+        sys.stderr.write(processed.stdout + processed.stderr)
+        raise SystemExit(f"extract_app_intents_metadata: the processor produced no valid metadata for {module}")
+    for line in processed.stderr.splitlines():
+        if "warning:" in line:
+            print(line, file=sys.stderr)
+    return actions_data
+
+
+def verify_metadata(metadata: dict, target: str, expected: list[str], has_shortcuts: bool) -> None:
+    declared = (set(metadata.get("actions", {})) | set(metadata.get("entities", {}))
+                | set(metadata.get("queries", {})))
+    missing = [name for name in expected if name not in declared]
+    if missing:
+        raise SystemExit(f"extract_app_intents_metadata: {target} metadata lacks {', '.join(missing)}")
+    if has_shortcuts and not (metadata.get("autoShortcuts") and metadata.get("autoShortcutProviderMangledName")):
+        raise SystemExit(f"extract_app_intents_metadata: {target} metadata lacks its App Shortcuts provider or phrases")
 
 
 def toolchain_dir() -> Path:
@@ -182,6 +244,7 @@ def main() -> int:
     targets = linked_targets(description, args.target)
 
     const_values: list[Path] = []
+    module_files: dict[str, list[Path]] = {}
     sources: list[Path] = []
     for target in targets:
         module = target.get("c99name", target["name"])
@@ -191,8 +254,11 @@ def main() -> int:
                 f"extract_app_intents_metadata: no .swiftconstvalues for {module} under "
                 f"{args.bin_path}; build with -emit-const-values")
         const_values.extend(files)
+        module_files[module] = files
         target_dir = ROOT_DIR / target["path"]
         sources.extend(target_dir / source for source in target.get("sources", []))
+
+    modules = metadata_module_order(module_files)
 
     archs = run(["lipo", "-archs", str(args.binary)]).split()
     if archs != ["arm64"]:
@@ -218,13 +284,11 @@ def main() -> int:
         command = [
             "xcrun", "appintentsmetadataprocessor",
             "--toolchain-dir", str(toolchain_dir()),
-            "--module-name", targets[0].get("c99name", args.target),
             "--sdk-root", run(["xcrun", "--sdk", "macosx", "--show-sdk-path"]).strip(),
             "--xcode-version", xcode_build_version(),
             "--platform-family", "macOS",
             "--deployment-target", args.deployment_target,
             "--bundle-identifier", args.bundle_id,
-            "--output", str(args.resources),
             "--target-triple", f"arm64-apple-macos{args.deployment_target}",
             "--binary-file", str(args.binary),
             "--source-file-list", str(source_list),
@@ -233,27 +297,23 @@ def main() -> int:
             "--deployment-aware-processing",
             "--force",
         ]
+        dependencies: list[Path] = []
+        for module in modules[1:]:
+            output = Path(scratch) / module
+            dependencies.append(process_metadata(
+                command + ["--module-name", module, "--output", str(output),
+                           "--no-app-shortcuts-localization"], module, output))
+        dependency_list = Path(scratch) / "static-metadata.txt"
+        dependency_list.write_text("".join(f"{path}\n" for path in dependencies))
+        primary = command + [
+            "--module-name", modules[0], "--output", str(args.resources),
+            "--static-metadata-file-list", str(dependency_list)]
         if not has_app_shortcuts:
-            command.append("--no-app-shortcuts-localization")
-        processed = subprocess.run(command, capture_output=True, text=True)
-        if processed.returncode != 0:
-            sys.stderr.write(processed.stdout + processed.stderr)
-            raise SystemExit(f"extract_app_intents_metadata: the processor failed for {args.target}")
-        warnings = [line for line in processed.stderr.splitlines() if "warning:" in line]
-        for line in warnings:
-            print(line, file=sys.stderr)
+            primary.append("--no-app-shortcuts-localization")
+        actions_data = process_metadata(primary, modules[0], args.resources)
 
-    actions_data = args.resources / "Metadata.appintents" / "extract.actionsdata"
     metadata = json.loads(actions_data.read_text())
-    declared = (
-        set(metadata.get("actions", {}))
-        | {entity for entity in metadata.get("entities", {})}
-        | {query for query in metadata.get("queries", {})}
-    )
-    missing = [name for name in args.expect if name not in declared]
-    if missing:
-        raise SystemExit(
-            f"extract_app_intents_metadata: {args.target} metadata lacks {', '.join(missing)}")
+    verify_metadata(metadata, args.target, args.expect, has_app_shortcuts)
 
     strings: dict[tuple[str, str], str] = {}
     metadata_strings(metadata, strings)

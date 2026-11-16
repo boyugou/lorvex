@@ -2,15 +2,22 @@
 from __future__ import annotations
 
 import json
+import io
 import plistlib
+import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
+from unittest.mock import patch
 
 from extract_app_intents_metadata import (
     const_value_files,
     linked_targets,
     metadata_strings,
+    metadata_module_order,
+    process_metadata,
+    verify_metadata,
     write_metadata_tables,
 )
 
@@ -67,6 +74,79 @@ class ConstValueFilesTests(unittest.TestCase):
 
             found = {path.name for path in const_value_files(bin_path, "Pkg", "Widget")}
             self.assertEqual(found, {"Widget-primary.swiftconstvalues", "A.swiftconstvalues"})
+
+
+class MetadataModuleTests(unittest.TestCase):
+    def const_file(self, root: Path, module: str, values: list[dict]) -> Path:
+        path = root / (module + ".swiftconstvalues")
+        path.write_text(json.dumps(values))
+        return path
+
+    def test_empty_executable_uses_its_intent_library_as_primary(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            files = {"App": [self.const_file(root, "App", [])],
+                     "Intents": [self.const_file(root, "Intents", [{"conformances": ["AppIntents.AppIntent"]}])]}
+            self.assertEqual(metadata_module_order(files), ["Intents"])
+
+    def test_shortcuts_provider_stays_primary_instead_of_losing_its_shortcuts_in_a_static_merge(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            files = {"App": [self.const_file(root, "App", [{"conformances": ["AppIntents.AppEntity"]}])],
+                     "Intents": [self.const_file(root, "Intents", [{"conformances": ["AppIntents.AppShortcutsProvider"]}])]}
+            self.assertEqual(metadata_module_order(files), ["Intents", "App"])
+
+    def test_widget_configuration_and_interactive_intents_both_participate(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            files = {"WidgetBundle": [self.const_file(root, "WidgetBundle", [])],
+                     "WidgetExtension": [self.const_file(root, "WidgetExtension", [{"conformances": ["AppIntents.WidgetConfigurationIntent"]}])],
+                     "WidgetIntents": [self.const_file(root, "WidgetIntents", [{"conformances": ["AppIntents.AppIntent"]}])]}
+            self.assertEqual(metadata_module_order(files), ["WidgetExtension", "WidgetIntents"])
+
+    def test_multiple_provider_modules_fail_rather_than_silently_dropping_one(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            files = {name: [self.const_file(root, name, [{"conformances": ["AppIntents.AppShortcutsProvider"]}])]
+                     for name in ("First", "Second")}
+            with self.assertRaisesRegex(SystemExit, "providers span multiple modules"):
+                metadata_module_order(files)
+
+    def test_no_declarations_is_a_clear_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            with self.assertRaisesRegex(SystemExit, "no App Intents declarations"):
+                metadata_module_order({"App": [self.const_file(root, "App", [])]})
+
+    def test_successful_process_without_fresh_output_rejects_stale_metadata_and_preserves_other_resources(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            metadata = root / "Metadata.appintents"
+            metadata.mkdir()
+            (metadata / "extract.actionsdata").write_text('{"actions": {"Old": {}}}')
+            (root / "keep.txt").write_text("resource")
+            output = io.StringIO()
+            with patch("extract_app_intents_metadata.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "no relevant symbols", "")), redirect_stderr(output):
+                with self.assertRaisesRegex(SystemExit, "produced no valid metadata"):
+                    process_metadata(["processor"], "App", root)
+            self.assertIn("no relevant symbols", output.getvalue())
+            self.assertFalse(metadata.exists())
+            self.assertTrue((root / "keep.txt").is_file())
+
+
+class VerifyMetadataTests(unittest.TestCase):
+    def test_actions_alone_cannot_satisfy_a_bundle_that_has_app_shortcuts(self) -> None:
+        with self.assertRaisesRegex(SystemExit, "App Shortcuts provider or phrases"):
+            verify_metadata({"actions": {"Capture": {}}}, "App", ["Capture"], True)
+
+    def test_complete_shortcuts_metadata_is_accepted(self) -> None:
+        verify_metadata({"actions": {"Capture": {}}, "autoShortcuts": [{}],
+                         "autoShortcutProviderMangledName": "provider"}, "App", ["Capture"], True)
+
+    def test_a_widget_requires_its_actions_but_not_an_app_shortcuts_provider(self) -> None:
+        verify_metadata({"actions": {"Complete": {}}}, "Widget", ["Complete"], False)
+        with self.assertRaisesRegex(SystemExit, "lacks Missing"):
+            verify_metadata({"actions": {"Complete": {}}}, "Widget", ["Missing"], False)
 
 
 class MetadataStringsTests(unittest.TestCase):

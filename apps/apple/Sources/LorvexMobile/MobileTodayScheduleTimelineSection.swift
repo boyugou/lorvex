@@ -101,7 +101,8 @@ struct MobileTodayScheduleTimelineSection: View {
       LorvexTimelineRow(
         time: item.timeLabel.isEmpty ? allDayLabel : item.timeLabel, title: event.title,
         duration: item.eventPart == .whole ? duration(item, task: nil) : nil,
-        isCurrent: false, isQuiet: true, isPast: item.isPast
+        isCurrent: false, isQuiet: true, isPast: item.isPast,
+        isCombinedEvent: !event.combinedEventCopies.isEmpty
       ) {
         Capsule()
           .fill(LorvexDesign.Palette.eventTint(event.color))

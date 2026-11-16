@@ -39,7 +39,7 @@ struct CalendarSearchResultsView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("calendar.searchResults")
-    .task(id: store.searchText) {
+    .task(id: store.searchText + "\u{0}" + store.calendarDuplicateGrouping.rawValue) {
       isLoading = true
       guard await LorvexSearchDebounce.shouldSearch(store.searchText) else { return }
       await reload()

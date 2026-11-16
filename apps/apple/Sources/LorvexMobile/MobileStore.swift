@@ -86,7 +86,14 @@ public final class MobileStore {
   /// celebration overlay. Set by ``stageMilestoneCelebrationIfReached(habitID:)``
   /// on a crossing and cleared when the overlay dismisses (tap / auto-timeout).
   var milestoneCelebration: MobileHabitMilestoneCelebration?
-  public internal(set) var calendarTimeline: CalendarTimelineSnapshot?
+  var rawCalendarTimeline: CalendarTimelineSnapshot?
+  public internal(set) var calendarTimeline: CalendarTimelineSnapshot? {
+    get { rawCalendarTimeline?.groupingDuplicates(calendarDuplicateGrouping) }
+    set { rawCalendarTimeline = newValue?.groupingDuplicates(.off) }
+  }
+  public var calendarDuplicateGrouping: CalendarDuplicateGrouping {
+    didSet { defaults.set(calendarDuplicateGrouping.rawValue, forKey: CalendarDuplicateGrouping.preferenceKey) }
+  }
   /// Tasks completed on the logical today, for Today's facts line.
   var doneTodayCount = 0
   /// The tasks completed on the logical today, newest completion first, for
@@ -403,6 +410,7 @@ public final class MobileStore {
     self.todayString = todayString
     self.now = now
     self.defaults = defaults
+    self.calendarDuplicateGrouping = CalendarDuplicateGrouping.remembered(in: defaults)
     self.calendarPresentationMode = MobileCalendarPresentationMode.remembered(in: defaults)
     self.cloudSyncMode = cloudSyncMode
     self.cloudSyncController = cloudSyncController

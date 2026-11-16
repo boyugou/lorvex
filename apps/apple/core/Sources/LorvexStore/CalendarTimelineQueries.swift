@@ -29,7 +29,7 @@ public enum CalendarTimelineQueries {
     pce.title, pce.start_date, pce.start_time, pce.end_date, pce.end_time, \
     pce.all_day, pce.location, pce.color, pce.recurrence, pce.recurrence_exceptions, \
     pce.source_time_kind, pce.source_tzid, pce.attendees_json, \
-    pce.description, pce.organizer_email, pce.video_call_url, pce.occurrence_instants
+    pce.description, pce.organizer_email, pce.video_call_url, pce.occurrence_instants, pce.origin_json
     """
 
   /// `EXISTS` gate (alias `pce`) restricting provider rows to scopes that are
@@ -518,6 +518,7 @@ public enum CalendarTimelineQueries {
       sourceTzid: sourceTzid,
       url: row[18], attendeesJson: row[15], description: row[16])
     guard case .success(var item) = made else { return nil }
+    item.providerOrigin = ProviderCalendarOrigin.decode(row[20])
     if let first = occurrences?.first {
       guard
         let projected = try? CalendarTimeline.projectProviderOccurrence(
@@ -563,6 +564,7 @@ public enum CalendarTimelineQueries {
     item.attendeesJson = nil
     item.description = nil
     item.url = nil
+    item.providerOrigin = nil
   }
 
   /// Whether a stored canonical row belongs to the active read model. Root

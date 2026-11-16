@@ -104,5 +104,6 @@ public func calendarEventAccessibilityLabel(_ event: CalendarTimelineEvent) -> S
     event.timedSpanLabel ?? event.offsetClockRangeLabel()
       ?? event.startTime.map { lorvexClockRangeLabel(start: $0, end: event.endTime) }
   let location = event.location.flatMap { $0.isEmpty ? nil : $0 }
-  return [event.title, time, location].compactMap { $0 }.joined(separator: ", ")
+  let combined = event.combinedEventCopies.isEmpty ? nil : CalendarDuplicateCopy.combined
+  return [event.title, time, location, combined].compactMap { $0 }.joined(separator: ", ")
 }

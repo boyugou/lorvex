@@ -51,7 +51,8 @@ enum SwiftLorvexCalendarDeserializers {
           startDate: item.timing.startDate.asString, startTime: item.timing.startTime?.asString,
           endDate: item.timing.endDate?.asString, endTime: item.timing.endTime?.asString,
           allDay: item.allDay, timezone: item.timezone)
-        : nil)
+        : nil,
+      origin: item.providerOrigin)
   }
 
   /// Map a stored `calendar_events` row (search / single fetch, no expansion)

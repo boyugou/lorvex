@@ -292,7 +292,9 @@ the password passed through an environment reference rather than command args.
    match once, never PlistBuddy `Set`, which re-sorts the plist and deletes its
    comments, and then runs `script/verify_app_metadata.py`, which names any file
    that disagrees. The marketing version stays unchanged between TestFlight
-   builds. Run the AppMetadata tests and commit.
+   builds. Run the AppMetadata tests, commit, and push the verified source to
+   GitHub. Each authorized feature batch includes this delivery step; do not
+   finish with local-only changes.
 4. `script/release_testflight.sh validate <log-dir>` archives and signs both
    channels and has App Store Connect validate each package, without
    uploading (about 15 minutes). The archives compile the working tree, so
@@ -312,7 +314,14 @@ the password passed through an environment reference rather than command args.
    next to an import status of `PROCESSING` for several minutes; wait for the
    import status. Match status values with their quotes, because `VALID` is
    also a substring of `INVALID_BINARY`.
-6. Delete the superseded packages in `dist/`.
+6. Save the English and Simplified Chinese "What to Test" notes on both new
+   builds, then read them back. Confirm the builds belong to the existing
+   tester groups and their internal build state is `IN_BETA_TESTING`;
+   processing `VALID` alone does not prove tester availability. Retain the
+   source commit, package checksums and the final App Store Connect status
+   alongside the ignored local release logs. Update the standing maintenance
+   record below and push that release record to GitHub.
+7. Delete the superseded packages in `dist/`.
 
 Failures and what they mean:
 

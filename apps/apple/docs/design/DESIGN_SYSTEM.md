@@ -132,12 +132,12 @@ Rules that follow from the table:
   `.secondary` or `.tertiary` inside it compounds: a count beside the title
   would measure about 2.3:1 and a fold chevron about 1.3:1.
 
-- A rating scale's unchosen steps are hollow rings in `.secondary`, and its
-  chosen steps fill with the accent (`LorvexDotScale`), so the empty scale
-  reads as five places to tap rather than five faint marks. A pale fill for
-  the unchosen steps sits near 1.25:1 against the page and looks disabled,
-  and the accent at a reduced alpha reads as half-chosen; a pointer preview
-  turns the hovered rings accent instead of filling them.
+- Review ratings are five equal-sized, named choices (`LorvexRatingScale`).
+  The selected choice has an accent border, a tinted fill, and a checkmark;
+  unchosen choices keep their number and word. They do not fill cumulatively,
+  and choosing the selected value again clears it. Every choice names its
+  meaning before selection. Columns adapt to the labels’ measured width, and
+  the controls stack at large text sizes.
 
 - A button that is a plain row in a `List` or `Form` states its color for the
   whole row, because SwiftUI colors the title from state it never applies to

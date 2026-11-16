@@ -189,7 +189,8 @@ actor LiveEventKitAccess: EventKitAccessing {
         guard calendarFilter.allows(calendarID: ekEvent.calendar?.calendarIdentifier) else {
           continue
         }
-        guard let fetched = Self.fetchedEvent(from: ekEvent) else { continue }
+        guard var fetched = Self.fetchedEvent(from: ekEvent) else { continue }
+        fetched.legacyKey = unambiguousLegacyKey(for: ekEvent)
         // Where the series starts: EventKit resolves a repeating event's item
         // identifier to its first occurrence. Looked up once per series; a
         // first occurrence that was itself moved does not say where the rule
@@ -200,6 +201,8 @@ actor LiveEventKitAccess: EventKitAccessing {
           !first.isDetached, let start = Self.fetchedEvent(from: first),
           start.key == fetched.key
         {
+          var start = start
+          start.legacyKey = fetched.legacyKey
           seriesStarts[fetched.key] = start
         }
         occurrences.append(
@@ -463,9 +466,17 @@ actor LiveEventKitAccess: EventKitAccessing {
   /// without a hint it falls back to a broad multi-year scan (the write-back
   /// path, which has no date in hand).
   private func resolveEvent(key: String, dayHint: String? = nil) -> EKEvent? {
-    if let item = store.calendarItem(withIdentifier: key) as? EKEvent {
+    let qualified = EventKitProviderIdentity.components(key)
+    let lookup = qualified?.base ?? key
+    if let item = store.calendarItem(withIdentifier: lookup) as? EKEvent,
+      qualified == nil || item.calendar?.calendarIdentifier == qualified?.calendarID
+    {
       return item
     }
+    if let qualified,
+      let item = store.calendarItems(withExternalIdentifier: lookup).compactMap({ $0 as? EKEvent })
+        .first(where: { $0.calendar?.calendarIdentifier == qualified.calendarID })
+    { return item }
     let start: Date
     let end: Date
     if let dayHint, let day = LorvexDateFormatters.ymd.date(from: dayHint) {
@@ -477,7 +488,13 @@ actor LiveEventKitAccess: EventKitAccessing {
       end = now.addingTimeInterval(5 * 365 * 24 * 3600)
     }
     let predicate = store.predicateForEvents(withStart: start, end: end, calendars: nil)
-    return store.events(matching: predicate).first { Self.stableKey(for: $0) == key }
+    return store.events(matching: predicate).first {
+      if let qualified {
+        return Self.stableKey(for: $0) == qualified.base
+          && $0.calendar?.calendarIdentifier == qualified.calendarID
+      }
+      return Self.stableKey(for: $0) == key
+    }
   }
 
   func missingEventKeys(
@@ -489,15 +506,26 @@ actor LiveEventKitAccess: EventKitAccessing {
     for key in keys {
       // A key is the event's external identifier when it has one, else its
       // local identifier (`stableKey(for:)`).
-      var items = store.calendarItems(withExternalIdentifier: key)
-      if let local = store.calendarItem(withIdentifier: key) { items.append(local) }
+      let qualified = EventKitProviderIdentity.components(key)
+      let lookup = qualified?.base ?? key
+      var items = store.calendarItems(withExternalIdentifier: lookup)
+      if let local = store.calendarItem(withIdentifier: lookup) { items.append(local) }
       let mirrored = items.contains { item in
         guard let calendarID = item.calendar?.calendarIdentifier else { return false }
+        if let qualified, calendarID != qualified.calendarID { return false }
         return calendarID != lorvexID && calendarFilter.allows(calendarID: calendarID)
       }
       if !mirrored { missing.insert(key) }
     }
     return missing
+  }
+
+  private func unambiguousLegacyKey(for event: EKEvent) -> String? {
+    let base = Self.stableKey(for: event)
+    guard let external = event.calendarItemExternalIdentifier, !external.isEmpty else { return base }
+    let calendars = Set(store.calendarItems(withExternalIdentifier: external)
+      .compactMap { $0.calendar?.calendarIdentifier })
+    return calendars.count == 1 && calendars.first == event.calendar?.calendarIdentifier ? base : nil
   }
 
   func eventSource(forEventKey key: String, dayHint: String?) async -> EventKitEventSource? {

@@ -3,8 +3,8 @@ import LorvexCore
 
 extension AppStore {
   var calendarTimeline: CalendarTimelineSnapshot? {
-    get { calendarStorage.calendarTimeline }
-    set { calendarStorage.calendarTimeline = newValue }
+    get { calendarStorage.calendarTimeline?.groupingDuplicates(calendarDuplicateGrouping) }
+    set { calendarStorage.calendarTimeline = newValue?.groupingDuplicates(.off) }
   }
 
   /// A count that changes each time the calendar timeline starts a load, which
@@ -26,7 +26,12 @@ extension AppStore {
   /// in step with edits and refreshes.
   var selectedCalendarEvent: CalendarTimelineEvent? {
     guard let id = calendarStorage.selectedCalendarEventID else { return nil }
-    return calendarTimeline?.events.first { $0.id == id }
+    guard let group = calendarTimeline?.events.first(where: { $0.containsDisplayCopy(id: id) })
+    else { return nil }
+    let copies = group.displayCopies
+    guard var selected = copies.first(where: { $0.id == id }) else { return group }
+    selected.combinedEventCopies = copies.filter { $0.id != id }
+    return selected
   }
 
   /// Open the inspector for `event` (any event — imported events show read-only).
@@ -71,7 +76,7 @@ extension AppStore {
   /// Toggle the inspector for `event`: re-tapping the open event collapses it,
   /// matching the inspector's ✕. Backs the event-block tap.
   func toggleCalendarEventSelection(_ event: CalendarTimelineEvent) {
-    if calendarStorage.selectedCalendarEventID == event.id {
+    if event.containsDisplayCopy(id: calendarStorage.selectedCalendarEventID) {
       clearSelectedCalendarEvent()
     } else {
       selectCalendarEvent(event)
@@ -95,7 +100,7 @@ extension AppStore {
   /// open, as re-clicking an open task row does. The inspector shows one
   /// subject, so an open task closes first.
   func toggleTodayEventSelection(_ event: CalendarTimelineEvent) {
-    if calendarStorage.selectedCalendarEventID == event.id {
+    if event.containsDisplayCopy(id: calendarStorage.selectedCalendarEventID) {
       clearSelectedCalendarEvent()
       return
     }

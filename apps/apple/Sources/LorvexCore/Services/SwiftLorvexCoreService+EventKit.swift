@@ -67,8 +67,8 @@ extension EventKitProviderServicing {
 /// them directly off the main actor.
 extension SwiftLorvexCoreService: EventKitProviderServicing {
   /// The single device-wide EventKit provider scope. EventKit has no per-source
-  /// scope axis in this design (no human classification UI), so all mirrored
-  /// system-calendar events share one scope.
+  /// scope axis, so all mirrored system-calendar events share one scope.
+  /// Fine-grained origin identity belongs to each full-detail observation.
   public static let eventKitScope = "device"
 
   /// Upsert a batch of ingest-mapped EventKit rows for the `[windowStart,
@@ -176,6 +176,7 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
       for event in events {
         _ = try ProviderRepo.upsertProviderEvent(db, event: event, now: now)
       }
+      try ProviderRepo.reassociateLegacyEventKitLinks(db, events: events, now: now)
       try ProviderRepo.updateProviderScopeState(
         db, providerKind: ProviderKind.eventkit, providerScope: scope,
         transition: .refreshSuccess(now: now))

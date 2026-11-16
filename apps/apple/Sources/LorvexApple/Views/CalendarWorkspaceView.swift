@@ -58,7 +58,8 @@ struct CalendarWorkspaceView: View {
           edit: { eventActions.beginEditing(event, store: store) },
           requestDelete: { eventActions.requestDelete(event) },
           close: { store.clearSelectedCalendarEvent() },
-          resolveSource: { await store.calendarEventSource(for: $0) }
+          resolveSource: { await store.calendarEventSource(for: $0) },
+          selectCopy: { store.selectCalendarEvent($0) }
         )
         .transition(.move(edge: .trailing).combined(with: .opacity))
       }

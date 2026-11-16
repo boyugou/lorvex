@@ -15,6 +15,9 @@ final class AppStore {
   var dailyReviewStorage = AppStoreDailyReviewStorage()
   var listsStorage = AppStoreListsStorage()
   var calendarStorage = AppStoreCalendarStorage()
+  var calendarDuplicateGrouping: CalendarDuplicateGrouping {
+    didSet { defaults.set(calendarDuplicateGrouping.rawValue, forKey: CalendarDuplicateGrouping.preferenceKey) }
+  }
   var calendarDraftStorage = AppStoreCalendarDraftStorage()
   var taskDetailStorage = AppStoreTaskDetailStorage()
   var taskWorkspaceStorage = AppStoreTaskWorkspaceStorage()
@@ -513,6 +516,7 @@ final class AppStore {
     self.setBadge = setBadge
     self.now = now
     self.defaults = defaults
+    self.calendarDuplicateGrouping = CalendarDuplicateGrouping.remembered(in: defaults)
     self.isTodayDoneCollapsed = defaults.bool(forKey: Key.todayDoneCollapsed)
   }
 }

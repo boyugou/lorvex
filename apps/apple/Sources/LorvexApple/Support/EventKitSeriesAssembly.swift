@@ -172,6 +172,8 @@ enum EventKitSeriesAssembly {
       recurrence: recurrence, recurrenceExceptions: recurrenceExceptions,
       color: event.color, organizerEmail: event.organizerEmail,
       url: event.url, attendees: event.attendees,
-      occurrenceInstants: recurrence != nil ? occurrenceInstants : event.occurrenceInstants)
+      occurrenceInstants: recurrence != nil ? occurrenceInstants : event.occurrenceInstants,
+      origin: event.origin,
+      legacyKey: event.legacyKey.map { $0 + String(key.dropFirst(event.key.count)) })
   }
 }

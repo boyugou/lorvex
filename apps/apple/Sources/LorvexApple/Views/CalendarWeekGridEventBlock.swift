@@ -41,7 +41,7 @@ extension CalendarWeekGridView {
     // The block whose inspector is open reads as selected: a stronger fill, a
     // full-color ring, and a soft lift. This gives the open inspector a visual
     // anchor and makes the tap-again-to-close toggle discoverable.
-    let isSelected = store.selectedCalendarEventID == block.event.id
+    let isSelected = block.event.containsDisplayCopy(id: store.selectedCalendarEventID)
     let preview = CalendarBlockMovePreview(draft: active)
     // A resize in progress cannot shrink the block below a quarter hour.
     let renderedHeight =
@@ -74,7 +74,9 @@ extension CalendarWeekGridView {
             lorvexClockRangeLabel(startMinutes: $0.lowerBound, endMinutes: $0.upperBound)
           } ?? block.rangeLabel,
           verticalPadding: CalendarEventBlockMetrics.verticalPadding
-        )
+        ) {
+          if !block.event.combinedEventCopies.isEmpty { CalendarCombinedEventMark() }
+        }
       }
     }
     .padding(.leading, CalendarEventBlockMetrics.horizontalPadding)

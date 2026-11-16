@@ -106,6 +106,9 @@ public struct ProviderEventData: Sendable {
   public let attendeesJson: String?
   public let videoCallUrl: String?
   public var occurrenceInstants: String?
+  public let originJSON: String?
+  /// Verified, unambiguous legacy address to repair after a successful ingest.
+  public let previousEventKey: String?
 
   public init(
     providerKind: String, providerScope: String, providerEventKey: String,
@@ -116,7 +119,7 @@ public struct ProviderEventData: Sendable {
     sourceTimeKind: String = "floating", sourceTzid: String? = nil,
     recurrence: String? = nil, recurrenceExceptions: String? = nil,
     color: String? = nil, attendeesJson: String? = nil, videoCallUrl: String? = nil,
-    occurrenceInstants: String? = nil
+    occurrenceInstants: String? = nil, originJSON: String? = nil, previousEventKey: String? = nil
   ) {
     self.providerKind = providerKind
     self.providerScope = providerScope
@@ -138,6 +141,8 @@ public struct ProviderEventData: Sendable {
     self.attendeesJson = attendeesJson
     self.videoCallUrl = videoCallUrl
     self.occurrenceInstants = occurrenceInstants
+    self.originJSON = originJSON
+    self.previousEventKey = previousEventKey
   }
 }
 
@@ -434,8 +439,8 @@ public enum ProviderRepo {
              end_date, end_time, all_day, location, organizer_email, \
              source_time_kind, source_tzid, recurrence, recurrence_exceptions, \
              color, attendees_json, video_call_url, \
-             last_seen_at, occurrence_instants) \
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \
+             last_seen_at, occurrence_instants, origin_json) \
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) \
         ON CONFLICT(provider_kind, provider_scope, provider_event_key) DO NOTHING
         """,
       arguments: [
@@ -444,7 +449,7 @@ public enum ProviderRepo {
         event.endDate, event.endTime, allDayInt, event.location, event.organizerEmail,
         event.sourceTimeKind, event.sourceTzid, event.recurrence, event.recurrenceExceptions,
         event.color, event.attendeesJson, event.videoCallUrl,
-        now, event.occurrenceInstants,
+        now, event.occurrenceInstants, event.originJSON,
       ])
     if db.changesCount == 1 {
       return .inserted
@@ -464,7 +469,7 @@ public enum ProviderRepo {
            recurrence = ?15, recurrence_exceptions = ?16, \
            color = ?17, attendees_json = ?18, \
            video_call_url = ?19, \
-           last_seen_at = ?20, occurrence_instants = ?21 \
+           last_seen_at = ?20, occurrence_instants = ?21, origin_json = ?22 \
         WHERE provider_kind = ?1 AND provider_scope = ?2 AND provider_event_key = ?3 \
           AND ?20 >= last_seen_at \
           AND NOT ( \
@@ -476,7 +481,7 @@ public enum ProviderRepo {
             AND source_time_kind IS ?13 AND source_tzid IS ?14 \
             AND recurrence IS ?15 AND recurrence_exceptions IS ?16 \
             AND color IS ?17 AND attendees_json IS ?18 \
-            AND video_call_url IS ?19 AND occurrence_instants IS ?21 \
+            AND video_call_url IS ?19 AND occurrence_instants IS ?21 AND origin_json IS ?22 \
           )
         """,
       arguments: [
@@ -485,6 +490,7 @@ public enum ProviderRepo {
         event.endDate, event.endTime, allDayInt, event.location, event.organizerEmail,
         event.sourceTimeKind, event.sourceTzid, event.recurrence, event.recurrenceExceptions,
         event.color, event.attendeesJson, event.videoCallUrl, now, event.occurrenceInstants,
+        event.originJSON,
       ])
     if db.changesCount == 1 {
       return .updated

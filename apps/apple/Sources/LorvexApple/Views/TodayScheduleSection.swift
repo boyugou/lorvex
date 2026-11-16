@@ -79,7 +79,7 @@ struct TodayScheduleSection: View {
         event: event,
         timeLabel: Self.eventTimeLabel(row),
         isPast: row.isPast,
-        isSelected: store.selectedCalendarEventID == event.id,
+        isSelected: event.containsDisplayCopy(id: store.selectedCalendarEventID),
         open: { store.toggleTodayEventSelection(event) }
       )
       // The arrow keys scroll to a row by the id of the task or event it shows.
@@ -193,6 +193,7 @@ struct TodayEventRow: View {
           .foregroundStyle(isPast ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .lineLimit(2)
         HStack(spacing: LorvexDesign.Spacing.sm) {
+          if !event.combinedEventCopies.isEmpty { CalendarCombinedEventMark() }
           HStack(spacing: LorvexDesign.Spacing.xxs) {
             Image(systemName: "clock").accessibilityHidden(true)
             Text(timeLabel).monospacedDigit()

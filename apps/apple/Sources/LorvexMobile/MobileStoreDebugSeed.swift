@@ -633,7 +633,8 @@
           let zoneExample = variant == "optional-end-edit" || variant == "with-end-edit"
             ? MobileCalendarDebugState.optionalEndExample(hasEndTime: variant == "with-end-edit") : clockExample
           if let zoneExample, zoneExample.editable { prepareCalendarDraft(for: zoneExample) }
-          MobileCalendarDebugState.pendingDetailEvent = zoneExample ?? Self.debugMirroredEvent(now: now())
+          let combined = variant == "combined" ? MobileCalendarDebugState.combinedEventExample() : nil
+          MobileCalendarDebugState.pendingDetailEvent = combined ?? zoneExample ?? Self.debugMirroredEvent(now: now())
           selectedTab = .today
         case "newlist", "editlist":
           MobileSheetDebugState.pending = name == "newlist" ? .newList : .editList

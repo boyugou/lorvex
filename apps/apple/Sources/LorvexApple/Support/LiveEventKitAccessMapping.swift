@@ -25,7 +25,7 @@ extension LiveEventKitAccess {
     guard let start = event.startDate else { return nil }
     let eventTimeZone = event.timeZone ?? .current
     return EventKitFetchedEvent(
-      key: stableKey(for: event),
+      key: importedKey(for: event),
       title: event.title?.isEmpty == false ? event.title : nil,
       notes: event.notes,
       startDate: AllDayEventSpan.dayKey(for: start, timeZone: eventTimeZone),
@@ -48,7 +48,23 @@ extension LiveEventKitAccess {
           ProviderOccurrenceInstant(
             date: AllDayEventSpan.dayKey(for: start, timeZone: eventTimeZone),
             start: start, end: event.endDate)
-        ] : nil)
+        ] : nil,
+      origin: event.calendar.flatMap { calendar in
+        guard !calendar.calendarIdentifier.isEmpty,
+          let signature = EventKitComparison.signature(for: event)
+        else { return nil }
+        return ProviderCalendarOrigin(
+          calendarID: calendar.calendarIdentifier,
+          calendarTitle: calendar.title.isEmpty
+            ? String(localized: "calendar.picker.untitled", defaultValue: "Untitled Calendar", table: "Localizable", bundle: LorvexL10n.bundle) : calendar.title,
+          accountTitle: calendar.source?.title, contentSignature: signature)
+      })
+  }
+
+  static func importedKey(for event: EKEvent) -> String {
+    let base = stableKey(for: event)
+    guard let id = event.calendar?.calendarIdentifier, !id.isEmpty else { return base }
+    return EventKitProviderIdentity.key(base: base, calendarID: id)
   }
 
   /// EventKit reports an all-day end as the last occupied day at 23:59:59,

@@ -38,13 +38,12 @@ struct DailyReviewForm: View {
         if isReadOnly {
           DailyReviewReadOnlyView(review: store.dailyReview)
         } else {
-          HStack(alignment: .top, spacing: LorvexDesign.Spacing.xl) {
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
             scale(
-              Copy.feelLabel, value: $store.dailyReviewMood, low: Copy.feelLow, high: Copy.feelHigh,
+              Copy.feelLabel, value: $store.dailyReviewMood,
               dotLabel: Copy.feelDot, word: Copy.feelWord, identifier: "review.mood")
             scale(
-              Copy.energyLabel, value: $store.dailyReviewEnergy, low: Copy.energyLow,
-              high: Copy.energyHigh, dotLabel: Copy.energyDot, word: Copy.energyWord,
+              Copy.energyLabel, value: $store.dailyReviewEnergy, dotLabel: Copy.energyDot, word: Copy.energyWord,
               identifier: "review.energy")
           }
           tomorrowSection
@@ -226,13 +225,13 @@ struct DailyReviewForm: View {
   }
 
   private func scale(
-    _ label: String, value: Binding<Int?>, low: String, high: String,
+    _ label: String, value: Binding<Int?>,
     dotLabel: @escaping (Int) -> String, word: @escaping (Int) -> String, identifier: String
   ) -> some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       LorvexPageLabel(label)
-      LorvexDotScale(
-        value: value, lowLabel: low, highLabel: high, dotLabel: dotLabel, levelWord: word,
+      LorvexRatingScale(
+        value: value, levelLabel: word, accessibilityLabel: dotLabel,
         identifierPrefix: identifier)
     }
     .frame(maxWidth: .infinity)

@@ -162,6 +162,7 @@ extension AppStore {
     }
     await cloudSyncController?.forgetCachedRecordState()
     settings.resetToDefaults()
+    calendarDuplicateGrouping = .strict
     let replacementCore =
       Self.factoryResetDependencies?.makeReplacementCore() ?? AppCoreFactory.make()
     await replaceCore(replacementCore, refreshAfterReplacement: false)

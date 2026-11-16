@@ -3,6 +3,21 @@ import Foundation
 import LorvexCore
 
 extension MobileCalendarDebugState {
+  static func combinedEventExample() -> CalendarTimelineEvent? {
+    let first = CalendarTimelineEvent(
+      id: "debug-work-copy", title: "Project planning", source: "provider", editable: false,
+      startDate: "2026-11-16", startTime: "10:00", endDate: "2026-11-16", endTime: "11:00",
+      allDay: false, location: "Room B", notes: "Review the plan for the coming week.",
+      color: "#5B8DEF", eventType: "event", timezone: nil, isRecurring: false,
+      origin: CalendarEventOrigin(calendarID: "a", calendarTitle: "Work", accountTitle: "Work Account"))
+    var second = first
+    second.id = "debug-personal-copy"
+    second.eventID = second.id
+    second.color = "#34A853"
+    second.origin = CalendarEventOrigin(calendarID: "b", calendarTitle: "Personal", accountTitle: "iCloud")
+    return CalendarDuplicateGrouping.strict.events([first, second]).first
+  }
+
   static func optionalEndExample(hasEndTime: Bool = false) -> CalendarTimelineEvent? {
     guard let start = ISO8601DateFormatter().date(from: "2026-11-23T15:00:00Z") else { return nil }
     return CalendarTimelineEvent(

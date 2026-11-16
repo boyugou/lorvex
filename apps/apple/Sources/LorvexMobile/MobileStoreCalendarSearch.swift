@@ -21,7 +21,7 @@ extension MobileStore {
       let events = try await core.searchCalendarEvents(
         query: trimmed, from: nil, to: nil, limit: Self.calendarSearchLimit)
       return MobileCalendarAgendaDay.searchResults(
-        events, todayKey: logicalTodayString, calendar: calendar)
+        calendarDuplicateGrouping.events(events), todayKey: logicalTodayString, calendar: calendar)
     } catch {
       await presentUserFacingError(error)
       return []

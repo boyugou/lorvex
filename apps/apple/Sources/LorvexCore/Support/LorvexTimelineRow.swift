@@ -36,6 +36,7 @@ public struct LorvexTimelineRow<Marker: View>: View {
   /// title is quiet; the row is never dimmed as a whole, since its time and
   /// duration would fall under 2:1.
   public var isPast: Bool
+  public var isCombinedEvent: Bool
   @ViewBuilder public var marker: () -> Marker
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   /// ``LorvexDesign/TextColumn/clockTime`` scaled with the text, as in the now
@@ -47,7 +48,7 @@ public struct LorvexTimelineRow<Marker: View>: View {
 
   public init(
     time: String, title: String, duration: String?, isCurrent: Bool, isQuiet: Bool,
-    isPast: Bool = false,
+    isPast: Bool = false, isCombinedEvent: Bool = false,
     @ViewBuilder marker: @escaping () -> Marker
   ) {
     self.time = time
@@ -56,6 +57,7 @@ public struct LorvexTimelineRow<Marker: View>: View {
     self.isCurrent = isCurrent
     self.isQuiet = isQuiet
     self.isPast = isPast
+    self.isCombinedEvent = isCombinedEvent
     self.marker = marker
   }
 
@@ -149,9 +151,12 @@ public struct LorvexTimelineRow<Marker: View>: View {
   }
 
   private var titleText: some View {
-    Text(userContent: title)
-      .font(isCurrent ? LorvexDesign.Typography.primaryEmphasis : LorvexDesign.Typography.primaryText)
-      .foregroundStyle(isQuiet || isPast ? Color.secondary : Color.primary)
+    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.xs) {
+      Text(userContent: title)
+        .font(isCurrent ? LorvexDesign.Typography.primaryEmphasis : LorvexDesign.Typography.primaryText)
+        .foregroundStyle(isQuiet || isPast ? Color.secondary : Color.primary)
+      if isCombinedEvent { CalendarCombinedEventMark() }
+    }
   }
 
   private func durationText(_ duration: String) -> some View {

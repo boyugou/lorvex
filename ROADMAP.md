@@ -12,6 +12,45 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 ## Next up
 
 ### Apple (Swift)
+- Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
+  fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
+  releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),
+  [Duo design guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo),
+  and [macOS SDK release notes](https://developer.apple.com/documentation/macos-release-notes).
+  Validate outer and inner displays, folding, rotation, Split View, side-mounted
+  navigation and toolbars, and reserved regions. Keep the current navigation,
+  selection, scroll position, and unsaved draft through layout changes. Cover
+  Today, calendar grids, task details, Review, capture, and settings, with large
+  text and light/dark appearances. Then evaluate system integration changes
+  against specific user benefits and the supported deployment and SDK/compiler
+  floors; existing integrations need a compatibility pass before adopting new APIs. Record
+  device/simulator evidence and prioritize improvements that simplify an
+  everyday action.
+- Calendar duplicate display (2026-11-16, build 145 implementation): conservative,
+  configurable display grouping, preserving every source event. Levels: off,
+  strict (default), and matching title plus exact start/end times (explicit
+  opt-in; may ignore location and other detail differences). Strict also
+  compares location, notes, link, organizer, attendees and response states,
+  and recurrence context, without treating calendar color as event content.
+  Require distinct, known origin calendars and full event details; redacted
+  busy blocks or unknown provenance do not prove equality. Compare timed
+  occurrences by exact instants, keep floating clocks distinct from fixed
+  instants, and compare all-day events by civil date spans. Never fuzzy-match
+  names or merge overlapping time ranges. Keep each copy accessible, make
+  edit targets explicit, and preserve all storage and synchronization records.
+  The provider cache now retains full-detail origin metadata; imported keys
+  distinguish copies sharing one server UID across calendars. Migration 006
+  rebuilds only the disposable device mirror, keeping owned events and task
+  links. Verified unique legacy links are reassociated; ambiguous ones are not
+  assigned to an arbitrary copy. The source picker opens each copy's details.
+- Daily Review ratings (2026-11-16, build 145 implementation):
+  replace growing circles with five equal, named choices and a single selected
+  checkmark. Keep unanswered distinct from neutral and let tapping the selected
+  choice clear it. Adapt columns to translated labels and use vertical choices
+  for large text. Verified native iPhone light/dark and large-text layouts,
+  narrow German and Arabic layouts, the app tests, and the iOS/Watch build.
+  Also run the scene's database-resume callback on its initial active value,
+  instead of requiring a later foreground transition.
 - CloudKit live sync on devices: the container `iCloud.com.lorvex.apple` is
   provisioned and its schema is deployed to Production. The `.live` mode runs
   `CloudSyncController`, an actor wrapping `CKSyncEngine` over one `Lorvex`

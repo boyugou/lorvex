@@ -136,10 +136,11 @@ struct LorvexMobileApp: App {
     }
     .lorvexMobileCommands(store: store)
     .lorvexReminderBackgroundRefresh(store: store)
-    .onChange(of: scenePhase) { _, phase in
+    .onChange(of: scenePhase, initial: true) { previousPhase, phase in
       if phase == .active {
         // Everything below reaches the database, which refuses locks while the
-        // app is suspended. Take it back before the first read.
+        // app is suspended. The scene can already be active when this observer
+        // attaches, so its initial value must take the database back too.
         DatabaseSuspension.resume()
         Task {
           await store.refresh()
@@ -152,7 +153,7 @@ struct LorvexMobileApp: App {
         }
       }
       #if os(iOS)
-        if phase == .background {
+        if phase == .background, previousPhase != .background {
           // Ask iOS for a periodic background wake to re-arm the rolling reminder
           // window while the app is suspended (see ``ReminderBackgroundRefresh``).
           ReminderBackgroundRefresh.schedule()

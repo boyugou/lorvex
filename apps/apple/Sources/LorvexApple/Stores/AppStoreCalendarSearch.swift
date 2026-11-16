@@ -17,7 +17,8 @@ extension AppStore {
     do {
       let events = try await core.searchCalendarEvents(
         query: trimmed, from: nil, to: nil, limit: Self.calendarSearchLimit)
-      return CalendarSearchDay.days(for: events, todayKey: logicalTodayDateString)
+      return CalendarSearchDay.days(
+        for: calendarDuplicateGrouping.events(events), todayKey: logicalTodayDateString)
     } catch {
       await presentUserFacingError(error)
       return []

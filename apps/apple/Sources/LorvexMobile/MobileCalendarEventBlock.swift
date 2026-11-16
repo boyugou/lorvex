@@ -33,7 +33,7 @@ extension MobileCalendarDayColumn {
     let trailingPadding: CGFloat = isCompact ? 1 : 5
     return blockContent(
       isCompact: isCompact, isTight: isTight, title: block.event.title, time: block.timeLabel,
-      range: block.rangeLabel
+      range: block.rangeLabel, combined: !block.event.combinedEventCopies.isEmpty
     )
     .padding(.leading, leadingPadding).padding(.trailing, trailingPadding)
     .frame(width: max(laneWidth - 2, 10), height: height, alignment: .topLeading)
@@ -106,13 +106,15 @@ extension MobileCalendarDayColumn {
   /// (``LorvexCalendarBlockText``).
   @ViewBuilder
   private func blockContent(
-    isCompact: Bool, isTight: Bool, title: String, time: String?, range: String?
+    isCompact: Bool, isTight: Bool, title: String, time: String?, range: String?, combined: Bool
   ) -> some View {
     if isCompact {
       LorvexCalendarCompactBlockTitle(title)
         .padding(.vertical, isTight ? 0 : 3)
     } else {
-      LorvexCalendarBlockText(title: title, time: time, range: range, verticalPadding: 3)
+      LorvexCalendarBlockText(title: title, time: time, range: range, verticalPadding: 3) {
+        if combined { CalendarCombinedEventMark() }
+      }
     }
   }
 

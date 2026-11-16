@@ -39,6 +39,12 @@ struct SettingsCalendarControlPanel: View {
     }
 
     Section {
+      CalendarDuplicateGroupingPicker(selection: $store.calendarDuplicateGrouping)
+    } footer: {
+      Text(store.calendarDuplicateGrouping.detail)
+    }
+
+    Section {
       EventKitCalendarFilterPicker(settings: settings, store: store)
         .disabled(!settings.eventKitEnabled || calendarAccessMode == .off)
         .accessibilityIdentifier("settings.calendar.filterPanel")

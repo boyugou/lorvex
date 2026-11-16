@@ -151,6 +151,21 @@ Saving an event keeps the calendar on the day, week, or month you are viewing,
 including when you browse to another page while the save finishes. The event
 appears on its date and time in the calendar's display zone.
 
+### Duplicate Calendar Events
+
+Settings → Calendar → Combine Duplicate Events controls how imported copies
+appear in Today, Calendar, Review and calendar search. **Matching Details** is
+the default: the title, exact times, location, notes, participants, organizer,
+links and recurrence context must match across different source calendars.
+**Same Title and Time** also combines copies whose other details differ;
+**Off** shows each copy separately. Busy-only events and events with an unknown
+source are always kept separate.
+
+A combined event has a small overlapping-squares mark. Open its details and
+choose the source calendar to inspect or share that particular copy. The setting
+only changes display: it does not delete events, change reminders, combine task
+links, or write changes to any source calendar.
+
 ## Quick Capture
 
 Quick Capture is the fastest way to get a task into Lorvex without interrupting

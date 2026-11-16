@@ -114,13 +114,13 @@ day, works through Today's list, and drives keyboard-first workflows.
 - Review writes the day as a calm page, read top to bottom as the day's close:
   the sentence, what moved forward, the due tasks still open (complete, open,
   or move to tomorrow, one at a time or all at once), the habits as they stood
-  that day (checked in on that day), dot-scale ratings that name the chosen
+  that day (checked in on that day), equal-sized rating choices that name every
   level, tomorrow's events and tasks while the review is of today, one note,
   and optional wins/blockers/learnings; and the week as a calm page: the week's
   sentence, what moved forward, the days written about (each opens its day),
   one decision about the task pushed off most (park it in Someday), the other
   pushed tasks, and a Someday line. Past days outside the write window read
-  back on the same dot scales. ✅
+  back on the same rating controls. ✅
 
 ## iPhone — capture, glance, today
 

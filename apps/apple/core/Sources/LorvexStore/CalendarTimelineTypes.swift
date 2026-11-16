@@ -72,6 +72,7 @@ public struct CalendarTimelineItem: Sendable, Equatable {
   /// Non-nil only for a visible stored replacement. Natural expanded
   /// occurrences have no decision state; cancelled and inherit rows are hidden.
   public var occurrenceState: CalendarOccurrenceState?
+  public var providerOrigin: ProviderCalendarOrigin? = nil
 
   public var startDate: LorvexDate { projection?.startDate ?? timing.startDate }
   public var startTime: TimeOfDay? { projection?.startTime ?? timing.startTime }

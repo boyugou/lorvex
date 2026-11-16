@@ -10,11 +10,24 @@ import SwiftUI
 struct MobileCalendarEventDetailSheet: View {
   let event: CalendarTimelineEvent
   @Binding var isPresented: Bool
+  @State private var selectedCopyID = ""
+
+  private var copies: [CalendarTimelineEvent] { event.displayCopies }
+  private var selectedEvent: CalendarTimelineEvent {
+    copies.first { $0.id == selectedCopyID } ?? event.displayCopies[0]
+  }
 
   var body: some View {
     NavigationStack {
       ScrollView {
-        MobileCalendarEventDetailContent(event: event)
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+          if copies.count > 1 {
+            CalendarEventCopyPicker(copies: copies, selectedID: Binding(
+              get: { selectedEvent.id }, set: { selectedCopyID = $0 }))
+              .lorvexCard()
+          }
+          MobileCalendarEventDetailContent(event: selectedEvent)
+        }
           .padding(.horizontal, LorvexDesign.Spacing.l)
           .padding(.vertical, LorvexDesign.Spacing.m)
       }
@@ -26,7 +39,7 @@ struct MobileCalendarEventDetailSheet: View {
       )
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          ShareLink(item: MobileShareText.event(event)) {
+          ShareLink(item: MobileShareText.event(selectedEvent)) {
             Label(
               String(
                 localized: "common.share", defaultValue: "Share", table: "Localizable",
@@ -94,7 +107,7 @@ struct MobileCalendarEventDetailContent: View {
         }
         row(icon: "lock", label: MobileCalendarEventCopy.calendar) {
           VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-            valueText(MobileCalendarEventCopy.systemCalendar)
+            valueText(event.origin == nil ? MobileCalendarEventCopy.systemCalendar : event.originDisplayName)
             if let calendarURL = event.appleCalendarURL {
               Link(destination: calendarURL) {
                 Label(MobileCalendarEventCopy.openInCalendar, systemImage: "arrow.up.forward.app")

@@ -1,4 +1,7 @@
 import Foundation
+import LorvexStore
+
+public typealias CalendarEventOrigin = ProviderCalendarOrigin
 
 /// A calendar timeline window as Gregorian day keys, both ends inclusive.
 /// Retain the requested keys while a load is in flight so a mutation reloads
@@ -73,7 +76,7 @@ public struct TaskCalendarEventLink: Equatable, Sendable {
 /// (from `provider_calendar_events.attendees_json`); Lorvex-native attendees are
 /// a lightweight `{name?, email?}` annotation with no RSVP state, so they leave
 /// `status` nil and never accept it on input.
-public struct CalendarEventAttendee: Codable, Equatable, Sendable {
+public struct CalendarEventAttendee: Codable, Hashable, Sendable {
   public var email: String
   public var name: String?
   public var status: String?
@@ -167,6 +170,9 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
   /// for EventKit-sourced events. Nil when `isRecurring` is false or the rule
   /// cannot be summarized.
   public var recurrenceSummary: String?
+  public var origin: CalendarEventOrigin?
+  /// Other source copies in a display-only group; storage retains every event.
+  public var combinedEventCopies: [CalendarTimelineEvent] = []
 
   public init(
     id: String,
@@ -196,7 +202,8 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
     recurrenceRule: String? = nil,
     recurrenceSummary: String? = nil,
     projection: CalendarEventProjection? = nil,
-    sourceTiming: CalendarEventSourceTiming? = nil
+    sourceTiming: CalendarEventSourceTiming? = nil,
+    origin: CalendarEventOrigin? = nil
   ) {
     self.id = id
     self.eventID = eventID ?? seriesID ?? id
@@ -227,6 +234,7 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
     self.isRecurring = isRecurring
     self.recurrenceRule = recurrenceRule
     self.recurrenceSummary = recurrenceSummary
+    self.origin = origin
   }
 
   /// True when `other` is this same event: the same ``id``, or, for a

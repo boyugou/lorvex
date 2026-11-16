@@ -94,6 +94,12 @@ struct MobileStoreSettingsCalendarSection: View {
       }
     }
 
+    Section {
+      CalendarDuplicateGroupingPicker(selection: $store.calendarDuplicateGrouping)
+    } footer: {
+      Text(store.calendarDuplicateGrouping.detail)
+    }
+
     // The mirror filter is its own group so the access footer above stays next
     // to the picker it explains instead of trailing the calendar list.
     Section {

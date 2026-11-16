@@ -23,6 +23,10 @@
       "005": {
         "name": "005_provider_occurrence_instants.sql",
         "sha256": "d6f9c5f7b6cc24baac067f65cb9446700a5e77f1ba2542ef20241f7d9c5e876a"
+      },
+      "006": {
+        "name": "006_provider_calendar_origin.sql",
+        "sha256": "323c7613fd0a075e2a8d7757d5fe9b2a32fec9f2a3dfbdb513e22df8e339c7bc"
       }
     },
     "sync_payload_contracts": {

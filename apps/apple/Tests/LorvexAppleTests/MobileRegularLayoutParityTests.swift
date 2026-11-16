@@ -161,13 +161,6 @@ struct MobileRegularLayoutParityTests {
     #expect(ring.contains(".stroke(.tertiary, lineWidth: lineWidth)"))
     #expect(!ring.contains("tint.opacity("))
 
-    // A rating dot that is not chosen is a hollow ring in the secondary style:
-    // never the accent at a reduced alpha, which reads as half-chosen, and
-    // never a pale fill, which reads as disabled.
-    let rating = try coreSource("Support/LorvexReviewCalm.swift")
-    #expect(rating.contains("Circle().strokeBorder(.secondary, lineWidth: 1.5)"))
-    #expect(!rating.contains("accent.opacity("))
-    #expect(!rating.contains("insetFill"))
   }
 
   @Test("The compact milestone line drops parts instead of truncating")

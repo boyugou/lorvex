@@ -193,8 +193,13 @@ device.
       Treat every screen as not-yet-good-enough until you've tried to break it.
 13. **No email addresses.** All contact routes through the lorvex.app
     support/privacy pages. Never introduce email contact references anywhere.
-14. **Commits are caller-controlled.** Do not commit or push unless the
-    controlling session explicitly asks for it.
+14. **Complete the authorized delivery cycle.** The owner's standing request
+    (2026-11-16) includes committing and pushing each completed feature batch to
+    GitHub, releasing the new iOS and macOS TestFlight builds, and confirming
+    processing and tester availability. Local code and passing tests alone do
+    not finish a batch. Follow `docs/release.md`; retain the signed source
+    commit, validation evidence and test notes. A narrower instruction from the
+    controlling session takes precedence.
 15. **The main app is the sole CloudSync owner on each device.** Only the
     macOS or iOS/iPadOS main app may construct or run
     `CloudSyncController`. MCP, widgets, App Intents, watchOS,

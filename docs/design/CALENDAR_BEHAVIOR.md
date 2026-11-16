@@ -229,6 +229,31 @@ This applies to every calendar surface:
 - Refresh/reconciliation is owned by the provider adapter. A later
   provider refresh may update, hide, or remove the mirror row.
 
+## Duplicate Display Groups
+
+The main macOS and iOS app surfaces share `CalendarDuplicateGrouping`: off,
+strict (default), and title plus exact start/end times. Grouping is a display
+projection over the raw timeline and calendar search; MCP reads, provider rows,
+links, notifications and sync records retain every source event. A selected
+copy determines the details and sharing target. Imported events stay read-only.
+
+Only fully readable provider events with known, distinct origin calendars can
+combine. Strict also compares location, notes, URL, organizer, attendees and
+response states, source timezone and recurrence context, including source rules
+and alarms that an expanded occurrence cannot reconstruct. Calendar color and
+participant ordering do not distinguish event content. A candidate set with
+two matching events in the same calendar stays separate in its entirety.
+Titles are exact, never fuzzy; overlapping ranges do not qualify. Timed zoned
+events compare exact instants (including the repeated hour), floating clocks
+stay distinct, and all-day events compare inclusive civil spans.
+
+EventKit imported identities qualify the server UID by source calendar. A
+single UID can name several copies, so it cannot alone identify a source.
+Migration 006 adds full-detail origin metadata and rebuilds only the disposable
+EventKit mirror. It preserves owned events, task links and sync data. Verified
+unambiguous legacy links are reassociated at ingest; ambiguous UIDs remain
+unresolved rather than silently selecting a different calendar.
+
 ## Drag And Edit Affordances
 
 Task pills support drag-reschedule through the task workflow contract.

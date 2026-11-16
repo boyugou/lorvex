@@ -106,6 +106,7 @@ extension MobileStore {
     // record versions too, so turning sync back on fetches the zone afresh.
     await cloudSyncController?.forgetCachedRecordState()
     MobileSetupPreferences(defaults: defaults).resetToDefaults()
+    calendarDuplicateGrouping = .strict
     clearSelectionsForLocalDataReset()
     _ = await refresh()
     return nil

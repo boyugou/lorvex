@@ -77,6 +77,7 @@
 #         lorvex://firsttask/edit hooks); event-detail opens Today on the
 #         read-only detail of a staged event mirrored from a device calendar
 #         (lorvex://sheet/eventdetail). event-detail-zone and event-edit-zone
+#         event-detail-combined shows the source picker for a combined event.
 #         show a New York Monday series projected onto Tuesday in Tokyo, in
 #         its read-only detail and edit form (visual fixtures only).
 #         event-detail-custom and event-edit-custom show an advanced month-end
@@ -174,6 +175,7 @@ url_for() {
     task-edit) echo "lorvex://firsttask/edit" ;;
     event-detail) echo "lorvex://sheet/eventdetail" ;;
     event-detail-zone) echo "lorvex://sheet/eventdetail/timezone" ;;
+    event-detail-combined) echo "lorvex://sheet/eventdetail/combined" ;;
     event-edit-zone) echo "lorvex://sheet/eventdetail/timezone-edit" ;;
     event-detail-custom) echo "lorvex://sheet/eventdetail/advanced" ;;
     event-edit-custom) echo "lorvex://sheet/eventdetail/advanced-edit" ;;
@@ -232,7 +234,7 @@ for ROUTE in "${ROUTES[@]}"; do
   # Today consumes a staged detail when it appears. Start on Calendar so a
   # launch that already mounted Today cannot miss the later detail request.
   case "$ROUTE" in
-    event-detail|event-detail-zone|event-edit-zone|event-detail-custom|event-edit-custom|event-detail-fold|event-edit-fold|event-edit-optional-end|event-edit-with-end) ROUTE="calendar+$ROUTE" ;;
+    event-detail|event-detail-combined|event-detail-zone|event-edit-zone|event-detail-custom|event-edit-custom|event-detail-fold|event-edit-fold|event-edit-optional-end|event-edit-with-end) ROUTE="calendar+$ROUTE" ;;
   esac
   LATER=""
   if [[ "$ROUTE" == *+* ]]; then

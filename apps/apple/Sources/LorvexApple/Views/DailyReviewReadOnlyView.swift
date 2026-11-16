@@ -2,7 +2,7 @@ import LorvexCore
 import SwiftUI
 
 /// The saved review of a past day outside the write window, in the calm page
-/// grammar: the two ratings on disabled dot scales and each written field under
+/// grammar: the two ratings on disabled rating controls and each written field under
 /// its name, or an empty-state note when nothing was written that day. The
 /// page header above it names the day and reads the day's sentence.
 struct DailyReviewReadOnlyView: View {
@@ -14,13 +14,12 @@ struct DailyReviewReadOnlyView: View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
       if let review, !isEmptyReview(review) {
         if review.mood != nil || review.energyLevel != nil {
-          HStack(alignment: .top, spacing: LorvexDesign.Spacing.xl) {
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
             scale(
-              Copy.feelLabel, value: review.mood, low: Copy.feelLow, high: Copy.feelHigh, dotLabel: Copy.feelDot,
+              Copy.feelLabel, value: review.mood, dotLabel: Copy.feelDot, word: Copy.feelWord,
               identifier: "reviews.readonly.mood")
             scale(
-              Copy.energyLabel, value: review.energyLevel, low: Copy.energyLow, high: Copy.energyHigh,
-              dotLabel: Copy.energyDot, identifier: "reviews.readonly.energy")
+              Copy.energyLabel, value: review.energyLevel, dotLabel: Copy.energyDot, word: Copy.energyWord, identifier: "reviews.readonly.energy")
           }
         }
         written(Copy.noteLabel, review.summary)
@@ -55,16 +54,16 @@ struct DailyReviewReadOnlyView: View {
       && (review.learnings ?? "").isEmpty
   }
 
-  /// A saved rating on the same dot scale the editable review uses, disabled,
+  /// A saved rating on the same rating control the editable review uses, disabled,
   /// so a rating reads the same in and past the write window.
   private func scale(
-    _ label: String, value: Int?, low: String, high: String, dotLabel: @escaping (Int) -> String,
-    identifier: String
+    _ label: String, value: Int?, dotLabel: @escaping (Int) -> String,
+    word: @escaping (Int) -> String, identifier: String
   ) -> some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       LorvexPageLabel(label)
-      LorvexDotScale(
-        value: .constant(value), lowLabel: low, highLabel: high, dotLabel: dotLabel,
+      LorvexRatingScale(
+        value: .constant(value), levelLabel: word, accessibilityLabel: dotLabel,
         identifierPrefix: identifier, isEnabled: false)
     }
     .frame(maxWidth: .infinity)

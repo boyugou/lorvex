@@ -6,9 +6,8 @@ import LorvexDomain
 /// boundary; the pure ingest mapper below consumes it so the tier-redaction
 /// contract is unit-testable without an `EKEventStore`.
 ///
-/// `key` is the stable provider event identity (the app prefers
-/// `calendarItemExternalIdentifier`, falling back to `eventIdentifier`); it
-/// becomes the `provider_event_key` composite-key field. Dates/times are
+/// `key` qualifies the server or local identifier by its origin calendar;
+/// it becomes the `provider_event_key` composite-key field. Dates/times are
 /// already rendered to the canonical wire forms (`yyyy-MM-dd`, `HH:mm`) in the
 /// event's source timezone. Zoned timed events also carry exact observations,
 /// because civil clocks alone cannot distinguish a repeated-hour reading.
@@ -43,6 +42,9 @@ public struct EventKitFetchedEvent: Sendable, Equatable {
   public let attendees: [EventKitFetchedAttendee]
   /// nil for floating/all-day or legacy snapshots; otherwise the exact fetched set.
   public let occurrenceInstants: [ProviderOccurrenceInstant]?
+  public let origin: ProviderCalendarOrigin?
+  /// Old UID address, only after EventKit proves it names a single calendar.
+  public var legacyKey: String?
 
   public init(
     key: String, title: String?, notes: String?,
@@ -53,7 +55,8 @@ public struct EventKitFetchedEvent: Sendable, Equatable {
     color: String? = nil, organizerEmail: String? = nil,
     url: String? = nil,
     attendees: [EventKitFetchedAttendee] = [],
-    occurrenceInstants: [ProviderOccurrenceInstant]? = nil
+    occurrenceInstants: [ProviderOccurrenceInstant]? = nil,
+    origin: ProviderCalendarOrigin? = nil, legacyKey: String? = nil
   ) {
     self.key = key
     self.title = title
@@ -72,6 +75,8 @@ public struct EventKitFetchedEvent: Sendable, Equatable {
     self.url = url
     self.attendees = attendees
     self.occurrenceInstants = occurrenceInstants
+    self.origin = origin
+    self.legacyKey = legacyKey
   }
 }
 
@@ -152,7 +157,8 @@ public enum EventKitIngest {
         attendeesJson: full ? attendeesJSON(from: event.attendees) : nil,
         videoCallUrl: full ? event.url : nil,
         occurrenceInstants: hasZone
-          ? event.occurrenceInstants.flatMap(ProviderOccurrenceInstant.encode) : nil)
+          ? event.occurrenceInstants.flatMap(ProviderOccurrenceInstant.encode) : nil,
+        originJSON: full ? event.origin?.encoded : nil, previousEventKey: event.legacyKey)
     }
   }
 

@@ -40177,6 +40177,1494 @@
         }
       }
     },
+    "calendar.duplicates.combined": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدث مدمج"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "একত্রিত ইভেন্ট"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammengefasstes Ereignis"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Συνδυασμένο συμβάν"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combined Event"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evento agrupado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رویداد ترکیبی"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Événement regroupé"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אירוע מאוחד"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जोड़ा गया इवेंट"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acara Gabungan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evento raggruppato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まとめられた予定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "묶인 이벤트"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "एकत्रित इव्हेंट"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acara Digabungkan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gecombineerde afspraak"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połączone wydarzenie"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evento agrupado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eveniment combinat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Объединённое событие"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இணைக்கப்பட்ட நிகழ்வு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కలిపిన ఈవెంట్"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กิจกรรมที่รวมแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birleştirilmiş Etkinlik"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Об’єднана подія"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یکجا ایونٹ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sự kiện đã gộp"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已合并事件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已合併行程"
+          }
+        }
+      }
+    },
+    "calendar.duplicates.off": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ανενεργό"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاموش"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כבוי"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बंद"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nonaktif"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattivato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끔"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बंद"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mati"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uit"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyłączone"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выключено"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "முடக்கு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఆఫ్"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимкнено"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بند"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
+          }
+        }
+      }
+    },
+    "calendar.duplicates.off.detail": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض كل نسخة على حدة."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রতিটি উৎসের অনুলিপি আলাদা দেখান।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Kopie einzeln anzeigen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κάθε αντίγραφο εμφανίζεται χωριστά."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show every source copy separately."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar cada copia por separado."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمایش جداگانهٔ هر نسخه."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher chaque copie séparément."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הצגת כל עותק בנפרד."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "हर स्रोत की प्रति अलग दिखाएँ।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan setiap salinan secara terpisah."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra ogni copia separatamente."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "各カレンダーの予定を個別に表示します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "각 원본 이벤트를 따로 표시합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "प्रत्येक स्रोताची प्रत स्वतंत्रपणे दाखवा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunjukkan setiap salinan secara berasingan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke kopie afzonderlijk tonen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokazuj każdą kopię osobno."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar cada cópia separadamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează fiecare copie separat."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывать каждую копию отдельно."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒவ்வொரு மூலப் பிரதியையும் தனித்தனியாகக் காட்டு."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రతి మూల ప్రతిని విడిగా చూపించండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แสดงแต่ละสำเนาแยกกัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her kaynak kopyasını ayrı göster."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показувати кожну копію окремо."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ہر ماخذ کی نقل الگ دکھائیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiển thị riêng từng bản sao."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分别显示每个来源的事件。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分別顯示每個來源的行程。"
+          }
+        }
+      }
+    },
+    "calendar.duplicates.setting": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دمج الأحداث المكررة"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সদৃশ ইভেন্ট একত্র করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppelte Ereignisse zusammenfassen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Συνδυασμός διπλών συμβάντων"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combine Duplicate Events"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrupar eventos duplicados"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترکیب رویدادهای تکراری"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regrouper les événements en double"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "איחוד אירועים כפולים"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "डुप्लिकेट इवेंट जोड़ें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gabungkan Acara Duplikat"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raggruppa eventi duplicati"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重複する予定をまとめる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "중복 이벤트 묶기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "डुप्लिकेट इव्हेंट एकत्र करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gabungkan Acara Pendua"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dubbele afspraken combineren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łącz powielone wydarzenia"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrupar eventos duplicados"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combină evenimentele duplicate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Объединять дубликаты событий"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நகல் நிகழ்வுகளை இணை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నకిలీ ఈవెంట్‌లను కలపండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รวมกิจกรรมซ้ำ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yinelenen Etkinlikleri Birleştir"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Об’єднувати дублікати подій"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقل ایونٹس یکجا کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gộp sự kiện trùng lặp"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合并重复事件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合併重複行程"
+          }
+        }
+      }
+    },
+    "calendar.duplicates.strict": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفاصيل متطابقة"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "একই বিবরণ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gleiche Details"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ίδιες λεπτομέρειες"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching Details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles idénticos"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزئیات یکسان"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détails identiques"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פרטים זהים"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "समान विवरण"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detail Cocok"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dettagli identici"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "詳細が一致"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "세부사항 일치"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जुळणारा तपशील"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Butiran Sepadan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezelfde details"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgodne szczegóły"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalhes iguais"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalii identice"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Совпадают подробности"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒரே விவரங்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సరిపోలే వివరాలు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายละเอียดตรงกัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aynı Ayrıntılar"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Однакові подробиці"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یکساں تفصیلات"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chi tiết trùng khớp"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "详情一致"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "詳細資料相同"
+          }
+        }
+      }
+    },
+    "calendar.duplicates.strict.detail": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دمج أحداث التقاويم المختلفة فقط عند تطابق العنوان والوقت والتفاصيل. تبقى كل النسخ متاحة في تفاصيل الحدث."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ভিন্ন ক্যালেন্ডারের ইভেন্ট কেবল শিরোনাম, সময় ও বিবরণ মিললে একত্র করুন। সব অনুলিপি ইভেন্টের বিবরণে পাওয়া যাবে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ereignisse verschiedener Kalender nur bei gleichem Titel, Zeitraum und gleichen Details zusammenfassen. Alle Kopien bleiben in den Ereignisdetails verfügbar."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Συνδυασμός συμβάντων από διαφορετικά ημερολόγια μόνο με ίδιο τίτλο, ώρες και λεπτομέρειες. Όλα τα αντίγραφα παραμένουν στις λεπτομέρειες συμβάντος."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combine events across calendars only when their title, time and details match. Every copy remains available in event details."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrupar eventos de calendarios distintos solo si coinciden el título, el horario y los detalles. Todas las copias siguen disponibles en los detalles del evento."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رویدادهای تقویم‌های مختلف فقط با عنوان، زمان و جزئیات یکسان ترکیب می‌شوند. همهٔ نسخه‌ها در جزئیات رویداد در دسترس می‌مانند."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regrouper les événements de calendriers différents uniquement si le titre, les horaires et les détails correspondent. Chaque copie reste accessible dans les détails."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "איחוד אירועים מיומנים שונים רק כשהכותרת, הזמנים והפרטים זהים. כל העותקים נשארים זמינים בפרטי האירוע."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अलग कैलेंडर के इवेंट तभी जोड़ें जब शीर्षक, समय और विवरण समान हों। सभी प्रतियाँ इवेंट के विवरण में उपलब्ध रहती हैं।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gabungkan acara dari kalender berbeda hanya jika judul, waktu, dan detailnya cocok. Semua salinan tetap tersedia di detail acara."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raggruppa eventi di calendari diversi solo se titolo, orari e dettagli coincidono. Ogni copia resta disponibile nei dettagli dell’evento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タイトル、時刻、詳細が一致する別のカレンダーの予定だけをまとめます。すべてのコピーは予定の詳細から確認できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목, 시간, 세부사항이 모두 같은 서로 다른 캘린더의 이벤트만 묶습니다. 모든 원본은 이벤트 세부사항에서 확인할 수 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "वेगवेगळ्या कॅलेंडरमधील शीर्षक, वेळ व तपशील जुळणारे इव्हेंटच एकत्र करा. सर्व प्रती इव्हेंटच्या तपशिलात उपलब्ध राहतात."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gabungkan acara daripada kalendar berbeza hanya apabila tajuk, masa dan butiran sepadan. Semua salinan kekal tersedia dalam butiran acara."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afspraken uit verschillende agenda’s alleen combineren bij dezelfde titel, tijden en details. Elke kopie blijft beschikbaar in de afspraakdetails."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łącz wydarzenia z różnych kalendarzy tylko przy zgodnym tytule, czasie i szczegółach. Każda kopia pozostaje dostępna w szczegółach wydarzenia."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrupar eventos de calendários diferentes apenas com título, horários e detalhes iguais. Todas as cópias continuam disponíveis nos detalhes do evento."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combină evenimente din calendare diferite doar dacă titlul, intervalul și detaliile coincid. Toate copiile rămân accesibile în detaliile evenimentului."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Объединять события разных календарей только при совпадении названия, времени и подробностей. Все копии доступны в подробностях события."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வெவ்வேறு நாட்காட்டிகளில் தலைப்பு, நேரம், விவரங்கள் அனைத்தும் பொருந்தும் நிகழ்வுகளை மட்டும் இணை. எல்லாப் பிரதிகளும் நிகழ்வு விவரங்களில் கிடைக்கும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "వేర్వేరు క్యాలెండర్‌లలో శీర్షిక, సమయాలు, వివరాలు అన్నీ సరిపోలితేనే కలపండి. అన్ని ప్రతులు ఈవెంట్ వివరాల్లో అందుబాటులో ఉంటాయి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รวมกิจกรรมจากต่างปฏิทินเมื่อชื่อ เวลา และรายละเอียดตรงกันเท่านั้น ทุกสำเนายังดูได้ในรายละเอียดกิจกรรม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farklı takvimlerdeki etkinlikleri yalnızca başlık, saatler ve ayrıntılar eşleştiğinde birleştir. Her kopya etkinlik ayrıntılarında kullanılabilir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Об’єднувати події різних календарів лише за однакових назви, часу й подробиць. Усі копії доступні в подробицях події."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مختلف کیلنڈروں کے ایونٹس صرف یکساں عنوان، اوقات اور تفصیلات پر یکجا کریں۔ تمام نقول ایونٹ کی تفصیلات میں دستیاب رہتی ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ gộp sự kiện từ các lịch khác nhau khi tiêu đề, thời gian và chi tiết khớp nhau. Mọi bản sao vẫn có trong chi tiết sự kiện."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅合并不同日历中标题、时间及详情均一致的事件。所有副本仍可在事件详情中查看。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "僅合併不同日曆中標題、時間及詳細資料皆相同的行程。所有副本仍可在行程詳細資料中查看。"
+          }
+        }
+      }
+    },
+    "calendar.duplicates.titleTime": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العنوان والوقت متطابقان"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "একই শিরোনাম ও সময়"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gleicher Titel und Zeitraum"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ίδιος τίτλος και ώρες"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same Title and Time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mismo título y horario"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنوان و زمان یکسان"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Même titre et mêmes horaires"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אותה כותרת ואותם זמנים"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "समान शीर्षक और समय"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Judul dan Waktu Sama"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stesso titolo e orario"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同じタイトルと開始・終了時刻"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "같은 제목과 시작·종료 시간"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "समान शीर्षक व वेळ"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tajuk dan Masa Sama"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezelfde titel en tijden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten sam tytuł i czas"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesmo título e horário"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Același titlu și interval"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одинаковые название и время"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒரே தலைப்பும் நேரமும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఒకే శీర్షిక, సమయాలు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ชื่อและเวลาตรงกัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aynı Başlık ve Saatler"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Однакові назва й час"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یکساں عنوان اور اوقات"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cùng tiêu đề và thời gian"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同标题、同起止时间"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相同標題及起迄時間"
+          }
+        }
+      }
+    },
+    "calendar.duplicates.titleTime.detail": {
+      "comment": "Display-only grouping of imported calendar copies. All source events remain available.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دمج الأحداث ذات العنوان ووقتي البدء والانتهاء المتطابقة. قد تختلف المواقع والتفاصيل الأخرى؛ اختر تقويماً في تفاصيل الحدث لعرض كل نسخة."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "একই শিরোনাম ও হুবহু শুরুর এবং শেষের সময় মিললে একত্র করুন। স্থানসহ অন্যান্য বিবরণ আলাদা হতে পারে; প্রতিটি অনুলিপি দেখতে বিবরণে ক্যালেন্ডার বেছে নিন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gleichen Titel und exakten Zeitraum zusammenfassen. Orte und andere Details können abweichen; in den Ereignisdetails einen Kalender wählen, um jede Kopie anzusehen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Συνδυασμός ίδιων τίτλων και ακριβών ωρών. Οι τοποθεσίες και άλλες λεπτομέρειες μπορεί να διαφέρουν· επιλέξτε ημερολόγιο στις λεπτομέρειες για κάθε αντίγραφο."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combine events with the same title and exact times. Locations and other details may differ; choose a calendar in event details to see each copy."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrupar títulos y horarios exactos coincidentes. Los lugares y otros detalles pueden variar; elige un calendario en los detalles para ver cada copia."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رویدادهای دارای عنوان و زمان شروع و پایان دقیقاً یکسان ترکیب می‌شوند. مکان و جزئیات دیگر ممکن است متفاوت باشند؛ برای دیدن هر نسخه، تقویم را در جزئیات انتخاب کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regrouper les titres et horaires exacts identiques. Les lieux et autres détails peuvent différer ; choisissez un calendrier dans les détails pour voir chaque copie."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "איחוד כותרות וזמני התחלה וסיום זהים בדיוק. המיקומים ופרטים אחרים עשויים להשתנות; בחרו יומן בפרטי האירוע לצפייה בכל עותק."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "समान शीर्षक और बिल्कुल समान आरंभ व समाप्ति समय वाले इवेंट जोड़ें। स्थान और अन्य विवरण अलग हो सकते हैं; हर प्रति देखने के लिए विवरण में कैलेंडर चुनें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gabungkan judul dan waktu mulai serta selesai yang persis sama. Lokasi dan detail lain dapat berbeda; pilih kalender di detail acara untuk melihat setiap salinan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raggruppa titoli e orari esatti identici. Luoghi e altri dettagli possono variare; scegli un calendario nei dettagli per vedere ogni copia."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タイトルと開始・終了時刻が完全に一致する予定をまとめます。場所などの詳細は異なる場合があります。予定の詳細でカレンダーを選ぶと各コピーを確認できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목과 정확한 시작·종료 시간이 같은 이벤트를 묶습니다. 장소 등은 다를 수 있으며, 세부사항에서 캘린더를 선택해 각 원본을 확인할 수 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "समान शीर्षक आणि तंतोतंत जुळणारी सुरुवात व समाप्ती वेळ असलेले इव्हेंट एकत्र करा. ठिकाण व इतर तपशील वेगळे असू शकतात; प्रत्येक प्रत पाहण्यासाठी तपशिलात कॅलेंडर निवडा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gabungkan tajuk dan masa mula serta tamat yang sama tepat. Lokasi dan butiran lain mungkin berbeza; pilih kalendar dalam butiran acara untuk melihat setiap salinan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezelfde titel en exacte tijden combineren. Locaties en andere details kunnen verschillen; kies een agenda in de details om elke kopie te bekijken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łącz zgodne tytuły i dokładne godziny. Miejsca i inne szczegóły mogą się różnić; wybierz kalendarz w szczegółach, aby zobaczyć każdą kopię."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrupar títulos e horários exatos iguais. Locais e outros detalhes podem variar; escolha um calendário nos detalhes para ver cada cópia."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combină titluri și ore exacte identice. Locurile și alte detalii pot diferi; alege un calendar în detalii pentru a vedea fiecare copie."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Объединять одинаковые названия и точное время. Места и другие подробности могут различаться; выберите календарь в подробностях для просмотра копии."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒரே தலைப்பும் துல்லியமான தொடக்க மற்றும் முடிவு நேரங்களும் உள்ள நிகழ்வுகளை இணை. இடம் உள்ளிட்ட விவரங்கள் மாறலாம்; ஒவ்வொரு பிரதியையும் காண விவரங்களில் நாட்காட்டியைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఒకే శీర్షిక, ఖచ్చితమైన ప్రారంభ మరియు ముగింపు సమయాలు ఉన్న ఈవెంట్‌లను కలపండి. ప్రదేశం, ఇతర వివరాలు మారవచ్చు; ప్రతి ప్రతిని చూడటానికి వివరాల్లో క్యాలెండర్‌ను ఎంచుకోండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รวมกิจกรรมที่ชื่อและเวลาเริ่มกับสิ้นสุดตรงกันทุกประการ สถานที่และรายละเอียดอื่นอาจต่างกัน เลือกปฏิทินในรายละเอียดเพื่อดูแต่ละสำเนา"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlığı ve kesin başlangıç ile bitiş saatleri aynı olanları birleştir. Konum ve diğer ayrıntılar farklı olabilir; her kopyayı görmek için ayrıntılarda bir takvim seç."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Об’єднувати однакові назви й точний час. Місця та інші подробиці можуть відрізнятися; виберіть календар у подробицях для перегляду копії."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یکساں عنوان اور عین یکساں آغاز و اختتام والے ایونٹس یکجا کریں۔ مقامات اور دیگر تفصیلات مختلف ہو سکتی ہیں؛ ہر نقل دیکھنے کے لیے تفصیلات میں کیلنڈر منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gộp tiêu đề và giờ bắt đầu, kết thúc giống hệt nhau. Địa điểm và chi tiết khác có thể khác; chọn lịch trong chi tiết để xem từng bản sao."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合并标题及起止时间完全一致的事件。地点等详情可能不同，可在事件详情中选择日历查看各副本。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合併標題及起迄時間完全相同的行程。地點等資料可能不同，可在行程詳細資料中選擇日曆查看各副本。"
+          }
+        }
+      }
+    },
     "calendar.editor.add_end": {
       "comment": "Calendar editor action. A timed event may have a start without an end.",
       "extractionState": "manual",

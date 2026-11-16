@@ -105,7 +105,17 @@
           guard calendarFilter.allows(calendarID: event.calendar?.calendarIdentifier) else {
             continue
           }
-          if let fetched = Self.fetchedEvent(from: event) { events.append(fetched) }
+          if var fetched = Self.fetchedEvent(from: event) {
+            let components = EventKitProviderIdentity.components(fetched.key)
+            if let components {
+              let calendars = Set(store.calendarItems(withExternalIdentifier: components.base)
+                .compactMap { $0.calendar?.calendarIdentifier })
+              if event.calendarItemExternalIdentifier?.isEmpty != false
+                || (calendars.count == 1 && calendars.first == components.calendarID)
+              { fetched.legacyKey = components.base + components.suffix }
+            }
+            events.append(fetched)
+          }
         }
         windowStart = windowEnd
       }
@@ -142,7 +152,17 @@
             ProviderOccurrenceInstant(
               date: AllDayEventSpan.dayKey(for: start, timeZone: eventTimeZone),
               start: start, end: event.endDate)
-          ] : nil
+          ] : nil,
+        origin: event.calendar.flatMap { calendar in
+          guard !calendar.calendarIdentifier.isEmpty,
+            let signature = EventKitComparison.signature(for: event)
+          else { return nil }
+          return ProviderCalendarOrigin(
+            calendarID: calendar.calendarIdentifier,
+            calendarTitle: calendar.title.isEmpty
+              ? String(localized: "calendar.picker.untitled", defaultValue: "Untitled Calendar", table: "Localizable", bundle: MobileL10n.bundle) : calendar.title,
+            accountTitle: calendar.source?.title, contentSignature: signature)
+        }
       )
     }
 
@@ -215,13 +235,15 @@
       } else {
         base = event.eventIdentifier ?? event.calendarItemIdentifier
       }
-      guard event.hasRecurrenceRules else {
-        return base
-      }
+      let key = event.calendar.flatMap { calendar in
+        calendar.calendarIdentifier.isEmpty ? nil
+          : EventKitProviderIdentity.key(base: base, calendarID: calendar.calendarIdentifier)
+      } ?? base
+      guard event.hasRecurrenceRules else { return key }
       if let startTime {
-        return "\(base):\(startDate)T\(startTime)"
+        return "\(key):\(startDate)T\(startTime)"
       }
-      return "\(base):\(startDate)"
+      return "\(key):\(startDate)"
     }
 
     static let lorvexCalendarEventPrefix = "lorvex-event-id:"

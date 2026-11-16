@@ -38,6 +38,8 @@ struct MobileCalendarAgendaRow: View {
 
       Spacer(minLength: LorvexDesign.Spacing.s)
 
+      if !event.combinedEventCopies.isEmpty { CalendarCombinedEventMark() }
+
       if event.isRecurring || event.supportsScopedMutation {
         Image(systemName: "repeat")
           .font(LorvexDesign.Typography.secondaryText)

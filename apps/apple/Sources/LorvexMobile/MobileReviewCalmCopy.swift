@@ -34,7 +34,7 @@ enum MobileReviewCalmCopy {
   static func feelDot(_ level: Int) -> String {
     String(localized: "review.calm.feel.dot", defaultValue: "Feeling \(level) of 5", table: "Localizable", bundle: MobileL10n.bundle)
   }
-  /// The word for one feeling level 1–5, named under the scale.
+  /// Names one feeling choice, 1–5.
   static func feelWord(_ level: Int) -> String {
     switch level {
     case 1: feelLow
@@ -52,7 +52,7 @@ enum MobileReviewCalmCopy {
   }
   static var movedLabel: String { String(localized: "review.calm.moved", defaultValue: "What moved forward", table: "Localizable", bundle: MobileL10n.bundle) }
   static var stillOpenLabel: String { String(localized: "review.calm.still_open", defaultValue: "Still open", table: "Localizable", bundle: MobileL10n.bundle) }
-  /// The word for one energy level 1–5, named under the scale.
+  /// Names one energy choice, 1–5.
   static func energyWord(_ level: Int) -> String {
     switch level {
     case 1: energyLow

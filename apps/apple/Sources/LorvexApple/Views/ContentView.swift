@@ -43,7 +43,8 @@ struct ContentView: View {
                 requestDelete: { todayEventActions.requestDelete(event) },
                 close: { store.clearSelectedCalendarEvent() },
                 resolveSource: { await store.calendarEventSource(for: $0) },
-                fixedWidth: nil
+                fixedWidth: nil,
+                selectCopy: { store.selectCalendarEvent($0) }
               )
             }
           }

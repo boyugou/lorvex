@@ -27,7 +27,7 @@ struct MobileCalendarSearchResults: View {
       .background(.background)
       .scrollDismissesKeyboard(.interactively)
       .accessibilityIdentifier("mobileCalendar.searchResults")
-      .task(id: query) {
+      .task(id: query + "\u{0}" + store.calendarDuplicateGrouping.rawValue) {
         isLoading = true
         guard await LorvexSearchDebounce.shouldSearch(query) else { return }
         await reload()

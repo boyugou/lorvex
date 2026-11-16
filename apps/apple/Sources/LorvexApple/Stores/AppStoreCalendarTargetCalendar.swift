@@ -7,10 +7,13 @@ import LorvexCore
 extension AppStore {
   /// Resolve the fine-grained origin calendar (title + account) of a provider
   /// (system-calendar) event for the inspector, matching the calendar-filter
-  /// settings list. The timeline cache collapses every system calendar into one
-  /// device scope, so this reaches back to EventKit live. Nil for Lorvex-owned
+  /// settings list. Cached provenance is used first, with live EventKit lookup
+  /// for legacy observations. Nil for Lorvex-owned
   /// (editable) events, non-EventKit ids, or when the integration is unavailable.
   func calendarEventSource(for event: CalendarTimelineEvent) async -> EventKitEventSource? {
+    if let origin = event.origin {
+      return EventKitEventSource(calendarTitle: origin.calendarTitle, accountTitle: origin.accountTitle)
+    }
     guard !event.editable, let eventKitCoordinator else { return nil }
     return await eventKitCoordinator.eventSource(
       forTimelineID: event.eventID, dayHint: event.startDate)

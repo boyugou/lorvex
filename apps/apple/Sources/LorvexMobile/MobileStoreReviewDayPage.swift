@@ -144,12 +144,11 @@ struct MobileStoreReviewDayPage: View {
 
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
       scale(
-        Copy.feelLabel, value: $store.dailyReviewDraft.mood, low: Copy.feelLow, high: Copy.feelHigh,
+        Copy.feelLabel, value: $store.dailyReviewDraft.mood,
         dotLabel: Copy.feelDot, word: Copy.feelWord, identifier: "review.daily.mood",
         editable: editable)
       scale(
-        Copy.energyLabel, value: $store.dailyReviewDraft.energy, low: Copy.energyLow,
-        high: Copy.energyHigh, dotLabel: Copy.energyDot, word: Copy.energyWord,
+        Copy.energyLabel, value: $store.dailyReviewDraft.energy, dotLabel: Copy.energyDot, word: Copy.energyWord,
         identifier: "review.daily.energy", editable: editable)
     }
 
@@ -213,14 +212,14 @@ struct MobileStoreReviewDayPage: View {
   }
 
   private func scale(
-    _ label: String, value: Binding<Int?>, low: String, high: String,
+    _ label: String, value: Binding<Int?>,
     dotLabel: @escaping (Int) -> String, word: @escaping (Int) -> String, identifier: String,
     editable: Bool
   ) -> some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       LorvexPageLabel(label)
-      LorvexDotScale(
-        value: value, lowLabel: low, highLabel: high, dotLabel: dotLabel, levelWord: word,
+      LorvexRatingScale(
+        value: value, levelLabel: word, accessibilityLabel: dotLabel,
         identifierPrefix: identifier, isEnabled: editable)
     }
   }

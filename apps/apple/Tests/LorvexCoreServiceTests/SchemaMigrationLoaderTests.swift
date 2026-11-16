@@ -29,17 +29,14 @@ import Testing
       lockContents: lockJSON(entries), lockOrigin: "fixture", migrationSQLByFileName: files)
   }
 
-  /// The production resolver against the real repo artifacts: the canonical
-  /// ladder holds exactly `002_retire_custom_sync_transport`,
-  /// `003_habit_skips`, `004_task_delegations`, and `005_provider_occurrence_instants`, and resolving them (lock +
-  /// migrations directory + validation) succeeds.
+  /// Resolve the shipped ladder and its pinned checksums from real resources.
   @Test func productionLadderResolvesTheShippedMigrations() throws {
     let migrations = try SwiftLorvexCoreService.resolveSchemaMigrations()
-    #expect(migrations.map(\.version) == [2, 3, 4, 5])
+    #expect(migrations.map(\.version) == [2, 3, 4, 5, 6])
     #expect(
       migrations.map(\.name) == [
         "retire_custom_sync_transport", "habit_skips", "task_delegations",
-        "provider_occurrence_instants",
+        "provider_occurrence_instants", "provider_calendar_origin",
       ])
   }
 

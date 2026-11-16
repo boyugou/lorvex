@@ -316,9 +316,12 @@ the password passed through an environment reference rather than command args.
 
 Failures and what they mean:
 
-- `403 FORBIDDEN_ERROR.CONTRACT_NOT_VALID`: an Apple agreement is waiting for
-  the account holder in App Store Connect. After it is accepted, re-run only
-  the validate and upload steps.
+- `403 FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED` or
+  `FORBIDDEN_ERROR.CONTRACT_NOT_VALID`: the account holder must accept a
+  required agreement at developer.apple.com/account, and check App Store
+  Connect → Business → Agreements if needed. Allow a few minutes for acceptance
+  to propagate, then retry API access and only the package validation and
+  upload steps; the signed packages do not need rebuilding.
 - `NSURLError -1005` (a lost connection) or an HTTP 504: a transient network
   failure. The script retries the step once; a second failure means re-running
   the step alone (`script/archive_mas.sh --upload`, for example).
@@ -434,9 +437,10 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 143 went up on
-  2026-11-12, so it stops installing around 2027-02-10. Upload a fresh build by
-  2027-01-27 (the steps above), even without a product change, while testers
+- **TestFlight builds expire 90 days after upload.** Build 144 went up on
+  2026-11-16 on iOS and macOS, and both are available to internal testers. App
+  Store Connect reports their expiry as 2027-02-14. Upload a fresh build by
+  2027-01-31 (the steps above), even without a product change, while testers
   still use TestFlight.
 - **Signing material.** The Apple Distribution and Mac installer certificates,
   and every iOS and Mac App Store profile that embeds them, expire on

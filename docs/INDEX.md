@@ -9,6 +9,7 @@ app.
 - [`../CLAUDE.md`](../CLAUDE.md) — operating manual for agents.
 - [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Shared) and open work.
 - [`development/NEW_MACHINE.md`](development/NEW_MACHINE.md) — setting up a development machine, the local files a clone lacks, privacy rules, and releasing.
+- [`releases/1.0.0-145.md`](releases/1.0.0-145.md) — build 145 source, distribution status, checksums, and validation scope.
 
 ## Platform ownership
 

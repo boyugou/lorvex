@@ -1,13 +1,45 @@
 from __future__ import annotations
 
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import github_release as release
 
 
 class GitHubReleaseTests(unittest.TestCase):
+    def test_build_commit_accepts_descriptions_and_ignores_other_builds_and_message_bodies(self) -> None:
+        with tempfile.TemporaryDirectory() as name:
+            repo = Path(name)
+
+            def local_run(command: list[str]) -> str:
+                return subprocess.run(command, cwd=repo, capture_output=True, text=True, check=True).stdout.strip()
+
+            def commit(subject: str, body: str | None = None) -> str:
+                command = [
+                    "git", "-c", "user.name=Fixture", "-c", "user.email=fixture",
+                    "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null",
+                    "commit", "--quiet", "--allow-empty", "-m", subject,
+                ]
+                if body is not None:
+                    command.extend(["-m", body])
+                local_run(command)
+                return local_run(["git", "rev-parse", "HEAD"])
+
+            local_run(["git", "init", "--quiet"])
+            exact = commit("Build 144")
+            described = commit("Build 145: improve Review and calendar")
+            commit("Build 1450: a different build")
+            commit("Record release delivery", "Build 145")
+            with patch.object(release, "run", side_effect=local_run):
+                self.assertEqual(release.build_commit(144), exact)
+                self.assertEqual(release.build_commit(145), described)
+                with self.assertRaises(SystemExit):
+                    release.build_commit(146)
+
     def test_dmg_for_build_finds_the_one_dmg_of_that_build(self) -> None:
         with tempfile.TemporaryDirectory() as name:
             dist = Path(name)
@@ -23,6 +55,34 @@ class GitHubReleaseTests(unittest.TestCase):
             self.assertEqual(version, "1.0.0")
             with self.assertRaises(SystemExit):
                 release.dmg_for_build(134, dist)
+
+    def test_publish_passes_an_absolute_notes_path_to_github(self) -> None:
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            dmg = root / "fixture.dmg"
+            dmg.write_bytes(b"fixture")
+            notes = root / "notes.md"
+            source_commit = "a" * 40
+            notes.write_text(f"Changes\n{release.sha256_of(dmg)}\n{source_commit[:7]}\n")
+            relative_notes = Path(os.path.relpath(notes))
+            created = []
+
+            def github(command: list[str], **kwargs: object) -> str:
+                if command[:3] == ["gh", "release", "create"]:
+                    passed_notes = Path(command[command.index("--notes-file") + 1])
+                    self.assertTrue(passed_notes.is_absolute())
+                    self.assertEqual(passed_notes, notes.resolve())
+                    created.append(command)
+                return ""
+
+            with (
+                patch.object(release, "dmg_for_build", return_value=(dmg, "1.0.0")),
+                patch.object(release, "build_commit", return_value=source_commit),
+                patch.object(release, "verify_dmg"),
+                patch.object(release, "run", side_effect=github),
+            ):
+                self.assertEqual(release.command_publish(145, relative_notes, False), 0)
+            self.assertEqual(len(created), 1)
 
     def test_dmg_for_build_refuses_two_dmgs_of_one_build(self) -> None:
         with tempfile.TemporaryDirectory() as name:

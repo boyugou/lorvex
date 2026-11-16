@@ -429,13 +429,16 @@ for every build would bury the ones people choose between.
   steps, the Mac and macOS requirement, what changed since the previous
   release, the language count, and the SHA-256 the download must print.
 - `script/github_release.py` does the mechanical part. `notes <build>` prints a
-  skeleton of the notes with the DMG's SHA-256 and the `Build <build>` commit
-  filled in and a marked place for what changed. `publish <build> notes.md`
+  skeleton of the notes with the DMG's SHA-256 and the build source commit
+  filled in and a marked place for what changed. Source commit subjects may be
+  `Build <build>` or `Build <build>: <description>`; a reference in another
+  commit's body does not identify the source. `publish <build> notes.md`
   checks the DMG (its checksum file, Gatekeeper's notarization verdict, its
   staple), refuses notes that still hold the marker or miss the checksum or the
   commit, renames the two assets, creates the release at the build's commit with
   `--latest`, and deletes the older builds' pages of that marketing version.
-  `--dry-run` runs every check and changes nothing.
+  `--dry-run` runs every check and changes nothing. Notes paths are resolved
+  relative to the invoking shell before GitHub commands run from the repo root.
 - Keep the page current: cut a release after each batch of changes DMG users
   would notice (a crash or data fix, a feature people asked for, a new set of
   languages), not per TestFlight build, and never leave the page more than a
@@ -446,14 +449,17 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 144 went up on
+- **TestFlight builds expire 90 days after upload.** Build 145 went up on
   2026-11-16 on iOS and macOS, and both are available to internal testers. App
   Store Connect reports their expiry as 2027-02-14. Upload a fresh build by
   2027-01-31 (the steps above), even without a product change, while testers
-  still use TestFlight.
+  still use TestFlight. The [build 145 release record](../../../docs/releases/1.0.0-145.md)
+  also records the published GitHub download and validation scope.
 - **Signing material.** The Apple Distribution and Mac installer certificates,
   and every iOS and Mac App Store profile that embeds them, expire on
-  2027-07-23; the Developer ID certificates and profiles expire in 2031.
+  2027-07-23. The current Developer ID Application certificate expires on
+  2031-03-07; its direct distribution profiles expire on 2044-07-19, but a
+  longer-lived profile does not extend its signing certificate's validity.
   Renew the first set by 2027-07-01. `script/doctor.sh --release` lists the
   expiry of the identities and profiles it checks.
 - **Toolchain.** Release with the newest Xcode 27.x that App Store Connect

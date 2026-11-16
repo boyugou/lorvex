@@ -121,11 +121,18 @@ def run(command: list[str], *, capture: bool = True, check: bool = True) -> str:
 
 
 def build_commit(build: int) -> str:
-    """The full hash of the `Build <build>` commit."""
-    found = run(["git", "log", "--format=%H", "--grep", f"^Build {build}$", "-n", "1"])
-    if not found:
-        raise SystemExit(f"no commit titled 'Build {build}' was found")
-    return found
+    """Find the source commit by its exact build subject, with an optional description."""
+    subject_pattern = rf"^Build {build}(: .+)?$"
+    found = run([
+        "git", "log", "--format=%H%x09%s", "--extended-regexp", "--grep", subject_pattern,
+    ])
+    for line in found.splitlines():
+        commit, separator, subject = line.partition("\t")
+        # git --grep also searches message bodies; a later release record may
+        # mention the build without being the commit from which it was built.
+        if separator and re.fullmatch(subject_pattern, subject):
+            return commit
+    raise SystemExit(f"no commit titled 'Build {build}' or 'Build {build}: …' was found")
 
 
 def previous_build(build: int, version: str) -> int:
@@ -184,6 +191,9 @@ def verify_dmg(dmg: Path, sha: str) -> None:
 
 
 def command_publish(build: int, notes_path: Path, dry_run: bool) -> int:
+    # gh runs from the repository root, while callers may invoke this script
+    # from apps/apple. Preserve the notes file the caller actually selected.
+    notes_path = notes_path.resolve(strict=True)
     dmg, version = dmg_for_build(build)
     sha = sha256_of(dmg)
     commit = build_commit(build)

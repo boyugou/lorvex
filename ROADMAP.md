@@ -26,7 +26,8 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   floors; existing integrations need a compatibility pass before adopting new APIs. Record
   device/simulator evidence and prioritize improvements that simplify an
   everyday action.
-- Calendar duplicate display (2026-11-16, build 145 implementation): conservative,
+- Calendar duplicate display (shipped 2026-11-16 in TestFlight and GitHub build
+  145; [release record](docs/releases/1.0.0-145.md)): conservative,
   configurable display grouping, preserving every source event. Levels: off,
   strict (default), and matching title plus exact start/end times (explicit
   opt-in; may ignore location and other detail differences). Strict also
@@ -43,7 +44,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   rebuilds only the disposable device mirror, keeping owned events and task
   links. Verified unique legacy links are reassociated; ambiguous ones are not
   assigned to an arbitrary copy. The source picker opens each copy's details.
-- Daily Review ratings (2026-11-16, build 145 implementation):
+- Daily Review ratings (shipped 2026-11-16 in TestFlight and GitHub build 145):
   replace growing circles with five equal, named choices and a single selected
   checkmark. Keep unanswered distinct from neutral and let tapping the selected
   choice clear it. Adapt columns to translated labels and use vertical choices

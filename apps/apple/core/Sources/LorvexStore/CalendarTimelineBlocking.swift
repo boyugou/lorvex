@@ -35,6 +35,26 @@ extension CalendarTimelineQueries {
 
     var ranges: [BlockingEventRange] = []
     for item in items {
+      if let projection = item.projection, let end = projection.end,
+        let zone = TimeZone(identifier: projection.timezone),
+        let day = try? LorvexDate.parse(date).get()
+      {
+        let segments = CalendarWallClockSegment.segments(from: projection.start, to: end, on: day, in: zone)
+        // The planner has one civil clock, so either reading of a repeated
+        // minute occupies it. Union only this occurrence's fragments; retain
+        // separate provenance for different events.
+        var spans: [Range<Int>] = []
+        for segment in segments.sorted(by: { $0.startMinutes < $1.startMinutes }) {
+          let span = segment.startMinutes..<segment.endMinutes
+          if let last = spans.last, span.lowerBound <= last.upperBound {
+            spans[spans.count - 1] = last.lowerBound..<max(last.upperBound, span.upperBound)
+          } else { spans.append(span) }
+        }
+        ranges.append(contentsOf: spans.map {
+          blockingRange(item, start: Int64($0.lowerBound), end: Int64($0.upperBound), staleScopes: staleScopes)
+        })
+        continue
+      }
       if let range = timelineItemToBlockingRange(item, queryDate, staleScopes) {
         ranges.append(range)
       }
@@ -93,6 +113,12 @@ extension CalendarTimelineQueries {
 
     if endMinutes <= startMinutes || startMinutes >= 1440 { return nil }
 
+    return blockingRange(item, start: max(startMinutes, 0), end: min(endMinutes, 1440), staleScopes: staleScopes)
+  }
+
+  private static func blockingRange(
+    _ item: CalendarTimelineItem, start: Int64, end: Int64, staleScopes: Set<ScopeKey>
+  ) -> BlockingEventRange {
     let stale: Bool
     if let kind = item.providerKind, let scope = item.providerScope {
       stale = staleScopes.contains(ScopeKey(kind: kind, scope: scope))
@@ -107,8 +133,8 @@ extension CalendarTimelineQueries {
       // their own, so `item.id` names nothing a caller could look up.
       canonicalEventId: item.source == .canonical ? item.eventId : nil,
       title: item.title,
-      startMinutes: max(startMinutes, 0),
-      endMinutes: min(endMinutes, 1440),
+      startMinutes: start,
+      endMinutes: end,
       stale: stale)
   }
 

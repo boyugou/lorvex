@@ -38,9 +38,8 @@ struct CalendarWeekGridView: View {
   }
   /// Maximum simultaneous lanes shown per day column before the "+N more" overflow badge appears.
   let maxDisplayedLanes = 3
-  // Read the calendar from the environment so a timezone / first-weekday change
-  // (including a mid-session DST shift) flows into the now-line and day
-  // boundaries rather than freezing whatever `Calendar.current` was at init.
+  // The environment calendar lays out civil day labels and the locale's first
+  // weekday. The product clock separately determines today and the now line.
   @Environment(\.calendar) var calendar
   @Environment(\.undoManager) var undoManager
   /// Drag-to-move and drag-to-resize snap to this granularity (matching the
@@ -137,13 +136,14 @@ struct CalendarWeekGridView: View {
 
   private var totalHeight: CGFloat { hourHeight * 24 }
 
+  var productClock: LorvexProductDayClock {
+    LorvexProductDayClock(logicalDay: store.logicalTodayDateString, timeZone: store.logicalTimeZone)
+  }
+
   var body: some View {
     let columns = days
-    let now = LorvexPreviewClock.now(in: calendar)
-    let todayKey = AppStore.ymdFormatter.string(from: now)
-    let nowMinute = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
     let anchorHour = CalendarGridModel.initialScrollAnchorHour(
-      for: columns, todayKey: todayKey, nowMinute: nowMinute)
+      for: columns, todayKey: productClock.logicalDay, nowMinute: productClock.nowMinutes())
     // Re-scroll fires only on week / event-content change, never when the wall
     // clock crosses an hour or an unrelated store update re-evaluates `body`.
     // The signature therefore keys off the CONTENT-only anchor; the now-aware
@@ -264,7 +264,9 @@ struct CalendarWeekGridView: View {
         // red live now-line; adjacent days get a faint guide at the same
         // time-of-day for cross-column reading.
         TimelineView(.periodic(from: .now, by: 60)) { context in
-          nowLine(now: LorvexPreviewClock.now(in: calendar, tick: context.date), isToday: isToday(day.date))
+          if let minutes = productClock.nowMinutes(at: context.date) {
+            nowLine(minutes: minutes, isToday: isToday(day.date))
+          }
         }
         .allowsHitTesting(false)
 
@@ -337,7 +339,9 @@ struct CalendarWeekGridView: View {
           // selected or dragged, so one that spans the current time never
           // covers it; the line itself runs under them.
           TimelineView(.periodic(from: .now, by: 60)) { context in
-            nowDot(now: LorvexPreviewClock.now(in: calendar, tick: context.date))
+            if let minutes = productClock.nowMinutes(at: context.date) {
+              nowDot(minutes: minutes)
+            }
           }
           .allowsHitTesting(false)
           .zIndex(3)

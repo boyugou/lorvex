@@ -190,8 +190,21 @@ extension AppStore {
   }
 
   var draftCalendarRecurrenceIsOpaque: Bool {
+    guard !calendarDraftStorage.draftCalendarRecurrenceWasEdited else { return false }
     if case .opaque = calendarDraftStorage.draftCalendarRecurrenceBaseline { return true }
     return false
+  }
+
+  /// Weekdays and month days belong to the event's storage frame. New events
+  /// use the draft's pinned zone; all-day dates and floating clocks stay civil.
+  var draftCalendarRecurrenceTiming: CalendarEventTiming {
+    let timing = draftCalendarTiming
+    guard !timing.allDay,
+      let zone = calendarDraftStorage.draftCalendarEditBaseline?.sourceTimeZone
+    else { return timing }
+    return CalendarEventTiming(
+      start: timing.start, end: timing.end, allDay: false,
+      calendar: LorvexDateFormatters.gregorianCalendar(timeZone: zone))
   }
 
   var draftCalendarRecurrencePatch: CalendarEventRecurrencePatch {

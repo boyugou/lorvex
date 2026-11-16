@@ -296,7 +296,12 @@ extension StubCoreService {
     url: String?, color: String?, eventType: String?, personName: String?,
     attendees: [CalendarEventAttendee]?
   ) async throws -> CalendarTimelineEvent {
-    throw unsupportedStubCoreOperation()
+    guard forwardsCalendarCreates else { throw unsupportedStubCoreOperation() }
+    return try await preview.createCalendarEvent(
+      title: title, startDate: startDate, endDate: endDate, startTime: startTime,
+      endTime: endTime, allDay: allDay, location: location, notes: notes,
+      recurrence: recurrence, timezone: timezone, url: url, color: color,
+      eventType: eventType, personName: personName, attendees: attendees)
   }
   func batchCreateCalendarEvents(_ drafts: [CalendarEventCreateDraft]) async throws
     -> [CalendarTimelineEvent]
@@ -310,7 +315,12 @@ extension StubCoreService {
     eventType: String?,
     personName: String?, attendees: CalendarEventAttendeesPatch
   ) async throws -> CalendarTimelineEvent {
-    throw unsupportedStubCoreOperation()
+    guard forwardsCalendarUpdates else { throw unsupportedStubCoreOperation() }
+    return try await preview.updateCalendarEvent(
+      id: id, title: title, startDate: startDate, endDate: endDate, startTime: startTime,
+      endTime: endTime, allDay: allDay, location: location, notes: notes,
+      recurrence: recurrence, timezone: timezone, url: url, color: color,
+      eventType: eventType, personName: personName, attendees: attendees)
   }
   func importCalendarEvent(
     id: CalendarTimelineEvent.ID, title: String, startDate: String, startTime: String?,

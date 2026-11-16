@@ -296,12 +296,14 @@ struct MobileCalendarPagerTests {
 
   private static func dayInputs(
     startDate: Date, dayCount: Int = 1, events: [CalendarTimelineEvent] = [],
-    pageWidth: CGFloat = 0, openDeletion: String? = nil, calendar: Calendar
+    pageWidth: CGFloat = 0, openDeletion: String? = nil, calendar: Calendar,
+    productClock: LorvexProductDayClock? = nil
   ) -> MobileCalendarDayPage.Inputs {
     MobileCalendarDayPage.Inputs(
       startDate: startDate, dayCount: dayCount, showsHeaders: true, circlesTodayInHeaders: true,
       opensDays: false, events: events, tasks: [], pageWidth: pageWidth, openDeletion: openDeletion,
-      calendar: calendar)
+      calendar: calendar,
+      productClock: productClock ?? LorvexProductDayClock(logicalDay: "2026-10-14", timeZone: .gmt))
   }
 
   private static func dayPage(
@@ -310,7 +312,7 @@ struct MobileCalendarPagerTests {
     MobileCalendarDayPage(inputs: inputs) {
       MobileCalendarDayColumn(
         startDate: inputs.startDate, dayCount: inputs.dayCount, events: inputs.events,
-        tasks: inputs.tasks, calendar: inputs.calendar,
+        tasks: inputs.tasks, calendar: inputs.calendar, productClock: inputs.productClock,
         onTapEvent: { _ in recorder.calls += 1 }, deletion: .inert,
         onTapTask: { _ in recorder.calls += 1 }, onDropTask: { _, _ in recorder.calls += 1 },
         onTapEmpty: { _, _ in recorder.calls += 1 }, onReschedule: nil)
@@ -351,5 +353,21 @@ struct MobileCalendarPagerTests {
     let live = Self.dayPage(Self.dayInputs(startDate: try Self.date(2026, 10, 14), calendar: calendar))
     #expect(MobileCalendarDayPage() == MobileCalendarDayPage())
     #expect(MobileCalendarDayPage() != live)
+  }
+
+  @Test("An unchanged week redraws its clock after a zone change or logical midnight")
+  func dayPageRefreshesWhenItsProductClockChanges() throws {
+    let calendar = try Self.calendar()
+    let start = try Self.date(2026, 10, 14)
+    func page(day: String, zone: String) throws -> MobileCalendarDayPage {
+      Self.dayPage(Self.dayInputs(
+        startDate: start, dayCount: 7, calendar: calendar,
+        productClock: LorvexProductDayClock(
+          logicalDay: day, timeZone: try #require(TimeZone(identifier: zone)))))
+    }
+    let original = try page(day: "2026-10-14", zone: "America/Los_Angeles")
+    #expect(original != (try page(day: "2026-10-14", zone: "America/New_York")))
+    #expect(original != (try page(day: "2026-10-15", zone: "America/Los_Angeles")))
+    #expect(original == (try page(day: "2026-10-14", zone: "America/Los_Angeles")))
   }
 }

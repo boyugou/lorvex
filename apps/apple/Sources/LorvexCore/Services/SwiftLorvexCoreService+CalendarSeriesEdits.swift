@@ -63,11 +63,11 @@ extension SwiftLorvexCoreService {
     let startTime = allDay ? nil : (updates.startTime ?? row.startTime?.asString)
     let sourceDaySpan = calendarDaySpan(
       from: row.startDate.asString, to: row.endDate?.asString)
-    var endDate =
-      updates.endDate
-      ?? shiftedEndDate(
-        from: startDate, daySpan: sourceDaySpan)
-    var endTime = allDay ? nil : (updates.endTime ?? row.endTime?.asString)
+    var endDate = updates.endDate != nil
+      ? updates.endDate?.trimmedNilIfEmpty
+      : shiftedEndDate(from: startDate, daySpan: sourceDaySpan)
+    var endTime = allDay ? nil : updates.endTime != nil
+      ? updates.endTime?.trimmedNilIfEmpty : row.endTime?.asString
 
     let startMoved =
       updates.startDate != nil || updates.startTime != nil
@@ -222,14 +222,16 @@ extension SwiftLorvexCoreService {
     let source = state == .replacement ? context.source : context.master
     let effectiveUpdates = updates ?? ScopedCalendarEventUpdates()
     let sourceIsReplacement = source.seriesId != nil && source.occurrenceState == .replacement
+    let inheritedStart = CalendarInheritedStart(
+      date: sourceIsReplacement ? source.startDate.asString : occurrenceDate,
+      time: source.startTime?.asString, timezone: source.timezone, allDay: source.allDay)
     let timing = Self.resolvedScopedTiming(
       row: source,
-      defaultStartDate: sourceIsReplacement ? source.startDate.asString : occurrenceDate,
+      defaultStartDate: inheritedStart.date,
       updates: effectiveUpdates)
     let title = effectiveUpdates.title ?? source.title
-    let timezone =
-      try effectiveUpdates.timezone.trimmedNilIfEmpty ?? source.timezone
-      ?? WorkflowTimezone.anchoredTimezoneName(db)
+    let timezone = effectiveUpdates.timezone != nil
+      ? effectiveUpdates.timezone.trimmedNilIfEmpty : source.timezone
     let description = effectiveUpdates.notes ?? source.description
     let location = effectiveUpdates.location ?? source.location
     let url = (effectiveUpdates.url ?? source.url).trimmedNilIfEmpty
@@ -273,7 +275,8 @@ extension SwiftLorvexCoreService {
       }
       let result = try CalendarEventUpdate.updateCalendarEvent(
         db, hlc: hlc, input: input, before: before,
-        beforeRecurrence: nil, existing: try Self.existingUpdateFields(existing, db: db))
+        beforeRecurrence: nil, existing: try Self.existingUpdateFields(existing, db: db),
+        inheritedStart: state == .replacement ? inheritedStart : nil)
       event = result.event
     } else {
       before = nil
@@ -298,7 +301,7 @@ extension SwiftLorvexCoreService {
         recurrenceGeneration: generation,
         attendees: attendees)
       event = try CalendarEventCreate.createCalendarEvent(
-        db, hlc: hlc, eventId: id, input: input
+        db, hlc: hlc, eventId: id, input: input, inheritedStart: inheritedStart
       ).event
     }
 
@@ -394,8 +397,8 @@ extension SwiftLorvexCoreService {
       timezone: Self.patchString(updates.timezone),
       startDate: updates.startDate.map(Patch.set) ?? .unset,
       startTime: updates.startTime.map(Patch.set) ?? .unset,
-      endDate: updates.endDate.map(Patch.set) ?? .unset,
-      endTime: updates.endTime.map(Patch.set) ?? .unset,
+      endDate: Self.patchString(updates.endDate),
+      endTime: Self.patchString(updates.endTime),
       allDay: updates.allDay,
       description: updates.notes.map(Patch.set) ?? .unset,
       location: updates.location.map(Patch.set) ?? .unset,
@@ -462,15 +465,17 @@ extension SwiftLorvexCoreService {
         occurrenceDate: occurrenceDate,
         seriesStartDate: master.startDate.asString)
       let sourceIsReplacement = source.seriesId != nil && source.occurrenceState == .replacement
+      let inheritedStart = CalendarInheritedStart(
+        date: sourceIsReplacement ? source.startDate.asString : occurrenceDate,
+        time: source.startTime?.asString, timezone: source.timezone, allDay: source.allDay)
       let timing = Self.resolvedScopedTiming(
         row: source,
-        defaultStartDate: sourceIsReplacement ? source.startDate.asString : occurrenceDate,
+        defaultStartDate: inheritedStart.date,
         updates: updates)
       let input = CalendarEventCreateInput(
         title: updates.title ?? source.title,
         recurrence: replacementRecurrence,
-        timezone: try updates.timezone.trimmedNilIfEmpty ?? source.timezone
-          ?? WorkflowTimezone.anchoredTimezoneName(db),
+        timezone: updates.timezone != nil ? updates.timezone.trimmedNilIfEmpty : source.timezone,
         startDate: timing.startDate,
         startTime: timing.startTime,
         endDate: timing.endDate,
@@ -556,14 +561,15 @@ extension SwiftLorvexCoreService {
         let updated = try CalendarEventUpdate.updateCalendarEvent(
           db, hlc: hlc, input: update, before: existingJSON,
           beforeRecurrence: existing.recurrence,
-          existing: try Self.existingUpdateFields(existing, db: db))
+          existing: try Self.existingUpdateFields(existing, db: db),
+          inheritedStart: inheritedStart)
         event = updated.event
         _ = try self.sweepSeriesDecisions(
           db, hlc: hlc, deviceId: deviceId, seriesId: cutover.id, scope: .all)
       } else {
         before = nil
         event = try CalendarEventCreate.createCalendarEvent(
-          db, hlc: hlc, eventId: cutover.id, input: input).event
+          db, hlc: hlc, eventId: cutover.id, input: input, inheritedStart: inheritedStart).event
       }
       try self.enqueueUpsert(
         db, hlc: hlc, deviceId: deviceId, kind: .calendarEvent,

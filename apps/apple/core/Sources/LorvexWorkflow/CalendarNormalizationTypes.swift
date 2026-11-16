@@ -72,7 +72,7 @@ public enum CalendarEventOpError: Error, Equatable, CustomStringConvertible, Loc
   }
 }
 
-/// Inputs for ``CalendarNormalization/normalizeCalendarCreate(_:)``.
+/// Inputs for ``CalendarNormalization/normalizeCalendarCreate(_:inheritedStart:)``.
 public struct CalendarCreateInput: Sendable, Equatable {
   public var title: String
   public var recurrence: String?
@@ -131,7 +131,7 @@ public struct NormalizedCalendarCreate: Sendable, Equatable {
   public var dstGuard: CalendarDstGuard
 }
 
-/// Pre-mutation row read by ``CalendarNormalization/normalizeCalendarUpdate(_:existing:)``
+/// Pre-mutation row read by ``CalendarNormalization/normalizeCalendarUpdate(_:existing:inheritedStart:)``
 /// so the patch logic can reconcile each `Patch<T>` against the existing
 /// value before validating the prospective post-patch state.
 public struct CalendarUpdateExisting: Sendable, Equatable {
@@ -147,7 +147,7 @@ public struct CalendarUpdateExisting: Sendable, Equatable {
   public var allDay: Bool
   public var timezone: String?
   /// Pre-mutation recurrence JSON. Read on a start_date re-anchor so
-  /// ``CalendarNormalization/normalizeCalendarUpdate(_:existing:)`` can re-run
+  /// ``CalendarNormalization/normalizeCalendarUpdate(_:existing:inheritedStart:)`` can re-run
   /// create-time recurrence normalization against the new anchor. `nil` for a
   /// non-recurring event.
   public var recurrence: String?

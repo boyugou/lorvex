@@ -70,6 +70,9 @@ struct AppStoreCalendarDraftStorage {
   struct CalendarEditBaseline: Equatable {
     var title: String
     var timing: CalendarEventTiming
+    /// The repeat rule follows the stored event's zone even when the form
+    /// shows its start and end in a different timeline zone.
+    var sourceTimeZone: TimeZone?
     var location: String
     var notes: String
     var color: String?

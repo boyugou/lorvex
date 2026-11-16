@@ -120,6 +120,37 @@ still rings at 9 AM there. When a device is in a different zone from Lorvex's,
 the setting offers a one-tap switch to the device's zone; on a short trip you
 can keep your home zone instead.
 
+Search by city, time-zone name, or the GMT offset shown in the list. The picker
+closes once the change has saved and refreshed; if it fails, your selection
+stays open so you can retry. Task editors propose new times using Lorvex's
+clock, even when your device is in another zone, and the Mac's custom snooze
+date uses the same zone as its Tomorrow shortcut.
+
+The calendar's Today highlight, current-time line, and opening scroll position
+follow Lorvex's clock too. All-day task overdue markers agree with Today, even
+when the device and Lorvex are on different dates.
+
+When the clocks change during an event, the calendar grid shows its occupied
+time in separate pieces with GMT offsets. Each piece opens the same event;
+use its edit form to change it. Event details, agendas, and the edit form show the actual
+start and end, including their different offsets. A repeated hour remains
+part of the event even when its end clock looks earlier than its start.
+
+Calendar event forms show the time zone used by their date and time controls.
+An event opened from the timeline uses the timeline's zone. Edits and drags
+preserve the event's original time zone, including the clock its repeating
+schedule follows. New events start from Lorvex's current clock; an open draft
+keeps its displayed zone even if the setting changes before you save.
+On the Mac, Repeat starts on the event's own weekday or day of the month.
+If an existing event repeats in a different zone from the displayed times,
+the Repeat controls name that zone; their weekday and month-day choices use it.
+Event details and the iPhone edit form also show the repeat rule's time zone
+when it differs. For example, a Monday-night series in New York can appear
+on Tuesday in Tokyo while continuing to repeat on Mondays in New York.
+Saving an event keeps the calendar on the day, week, or month you are viewing,
+including when you browse to another page while the save finishes. The event
+appears on its date and time in the calendar's display zone.
+
 ## Quick Capture
 
 Quick Capture is the fastest way to get a task into Lorvex without interrupting
@@ -3415,12 +3446,24 @@ the event's time, place, repeat rule, attendees, link, and notes, and an **Open 
 Calendar** link that opens Apple Calendar on the event's day, where it can be
 changed. The Mac inspector offers the same link for such an event.
 
+Imported timed events keep Apple Calendar's actual start and end, including
+both readings of the repeated hour when clocks go back. Their durations and
+busy times stay accurate when you change Lorvex's time zone. Refreshing one
+week preserves imported events already cached in other weeks; repeat rules do
+not create extra meetings outside the observations fetched from Calendar.
+Open or refresh the week you want to inspect to fetch its current events.
+
 **Copy or share an event** as plain text. On the Mac, right-click the event (on
 the calendar, in search results, or on Today's schedule) or open its inspector's
 **More** menu, and choose **Copy as Text** or **Share**. On iPhone and iPad, tap
 **Share** in the read-only event sheet. The text is the title, one line each
-for when, where, how it repeats, who is invited, and the link, and then the
-notes, written in your language.
+for when, its time zone, where, how it repeats, who is invited, and the link,
+and then the notes, written in your language. Dates include the year. A timed
+event names the zone its displayed time uses; a repeat following a different
+zone names that clock too. If the UTC offset changes during the event, each
+endpoint includes its own offset, so two readings of the same clock time
+remain distinct. An event ending at midnight names the following date.
+All-day dates and floating times have no added time zone.
 
 On iPhone and iPad, the control at the top of the **Calendar** tab switches
 between **Day**, **Week**, and **Month**, and keeps the day you were looking
@@ -3506,9 +3549,20 @@ starts at that time, and a drag covers the time you dragged across.
 
 **Start** and **End** each have a day and, unless the event is all day, a
 time, so an event can run overnight, such as from 10 PM to 1 AM, or across
-several days. Changing the start moves the end with it, so the event keeps its
-length. Picking an end time earlier than the start time ends the event the
-next day. An event can't be saved while its end is not after its start.
+several days. A timed event can also have no end: choose **Add end time** to
+give it one, or the clear button beside **End** to remove it. Changing the start
+moves an existing end with it, so the event keeps its length. Moving an event
+with no end keeps it that way. Picking an end time earlier than the start time
+ends the event the next day. An event with an end can't be saved while that
+end is not after its start.
+
+On the Mac, **Repeat** shows **Custom** for patterns such as the last day of
+each month, several dates per month, or the last matching weekday. The summary
+names the full pattern, and changing **Every** keeps its dates and conditions.
+Choosing Daily, Weekly, Monthly, or Yearly replaces that custom pattern while
+keeping its interval and ending condition. Day 31 skips months without a
+31st; the last day follows each month's end. iPhone and iPad show the same
+saved repeat summary in the event's details and edit form.
 
 To move an event, drag it in the grid; on iPhone and iPad, touch and hold it
 first. On the Mac, drag an event's top or bottom edge to change when it starts

@@ -6,14 +6,15 @@ extension AppStore {
 
   func prepareCalendarDraft(for event: CalendarTimelineEvent) {
     draftCalendarTitle = event.title
-    draftCalendarTiming = CalendarEventTiming(event: event, fallbackDay: draftCalendarTiming.start)
+    draftCalendarTiming = CalendarEventTiming(
+      event: event, fallbackDay: draftCalendarTiming.start, fallbackTimeZone: logicalTimeZone)
     draftCalendarLocation = event.location ?? ""
     draftCalendarNotes = event.notes ?? ""
     draftCalendarColor = event.color
     // Parse the canonical recurrence JSON back into the typed rule so the Repeat
     // row opens on the current cadence; nil for a one-off event.
     if let raw = event.recurrenceRule {
-      if let rule = TaskRecurrenceRule.bridgeRule(from: raw) {
+      if let rule = TaskRecurrenceRule.bridgeRule(from: raw, requiringKnownFields: true) {
         draftCalendarRecurrence = rule
         calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(rule)
       } else {
@@ -32,6 +33,7 @@ extension AppStore {
       AppStoreCalendarDraftStorage.CalendarEditBaseline(
         title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
         timing: draftCalendarTiming,
+        sourceTimeZone: event.timezone.flatMap(TimeZone.init(identifier:)),
         location: draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines),
         notes: draftCalendarNotes.trimmingCharacters(in: .whitespacesAndNewlines),
         color: draftCalendarColor)
@@ -46,7 +48,8 @@ extension AppStore {
   func beginCreateCalendarDraft() {
     stashCalendarDraftForCreate()
     draftCalendarTitle = ""
-    draftCalendarTiming = .nextHourBlock(after: Date())
+    draftCalendarTiming = .nextHourBlock(
+      after: now(), calendar: LorvexDateFormatters.gregorianCalendar(timeZone: logicalTimeZone))
     draftCalendarLocation = ""
     draftCalendarNotes = ""
     draftCalendarColor = nil
@@ -74,7 +77,7 @@ extension AppStore {
           location: draftCalendarLocation.trimmedNilIfEmpty,
           notes: notes,
           recurrence: draftCalendarRecurrence,
-          timezone: nil,
+          timezone: draftCalendarTiming.calendar.timeZone.identifier,
           url: nil,
           color: draftCalendarColor,
           eventType: nil,
@@ -89,9 +92,6 @@ extension AppStore {
       target: draftEventKitWriteTarget)
     await reconcileAfterCommittedMutation(source: "macos.calendar.create.reconcile") {
       try await refreshCurrentCalendarTimeline()
-    }
-    if calendarTimeline?.events.contains(where: { $0.eventID == event.eventID }) != true {
-      calendarTimeline?.events.append(event)
     }
     draftCalendarTitle = ""
     draftCalendarLocation = ""
@@ -117,6 +117,7 @@ extension AppStore {
       // The core validates a start and an end as a pair, so the timing is
       // written whole when any part of it changed and left out otherwise.
       let timingChanged = baseline.map { !timing.storesSameFields(as: $0.timing) } ?? true
+      let storedTiming = timing.sourceFields(for: event)
       // Only the fields the user changed from the baseline are sent; nil leaves
       // the others as stored, including a change another writer made while the
       // form was open. A field the user emptied is a deliberate clear, so it is
@@ -124,10 +125,10 @@ extension AppStore {
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
         title: title == baseline?.title ? nil : title,
-        startDate: timingChanged ? timing.startDate : nil,
-        endDate: timingChanged ? timing.endDate(updating: event.endDate) : nil,
-        startTime: timingChanged ? timing.startTime : nil,
-        endTime: timingChanged ? timing.endTime : nil,
+        startDate: timingChanged ? storedTiming.startDate : nil,
+        endDate: timingChanged ? storedTiming.endDate ?? storedTiming.startDate : nil,
+        startTime: timingChanged ? storedTiming.startTime : nil,
+        endTime: timingChanged ? storedTiming.endTime ?? "" : nil,
         allDay: timingChanged ? timing.allDay : nil,
         location: location == baseline?.location ? nil : location,
         notes: notesChanged ? notes : nil,
@@ -178,6 +179,8 @@ extension AppStore {
   ///   - newEnd: The new end instant. A resize to the bottom of the grid passes
   ///     midnight at the start of the next day (`dateAtMinute`), which is
   ///     stored as that day at 00:00.
+  ///   - isResize: An explicit resize may give an event an end. A move retains
+  ///     an absent end even though the grid supplies a visual block length.
   ///   - notes: Optional notes override. When nil, leaves notes unchanged.
   ///   - undoManager: When given, the move registers its inverse so ⌘Z puts the
   ///     event back at its previous times; the undo is itself redoable. Only the
@@ -187,14 +190,19 @@ extension AppStore {
     _ event: CalendarTimelineEvent,
     newStart: Date,
     newEnd: Date,
+    isResize: Bool = false,
     notes: String? = nil,
     undoManager: UndoManager? = nil
   ) async {
     // Defense in depth: the view-side guard also keeps the gesture from firing.
     guard event.editable, !event.allDay, !event.supportsScopedMutation, !event.isMultiDay
     else { return }
-    let timing = CalendarEventTiming(start: newStart, end: newEnd, allDay: false)
-    let previous = CalendarEventTiming(event: event, fallbackDay: newStart)
+    let displayZone = event.projection.flatMap { TimeZone(identifier: $0.timezone) } ?? logicalTimeZone
+    let timing = CalendarEventTiming(
+      start: newStart, end: newEnd, allDay: false,
+      hasEndTime: isResize || event.endTime != nil)
+      .interpretingWallClock(in: displayZone, preserving: event.projection).storing(for: event)
+    let previous = CalendarEventTiming(event: event, fallbackDay: newStart).storing(for: event)
     // A nil title, location, or notes leaves that column as stored (the core
     // maps nil to `.unset`). Sending the grid's copy would write back a title
     // or location changed elsewhere after the block was drawn, and `""` would
@@ -207,9 +215,9 @@ extension AppStore {
         // An event that had an end date and now fits in one day sends its
         // start date: nil keeps the stored end, which would stretch an event
         // moved up from a midnight end into the next day.
-        endDate: timing.endDate(updating: event.endDate),
+        endDate: timing.endDate ?? timing.startDate,
         startTime: timing.startTime,
-        endTime: timing.endTime,
+        endTime: timing.endTime ?? "",
         allDay: event.allDay,
         location: nil,
         notes: notes
@@ -264,13 +272,14 @@ extension AppStore {
     _ timing: LorvexCore.CalendarEventTiming, toEventWithID id: CalendarTimelineEvent.ID
   ) async throws {
     guard let stored = try await core.getCalendarEvent(id: id) else { return }
+    let timing = timing.storing(for: stored)
     let updated = try await core.updateCalendarEvent(
       id: id,
       title: nil,
       startDate: timing.startDate,
       endDate: timing.endDate(updating: stored.endDate),
       startTime: timing.startTime,
-      endTime: timing.endTime,
+      endTime: timing.endTime ?? "",
       allDay: nil,
       location: nil,
       notes: nil
@@ -320,6 +329,17 @@ extension AppStore {
     let from =
       anchorDate.map { Self.ymdFormatter.string(from: $0) } ?? logicalTodayDateString
     let to = LorvexDateFormatters.ymdUTCAddingDays(from, days: dayCount) ?? from
+    try await refreshCalendarTimeline(
+      window: CalendarTimelineWindow(from: from, to: to),
+      requestCalendarAccess: requestCalendarAccess, ingestingEventKit: ingestingEventKit)
+  }
+
+  private func refreshCalendarTimeline(
+    window: CalendarTimelineWindow, requestCalendarAccess: Bool = false,
+    ingestingEventKit: Bool
+  ) async throws {
+    let (from, to) = (window.from, window.to)
+    calendarStorage.requestedWindow = window
     calendarStorage.timelineLoadToken &+= 1
     let loadToken = calendarStorage.timelineLoadToken
     if ingestingEventKit, let coordinator = eventKitCoordinator,
@@ -365,27 +385,17 @@ extension AppStore {
     adoptSelectedCalendarOccurrence()
   }
 
-  /// Re-loads whatever window is currently on screen (day, week, or month) at
-  /// its own span, so a mutation-triggered refresh (create/edit/delete/drag)
-  /// can't silently shrink a wider window — e.g. narrowing the month grid's
-  /// ~42-day span back down to the day/week default of 14. `ingestingEventKit`
-  /// carries through to the load, as ``refreshCalendarTimeline`` takes it.
+  /// Reloads the last requested window, including navigation still in flight.
+  /// Keeping its exact keys preserves both a single day and a wider month.
   func refreshCurrentCalendarTimeline(ingestingEventKit: Bool = true) async throws {
-    guard let timeline = calendarTimeline,
-      let from = Self.ymdFormatter.date(from: timeline.from)
-    else {
+    let window = calendarStorage.requestedWindow
+      ?? calendarTimeline.map { CalendarTimelineWindow(from: $0.from, to: $0.to) }
+    guard let window else {
       try await refreshCalendarTimeline(ingestingEventKit: ingestingEventKit)
       return
     }
-    let dayCount: Int
-    if let to = Self.ymdFormatter.date(from: timeline.to) {
-      let days = Calendar.current.dateComponents([.day], from: from, to: to).day ?? 14
-      dayCount = max(days, 1)
-    } else {
-      dayCount = 14
-    }
     try await refreshCalendarTimeline(
-      anchorDate: from, dayCount: dayCount, ingestingEventKit: ingestingEventKit)
+      window: window, ingestingEventKit: ingestingEventKit)
   }
 
   /// Re-loads the calendar window while the Calendar is on screen. A task

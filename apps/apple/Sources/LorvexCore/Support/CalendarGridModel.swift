@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 /// Pure day-column layout assembly: takes a contiguous date range's events +
 /// scheduled tasks and produces fully laid-out day columns. Free of SwiftUI so
@@ -75,6 +76,7 @@ public enum CalendarGridModel {
     // For each day key, the timed intervals clipped to that day.
     var intervalsByKey: [String: [CalendarGridLayout.Interval]] = [:]
     var eventByBlockID: [String: CalendarTimelineEvent] = [:]
+    var clockSegmentByBlockID: [String: CalendarWallClockSegment] = [:]
 
     for event in events {
       let startKey = event.startDate
@@ -103,9 +105,26 @@ public enum CalendarGridModel {
       let wallMinutes =
         CalendarEventTiming.daySpan(startDate: startKey, endDate: event.endDate) * 1440
         + endMinRaw - startMinRaw
-      if wallMinutes >= 1440 {
+      if (event.elapsedMinutes ?? wallMinutes) >= 1440 {
         for key in dayKeys where event.occurs(on: key) {
           allDayByKey[key, default: []].append(event)
+        }
+        continue
+      }
+
+      if let projection = event.projection, let end = projection.end, end > projection.start,
+        TimeZone(identifier: projection.timezone) != nil
+      {
+        let needsOffsets = event.needsClockOffsets
+        for key in dayKeys where event.occurs(on: key) {
+          let segments = event.clockSegments(on: key)
+          for (index, segment) in segments.enumerated() {
+            let blockID = "\(event.id)#\(key)" + (segments.count > 1 ? "#clock\(index)" : "")
+            intervalsByKey[key, default: []].append(
+              .init(id: blockID, startMin: segment.startMinutes, endMin: segment.endMinutes))
+            eventByBlockID[blockID] = event
+            if needsOffsets { clockSegmentByBlockID[blockID] = segment }
+          }
         }
         continue
       }
@@ -172,7 +191,8 @@ public enum CalendarGridModel {
               lane: p.lane,
               laneCount: p.laneCount,
               id: p.id,
-              part: event.dayPart(on: key)
+              part: event.dayPart(on: key),
+              clockSegment: clockSegmentByBlockID[p.id]
             ))
         } else if let task = taskByBlockID[p.id] {
           taskBlocks.append(

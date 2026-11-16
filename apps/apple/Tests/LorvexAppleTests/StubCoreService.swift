@@ -140,6 +140,10 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// memory save is still in flight.
   var loadMemoryGate: (@Sendable () async -> Void)?
   var loadCalendarTimelineCallCount = 0
+  var loadCalendarTimelineError: LorvexCoreError?
+  var loadCalendarTimelineGate: (@Sendable (String, String) async -> Void)?
+  var forwardsCalendarCreates = false
+  var forwardsCalendarUpdates = false
   var loadRuntimeDiagnosticsCallCount = 0
   var loadSyncStatusCallCount = 0
   var listTasksCallCount = 0

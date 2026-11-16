@@ -54,13 +54,13 @@ public struct LorvexTimeZoneChoice: Identifiable, Hashable, Sendable {
 
   /// Whether `query` names this zone: a case- and accent-insensitive match on
   /// the city in the user's language or as the identifier spells it, the
-  /// region, the generic name, the identifier, or the city of an unlisted
-  /// alias. An empty query matches every zone.
+  /// region, the generic name, the identifier, the displayed GMT offset,
+  /// or the city of an unlisted alias. An empty query matches every zone.
   public func matches(_ query: String) -> Bool {
     let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return true }
-    return ([city, identifierCity, region, genericName, identifier] + searchAliases).contains {
-      $0.range(of: trimmed, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+    return ([city, identifierCity, region, genericName, identifier, offsetLabel] + searchAliases).contains {
+      $0.containsSearchTerm(trimmed)
     }
   }
 
@@ -94,7 +94,9 @@ public struct LorvexTimeZoneChoice: Identifiable, Hashable, Sendable {
     let namer = ZoneNamer(locale: locale)
     let english = ZoneNamer(locale: Locale(identifier: "en_US"))
     var zones: [String: [ZoneIdentifier]] = [:]
-    for identifier in TimeZone.knownTimeZoneIdentifiers.filter({ $0.contains("/") }) + ["UTC"] {
+    let identifiers = Set(TimeZone.knownTimeZoneIdentifiers.filter { $0.contains("/") })
+      .union(["UTC"]).union(kept)
+    for identifier in identifiers {
       guard let choice = LorvexTimeZoneChoice(identifier: identifier, now: now, namer: namer),
         let zone = TimeZone(identifier: identifier)
       else { continue }

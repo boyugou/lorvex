@@ -1,12 +1,6 @@
 import Foundation
 import LorvexCore
 
-/// A calendar timeline window as `yyyy-MM-dd` day keys, both ends inclusive.
-struct MobileCalendarWindow: Equatable, Sendable {
-  let from: String
-  let to: String
-}
-
 extension MobileStore {
   /// Shows the calendar in `mode`, opening on `dayKey` (`yyyy-MM-dd`), and
   /// remembers the mode so the next store opens the calendar in it. Switching
@@ -30,7 +24,7 @@ extension MobileStore {
     isMutatingCalendarEvent = true
     defer { isMutatingCalendarEvent = false }
     guard
-      let event = await performCanonicalMutation({
+      await performCanonicalMutation({
         try await core.createCalendarEvent(
           title: calendarDraft.trimmedTitle,
           startDate: calendarDraft.timing.startDate,
@@ -39,29 +33,16 @@ extension MobileStore {
           endTime: calendarDraft.timing.endTime,
           allDay: calendarDraft.timing.allDay,
           location: calendarDraft.trimmedLocation.trimmedNilIfEmpty,
-          notes: calendarDraft.trimmedNotes.trimmedNilIfEmpty
+          notes: calendarDraft.trimmedNotes.trimmedNilIfEmpty,
+          recurrence: nil, timezone: calendarDraft.timing.calendar.timeZone.identifier,
+          url: nil, color: nil, eventType: nil, personName: nil, attendees: nil
         )
-      })
+      }) != nil
     else { return false }
 
     calendarDraft = MobileCalendarDraft(now: now)
-    await reconcileAfterCommittedMutation(source: "ios.calendar.create.reconcile") {
-      // Reconcile the window the user is actually viewing, not a today-anchored
-      // one: the day view loads `[visibleDate-7, visibleDate+7]`, so reloading a
-      // fixed `[today, today+14]` here would drop every pre-existing event in a
-      // week the user paged away to. Matches the scoped-mutation and macOS
-      // reconcile paths. Falls back to the today window only when no timeline is
-      // loaded (a create raised before the timeline first loads).
-      let from = calendarWindowToReload?.from ?? logicalTodayString
-      let to = calendarWindowToReload?.to ?? Self.calendarEndDateString(from: logicalTodayString)
-      calendarTimeline = try await core.loadCalendarTimeline(from: from, to: to)
-      if calendarTimeline?.events.contains(where: { $0.eventID == event.eventID }) != true {
-        calendarTimeline?.events.append(event)
-      }
-    }
-    if calendarTimeline?.events.contains(where: { $0.eventID == event.eventID }) != true {
-      calendarTimeline?.events.append(event)
-    }
+    await reloadCalendarWindowAfterMutation(fallback: CalendarTimelineWindow(
+      from: logicalTodayString, to: Self.calendarEndDateString(from: logicalTodayString)))
     return true
   }
 
@@ -70,7 +51,7 @@ extension MobileStore {
   }
 
   public func prepareCalendarDraft(for event: CalendarTimelineEvent) {
-    calendarDraft = MobileCalendarDraft(event: event, fallbackDate: now())
+    calendarDraft = MobileCalendarDraft(event: event, fallbackDate: now(), timeZone: logicalTimeZone)
   }
 
   /// Seed a fresh default draft before presenting the create-event sheet from a
@@ -81,7 +62,8 @@ extension MobileStore {
   /// edited or tapped-slot draft. Day-grid taps seed their own time slot and
   /// bypass this.
   public func beginCreateCalendarDraft() {
-    calendarDraft = MobileCalendarDraft(timing: .nextHourBlock(after: now()))
+    calendarDraft = MobileCalendarDraft(timing: .nextHourBlock(
+      after: now(), calendar: LorvexDateFormatters.gregorianCalendar(timeZone: logicalTimeZone)))
   }
 
   @discardableResult
@@ -97,25 +79,24 @@ extension MobileStore {
     // The core validates a start and an end as a pair, so the timing is
     // written whole when any part of it changed and left out otherwise.
     let timingChanged = baseline.map { !timing.storesSameFields(as: $0.timing) } ?? true
+    let storedTiming = timing.sourceFields(for: event)
     do {
       // Only the fields the user changed from the draft's baseline are sent; nil
       // leaves the others as stored, including a change another writer made
       // while the sheet was open. A location or notes field the user emptied is
       // sent as "", which clears it.
-      let updated = try await core.updateCalendarEvent(
+      _ = try await core.updateCalendarEvent(
         id: event.eventID,
         title: draft.trimmedTitle == baseline?.title ? nil : draft.trimmedTitle,
-        startDate: timingChanged ? timing.startDate : nil,
-        endDate: timingChanged ? timing.endDate(updating: event.endDate) : nil,
-        startTime: timingChanged ? timing.startTime : nil,
-        endTime: timingChanged ? timing.endTime : nil,
+        startDate: timingChanged ? storedTiming.startDate : nil,
+        endDate: timingChanged ? storedTiming.endDate ?? storedTiming.startDate : nil,
+        startTime: timingChanged ? storedTiming.startTime : nil,
+        endTime: timingChanged ? storedTiming.endTime ?? "" : nil,
         allDay: timingChanged ? timing.allDay : nil,
         location: draft.trimmedLocation == baseline?.location ? nil : draft.trimmedLocation,
         notes: draft.trimmedNotes == baseline?.notes ? nil : draft.trimmedNotes
       )
-      if let index = calendarTimeline?.events.firstIndex(where: { $0.id == updated.id }) {
-        calendarTimeline?.events[index] = updated
-      }
+      await reloadCalendarWindowAfterMutation()
       calendarDraft = MobileCalendarDraft(now: now)
       return true
     } catch {
@@ -145,9 +126,12 @@ extension MobileStore {
     else { return false }
     isMutatingCalendarEvent = true
     defer { isMutatingCalendarEvent = false }
-    let timing = CalendarEventTiming(start: newStart, end: newEnd, allDay: false)
+    let displayZone = event.projection.flatMap { TimeZone(identifier: $0.timezone) } ?? logicalTimeZone
+    let timing = CalendarEventTiming(
+      start: newStart, end: newEnd, allDay: false, hasEndTime: event.endTime != nil)
+      .interpretingWallClock(in: displayZone, preserving: event.projection).storing(for: event)
     do {
-      let updated = try await core.updateCalendarEvent(
+      _ = try await core.updateCalendarEvent(
         id: event.eventID,
         title: nil,
         startDate: timing.startDate,
@@ -157,16 +141,14 @@ extension MobileStore {
         // stored end on the original day, which throws "end before start" when
         // a drag across day columns (iPad) moves forward and stretches the
         // event when it moves back.
-        endDate: timing.endDate(updating: event.endDate),
+        endDate: timing.endDate ?? timing.startDate,
         startTime: timing.startTime,
-        endTime: timing.endTime,
+        endTime: timing.endTime ?? "",
         allDay: event.allDay,
         location: nil,
         notes: nil
       )
-      if let index = calendarTimeline?.events.firstIndex(where: { $0.id == updated.id }) {
-        calendarTimeline?.events[index] = updated
-      }
+      await reloadCalendarWindowAfterMutation()
       return true
     } catch {
       await presentUserFacingError(error)
@@ -203,6 +185,26 @@ extension MobileStore {
     await refreshCalendarTimeline(from: start, to: end)
   }
 
+  /// Reloads projected occurrences after a write. Mutation results carry source
+  /// clocks and cannot replace timeline rows that use the product's time zone.
+  /// Tasks share the same window and supersede token, including when the user
+  /// navigated while the write was in flight.
+  func reloadCalendarWindowAfterMutation(fallback: CalendarTimelineWindow? = nil) async {
+    guard let window = calendarWindowToReload ?? fallback else { return }
+    calendarTimelineLoadToken &+= 1
+    let token = calendarTimelineLoadToken
+    await reconcileAfterCommittedMutation(source: "ios.calendar.mutation.reconcile") {
+      async let loadedTimeline = core.loadCalendarTimeline(from: window.from, to: window.to)
+      async let loadedTasks = core.getScheduledTasks(
+        from: window.from, to: window.to, limit: CalendarGridModel.windowTaskLimit)
+      let timeline = try await loadedTimeline
+      let tasks = try await loadedTasks
+      guard token == calendarTimelineLoadToken else { return }
+      calendarTimeline = timeline
+      calendarScheduledTasks = tasks
+    }
+  }
+
   /// Reload the window the day view currently owns rather than re-anchoring to a
   /// fixed date. Falls back to a window around `fallbackAnchor` only when no
   /// timeline is loaded yet. A background `.EKEventStoreChanged` and a CloudKit
@@ -222,7 +224,7 @@ extension MobileStore {
   /// supersede token so a slower in-flight load can never pair one window's
   /// events with another window's scheduled tasks.
   func refreshCalendarTimeline(from start: String, to end: String) async {
-    calendarRequestedWindow = MobileCalendarWindow(from: start, to: end)
+    calendarRequestedWindow = CalendarTimelineWindow(from: start, to: end)
     calendarTimelineLoadToken &+= 1
     let token = calendarTimelineLoadToken
     do {
@@ -245,8 +247,8 @@ extension MobileStore {
   /// The window a refresh reloads: the one the calendar surface last asked
   /// for, even while that load is still in flight, else the loaded one. Nil
   /// before any calendar load, when a refresh falls back to a today window.
-  var calendarWindowToReload: MobileCalendarWindow? {
-    calendarRequestedWindow ?? calendarTimeline.map { MobileCalendarWindow(from: $0.from, to: $0.to) }
+  var calendarWindowToReload: CalendarTimelineWindow? {
+    calendarRequestedWindow ?? calendarTimeline.map { CalendarTimelineWindow(from: $0.from, to: $0.to) }
   }
 
   /// Reconciles the exact already-visible calendar window after an explicit
@@ -259,7 +261,7 @@ extension MobileStore {
     throughDay: String,
     requestAccess: Bool
   ) async throws {
-    calendarRequestedWindow = MobileCalendarWindow(from: fromDay, to: throughDay)
+    calendarRequestedWindow = CalendarTimelineWindow(from: fromDay, to: throughDay)
     calendarTimelineLoadToken &+= 1
     let token = calendarTimelineLoadToken
     let ingestError: (any Error)?

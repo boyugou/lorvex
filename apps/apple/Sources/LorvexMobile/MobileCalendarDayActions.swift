@@ -68,11 +68,8 @@ extension MobileCalendarDayView {
   }
 
   func prepareCreate(at day: Date, minutes: Int) {
-    let start =
-      calendar.date(
-        bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: day
-      ) ?? day
-    store.calendarDraft = MobileCalendarDraft.timedDefault(start: start)
+    store.calendarDraft = MobileCalendarDraft(timing: .timed(
+      on: day, atMinute: minutes, timeZone: store.logicalTimeZone, dayCalendar: calendar))
     isShowingCreateEvent = true
   }
 

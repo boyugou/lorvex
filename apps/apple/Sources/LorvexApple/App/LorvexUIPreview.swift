@@ -289,7 +289,7 @@
         }
         store.selectedTaskID = nil
         store.selection = .today
-        // The create sheets of lists and habits and the list edit sheet, each
+        // The create and edit sheets, each
         // in a window of its own sized like the sheet. The edit sheet opens on
         // a seeded list; a habit is edited in its inspector.
         var sheetStops: [(String, AnyView)] = []
@@ -300,6 +300,14 @@
             .onAppear { store.prepareListDraft(for: list) })))
         }
         sheetStops.append(("sheet-createHabit", AnyView(CreateHabitSheet(store: store, isPresented: closed))))
+        sheetStops.append(("sheet-createEvent", AnyView(
+          CalendarEventSheet(store: store, mode: .create, dismiss: {})
+            .onAppear { store.beginCreateCalendarDraft() })))
+        if let event = store.calendarTimeline?.events.first(where: { $0.editable && !$0.allDay }) {
+          sheetStops.append(("sheet-editEvent", AnyView(
+            CalendarEventSheet(store: store, mode: .edit(event), dismiss: {})
+              .onAppear { store.prepareCalendarDraft(for: event) })))
+        }
         for (stop, sheet) in sheetStops {
           let sheetWindow = makeSheetWindow(sheet, beside: window)
           sheetWindow.orderFrontRegardless()

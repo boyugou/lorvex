@@ -18,6 +18,10 @@ public protocol EventKitProviderServicing: AnyObject, Sendable {
     _ events: [ProviderEventData], builtAtMode: CalendarAiAccessMode,
     windowStart: String, windowEnd: String
   ) throws -> Int
+  @discardableResult func ingestEventKitEvents(
+    _ events: [ProviderEventData], builtAtMode: CalendarAiAccessMode,
+    windowStart: String, windowEnd: String, fetchedWindow: DateInterval?
+  ) throws -> Int
   func setEventKitScopeEnabled(_ enabled: Bool) throws
   /// The keys of the mirrored repeating series.
   func recurringEventKitMirrorKeys() throws -> [String]
@@ -31,6 +35,20 @@ public protocol EventKitProviderServicing: AnyObject, Sendable {
     taskID: String, providerEventKey: String
   ) throws -> ProviderEventLinkDeleteResult
   func eventKitLinksForTask(taskID: String) throws -> [ProviderEventLinkWithResolution]
+}
+
+extension EventKitProviderServicing {
+  /// Compatibility for providers without an instant cache. Live coordinators
+  /// supply the exact request window so a concurrent zone switch cannot change
+  /// which cached observations that request is allowed to replace.
+  public func ingestEventKitEvents(
+    _ events: [ProviderEventData], builtAtMode: CalendarAiAccessMode,
+    windowStart: String, windowEnd: String, fetchedWindow: DateInterval?
+  ) throws -> Int {
+    try ingestEventKitEvents(
+      events, builtAtMode: builtAtMode,
+      windowStart: windowStart, windowEnd: windowEnd)
+  }
 }
 
 /// EventKit provider mirror + write-back surface on the concrete
@@ -87,8 +105,18 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
   /// persisted value throws (fail closed).
   @discardableResult
   public func ingestEventKitEvents(
-    _ events: [ProviderEventData], builtAtMode: CalendarAiAccessMode,
+    _ incomingEvents: [ProviderEventData], builtAtMode: CalendarAiAccessMode,
     windowStart: String, windowEnd: String
+  ) throws -> Int {
+    try ingestEventKitEvents(
+      incomingEvents, builtAtMode: builtAtMode,
+      windowStart: windowStart, windowEnd: windowEnd, fetchedWindow: nil)
+  }
+
+  @discardableResult
+  public func ingestEventKitEvents(
+    _ incomingEvents: [ProviderEventData], builtAtMode: CalendarAiAccessMode,
+    windowStart: String, windowEnd: String, fetchedWindow: DateInterval?
   ) throws -> Int {
     let scope = Self.eventKitScope
     let now = SyncTimestamp.now().asString
@@ -96,6 +124,21 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
       let persisted = try DeviceStateRepo.readCalendarAiAccessMode(db)
       guard persisted.detailRank >= builtAtMode.detailRank else {
         return 0
+      }
+      let events: [ProviderEventData]
+      let window =
+        try fetchedWindow
+        ?? PlannedDayBridge.instantRange(
+          fromLogicalDay: windowStart, throughLogicalDay: windowEnd,
+          timezoneName: WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+        )
+        .map { DateInterval(start: $0.start, end: $0.endExclusive) }
+      if let window {
+        events = try ProviderRepo.reconcileOccurrenceInstants(
+          db, events: incomingEvents, providerKind: ProviderKind.eventkit, scope: scope,
+          window: window, now: now)
+      } else {
+        events = incomingEvents
       }
       let keepKeys = Set(events.map(\.providerEventKey))
       // Stale candidates: only rows whose start_date is inside the ingested
@@ -113,6 +156,7 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
           sql: """
             SELECT start_date FROM provider_calendar_events \
             WHERE provider_kind = ? AND provider_scope = ? AND provider_event_key = ?
+              AND recurrence IS NULL AND occurrence_instants IS NULL
             """,
           arguments: [ProviderKind.eventkit, scope, staleKey])
         guard let startDate, startDate <= windowEnd else { continue }
@@ -160,7 +204,8 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
     return try CalendarTimelineQueries.oneOffProviderEventKeysShown(
       db, providerKind: ProviderKind.eventkit, providerScope: eventKitScope,
       from: from, to: to,
-      anchorTimezone: try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier)
+      anchorTimezone: try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier,
+      excludingPreciseOccurrences: true)
   }
 
   /// The keys of the mirrored repeating series: rows with a rule. A window's

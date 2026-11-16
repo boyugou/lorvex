@@ -12,7 +12,7 @@ public enum CalendarNormalization {
   /// start_date anchor), all-day time-clearing, field-shape validation,
   /// DST guard.
   public static func normalizeCalendarCreate(
-    _ input: CalendarCreateInput
+    _ input: CalendarCreateInput, inheritedStart: CalendarInheritedStart? = nil
   ) throws -> NormalizedCalendarCreate {
     let title = try normalizeCalendarTitle(input.title)
     let description = try normalizeOptionalText(
@@ -48,7 +48,7 @@ public enum CalendarNormalization {
       endDate: input.endDate, endTime: endTime, allDay: allDay)
     let dst = try checkCalendarEventDST(
       startDate: input.startDate, startTime: startTime,
-      timezone: timezone, allDay: allDay)
+      timezone: timezone, allDay: allDay, preservingStart: inheritedStart)
 
     return NormalizedCalendarCreate(
       title: title, recurrence: recurrence, timezone: timezone,
@@ -64,7 +64,8 @@ public enum CalendarNormalization {
   /// patch against `existing` into ``EffectiveCalendarEventFields``,
   /// validates the prospective post-patch row + DST guard.
   public static func normalizeCalendarUpdate(
-    _ input: CalendarUpdateInput, existing: CalendarUpdateExisting
+    _ input: CalendarUpdateInput, existing: CalendarUpdateExisting,
+    inheritedStart: CalendarInheritedStart? = nil
   ) throws -> NormalizedCalendarUpdate {
     try validateExisting(existing)
     let title = try input.title.map(normalizeCalendarTitle)
@@ -147,7 +148,10 @@ public enum CalendarNormalization {
       allDay: effective.allDay)
     let dst = try checkCalendarEventDST(
       startDate: effective.startDate, startTime: effective.startTime,
-      timezone: effective.timezone, allDay: effective.allDay)
+      timezone: effective.timezone, allDay: effective.allDay,
+      preservingStart: inheritedStart ?? CalendarInheritedStart(
+        date: existing.startDate, time: existing.startTime,
+        timezone: existing.timezone, allDay: existing.allDay))
 
     return NormalizedCalendarUpdate(
       title: title, recurrence: recurrence, timezone: timezone,
@@ -493,7 +497,8 @@ public enum CalendarNormalization {
   }
 
   static func checkCalendarEventDST(
-    startDate: String, startTime: String?, timezone: String?, allDay: Bool
+    startDate: String, startTime: String?, timezone: String?, allDay: Bool,
+    preservingStart: CalendarInheritedStart? = nil
   ) throws -> CalendarDstGuard {
     if allDay { return .ok }
     guard let startTime else { return .ok }
@@ -512,6 +517,11 @@ public enum CalendarNormalization {
       return .ambiguous(
         wallClock: "\(startDate) \(startTime)", timezone: tzName)
     case .skipped:
+      if preservingStart == CalendarInheritedStart(
+        date: startDate, time: startTime, timezone: timezone, allDay: allDay)
+      {
+        return .ok
+      }
       throw CalendarEventOpError.startTimeSkipped(
         time: startTime, date: startDate, timezone: tzName)
     }

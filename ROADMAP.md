@@ -194,10 +194,107 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   - The device's day, not the planner's: when Settings > Time Zone differs from
     the device's, the task editors' day presets (Today, Tomorrow, This Weekend,
     Next Monday) and the Mac picker's month calendar count from the planner's
-    day (fixed 2026-11-09). Still on the device's day: the today highlight on
-    the calendar grids and week strips (`isDateInToday`), which lay events out
-    in device time, the event and snooze date chips (`LorvexDateChip`), and the
-    iPhone edit sheet's Add Time proposal.
+    day (fixed 2026-11-09). Fixed 2026-11-15: both iPhone task
+    editors now propose Add Time from the planner's clock, including when its
+    day differs from the device's; the Mac custom snooze chip reads and saves
+    its date in the planner's zone. Calendar grids and week strips now mark
+    the planner's today; their now line and initial scroll use its clock,
+    including fractional offsets and DST. All-day task overdue markers agree
+    with Today. Mobile page caches include the logical day and zone so a
+    setting change refreshes even an otherwise unchanged page.
+  - Time Zone selection (2026-11-15): both settings pickers wait for a saved,
+    refreshed choice before closing, show the pending choice, and reject
+    repeated taps while saving. A failed write or read keeps the picker open.
+    The Mac waits for a trailing refresh if another one is already running.
+    Search also matches the displayed GMT offset and full-width city text;
+    a saved non-geographic zone such as GMT retains a selectable row.
+  - Calendar editing across time zones (2026-11-15): forms show their clock's
+    zone, retain exact projected instants across a repeated DST hour, and save
+    edits and grid moves back in the event's source zone. Scoped recurrence
+    edits compare source days so a projected overnight occurrence cannot
+    re-anchor its series accidentally. Undo keeps its instants across a
+    product-zone change. New-event defaults, grid selections, and date/time
+    controls use the product zone; a draft retains that zone through save.
+    Both surfaces reload projected rows after writes instead of displaying
+    returned source clocks. Creates no longer append an out-of-window raw
+    event, including after a failed reload. A save and a page turn in either
+    order retain the last requested window and its matching tasks; a one-day
+    Mac window also keeps its exact inclusive range.
+    The Mac Repeat defaults now use the event's Gregorian source day, including
+    month boundaries and fractional offsets, and identify a source zone that
+    differs from the displayed clock. New grid drafts clear the edited event's
+    source-zone baseline; returning to that edit restores it.
+    Repeat interval and month-day steppers show their current numbers beside
+    the arrows, with localized values and explicit accessibility labels.
+    Repeat summaries use the source weekday even across the date line, with
+    the recurrence zone named in event details. The iPhone editor also shows
+    the stored repeat rule. Clearing an opaque rule moves Custom to None
+    immediately while preserving the explicit clear in the save patch.
+  - Advanced calendar recurrence presentation (2026-11-15): the basic Mac
+    editor shows Custom for month-end, multiple month days, ordinal weekdays,
+    and other patterns its controls cannot express. The shared summary names
+    every supported date filter, including months, signed days, positions,
+    and explicit week starts. Interval edits preserve the complete pattern;
+    choosing a basic frequency explicitly replaces it while retaining its
+    interval and ending condition. Unknown fields keep a rule opaque so a
+    partial decode cannot erase them. Core-backed tests check saved rules and
+    future dates after title and interval edits.
+  - Calendar sharing across zones (2026-11-15): copied/shared text includes
+    years, the displayed clock's zone and the source-zone note for a differing
+    repeat. Offsets follow event instants, including the second reading of a
+    fall-back hour. A change in offset formats both endpoints separately;
+    midnight ends name the following date. All-day and floating values stay
+    civil, and an event without an end never gains one from editor defaults.
+  - Calendar offset transitions (2026-11-15): positive spans with equal or
+    reversed fall-back clocks survive projection without weakening source
+    timing validation. Grids split occupied clocks at offset changes and name
+    each offset; details, forms and agendas retain both real endpoints. Split
+    events edit in the sheet. Agenda order, past-state checks and elapsed
+    durations use instants. Planning and load use the union of occupied civil
+    pieces; Apple Calendar export keeps the real endpoints. Regressions cover
+    New York, Lord Howe, spring gaps, exact transitions, provider mirrors and
+    recurring identity. No drawn-height or open-end placeholder leaks into a
+    reported end time. Headless captures cover Mac and mobile grid geometry.
+    Editor no-ops retain repeated-hour instants. Moves use elapsed duration
+    when wall duration is nonpositive, and minute edits keep the current
+    reading when it remains valid before considering an overnight end.
+  - EventKit import instants (2026-11-15): both device mappers retain zoned
+    endpoints; migration 005 adds a device-local occurrence cache. Mac series
+    retain source rules, anchor dates and zones alongside enumerated instants,
+    with stable event/occurrence identities. Exact observations drive timeline
+    and occupancy; no master UTC recurrence drift or inferred unseen slots.
+    Busy-only redaction preserves occupancy only. Window refreshes merge other
+    cached weeks and clear missing in-window occurrences. Legacy rows retain
+    their existing projection until refreshed; floating/all-day remain civil.
+  - Provider coverage remains a follow-up: expose which queried days were
+    actually fetched, so MCP/planning can distinguish an uncached range from
+    a confirmed empty range. iOS already mirrors enumerated occurrences;
+    precise Mac imports now follow that same observation-based contract.
+  - Calendar MCP time context (2026-11-15): clock fields carry their actual
+    display/source zone, with response-only `time_context` identifying civil
+    values and known UTC endpoints. Full/time-detail canonical rows preserve
+    source coordinates for editing, including intended clocks in recurrence
+    gaps. Timeline envelopes name the queried zone even when empty. Repeated
+    hours page in real-time order with stable identity ties; floating values
+    remain civil. Linked provider rows share the precise timeline decoder and
+    existing privacy gates. Search remains a source-definition read; tool
+    guidance distinguishes master edits from projected occurrence edits.
+  - Human editor source-clock preservation (2026-11-16): Mac/iOS scoped saves
+    patch changed fields and retain source clocks for unchanged endpoints,
+    including spring gaps. Existing gap occurrences can be edited, cancelled,
+    restored, and split without admitting a newly invalid start. Floating
+    zones survive scoped edits and can be explicitly cleared. Editors expose
+    optional ends through add/clear controls; details, grid moves, and undo
+    preserve a missing end instead of saving a placeholder duration.
+  - Optional-end external fidelity: the Mac's `CalendarEventExport` still
+    supplies a fallback duration and a minimum span for system-calendar
+    writes. Audit that adapter's point-event semantics and external validation
+    before changing the mirror contract; the human editor now retains an
+    absent canonical end explicitly.
+  - Zero-length timing alignment: core validation accepts equal endpoints,
+    while the human editor requires a positive duration. Cover explicit point
+    events and recurrence intervals collapsed by a DST gap so their details
+    remain editable without forcing a new duration.
   - CloudKit traffic and scale (read-only review against Apple's CKSyncEngine
     guidance, 2026-11-09; none loses data): every local write and every push
     runs a full fetch-then-send pass (`runCloudSyncCycle`), where Apple's

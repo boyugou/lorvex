@@ -83,27 +83,44 @@ struct CalendarEventFormFields: View {
           title: String(localized: "calendar.field.end", defaultValue: "End", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "timer"
         ) {
-          HStack(spacing: LorvexDesign.Spacing.xs) {
-            // The end day can't come before the start day.
-            LorvexDateChip(
-              date: store.draftCalendarTiming.end,
-              placeholder: endDateName,
-              minDate: store.draftCalendarTiming.calendar.startOfDay(
-                for: store.draftCalendarTiming.start),
-              accessibilityName: endDateName,
-              onSet: { store.draftCalendarTiming.setEndDay($0) }
-            )
-            .accessibilityIdentifier("\(idPrefix).endDate")
-            if !store.draftCalendarTiming.allDay {
-              LorvexTimeChip(
+          if store.draftCalendarTiming.allDay || store.draftCalendarTiming.hasEndTime {
+            HStack(spacing: LorvexDesign.Spacing.xs) {
+              LorvexDateChip(
                 date: store.draftCalendarTiming.end,
-                accessibilityIdentifier: "\(idPrefix).endTime",
-                accessibilityName: String(
-                  localized: "calendar.end_time.a11y", defaultValue: "End time",
-                  table: "Localizable", bundle: LorvexL10n.bundle),
-                onSet: { store.draftCalendarTiming.setEndTime($0) }
+                placeholder: endDateName,
+                minDate: store.draftCalendarTiming.calendar.startOfDay(
+                  for: store.draftCalendarTiming.start),
+                accessibilityName: endDateName,
+                onSet: { store.draftCalendarTiming.setEndDay($0) }
               )
+              .accessibilityIdentifier("\(idPrefix).endDate")
+              if !store.draftCalendarTiming.allDay {
+                LorvexTimeChip(
+                  date: store.draftCalendarTiming.end,
+                  accessibilityIdentifier: "\(idPrefix).endTime",
+                  accessibilityName: String(
+                    localized: "calendar.end_time.a11y", defaultValue: "End time",
+                    table: "Localizable", bundle: LorvexL10n.bundle),
+                  onSet: { store.draftCalendarTiming.setEndTime($0) }
+                )
+                Button {
+                  lorvexAnimated { store.draftCalendarTiming.removeEndTime() }
+                } label: {
+                  Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help(CalendarEventEditorCopy.removeEndTime)
+                .accessibilityLabel(CalendarEventEditorCopy.removeEndTime)
+                .accessibilityIdentifier("\(idPrefix).removeEndTime")
+              }
             }
+          } else {
+            Button(CalendarEventEditorCopy.addEndTime) {
+              lorvexAnimated { store.draftCalendarTiming.addEndTime() }
+            }
+            .buttonStyle(.link)
+            .accessibilityIdentifier("\(idPrefix).addEndTime")
           }
         }
 
@@ -119,6 +136,26 @@ struct CalendarEventFormFields: View {
           .foregroundStyle(LorvexDesign.Palette.warning)
           .padding(.horizontal, LorvexDesign.Spacing.s)
           .accessibilityIdentifier("\(idPrefix).timesInvalid")
+        }
+
+        if !store.draftCalendarTiming.allDay {
+          DraftSheetControlRow(
+            title: String(localized: "settings.time_zone", defaultValue: "Time Zone",
+              table: "Localizable", bundle: LorvexL10n.bundle),
+            systemImage: "globe"
+          ) {
+            VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+              Text(store.draftCalendarTiming.timeZoneSummary)
+                .accessibilityIdentifier("\(idPrefix).timeZone")
+              if let note = store.draftCalendarTiming.clockOffsetNote {
+                Text(note)
+                  .fixedSize(horizontal: false, vertical: true)
+                  .accessibilityIdentifier("\(idPrefix).clockOffsets")
+              }
+            }
+            .font(LorvexDesign.Typography.secondaryText)
+            .foregroundStyle(.secondary)
+          }
         }
 
         DraftSheetField(
@@ -149,7 +186,8 @@ struct CalendarEventFormFields: View {
         CalendarEventRepeatField(
           recurrence: $store.draftCalendarRecurrence,
           isOpaque: store.draftCalendarRecurrenceIsOpaque,
-          referenceDate: store.draftCalendarTiming.start,
+          referenceTiming: store.draftCalendarRecurrenceTiming,
+          displayTimeZone: store.draftCalendarTiming.calendar.timeZone,
           idPrefix: idPrefix)
       }
 
@@ -174,6 +212,7 @@ struct CalendarEventFormFields: View {
         }
       }
     }
+    .environment(\.timeZone, store.draftCalendarTiming.calendar.timeZone)
     .task {
       titleFocused = false
       await Task.yield()

@@ -113,12 +113,14 @@ extension Sequence where Element == CalendarTimelineEvent {
   /// broken case-insensitively by title for a stable order. Events with no
   /// start time sort after timed ones.
   public func sortedForAgenda(on day: String) -> [CalendarTimelineEvent] {
-    sorted { a, b in
+    let events = Array(self)
+    let clock = CalendarAgendaClock(day: day, events: events)
+    return events.sorted { a, b in
       let aUnderway = a.allDay || a.startDate < day
       let bUnderway = b.allDay || b.startDate < day
       if aUnderway != bUnderway { return aUnderway && !bUnderway }
-      let aTime = a.startTime ?? "99:99"
-      let bTime = b.startTime ?? "99:99"
+      let aTime = clock.position(event: a, minute: CalendarGridModel.parseMinutes(a.startTime) ?? 5999)
+      let bTime = clock.position(event: b, minute: CalendarGridModel.parseMinutes(b.startTime) ?? 5999)
       if aTime != bTime { return aTime < bTime }
       return a.title.localizedCaseInsensitiveCompare(b.title) == .orderedAscending
     }

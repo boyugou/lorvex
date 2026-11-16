@@ -27,4 +27,50 @@ struct LorvexProductDayClockTests {
       LorvexProductDayClock.nowMinutes(on: "2026-10-02", in: Self.losAngeles, at: Self.instant)
         == nil)
   }
+
+  @Test("A grid's initial scroll follows the product day even when the device is on yesterday")
+  func gridFocusUsesTheProductClock() throws {
+    var deviceCalendar = Calendar(identifier: .gregorian)
+    deviceCalendar.timeZone = Self.losAngeles
+    let formatter = DateFormatter()
+    formatter.calendar = deviceCalendar
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = deviceCalendar.timeZone
+    formatter.dateFormat = "yyyy-MM-dd"
+    let columns = CalendarGridModel.buildDays(
+      rangeStart: try #require(formatter.date(from: "2026-10-01")), dayCount: 2,
+      calendar: deviceCalendar, events: [], tasks: [], dayKeyFor: formatter.string(from:))
+    let shanghai = LorvexProductDayClock(logicalDay: "2026-10-02", timeZone: Self.shanghai)
+    let losAngeles = LorvexProductDayClock(logicalDay: "2026-10-01", timeZone: Self.losAngeles)
+    #expect(columns.filter { $0.dayKey == shanghai.logicalDay }.map(\.dayKey) == ["2026-10-02"])
+    #expect(CalendarGridModel.initialScrollAnchorHour(
+      for: columns, todayKey: shanghai.logicalDay, nowMinute: shanghai.nowMinutes(at: Self.instant)) == 0)
+    #expect(CalendarGridModel.initialScrollAnchorHour(
+      for: columns, todayKey: losAngeles.logicalDay, nowMinute: losAngeles.nowMinutes(at: Self.instant)) == 9)
+    // A page that contains the device's today but not the product's today
+    // uses its content anchor, never the device clock's current hour.
+    #expect(CalendarGridModel.initialScrollAnchorHour(
+      for: Array(columns.prefix(1)), todayKey: shanghai.logicalDay,
+      nowMinute: shanghai.nowMinutes(at: Self.instant)) == 8)
+  }
+
+  @Test("The grid clock reads civil minutes across DST jumps and fractional offsets")
+  func gridClockHandlesDaylightSavingAndFractionalOffsets() throws {
+    let cases: [(zone: String, instant: String, day: String, minutes: Int)] = [
+      ("America/Los_Angeles", "2026-03-08T09:30:00Z", "2026-03-08", 90),
+      ("America/Los_Angeles", "2026-03-08T10:30:00Z", "2026-03-08", 210),
+      ("America/Los_Angeles", "2026-11-01T08:30:00Z", "2026-11-01", 90),
+      ("America/Los_Angeles", "2026-11-01T09:30:00Z", "2026-11-01", 90),
+      ("Asia/Kathmandu", "2026-10-01T18:30:00Z", "2026-10-02", 15),
+      ("Australia/Adelaide", "2026-10-01T15:00:00Z", "2026-10-02", 30),
+    ]
+    for example in cases {
+      let clock = LorvexProductDayClock(
+        logicalDay: example.day, timeZone: try #require(TimeZone(identifier: example.zone)))
+      let instant = try #require(ISO8601DateFormatter().date(from: example.instant))
+      #expect(clock.nowMinutes(at: instant) == example.minutes, "\(example.zone), \(example.instant)")
+    }
+    let staleClock = LorvexProductDayClock(logicalDay: "2026-10-01", timeZone: Self.shanghai)
+    #expect(staleClock.nowMinutes(at: Self.instant) == nil)
+  }
 }

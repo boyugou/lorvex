@@ -38,6 +38,9 @@ struct MobileCalendarDayPage: View, Equatable {
     /// when the column is built again.
     let openDeletion: String?
     let calendar: Calendar
+    /// Part of equality even when a zone change leaves the visible dates and
+    /// events untouched: today's header and the live clock still change.
+    let productClock: LorvexProductDayClock
   }
 
   /// The column's inputs, or nil for a page that holds no column.

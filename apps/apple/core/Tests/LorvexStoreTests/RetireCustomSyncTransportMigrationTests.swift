@@ -278,7 +278,7 @@ final class RetireCustomSyncTransportMigrationTests: XCTestCase {
     try migrated.writer.read { db in
       let rows = try Row.fetchAll(
         db, sql: "SELECT version, name, checksum FROM schema_migrations ORDER BY version")
-      XCTAssertEqual(rows.map { $0["version"] as Int }, [1, 2, 3, 4])
+      XCTAssertEqual(rows.map { $0["version"] as Int }, [1] + fixture.migrations.map(\.version))
       XCTAssertEqual(rows[0]["checksum"] as String, fixture.schemaChecksum)
       XCTAssertEqual(rows[1]["name"] as String, "retire_custom_sync_transport")
       XCTAssertEqual(
@@ -289,7 +289,9 @@ final class RetireCustomSyncTransportMigrationTests: XCTestCase {
     let reopened = try fixture.openWithLadder()
     XCTAssertNil(reopened.recovery)
     try reopened.writer.read { db in
-      XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM schema_migrations"), 4)
+      XCTAssertEqual(
+        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM schema_migrations"),
+        fixture.migrations.count + 1)
       XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox"), 1)
     }
   }
@@ -364,7 +366,8 @@ final class RetireCustomSyncTransportMigrationTests: XCTestCase {
     try migrated.writer.write { db in
       let indexes = Set(
         try String.fetchAll(
-          db, sql: "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'sync_outbox'"))
+          db,
+          sql: "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'sync_outbox'"))
       for index in [
         "idx_sync_outbox_pending", "idx_sync_outbox_retry_due",
         "idx_sync_outbox_future_hold_identity", "idx_sync_outbox_entity",
@@ -379,7 +382,9 @@ final class RetireCustomSyncTransportMigrationTests: XCTestCase {
         "a second unsynced row for one entity violates the unique partial index")
       XCTAssertThrowsError(
         try db.execute(
-          sql: "UPDATE sync_outbox SET disposition = 'authoritative_adoption' WHERE entity_id = 'task-unique'"),
+          sql:
+            "UPDATE sync_outbox SET disposition = 'authoritative_adoption' WHERE entity_id = 'task-unique'"
+        ),
         "the retired disposition is no longer storable")
 
       let changelogIndexes = Set(

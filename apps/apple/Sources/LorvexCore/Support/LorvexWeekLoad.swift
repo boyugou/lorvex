@@ -214,8 +214,14 @@ public struct LorvexWeekLoad: Equatable, Sendable {
   static func mergedMeetings(
     _ events: [CalendarTimelineEvent], key: String, workStart: Int, workEnd: Int
   ) -> [(start: Int, end: Int)] {
-    let intervals: [(start: Int, end: Int)] = events.compactMap { event in
-      guard !event.allDay, event.occurs(on: key) else { return nil }
+    let intervals: [(start: Int, end: Int)] = events.flatMap { event -> [(start: Int, end: Int)] in
+      guard !event.allDay, event.occurs(on: key) else { return [] }
+      if let projection = event.projection, let end = projection.end, end > projection.start {
+        return event.clockSegments(on: key).compactMap { segment in
+          let clipped = (start: max(segment.startMinutes, workStart), end: min(segment.endMinutes, workEnd))
+          return clipped.end > clipped.start ? clipped : nil
+        }
+      }
       let start: Int
       let end: Int
       if event.dayPart(on: key) == .middleDay {
@@ -224,10 +230,10 @@ public struct LorvexWeekLoad: Equatable, Sendable {
         start = span.start
         end = min(span.end ?? span.start + CalendarGridModel.defaultEventDurationMinutes, 24 * 60)
       } else {
-        return nil
+        return []
       }
       let clipped = (start: max(start, workStart), end: min(end, workEnd))
-      return clipped.end > clipped.start ? clipped : nil
+      return clipped.end > clipped.start ? [clipped] : []
     }
     var merged: [(start: Int, end: Int)] = []
     for interval in intervals.sorted(by: { $0.start < $1.start }) {

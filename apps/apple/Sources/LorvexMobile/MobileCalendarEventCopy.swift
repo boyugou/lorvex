@@ -16,6 +16,12 @@ enum MobileCalendarEventCopy {
       bundle: MobileL10n.bundle)
   }
 
+  static var timeZone: String {
+    String(
+      localized: "settings.time_zone", defaultValue: "Time Zone", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+
   static var repeats: String {
     String(
       localized: "recurrence.repeats", defaultValue: "Repeats", table: "Localizable",
@@ -75,6 +81,7 @@ enum MobileCalendarEventCopy {
   static func label(_ field: LorvexEventShareField) -> String {
     switch field {
     case .when: when
+    case .timeZone: timeZone
     case .location: location
     case .repeats: repeats
     case .attendees: attendees

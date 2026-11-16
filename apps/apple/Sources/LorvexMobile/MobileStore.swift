@@ -109,7 +109,7 @@ public final class MobileStore {
   /// the load is in flight supersedes it, so the refresh reloads this window
   /// rather than a today-anchored one; otherwise the week the surface is
   /// about to show would open with its earlier days empty.
-  var calendarRequestedWindow: MobileCalendarWindow?
+  var calendarRequestedWindow: CalendarTimelineWindow?
   /// How the calendar shows time: the width-adaptive 1/2/3-day grid, the
   /// seven days of a week, or a month over the chosen day's agenda. A store
   /// opens in the mode the user last switched to

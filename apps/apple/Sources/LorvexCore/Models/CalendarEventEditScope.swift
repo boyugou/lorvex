@@ -3,11 +3,11 @@ import Foundation
 /// Scope for editing or deleting a single occurrence of a recurring calendar
 /// event, matching the `scope` argument of `editScopedCalendarEvent` /
 /// `deleteScopedCalendarEvent`. Raw values are the wire strings the core
-/// expects; `allEvents` is equivalent to a whole-series update/delete.
+/// expects; `allEvents` updates/deletes the addressed series segment.
 ///
-/// `thisEvent` and `thisAndFollowing` pin the affected occurrence(s) to the
-/// tapped date — the core ignores a start-date change for those scopes — so a
-/// move to a different day only takes effect under `allEvents`.
+/// Occurrence scopes keep the original source slot as their identity even
+/// when an edit moves the event to another day. Use the event's original
+/// `occurrenceDate`, never its projected display day or the edited start day.
 public enum CalendarEventEditScope: String, Sendable, CaseIterable {
   case thisEvent = "this_only"
   case thisAndFollowing = "this_and_following"

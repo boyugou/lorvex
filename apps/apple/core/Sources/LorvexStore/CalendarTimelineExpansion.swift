@@ -8,6 +8,7 @@ extension CalendarTimeline {
     var item: CalendarTimelineItem
     var recurrence: String?
     var recurrenceExceptions: String?
+    var providerOccurrences: [ProviderOccurrenceInstant]?
     var ownedFromDate: String?
     var ownedUntilDate: String?
 
@@ -15,12 +16,14 @@ extension CalendarTimeline {
       item: CalendarTimelineItem,
       recurrence: String?,
       recurrenceExceptions: String?,
+      providerOccurrences: [ProviderOccurrenceInstant]? = nil,
       ownedFromDate: String? = nil,
       ownedUntilDate: String? = nil
     ) {
       self.item = item
       self.recurrence = recurrence
       self.recurrenceExceptions = recurrenceExceptions
+      self.providerOccurrences = providerOccurrences
       self.ownedFromDate = ownedFromDate
       self.ownedUntilDate = ownedUntilDate
     }
@@ -45,8 +48,16 @@ extension CalendarTimeline {
   static func expandRowForRange(
     _ row: RawCalendarRow, _ from: RDate, _ to: RDate, _ anchorTimezone: String
   ) throws -> ExpandedCalendarRow {
+    if let occurrences = row.providerOccurrences {
+      let items = try occurrences.compactMap { occurrence -> CalendarTimelineItem? in
+        let item = try projectProviderOccurrence(row.item, occurrence, anchorTimezone)
+        return overlapsItemRange(item, from, to) ? item : nil
+      }
+      return ExpandedCalendarRow(items: items, truncatedAtStepCap: false)
+    }
     let baseStart = try CalendarRecurrence.parseYmd(row.item.startDate.asString)
-    let baseEnd = try row.item.endDate.map { try CalendarRecurrence.parseYmd($0.asString) } ?? baseStart
+    let baseEnd =
+      try row.item.endDate.map { try CalendarRecurrence.parseYmd($0.asString) } ?? baseStart
     let durationDays = max(baseStart.daysUntil(baseEnd), 0)
 
     let recurrence: String? = {
@@ -147,7 +158,8 @@ extension CalendarTimeline {
       guard let currentEnd = currentStart.addingDays(durationDays) else { break }
 
       if !excluded.contains(currentStr)
-        && CalendarRecurrence.overlapsCalendarRange(currentStart, currentEnd, targetStart, targetEnd)
+        && CalendarRecurrence.overlapsCalendarRange(
+          currentStart, currentEnd, targetStart, targetEnd)
       {
         // Stop expanding once an occurrence rolls past the representable date
         // range. `LorvexDate.parse` accepts only a 10-character `YYYY-MM-DD`, so
@@ -167,7 +179,7 @@ extension CalendarTimeline {
           startDate: newStartDate, startTime: row.item.startTime,
           endDate: newEndDate, endTime: row.item.endTime, allDay: row.item.allDay)
         switch newTiming {
-        case let .success(t):
+        case .success(let t):
           var instance = row.item
           instance.timing = t
           if instance.source == .canonical,
@@ -186,14 +198,16 @@ extension CalendarTimeline {
           if overlapsItemRange(projected, from, to) {
             out.append(projected)
           }
-        case let .failure(err):
+        case .failure(let err):
           throw StoreError.validation(
-            "expanded occurrence timing invalid for calendar event \(row.item.id): \(err.messageString)")
+            "expanded occurrence timing invalid for calendar event \(row.item.id): \(err.messageString)"
+          )
         }
       }
 
       guard
-        let nextStart = try CalendarRecurrence.calculateNextOccurrenceDate(rule: rule, base: currentStart)
+        let nextStart = try CalendarRecurrence.calculateNextOccurrenceDate(
+          rule: rule, base: currentStart)
       else { break }
       if nextStart <= currentStart {
         throw StoreError.invariant(
@@ -224,7 +238,7 @@ extension CalendarTimeline {
   /// occurrence step. On failure it throws `.serialization` with the event id.
   @discardableResult
   static func validateRecurrenceJSON(_ raw: String, eventId: String) throws -> [String: JSONValue] {
-    guard let parsed = JSONValue.parse(raw), case let .object(rule) = parsed else {
+    guard let parsed = JSONValue.parse(raw), case .object(let rule) = parsed else {
       throw StoreError.serialization(
         "invalid recurrence rule for calendar event \(eventId): recurrence must be a JSON object")
     }

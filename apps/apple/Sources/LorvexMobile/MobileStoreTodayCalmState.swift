@@ -22,7 +22,7 @@ extension MobileStore {
       events: todayScheduleEvents,
       tasks: tasks,
       times: tasks.times(on: logicalTodayString),
-      nowMinutes: nowMinutesInProductDay)
+      nowMinutes: nowMinutesInProductDay, now: Date())
   }
 
   /// Minutes since midnight in the product day's own timezone, or `nil` when the
@@ -52,7 +52,7 @@ extension MobileStore {
       doneToday: doneTodayCount,
       nowMinutes: nowMinutesInProductDay,
       logicalDay: logicalTodayString,
-      workingHours: workdayWindow)
+      workingHours: workdayWindow, now: Date())
   }
 
   /// Each of today's timed tasks' time range ("9:45 – 10:45 AM"), keyed by

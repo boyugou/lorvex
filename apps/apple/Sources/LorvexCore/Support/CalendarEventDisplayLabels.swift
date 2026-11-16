@@ -31,21 +31,40 @@ extension CalendarTimelineEvent {
     let first = span ?? dayRangeLabel
     if allDay { return (first, allDayText) }
     guard span == nil, let startTime else { return (first, nil) }
-    return (first, lorvexClockRangeLabel(start: startTime, end: endTime))
+    return (first, offsetClockRangeLabel() ?? lorvexClockRangeLabel(start: startTime, end: endTime))
   }
 
   /// How the event repeats, in the words the repeat editor uses ("Every 2
   /// weeks · Mon, Wed · 10 times"): the source's own summary for a mirrored
   /// event, else the stored rule's. A one-off change to a series occurrence
   /// carries no rule of its own and reads as `generic`.
+  /// An implicit weekly day follows the source clock, even when the timeline
+  /// displays that occurrence on a different day. Day anchors are UTC-midnight
+  /// civil values, as the shared recurrence formatter requires.
   ///
   /// - Parameter generic: the surface's words for a repeating event whose
   ///   rule is not known ("Repeating event").
   public func recurrenceDescription(generic: String) -> String {
     if let recurrenceSummary, !recurrenceSummary.isEmpty { return recurrenceSummary }
-    guard let rule = TaskRecurrenceRule.bridgeRule(from: recurrenceRule) else { return generic }
+    guard let rule = TaskRecurrenceRule.bridgeRule(from: recurrenceRule, requiringKnownFields: true)
+    else { return generic }
+    let sourceDay = !allDay && projection != nil
+      ? CalendarEventTiming(event: self, fallbackDay: .distantPast).storing(for: self).startDate
+      : startDate
     return rule.localizedDisplaySummary(
-      anchorDay: LorvexDateFormatters.ymd.date(from: startDate))
+      anchorDay: LorvexDateFormatters.ymdUTC.date(from: sourceDay))
+  }
+
+  /// Names the recurrence clock when it differs from the displayed one, so a
+  /// source Monday shown on Tuesday does not appear to contradict its rule.
+  /// All-day and floating events have no separate recurrence zone to explain.
+  public var recurrenceTimeZoneNote: String? {
+    guard hasRecurrenceRow, !allDay,
+      timezone.flatMap(TimeZone.init(identifier:)) != nil,
+      let displayZone = projection.flatMap({ TimeZone(identifier: $0.timezone) })
+    else { return nil }
+    return CalendarEventTiming(event: self, fallbackDay: .distantPast)
+      .storing(for: self).recurrenceTimeZoneNote(comparedTo: displayZone)
   }
 
   /// Whether the event's detail has a Repeats row: it repeats, or it is a
@@ -60,5 +79,16 @@ extension CalendarTimelineEvent {
     guard LorvexDateFormatters.ymd.date(from: startDate) != nil else { return nil }
     let start = CalendarEventTiming(event: self, fallbackDay: Date()).start
     return URL(string: "calshow:\(Int(start.timeIntervalSinceReferenceDate))")
+  }
+}
+
+extension CalendarEventTiming {
+  /// A repeat editor's note when its source clock differs from the date/time
+  /// controls. Uses the event's seasonal offset, not today's offset.
+  public func recurrenceTimeZoneNote(comparedTo displayTimeZone: TimeZone) -> String? {
+    guard !allDay, calendar.timeZone != displayTimeZone else { return nil }
+    return String(
+      localized: "calendar.repeat.time_zone", defaultValue: "Repeats in \(timeZoneSummary)",
+      table: "Localizable", bundle: CoreL10n.bundle)
   }
 }

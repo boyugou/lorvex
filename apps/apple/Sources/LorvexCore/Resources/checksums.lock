@@ -14,5 +14,9 @@
   "004": {
     "name": "004_task_delegations.sql",
     "sha256": "2bfd3e51c02be5d3d21f5ced58cc474c8bb41afa830a80c9ab324c13a059290e"
+  },
+  "005": {
+    "name": "005_provider_occurrence_instants.sql",
+    "sha256": "d6f9c5f7b6cc24baac067f65cb9446700a5e77f1ba2542ef20241f7d9c5e876a"
   }
 }

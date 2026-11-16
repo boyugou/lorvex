@@ -69,6 +69,10 @@ public struct MobileCalendarDayView: View {
 
   var today: Date { store.calendarToday(in: calendar) }
 
+  var productClock: LorvexProductDayClock {
+    LorvexProductDayClock(logicalDay: store.logicalTodayString, timeZone: store.logicalTimeZone)
+  }
+
   /// The events of the loaded window.
   var loadedEvents: [CalendarTimelineEvent] {
     store.calendarTimeline?.events ?? []
@@ -146,7 +150,7 @@ public struct MobileCalendarDayView: View {
         switchMode: { switchMode(to: $0) },
         createEvent: {
           store.calendarDraft = .timedDefault(
-            on: defaultCreateDate, now: store.now(), calendar: calendar)
+            on: defaultCreateDate, now: store.now(), calendar: calendar, timeZone: store.logicalTimeZone)
           isShowingCreateEvent = true
         })
     }
@@ -229,7 +233,7 @@ public struct MobileCalendarDayView: View {
   private var headerTitle: String {
     if weekMode {
       return LorvexDateFormatters.weekRange(
-        startingOn: visibleDate, now: LorvexPreviewClock.now(in: calendar), calendar: calendar)
+        startingOn: visibleDate, now: today, calendar: calendar)
     }
     return LorvexDateFormatters.string(
       visibleDate, template: "yMMMM", timeZone: calendar.timeZone, position: .leading)
@@ -288,6 +292,7 @@ public struct MobileCalendarDayView: View {
       events: events,
       tasks: tasks,
       calendar: calendar,
+      productClock: productClock,
       onOpenDay: weekMode ? { day in openInDayMode(day) } : nil,
       onTapEvent: { event in
         store.prepareCalendarDraft(for: event)
@@ -349,7 +354,7 @@ public struct MobileCalendarDayView: View {
       circlesTodayInHeaders: !showsWeekStrip, opensDays: weekMode, events: events, tasks: tasks,
       pageWidth: pagerWidth,
       openDeletion: eventPendingDeletion.flatMap { $0.scope == scope ? $0.id : nil },
-      calendar: calendar)
+      calendar: calendar, productClock: productClock)
     return MobileCalendarDayPage(inputs: inputs) {
       column(
         startDate: startDate, dayCount: dayCount, showsHeaders: true, events: events, tasks: tasks,

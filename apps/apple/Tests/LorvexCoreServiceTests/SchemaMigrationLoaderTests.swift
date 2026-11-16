@@ -14,7 +14,8 @@ import Testing
   private static let baselineSha = String(repeating: "0", count: 64)
 
   private func lockJSON(_ entries: [(key: String, name: String, sha: String)]) -> String {
-    let body = entries
+    let body =
+      entries
       .map { "\"\($0.key)\": {\"name\": \"\($0.name)\", \"sha256\": \"\($0.sha)\"}" }
       .joined(separator: ", ")
     return "{\(body)}"
@@ -30,13 +31,16 @@ import Testing
 
   /// The production resolver against the real repo artifacts: the canonical
   /// ladder holds exactly `002_retire_custom_sync_transport`,
-  /// `003_habit_skips`, and `004_task_delegations`, and resolving them (lock +
+  /// `003_habit_skips`, `004_task_delegations`, and `005_provider_occurrence_instants`, and resolving them (lock +
   /// migrations directory + validation) succeeds.
   @Test func productionLadderResolvesTheShippedMigrations() throws {
     let migrations = try SwiftLorvexCoreService.resolveSchemaMigrations()
-    #expect(migrations.map(\.version) == [2, 3, 4])
+    #expect(migrations.map(\.version) == [2, 3, 4, 5])
     #expect(
-      migrations.map(\.name) == ["retire_custom_sync_transport", "habit_skips", "task_delegations"])
+      migrations.map(\.name) == [
+        "retire_custom_sync_transport", "habit_skips", "task_delegations",
+        "provider_occurrence_instants",
+      ])
   }
 
   /// The ladder applied to the baseline schema yields the production shape:
@@ -249,7 +253,8 @@ import Testing
     let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL, migrations: migrations)
     let recorded = try store.writer.read { db in
       try String.fetchOne(
-        db, sql: "SELECT checksum FROM schema_migrations WHERE version = 2 AND name = 'add_widgets'")
+        db, sql: "SELECT checksum FROM schema_migrations WHERE version = 2 AND name = 'add_widgets'"
+      )
     }
     #expect(recorded == sha)
   }

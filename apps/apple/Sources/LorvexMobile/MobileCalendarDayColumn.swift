@@ -21,6 +21,7 @@ struct MobileCalendarDayColumn: View {
   /// day's time axis, any other in the all-day strip of its day.
   let tasks: [LorvexTask]
   let calendar: Calendar
+  let productClock: LorvexProductDayClock
   /// When set, each day's header is a button that opens that day; week mode
   /// uses it to open a day in Day mode.
   var onOpenDay: ((Date) -> Void)? = nil
@@ -106,11 +107,8 @@ struct MobileCalendarDayColumn: View {
 
   var body: some View {
     let columns = days
-    let now = LorvexPreviewClock.now(in: calendar)
-    let todayKey = Self.keyFormatter.string(from: now)
-    let nowMinute = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
     let anchorHour = CalendarGridModel.initialScrollAnchorHour(
-      for: columns, todayKey: todayKey, nowMinute: nowMinute)
+      for: columns, todayKey: productClock.logicalDay, nowMinute: productClock.nowMinutes())
     let scrollSignature = scrollAnchorSignature(columns: columns, anchorHour: anchorHour)
     let gutter = gutterWidth
     VStack(spacing: 0) {
@@ -118,6 +116,7 @@ struct MobileCalendarDayColumn: View {
         MobileCalendarColumnHeaders(
           columns: columns,
           calendar: calendar,
+          todayKey: productClock.logicalDay,
           gutterWidth: gutter,
           circlesToday: circlesTodayInHeaders,
           onOpenDay: onOpenDay
@@ -128,6 +127,7 @@ struct MobileCalendarDayColumn: View {
       if showsAllDayStrip(columns) {
         MobileCalendarAllDayStrip(
           columns: columns,
+          logicalDay: productClock.logicalDay,
           gutterWidth: gutter,
           isCompact: hasNarrowColumns(gutter: gutter),
           eventColor: eventColor,
@@ -187,14 +187,16 @@ struct MobileCalendarDayColumn: View {
       let width = geo.size.width
       ZStack(alignment: .topLeading) {
         hourLines(tapping: day.date)
-        if isToday(day.date) {
+        if day.dayKey == productClock.logicalDay {
           // Under the blocks (their zIndex lifts them above it), which are
           // opaque, so the line runs through the free time and never across a
           // block's title. Scoped to the now-line only: the per-minute tick
           // rebuilds this thin overlay without re-running the lane-packer or
           // re-laying-out the day.
           TimelineView(.periodic(from: .now, by: 60)) { context in
-            nowLine(now: LorvexPreviewClock.now(in: calendar, tick: context.date))
+            if let minutes = productClock.nowMinutes(at: context.date) {
+              nowLine(minutes: minutes)
+            }
           }
           .allowsHitTesting(false)
         }
@@ -209,12 +211,14 @@ struct MobileCalendarDayColumn: View {
         ForEach(day.taskBlocks) { block in
           taskBlock(block, day: day, columnWidth: width)
         }
-        if isToday(day.date) {
+        if day.dayKey == productClock.logicalDay {
           // The dot draws above the blocks, which sit at zIndex 1, so one that
           // spans the current time never covers it; the line itself runs under
           // them.
           TimelineView(.periodic(from: .now, by: 60)) { context in
-            nowDot(now: LorvexPreviewClock.now(in: calendar, tick: context.date))
+            if let minutes = productClock.nowMinutes(at: context.date) {
+              nowDot(minutes: minutes)
+            }
           }
           .allowsHitTesting(false)
           .zIndex(2)
@@ -253,32 +257,29 @@ struct MobileCalendarDayColumn: View {
     min(max(Int(y / hourHeight), 0), 23)
   }
 
-  /// The now line across the column, centered on `now`'s time of day. Drawn
-  /// under the blocks; its dot is ``nowDot(now:)``, drawn above them.
-  private func nowLine(now: Date) -> some View {
+  /// The now line across the column, centered on the product time of day. Drawn
+  /// under the blocks; its dot is ``nowDot(minutes:)``, drawn above them.
+  private func nowLine(minutes: Int) -> some View {
     Rectangle().fill(LorvexDesign.Palette.nowIndicator).frame(height: 1.5)
-      .offset(y: nowOffset(now) - 0.75)
+      .offset(y: nowOffset(minutes) - 0.75)
       .accessibilityHidden(true)
   }
 
-  /// The now dot, centered on the column's leading edge at `now`'s time of day.
+  /// The now dot, centered on the column's leading edge at the product time of day.
   /// Drawn above the blocks, so a block that spans the current time never
   /// covers it while the line itself runs beneath them.
-  private func nowDot(now: Date) -> some View {
+  private func nowDot(minutes: Int) -> some View {
     Circle().fill(LorvexDesign.Palette.nowIndicator).frame(width: 7, height: 7)
-      .offset(x: -3.5, y: nowOffset(now) - 3.5)
+      .offset(x: -3.5, y: nowOffset(minutes) - 3.5)
       .accessibilityHidden(true)
   }
 
-  /// The distance from the column's midnight line to `now`'s time of day.
-  private func nowOffset(_ now: Date) -> CGFloat {
-    let minutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
+  /// The distance from the column's midnight line to the product time of day.
+  private func nowOffset(_ minutes: Int) -> CGFloat {
     return CGFloat(minutes) / 60 * hourHeight
   }
 
   // MARK: Helpers
-
-  private func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
 
   private func scrollAnchorSignature(columns: [CalendarGridDay], anchorHour: Int) -> String {
     let timedIDs = columns.flatMap { day in

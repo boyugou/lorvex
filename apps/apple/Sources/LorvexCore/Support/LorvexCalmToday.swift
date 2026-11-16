@@ -167,7 +167,8 @@ public struct LorvexCalmToday: Equatable, Sendable {
     doneToday: Int,
     nowMinutes: Int?,
     logicalDay: String,
-    workingHours: Range<Int>?
+    workingHours: Range<Int>?,
+    now: Date? = nil
   ) -> LorvexCalmToday {
     let items = tasks.filter(\.status.isActionable).map { task in
       let time = task.time(on: logicalDay)
@@ -181,9 +182,8 @@ public struct LorvexCalmToday: Equatable, Sendable {
     let work = items.compactMap { $0.workMinutes(nowMinutes: nowMinutes) }
     let workMinutes = work.isEmpty ? nil : work.reduce(0, +)
     let remainingMeetings = events.filter { event in
-      guard let span = event.clockSpan(on: logicalDay) else { return false }
-      guard let nowMinutes else { return true }
-      return (span.end ?? span.start) > nowMinutes
+      guard event.clockSpan(on: logicalDay) != nil else { return false }
+      return !event.hasPassed(on: logicalDay, nowMinutes: nowMinutes, now: now, includingPointEvents: true)
     }.count
     return LorvexCalmToday(
       items: items,

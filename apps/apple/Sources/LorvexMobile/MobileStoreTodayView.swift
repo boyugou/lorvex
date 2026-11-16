@@ -21,6 +21,13 @@ struct MobileStoreTodayView: View {
           editingCalendarEvent = event
         }
       }
+      .onChange(of: MobileCalendarDebugState.pendingDetailEvent) { _, event in
+        // TabView may keep Today mounted before a later screenshot URL stages
+        // its event, so appearance alone cannot deliver every request.
+        if event != nil, let event = MobileCalendarDebugState.takePendingDetailEvent() {
+          editingCalendarEvent = event
+        }
+      }
     #endif
   }
 

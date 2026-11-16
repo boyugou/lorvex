@@ -10,20 +10,28 @@ extension CalendarLinksToolCatalog {
     ]),
     "description": .string(
       "all_in_series: edit/delete the entire recurring series. "
-      + "this_only: store a synced decision for this occurrence; edit replaces it and delete cancels it. "
-      + "this_and_following: truncate the series before occurrence_date, edit creates a new series from occurrence_date."
+        + "this_only: store a synced decision for this occurrence; edit replaces it and delete cancels it. "
+        + "this_and_following: truncate the series before occurrence_date, edit creates a new series from occurrence_date."
     ),
   ])
 
   static let editScopedEventTool = Tool(
     name: "edit_scoped_calendar_event",
     title: "Edit Scoped Calendar Event",
-    description: "Edit a recurring calendar event with scope control: all_in_series patches the whole series, this_only stores a replacement decision for one occurrence, and this_and_following splits the series at occurrence_date and creates a replacement series. Returns {original_event?, replacement_event?, noop}.",
+    description:
+      "Edit a recurring calendar event with scope control: all_in_series patches the whole series, this_only stores a replacement decision for one occurrence, and this_and_following splits the series at occurrence_date and creates a replacement series. Returns {original_event?, replacement_event?, noop}."
+      + CalendarEventTimeContext.writeDescription
+      + " Keep the returned occurrence_date as the source slot, including when the display date differs.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
         "event_id": .object(["type": .string("string")]),
-        "occurrence_date": .object(["type": .string("string"), "description": .string("YYYY-MM-DD of the occurrence to scope the edit to")]),
+        "occurrence_date": .object([
+          "type": .string("string"),
+          "description": .string(
+            "Original source slot (occurrence_date returned by reads), YYYY-MM-DD; it may differ from the displayed date"
+          ),
+        ]),
         "scope": scopeProperty,
         "title": .object(["type": .string("string")]),
         "start_date": .object(["type": .string("string")]),
@@ -55,12 +63,18 @@ extension CalendarLinksToolCatalog {
   static let deleteScopedEventTool = Tool(
     name: "delete_scoped_calendar_event",
     title: "Delete Scoped Calendar Event",
-    description: "Delete a recurring calendar event with scope control: all_in_series deletes the entire series, this_only stores a cancellation decision for one occurrence, and this_and_following truncates the series before occurrence_date or deletes it if it collapses. Returns {previous?, noop} where previous is the surviving/modified series event (null when the whole series is gone).",
+    description:
+      "Delete a recurring calendar event with scope control: all_in_series deletes the entire series, this_only stores a cancellation decision for one occurrence, and this_and_following truncates the series before occurrence_date or deletes it if it collapses. Returns {previous?, noop} where previous is the surviving/modified series event (null when the whole series is gone).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
         "event_id": .object(["type": .string("string")]),
-        "occurrence_date": .object(["type": .string("string"), "description": .string("YYYY-MM-DD of the occurrence to scope the delete to")]),
+        "occurrence_date": .object([
+          "type": .string("string"),
+          "description": .string(
+            "Original source slot (occurrence_date returned by reads), YYYY-MM-DD; it may differ from the displayed date"
+          ),
+        ]),
         "scope": scopeProperty,
         IdempotencyKeySchema.propertyName: IdempotencyKeySchema.property,
       ]),

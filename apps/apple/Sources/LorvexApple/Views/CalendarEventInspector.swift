@@ -36,7 +36,15 @@ struct CalendarEventInspector: View {
           }
           if event.hasRecurrenceRow {
             detailRow(icon: "repeat", title: recurrenceTitle) {
-              plainText(Self.recurrenceLabel(for: event))
+              VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+                plainText(Self.recurrenceLabel(for: event))
+                if let zoneNote = event.recurrenceTimeZoneNote {
+                  Text(zoneNote)
+                    .font(LorvexDesign.Typography.secondaryText)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+              }
             }
           }
           if let notes = event.notes, !notes.isEmpty {

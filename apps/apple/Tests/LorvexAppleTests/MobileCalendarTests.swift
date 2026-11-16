@@ -1,7 +1,8 @@
 import Foundation
 import LorvexCore
-import LorvexMobile
 import Testing
+
+@testable import LorvexMobile
 
 @MainActor
 @Test
@@ -11,6 +12,7 @@ func mobileStoreCreatesCalendarEventThroughCore() async throws {
   let store = MobileStore(core: core, todayString: { "2026-05-23" }, now: { date })
 
   await store.refresh()
+  await store.refreshCalendarTimeline(around: date)
   store.calendarDraft = MobileCalendarDraft(
     title: "  Product Review  ",
     timing: CalendarEventTiming(

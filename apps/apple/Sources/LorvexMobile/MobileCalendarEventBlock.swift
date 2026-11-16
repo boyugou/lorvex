@@ -25,8 +25,7 @@ extension MobileCalendarDayColumn {
     let dragOffsetX: CGFloat = activeDrag?.translationX ?? 0
     let dragOffsetY: CGFloat = activeDrag?.translationY ?? 0
     let isReschedulable =
-      onReschedule != nil && block.event.editable && !block.event.allDay
-      && !block.event.supportsScopedMutation && !block.event.isMultiDay
+      onReschedule != nil && block.canEditOnGrid
     // The text clears the 3pt color rail on the leading edge. A compact
     // block takes the trailing side down to 1pt instead, so its title keeps
     // every point of the narrow lane.
@@ -168,7 +167,9 @@ extension MobileCalendarDayColumn {
     _ block: CalendarGridTimedBlock, namingDayOf day: CalendarGridDay?
   ) -> String {
     var parts = [block.event.title]
-    if let start = block.event.startTime {
+    if let clockRange = block.event.offsetClockRangeLabel() {
+      parts.append(clockRange)
+    } else if let start = block.event.startTime {
       parts.append(
         String(
           format: String(

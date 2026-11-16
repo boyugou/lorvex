@@ -73,6 +73,12 @@ private func summary(_ tokens: [String], locale identifier: String = "en_US") ->
   #expect(summary(["0MO"]) == "0MO", "position 0 is not a position")
 }
 
+@Test func recurrenceWeekdaysKeepUnrecognizedPositionsWithoutOverflow() {
+  for token in ["\(Int.min)MO", "\(Int.max)FR", "54MO", "-54TU"] {
+    #expect(summary([token]) == token)
+  }
+}
+
 /// A Siri list names five results, then the count of the rest as its last item,
 /// so the conjunction comes once. The list's separators follow the test
 /// machine's region, so the expectations are built with the same list style.

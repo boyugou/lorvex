@@ -43,6 +43,10 @@ enum CalendarEventShare {
       String(
         localized: "calendar.event.field.when", defaultValue: "When", table: "Localizable",
         bundle: LorvexL10n.bundle)
+    case .timeZone:
+      String(
+        localized: "settings.time_zone", defaultValue: "Time Zone", table: "Localizable",
+        bundle: LorvexL10n.bundle)
     case .location:
       String(
         localized: "calendar.section.location", defaultValue: "Location", table: "Localizable",

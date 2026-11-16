@@ -28,9 +28,10 @@
 # uploaded build matches a commit on main.
 #
 # Credentials come from `secrets/apple-developer.env` at the repository root,
-# which git ignores. It must define APPLE_ID, APPLE_PASSWORD (an app-specific
-# password), APPLE_TEAM_ID, MAS_APP_SIGN_IDENTITY ("Apple Distribution: …"), and
-# MAS_INSTALLER_SIGN_IDENTITY ("3rd Party Mac Developer Installer: …"). The Mac
+# which git ignores. Define ASC_KEY_ID, ASC_ISSUER_ID, and ASC_KEY_PATH for API
+# authentication, or APPLE_ID and APPLE_PASSWORD (an app-specific password).
+# Signing needs APPLE_TEAM_ID, MAS_APP_SIGN_IDENTITY ("Apple Distribution: …"),
+# and MAS_INSTALLER_SIGN_IDENTITY ("3rd Party Mac Developer Installer: …"). The Mac
 # App Store provisioning profiles are read from `apps/apple/secrets/profiles/`.
 # altool reads the password from the environment, so it never appears in `ps`,
 # and every log line passes through a filter that masks passwords and email
@@ -51,8 +52,9 @@ set -a
 # shellcheck disable=SC1090
 source "$SECRETS"
 set +a
-export APPLE_APP_PASSWORD="${APPLE_PASSWORD:?APPLE_PASSWORD is not set}"
-: "${APPLE_ID:?APPLE_ID is not set}" "${APPLE_TEAM_ID:?APPLE_TEAM_ID is not set}"
+: "${APPLE_TEAM_ID:?APPLE_TEAM_ID is not set}"
+source "$ROOT_DIR/script/lib_altool_auth.sh"
+configure_altool_auth || exit $?
 
 MASK='s/[a-z]{4}-[a-z]{4}-[a-z]{4}-[a-z]{4}/[redacted]/g; s/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email]/g'
 cd "$ROOT_DIR" || exit 1
@@ -81,7 +83,7 @@ ios_channel() {
   else
     run_masked "$log" ./script/archive_ios.sh --scheme LorvexMobileApp --export \
       || { echo "IOS_ARCHIVE_FAILED" >> "$log"; return 1; }
-    run_masked "$log" xcrun altool --validate-app --type ios -f "$ipa" -u "$APPLE_ID" -p "@env:APPLE_APP_PASSWORD" \
+    run_masked "$log" xcrun altool --validate-app --type ios -f "$ipa" "${ALTOOL_AUTH_ARGS[@]}" \
       --output-format json || { echo "IOS_VALIDATE_FAILED" >> "$log"; return 1; }
     if [[ "$mode" == "validate" ]]; then
       echo "IOS_VALIDATED" >> "$log"
@@ -89,7 +91,7 @@ ios_channel() {
     fi
   fi
   : > "$1/ios_upload.log"
-  run_masked "$1/ios_upload.log" xcrun altool --upload-app --type ios -f "$ipa" -u "$APPLE_ID" -p "@env:APPLE_APP_PASSWORD" \
+  run_masked "$1/ios_upload.log" xcrun altool --upload-app --type ios -f "$ipa" "${ALTOOL_AUTH_ARGS[@]}" \
     --output-format json || { echo "IOS_UPLOAD_FAILED" >> "$log"; return 1; }
   echo "IOS_UPLOADED" >> "$log"
 }
@@ -150,14 +152,14 @@ case "$MODE" in
     for _ in $(seq 1 60); do
       still=()
       for pair in "${pending[@]}"; do
-        out=$(xcrun altool --build-status --delivery-id "${pair#*:}" -u "$APPLE_ID" \
-          -p "@env:APPLE_APP_PASSWORD" --output-format json 2>&1 | sed -E "$MASK")
+        out=$(xcrun altool --build-status --delivery-id "${pair#*:}" \
+          "${ALTOOL_AUTH_ARGS[@]}" --output-format json 2>&1 | sed -E "$MASK")
         status=$(echo "$out" | grep -oE '"import-status" *: *"[A-Z_]+"' | head -1)
         if [[ -z "$status" ]]; then
           # altool's JSON writer crashes on a build that failed processing, which
           # hides the reason; its plain-text report names it.
-          text=$(xcrun altool --build-status --delivery-id "${pair#*:}" -u "$APPLE_ID" \
-            -p "@env:APPLE_APP_PASSWORD" 2>&1 | sed -E "$MASK")
+          text=$(xcrun altool --build-status --delivery-id "${pair#*:}" \
+            "${ALTOOL_AUTH_ARGS[@]}" 2>&1 | sed -E "$MASK")
           if grep -q 'IMPORT-STATUS: *FAILED' <<<"$text"; then
             echo "$(date +%H:%M:%S) ${pair%%:*} FAILED" | tee -a "$LOG"
             grep -A3 'PROCESSING-ERRORS' <<<"$text" | tee -a "$LOG"

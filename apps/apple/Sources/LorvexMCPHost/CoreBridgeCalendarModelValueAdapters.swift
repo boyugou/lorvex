@@ -19,9 +19,10 @@ struct CalendarEventValueOptions: Sendable, Equatable {
   static func from(arguments: [String: Value], defaultShape: Shape = .compact) throws
     -> CalendarEventValueOptions
   {
-    let shape = Shape(
-      rawValue: try StrictScalarArguments.string(
-        arguments["shape"], field: "shape", default: defaultShape.rawValue))
+    let shape =
+      Shape(
+        rawValue: try StrictScalarArguments.string(
+          arguments["shape"], field: "shape", default: defaultShape.rawValue))
       ?? defaultShape
     let requestedFields = try StrictArgumentArray.optionalStrings(
       arguments["fields"], field: "fields")
@@ -151,7 +152,7 @@ extension CoreBridgeClient {
       "event_type": .string(event.eventType),
       "person_name": event.personName.map(Value.string) ?? .null,
       "attendees": event.attendees.map { .array($0.map(calendarAttendeeValue(from:))) } ?? .null,
-      "timezone": event.timezone.map(Value.string) ?? .null,
+      "timezone": CalendarEventTimeContext.timezone(for: event).map(Value.string) ?? .null,
       "is_recurring": .bool(event.isRecurring),
       "recurrence": recurrencePayloadValue(
         TaskRecurrenceRule.bridgeRule(from: event.recurrenceRule)),
@@ -179,6 +180,7 @@ extension CoreBridgeClient {
         projected[key] = fields[key]
       }
     }
+    CalendarEventTimeContext.attach(to: &projected, event: event, options: options)
     return .object(projected)
   }
 
@@ -202,6 +204,7 @@ extension CoreBridgeClient {
     .object([
       "from": .string(snapshot.from),
       "to": .string(snapshot.to),
+      "timezone": snapshot.timezone.map(Value.string) ?? .null,
       "events": .array(snapshot.events.map { calendarEventValue(from: $0, options: options) }),
       "truncated": .bool(snapshot.truncated),
     ])

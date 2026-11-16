@@ -37,6 +37,7 @@ func calendarCreateWritesTypedRecurrenceThroughCore() async throws {
     core: try await makeSeededInMemoryCore(), eventKitCoordinator: makeRecurrenceCoordinator())
   await store.refresh()
 
+  try await store.refreshCalendarTimeline(anchorDate: makeDate(2026, 7, 6, 0, 0))
   store.draftCalendarTitle = "Weekly sync"
   store.draftCalendarTiming = CalendarEventTiming(
     start: makeDate(2026, 7, 6, 10, 0), end: makeDate(2026, 7, 6, 10, 30), allDay: false)
@@ -132,8 +133,12 @@ func unchangedCalendarRecurrenceProducesUnsetPatch() async throws {
 }
 
 @MainActor
-@Test
-func opaqueCalendarRecurrencePreservesUntilExplicitlyCleared() async throws {
+@Test(arguments: [
+  #"{"FREQ":"FORTNIGHTLY","X-FUTURE":true}"#,
+  #"{"FREQ":"WEEKLY","BYWEEKNO":[2]}"#,
+  #"{"FREQ":"WEEKLY","ANCHOR":"future"}"#,
+])
+func opaqueCalendarRecurrencePreservesUntilExplicitlyCleared(rawRule: String) async throws {
   let store = AppStore(
     core: try await makeSeededInMemoryCore(),
     eventKitCoordinator: makeRecurrenceCoordinator())
@@ -142,7 +147,9 @@ func opaqueCalendarRecurrencePreservesUntilExplicitlyCleared() async throws {
     editable: true, startDate: "2026-07-06", startTime: "09:00",
     endDate: nil, endTime: "09:30", allDay: false, location: nil,
     color: nil, eventType: "event", timezone: nil, isRecurring: true,
-    recurrenceRule: #"{"FREQ":"FORTNIGHTLY","X-FUTURE":true}"#)
+    recurrenceRule: rawRule)
+
+  #expect(futureRuleEvent.recurrenceDescription(generic: "Repeating event") == "Repeating event")
 
   store.prepareCalendarDraft(for: futureRuleEvent)
   #expect(store.draftCalendarRecurrenceIsOpaque)
@@ -153,18 +160,26 @@ func opaqueCalendarRecurrencePreservesUntilExplicitlyCleared() async throws {
   // is unchanged structurally, so the touched bit is what distinguishes clear.
   store.draftCalendarRecurrence = nil
   #expect(store.draftCalendarRecurrencePatch == .clear)
+  #expect(!store.draftCalendarRecurrenceIsOpaque)
+
+  store.prepareCalendarDraft(for: futureRuleEvent)
+  #expect(store.draftCalendarRecurrenceIsOpaque)
+  let replacement = TaskRecurrenceRule(freq: .weekly, byDay: ["MO"])
+  store.draftCalendarRecurrence = replacement
+  #expect(!store.draftCalendarRecurrenceIsOpaque)
+  #expect(store.draftCalendarRecurrencePatch == .set(replacement))
 }
 
 @MainActor
 @Test
 func calendarRepeatFrequencyChangeClearsIncompatibleAdvancedFields() {
-  let referenceDate = makeDate(2026, 7, 6, 9, 0)  // Monday
+  let referenceTiming = CalendarEventTiming.timed(startingAt: makeDate(2026, 7, 6, 9, 0))  // Monday
   let advanced = TaskRecurrenceRule(
     freq: .monthly, interval: 2, byDay: ["1MO"], byMonth: [3],
     byMonthDay: nil, bySetPos: [1], wkst: "SU", until: "2028-12-31")
 
   let weekly = CalendarEventRepeatField.ruleFor(
-    frequency: .weekly, from: advanced, referenceDate: referenceDate)
+    frequency: .weekly, from: advanced, referenceTiming: referenceTiming)
 
   #expect(weekly.freq == .weekly)
   #expect(weekly.interval == 2)
@@ -179,7 +194,7 @@ func calendarRepeatFrequencyChangeClearsIncompatibleAdvancedFields() {
   // erase an advanced rule merely because its menu binding re-emits the value.
   #expect(
     CalendarEventRepeatField.ruleFor(
-      frequency: .monthly, from: advanced, referenceDate: referenceDate) == advanced)
+      frequency: .monthly, from: advanced, referenceTiming: referenceTiming) == advanced)
 }
 
 @MainActor
@@ -202,6 +217,7 @@ func calendarPrepareDraftSeedsRecurrenceFromEvent() async throws {
   // A recurring event round-trips its rule back into the draft so the editor
   // opens showing the current cadence.
   store.beginCreateCalendarDraft()
+  try await store.refreshCalendarTimeline(anchorDate: makeDate(2026, 7, 13, 0, 0))
   store.draftCalendarTitle = "Standup"
   store.draftCalendarTiming = CalendarEventTiming(
     start: makeDate(2026, 7, 13, 9, 0), end: makeDate(2026, 7, 13, 9, 15), allDay: false)
@@ -234,7 +250,7 @@ func calendarRepeatFieldEditsTypedRuleThroughCommonCases() throws {
   #expect(source.contains("case custom, none, daily, weekly, monthly, yearly"))
   #expect(source.contains("HabitWeekdayPicker("))
   #expect(source.contains("byMonthDay"))
-  #expect(source.contains(".onChange(of: referenceDate)"))
+  #expect(source.contains(".onChange(of: referenceTiming.startDate)"))
   // Dot-separated accessibility identifiers.
   #expect(source.contains(#".accessibilityIdentifier("\(idPrefix).repeat")"#))
   #expect(source.contains(#".accessibilityIdentifier("\(idPrefix).repeat.interval")"#))

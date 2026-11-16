@@ -11,13 +11,25 @@ public enum TimelineSource: String, Sendable, Equatable {
   case provider
 }
 
+/// The instants behind a timed occurrence's displayed wall clock. Keeping them
+/// through projection distinguishes the two readings of a fall-back hour.
+public struct CalendarTimelineProjection: Sendable, Equatable {
+  public let timezone: String
+  public let start: Date
+  public let end: Date?
+  public let startDate: LorvexDate
+  public let startTime: TimeOfDay
+  public let endDate: LorvexDate?
+  public let endTime: TimeOfDay?
+}
+
 /// A single occurrence on a calendar timeline (post-expansion).
 ///
 /// Recurring events are expanded into individual items before reaching this
 /// type, so it carries no recurrence / recurrence_exceptions fields. The
-/// `(start_date, start_time, end_date, end_time, all_day)` quintuple is
-/// bundled into a typed ``CalendarEventTiming`` so illegal combinations are
-/// non-representable.
+/// Source fields remain in validated ``CalendarEventTiming``. Display fields
+/// come from ``projection`` when present: during a fall-back they can run
+/// backwards on the clock while their real instants still run forwards.
 public struct CalendarTimelineItem: Sendable, Equatable {
   public var source: TimelineSource
   public var editable: Bool
@@ -31,7 +43,9 @@ public struct CalendarTimelineItem: Sendable, Equatable {
   /// device-local provider-link tools accept the latter with its provider kind.
   public var eventId: String
   public var title: String
+  /// The source occurrence's valid civil timing, never display coordinates.
   public var timing: CalendarEventTiming
+  public var projection: CalendarTimelineProjection? = nil
   public var location: String?
   public var color: String?
   public var eventType: String
@@ -59,10 +73,16 @@ public struct CalendarTimelineItem: Sendable, Equatable {
   /// occurrences have no decision state; cancelled and inherit rows are hidden.
   public var occurrenceState: CalendarOccurrenceState?
 
-  public var startDate: LorvexDate { timing.startDate }
-  public var startTime: TimeOfDay? { timing.startTime }
-  public var endDate: LorvexDate? { timing.endDate }
-  public var endTime: TimeOfDay? { timing.endTime }
+  public var startDate: LorvexDate { projection?.startDate ?? timing.startDate }
+  public var startTime: TimeOfDay? { projection?.startTime ?? timing.startTime }
+  public var endDate: LorvexDate? {
+    if let projection { return projection.endDate }
+    return timing.endDate
+  }
+  public var endTime: TimeOfDay? {
+    if let projection { return projection.endTime }
+    return timing.endTime
+  }
   public var allDay: Bool { timing.allDay }
 
   /// Build an item, enforcing temporal validity via

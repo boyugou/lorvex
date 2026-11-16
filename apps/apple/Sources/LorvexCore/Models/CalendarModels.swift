@@ -1,24 +1,41 @@
 import Foundation
 
+/// A calendar timeline window as Gregorian day keys, both ends inclusive.
+/// Retain the requested keys while a load is in flight so a mutation reloads
+/// the page the user navigated to, even before its snapshot has arrived.
+public struct CalendarTimelineWindow: Equatable, Sendable {
+  public let from: String
+  public let to: String
+
+  public init(from: String, to: String) {
+    self.from = from
+    self.to = to
+  }
+}
+
 public struct CalendarTimelineSnapshot: Equatable, Sendable {
   public var from: String
   public var to: String
   public var events: [CalendarTimelineEvent]
   public var truncated: Bool
   public var nextOffset: Int?
+  /// The display timezone used for both the inclusive day bounds and timed rows.
+  public var timezone: String?
 
   public init(
     from: String,
     to: String,
     events: [CalendarTimelineEvent],
     truncated: Bool,
-    nextOffset: Int?
+    nextOffset: Int?,
+    timezone: String? = nil
   ) {
     self.from = from
     self.to = to
     self.events = events
     self.truncated = truncated
     self.nextOffset = nextOffset
+    self.timezone = timezone
   }
 }
 
@@ -89,6 +106,20 @@ public enum CalendarTimelineOccurrenceState: String, Equatable, Sendable {
   case inherit
 }
 
+/// Display frame and exact instants of a timed timeline occurrence. The
+/// event's own `timezone` remains its storage and recurrence authority.
+public struct CalendarEventProjection: Equatable, Sendable {
+  public let timezone: String
+  public let start: Date
+  public let end: Date?
+
+  public init(timezone: String, start: Date, end: Date?) {
+    self.timezone = timezone
+    self.start = start
+    self.end = end
+  }
+}
+
 public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
   /// Stable identity for this rendered occurrence. Recurring series therefore
   /// expose a different id for every expanded occurrence.
@@ -126,6 +157,10 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
   public var personName: String?
   public var attendees: [CalendarEventAttendee]?
   public var timezone: String?
+  public var projection: CalendarEventProjection?
+  /// Original civil coordinates of an editable occurrence, before display
+  /// projection. A skipped clock must retain its intended time for edits.
+  public var sourceTiming: CalendarEventSourceTiming?
   public var isRecurring: Bool
   public var recurrenceRule: String?
   /// Human-readable summary of the primary recurrence rule, populated only
@@ -159,7 +194,9 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
     timezone: String?,
     isRecurring: Bool,
     recurrenceRule: String? = nil,
-    recurrenceSummary: String? = nil
+    recurrenceSummary: String? = nil,
+    projection: CalendarEventProjection? = nil,
+    sourceTiming: CalendarEventSourceTiming? = nil
   ) {
     self.id = id
     self.eventID = eventID ?? seriesID ?? id
@@ -185,6 +222,8 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
     self.personName = personName
     self.attendees = attendees
     self.timezone = timezone
+    self.projection = projection
+    self.sourceTiming = sourceTiming
     self.isRecurring = isRecurring
     self.recurrenceRule = recurrenceRule
     self.recurrenceSummary = recurrenceSummary
@@ -218,7 +257,8 @@ extension CalendarTimelineEvent {
 }
 
 /// Patch fields for a scoped calendar event edit. All fields are optional —
-/// omitted fields preserve the original value.
+/// omitted fields preserve the original value. Empty `endDate`, `endTime`,
+/// and `timezone` strings explicitly clear those fields.
 public struct ScopedCalendarEventUpdates: Sendable {
   public var title: String?
   public var startDate: String?

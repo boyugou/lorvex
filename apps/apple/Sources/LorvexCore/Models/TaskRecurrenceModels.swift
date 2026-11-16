@@ -112,9 +112,13 @@ extension TaskRecurrenceRule {
     return string
   }
 
-  public static func bridgeRule(from value: Any?) -> TaskRecurrenceRule? {
+  /// Calendar editors require every field to be known so a future modifier
+  /// stays opaque until the user explicitly replaces the rule.
+  public static func bridgeRule(
+    from value: Any?, requiringKnownFields: Bool = false
+  ) -> TaskRecurrenceRule? {
     if let object = value as? [String: Any] {
-      return bridgeRule(fromObject: object)
+      return bridgeRule(fromObject: object, requiringKnownFields: requiringKnownFields)
     }
     guard
       let text = value as? String,
@@ -123,7 +127,7 @@ extension TaskRecurrenceRule {
     else {
       return nil
     }
-    return bridgeRule(fromObject: object)
+    return bridgeRule(fromObject: object, requiringKnownFields: requiringKnownFields)
   }
 
   public static func bridgeExceptionDates(from value: Any?) -> [String] {
@@ -140,7 +144,24 @@ extension TaskRecurrenceRule {
     return strings
   }
 
-  private static func bridgeRule(fromObject object: [String: Any]) -> TaskRecurrenceRule? {
+  private static let knownBridgeKeys: Set<String> = [
+    "freq", "FREQ", "interval", "INTERVAL", "byday", "BYDAY", "byDay",
+    "bymonth", "BYMONTH", "byMonth", "bymonthday", "BYMONTHDAY", "byMonthDay",
+    "bysetpos", "BYSETPOS", "bySetPos", "wkst", "WKST", "until", "UNTIL",
+    "count", "COUNT", "anchor", "ANCHOR",
+  ]
+
+  private static func bridgeRule(
+    fromObject object: [String: Any], requiringKnownFields: Bool
+  ) -> TaskRecurrenceRule? {
+    if requiringKnownFields {
+      guard object.keys.allSatisfy({ knownBridgeKeys.contains($0) }),
+        Set(object.keys.map { $0.lowercased() }).count == object.count
+      else { return nil }
+      if let anchor = object["anchor"] ?? object["ANCHOR"] {
+        guard let name = anchor as? String, Anchor(rawValue: name) != nil else { return nil }
+      }
+    }
     guard
       let rawFreq = stringValue(object, keys: ["freq", "FREQ"]),
       let frequency = Frequency(rawValue: rawFreq.uppercased())

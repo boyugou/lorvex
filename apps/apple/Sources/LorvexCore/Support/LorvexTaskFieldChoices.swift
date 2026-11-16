@@ -57,6 +57,19 @@ public enum LorvexTaskFieldChoices {
     return start..<(start + minutes)
   }
 
+  /// Proposes a time for a stored UTC-midnight planned day using the
+  /// planner's clock. The picker may display that day in the device's zone;
+  /// its instant must be bridged to storage before calling this overload.
+  public static func newTime(
+    length: Int?, plannedDay: Date, timeZone: TimeZone, now: Date = Date()
+  ) -> Range<Int> {
+    let day = LorvexDateFormatters.ymdUTC.string(from: plannedDay)
+    let today = PlannedDayBridge.storageDate(forLocalInstant: now, timeZone: timeZone)
+    let isToday = day == LorvexDateFormatters.ymdUTC.string(from: today)
+    let minutes = LorvexProductDayClock.nowMinutes(on: day, in: timeZone, at: now)
+    return newTime(length: length, nowMinutes: minutes, isToday: isToday)
+  }
+
   /// `time` with its start moved to `start`, keeping its length the way a
   /// calendar event moves, and kept inside the day.
   public static func time(_ time: Range<Int>, movingStartTo start: Int) -> Range<Int> {

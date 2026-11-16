@@ -126,6 +126,22 @@ struct LorvexTimeZoneChoiceTests {
     #expect(!kyiv.matches("Montreal"))
   }
 
+  @Test func aStoredNonGeographicZoneStillHasASelectedRow() {
+    let all = LorvexTimeZoneChoice.all(
+      now: winter, locale: Locale(identifier: "en_US"), keeping: ["GMT", "Nowhere/Atlantis"])
+    #expect(all.contains { $0.identifier == "GMT" })
+    #expect(!all.contains { $0.identifier == "Nowhere/Atlantis" })
+    #expect(Set(all.map(\.identifier)).count == all.count)
+  }
+
+  @Test func searchFindsDisplayedOffsetsAndFullWidthCityNames() throws {
+    let choice = try #require(LorvexTimeZoneChoice(
+      identifier: "Asia/Kolkata", now: winter, locale: Locale(identifier: "en_US")))
+    #expect(choice.matches("GMT+5:30"))
+    #expect(!choice.matches("GMT-5:30"))
+    #expect(choice.matches("Ｋｏｌｋａｔａ"))
+  }
+
   @MainActor
   @Test func settingTheTimeZoneMovesTheTodaySnapshotToIt() async throws {
     let suiteName = "settingTheTimeZone.\(UUID().uuidString)"

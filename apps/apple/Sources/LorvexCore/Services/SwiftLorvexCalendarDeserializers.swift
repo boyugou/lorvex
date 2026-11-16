@@ -42,7 +42,16 @@ enum SwiftLorvexCalendarDeserializers {
       timezone: item.timezone,
       isRecurring: item.isRecurring,
       recurrenceRule: item.recurrenceRule,
-      recurrenceSummary: nil)
+      recurrenceSummary: nil,
+      projection: item.projection.map {
+        CalendarEventProjection(timezone: $0.timezone, start: $0.start, end: $0.end)
+      },
+      sourceTiming: item.editable
+        ? CalendarEventSourceTiming(
+          startDate: item.timing.startDate.asString, startTime: item.timing.startTime?.asString,
+          endDate: item.timing.endDate?.asString, endTime: item.timing.endTime?.asString,
+          allDay: item.allDay, timezone: item.timezone)
+        : nil)
   }
 
   /// Map a stored `calendar_events` row (search / single fetch, no expansion)

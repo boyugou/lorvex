@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 /// Day-clipped, lane-assigned representation of a timed event for one day
 /// column. `startMin`/`endMin` are minutes-from-midnight within that column.
@@ -13,13 +14,21 @@ public struct CalendarGridTimedBlock: Identifiable, Equatable, Sendable {
   public let drawnEndMin: Int
   public let lane: Int
   public let laneCount: Int
-  /// Stable per-column identity (event id + day key), since a multi-day event
-  /// yields one block per day it spans.
+  /// Stable per-piece identity (event id + day key + clock-piece index when
+  /// split at an offset change). Every piece still opens the same event.
   public let id: String
   /// Which part of the event this block draws: all of it, or the first or
   /// last day of an event shorter than a day that runs past midnight. An event
   /// of a day or more has no timed blocks, so no block draws a middle day.
   public let part: CalendarEventDayPart
+  /// Present when the block needs an offset to distinguish its clock. The
+  /// minute interval is just this piece; the event retains its true endpoints.
+  public let clockSegment: CalendarWallClockSegment?
+
+  public var canEditOnGrid: Bool {
+    event.editable && !event.allDay && !event.supportsScopedMutation && !event.isMultiDay
+      && !event.crossesClockChange
+  }
 
   public init(
     event: CalendarTimelineEvent,
@@ -29,7 +38,8 @@ public struct CalendarGridTimedBlock: Identifiable, Equatable, Sendable {
     lane: Int,
     laneCount: Int,
     id: String,
-    part: CalendarEventDayPart = .whole
+    part: CalendarEventDayPart = .whole,
+    clockSegment: CalendarWallClockSegment? = nil
   ) {
     self.event = event
     self.startMin = startMin
@@ -39,6 +49,7 @@ public struct CalendarGridTimedBlock: Identifiable, Equatable, Sendable {
     self.laneCount = laneCount
     self.id = id
     self.part = part
+    self.clockSegment = clockSegment
   }
 }
 

@@ -12,6 +12,7 @@ struct SettingsTimeZoneRow: View {
   @Bindable var store: AppStore
 
   @State private var isPickerPresented = false
+  @State private var selection = LorvexTimeZoneSelection()
 
   var body: some View {
     LabeledContent(Copy.title) {
@@ -35,24 +36,48 @@ struct SettingsTimeZoneRow: View {
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
+      .disabled(selection.isSaving)
       .accessibilityIdentifier("settings.timeZone")
       .popover(isPresented: $isPickerPresented, arrowEdge: .bottom) {
-        SettingsTimeZonePicker(selected: store.logicalTimezoneName) { identifier in
-          isPickerPresented = false
-          Task { await store.setLogicalTimeZone(identifier) }
+        SettingsTimeZonePicker(
+          selected: store.logicalTimezoneName, pendingIdentifier: selection.pendingIdentifier
+        ) { identifier in
+          Task {
+            if await choose(identifier) { isPickerPresented = false }
+          }
         }
       }
+      #if DEBUG
+        .onAppear {
+          if CommandLine.arguments.contains("-lorvexOpenTimeZonePicker") { isPickerPresented = true }
+        }
+      #endif
     }
 
     if let device, device.identifier != store.logicalTimezoneName {
-      Button(Copy.useDevice(device.summary)) {
-        Task { await store.setLogicalTimeZone(device.identifier) }
+      Button {
+        Task { await choose(device.identifier) }
+      } label: {
+        HStack(spacing: LorvexDesign.Spacing.s) {
+          Text(Copy.useDevice(device.summary))
+          if selection.pendingIdentifier == device.identifier {
+            ProgressView().controlSize(.small).environment(\.isEnabled, true)
+          }
+        }
       }
       .buttonStyle(.plain)
       .foregroundStyle(LorvexDesign.Palette.accent)
+      .disabled(selection.isSaving)
       .accessibilityIdentifier("settings.timeZone.useDevice")
     }
 
+  }
+
+  @discardableResult
+  private func choose(_ identifier: String) async -> Bool {
+    await selection.select(identifier, current: store.logicalTimezoneName) {
+      await store.setLogicalTimeZone($0)
+    }
   }
 
   /// The footnote for the group holding these rows.
@@ -90,6 +115,7 @@ struct SettingsTimeZoneRow: View {
 /// chosen zone carries a checkmark and is scrolled into view on open.
 struct SettingsTimeZonePicker: View {
   let selected: String
+  var pendingIdentifier: String? = nil
   let choose: (String) -> Void
 
   @State private var query = ""
@@ -128,10 +154,13 @@ struct SettingsTimeZonePicker: View {
       }
     }
     .frame(width: 340, height: 400)
-    .task {
+    .disabled(pendingIdentifier != nil)
+    .task(id: selected) {
       isSearchFocused = true
       let kept: Set<String> = [selected]
-      choices = await Task.detached { LorvexTimeZoneChoice.all(keeping: kept) }.value
+      let loaded = await Task.detached { LorvexTimeZoneChoice.all(keeping: kept) }.value
+      guard !Task.isCancelled else { return }
+      choices = loaded
     }
     .accessibilityIdentifier("settings.timeZone.picker")
   }
@@ -141,10 +170,16 @@ struct SettingsTimeZonePicker: View {
       choose(choice.identifier)
     } label: {
       HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-        Image(systemName: "checkmark")
-          .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
-          .foregroundStyle(LorvexDesign.Palette.accent)
-          .opacity(choice.identifier == selected ? 1 : 0)
+        ZStack {
+          Image(systemName: "checkmark")
+            .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
+            .foregroundStyle(LorvexDesign.Palette.accent)
+            .opacity(choice.identifier == selected && choice.identifier != pendingIdentifier ? 1 : 0)
+          if choice.identifier == pendingIdentifier {
+            ProgressView().controlSize(.small).environment(\.isEnabled, true)
+          }
+        }
+        .frame(width: 16)
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           Text(choice.city)
             .font(LorvexDesign.Typography.primaryText)

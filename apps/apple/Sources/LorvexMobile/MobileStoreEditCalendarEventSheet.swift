@@ -48,6 +48,12 @@ struct MobileStoreEditCalendarEventSheet: View {
           .accessibilityIdentifier("mobileEditCalendarEvent.location")
         }
 
+        if event.hasRecurrenceRow {
+          Section(MobileCalendarEventCopy.repeats) {
+            MobileCalendarRecurrenceSummary(event: event)
+          }
+        }
+
         Section(
           String(
             localized: "calendar.section.notes", defaultValue: "Notes", table: "Localizable",

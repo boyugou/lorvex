@@ -7,14 +7,27 @@ extension CalendarGridTimedBlock {
   /// (``CalendarTimelineEvent/timeLabel(for:)``), its start ("11:00 PM") on a
   /// block that starts it and "Until 1:00 AM" on the block that ends an event
   /// that started the day before.
-  public var timeLabel: String? { event.timeLabel(for: part) }
+  public var timeLabel: String? {
+    if let clockSegment, let zone = TimeZone(secondsFromGMT: clockSegment.secondsFromGMT) {
+      return LorvexDateFormatters.string(clockSegment.start, template: "jmmO", timeZone: zone)
+    }
+    return event.timeLabel(for: part)
+  }
 
   /// The time range an event's block shows where it fits the width ("9:00 –
   /// 10:30 AM"), in place of ``timeLabel``: the block's own span when it draws
-  /// the whole event. One day's block of an event that runs past midnight has
-  /// none, since its span is only that day's share of the event.
+  /// the whole event. Offset-change pieces instead name their own occupied
+  /// clocks and offset. Other partial-day blocks have none, since their span
+  /// is only that day's share of the event.
   public var rangeLabel: String? {
-    part == .whole ? lorvexClockRangeLabel(startMinutes: startMin, endMinutes: endMin) : nil
+    if let clockSegment, let zone = TimeZone(secondsFromGMT: clockSegment.secondsFromGMT) {
+      let offset = LorvexDateFormatters.string(clockSegment.start, template: "O", timeZone: zone)
+      return lorvexClockRangeLabel(startMinutes: startMin, endMinutes: endMin) + " · " + offset
+    }
+    guard part == .whole, let start = event.startTime else { return nil }
+    // Minimum drawing height and an open-ended event's placeholder are not
+    // real endpoints and must never leak into the time label.
+    return lorvexClockRangeLabel(start: start, end: event.endTime)
   }
 }
 
@@ -29,12 +42,12 @@ extension CalendarTimelineEvent {
   public func timeLabel(for part: CalendarEventDayPart) -> String? {
     switch part {
     case .whole, .firstDay:
-      return startTime.map(lorvexClockTimeLabel)
+      return offsetClockLabel() ?? startTime.map(lorvexClockTimeLabel)
     case .middleDay:
       return nil
     case .lastDay:
       guard let endTime else { return nil }
-      let time = lorvexClockTimeLabel(endTime)
+      let time = offsetClockLabel(ending: true) ?? lorvexClockTimeLabel(endTime)
       return String(
         localized: "calendar.block.until", defaultValue: "Until \(time)", table: "Localizable",
         bundle: CoreL10n.bundle)
@@ -63,7 +76,7 @@ extension CalendarTimelineEvent {
   public func listTimeLabel(on day: String, range: (_ start: Int, _ end: Int?) -> String) -> String? {
     guard let span = clockSpan(on: day) else { return nil }
     let part = dayPart(on: day)
-    return part == .whole ? range(span.start, span.end) : timeLabel(for: part)
+    return part == .whole ? offsetClockRangeLabel() ?? range(span.start, span.end) : timeLabel(for: part)
   }
 
   /// A timed event that runs into a later day, written as one span from its
@@ -74,9 +87,10 @@ extension CalendarTimelineEvent {
   /// clock times.
   public var timedSpanLabel: String? {
     guard !allDay, isMultiDay else { return nil }
+    if let label = offsetClockRangeLabel(includingDays: true) { return label }
     let timing = CalendarEventTiming(event: self, fallbackDay: Date())
     return LorvexDateFormatters.range(
       from: timing.start, to: timing.end, template: "EEEEMMMMdjmm",
-      timeZone: .autoupdatingCurrent)
+      timeZone: timing.calendar.timeZone)
   }
 }

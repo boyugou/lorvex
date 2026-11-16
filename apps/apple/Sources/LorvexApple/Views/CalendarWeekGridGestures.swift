@@ -226,7 +226,7 @@ extension CalendarWeekGridView {
         let endDate = dateAtMinute(of: parsedDay, minute: resized.upperBound)
         Task { @MainActor in
           await store.rescheduleCalendarEvent(
-            block.event, newStart: startDate, newEnd: endDate, undoManager: undoManager)
+            block.event, newStart: startDate, newEnd: endDate, isResize: true, undoManager: undoManager)
         }
       }
   }
@@ -259,7 +259,7 @@ extension CalendarWeekGridView {
         let endDate = dateAtMinute(of: parsedDay, minute: block.endMin)
         Task { @MainActor in
           await store.rescheduleCalendarEvent(
-            block.event, newStart: startDate, newEnd: endDate, undoManager: undoManager)
+            block.event, newStart: startDate, newEnd: endDate, isResize: true, undoManager: undoManager)
         }
       }
   }

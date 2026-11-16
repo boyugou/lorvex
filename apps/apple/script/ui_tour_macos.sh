@@ -73,7 +73,8 @@
 # and habit-editor-goal
 # (that habit's field popovers), sheet-createList, sheet-editList, and
 # sheet-createHabit (the list and habit create sheets and the list edit
-# sheet), and setup-welcome, setup-cloudSync,
+# sheet), sheet-createEvent and sheet-editEvent (the calendar event forms),
+# and setup-welcome, setup-cloudSync,
 # setup-permissions, setup-permissions-answered (Calendar allowed and
 # Notifications denied, the page's tallest state), and setup-done (the
 # first-run wizard's pages); plus tour-<appearance>.log.

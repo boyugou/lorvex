@@ -16,6 +16,7 @@ import SwiftUI
 struct MobileCalendarColumnHeaders: View {
   let columns: [CalendarGridDay]
   let calendar: Calendar
+  let todayKey: String
   let gutterWidth: CGFloat
   var circlesToday = true
   var onOpenDay: ((Date) -> Void)? = nil
@@ -29,7 +30,7 @@ struct MobileCalendarColumnHeaders: View {
       Color.clear.frame(width: gutterWidth, height: 1)
       ForEach(columns) { day in
         let spokenDay = MobileCalendarDayName.spoken(
-          day.date, isToday: isToday(day.date), calendar: calendar)
+          day.date, isToday: day.dayKey == todayKey, calendar: calendar)
         if let onOpenDay {
           Button { onOpenDay(day.date) } label: { label(for: day) }
             .buttonStyle(.plain)
@@ -51,7 +52,7 @@ struct MobileCalendarColumnHeaders: View {
   }
 
   private func label(for day: CalendarGridDay) -> some View {
-    let isToday = isToday(day.date)
+    let isToday = day.dayKey == todayKey
     let sidewaysPhone = verticalSizeClass == .compact
     let circle: CGFloat = sidewaysPhone ? 24 : 28
     let weekday = Text(LorvexDateFormatters.string(day.date, template: "EEE", timeZone: calendar.timeZone))
@@ -80,13 +81,12 @@ struct MobileCalendarColumnHeaders: View {
     .frame(maxWidth: .infinity)
     .contentShape(Rectangle())
   }
-
-  private func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
 }
 
 @MainActor
 struct MobileCalendarAllDayStrip: View {
   let columns: [CalendarGridDay]
+  let logicalDay: String
   let gutterWidth: CGFloat
   /// Narrow columns: pills carry their title alone, in the compact block face.
   var isCompact = false
@@ -248,7 +248,7 @@ struct MobileCalendarAllDayStrip: View {
   /// context menu still completes it.
   private func allDayTaskPill(_ task: LorvexTask, namingDayOf day: CalendarGridDay?) -> some View {
     let isDone = task.status == .completed
-    let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
+    let isOverdue = LorvexTaskSections.isOverdue(task, logicalDay: logicalDay)
     let toggleLabel = MobileTaskActionCopy.completionToggle(isDone: isDone)
     return HStack(spacing: 2) {
       if !isCompact {

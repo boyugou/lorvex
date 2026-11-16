@@ -113,7 +113,8 @@ actor EventKitCoordinator {
   /// (`"<kind>:<scope>:<key>"` as built by `SwiftLorvexCoreService.providerEvent`).
   /// Splits at most twice so a `:`-bearing event key survives intact. Inert (nil)
   /// when the integration is disabled or the id is not an EventKit provider event.
-  func eventSource(forTimelineID timelineID: String, dayHint: String?) async -> EventKitEventSource? {
+  func eventSource(forTimelineID timelineID: String, dayHint: String?) async -> EventKitEventSource?
+  {
     guard await isEnabled() else { return nil }
     let parts = timelineID.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
     guard parts.count == 3, parts[0] == ProviderKind.eventkit else { return nil }
@@ -172,7 +173,8 @@ actor EventKitCoordinator {
     let count = try provider.ingestEventKitEvents(
       rows, builtAtMode: mode,
       windowStart: resolvedWindowStart,
-      windowEnd: resolvedWindowEnd)
+      windowEnd: resolvedWindowEnd,
+      fetchedWindow: from < to ? DateInterval(start: from, end: to) : nil)
     try await removeSeriesCalendarNoLongerHas(
       fetchedKeys: Set(fetched.map(\.key)), calendarFilter: calendarFilter)
     return IngestReport(ingestedCount: count)
@@ -283,7 +285,9 @@ actor EventKitCoordinator {
     guard await isEnabled() else {
       throw EventKitAccessError.integrationDisabled
     }
-    if let taskID, let key = try provider.eventKitLinksForTask(taskID: taskID).first?.providerEventKey {
+    if let taskID,
+      let key = try provider.eventKitLinksForTask(taskID: taskID).first?.providerEventKey
+    {
       try await access.deleteLorvexEvent(providerEventKey: key)
       _ = try provider.unlinkTaskFromEventKitEvent(taskID: taskID, providerEventKey: key)
     } else {

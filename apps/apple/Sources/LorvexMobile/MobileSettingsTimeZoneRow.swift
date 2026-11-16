@@ -10,6 +10,7 @@ import SwiftUI
 struct MobileSettingsTimeZoneRow: View {
   @Bindable var store: MobileStore
   @State private var isPickerPresented = false
+  @State private var selection = LorvexTimeZoneSelection()
 
   var body: some View {
     // A navigation link, so the row carries the system chevron and lines up
@@ -22,6 +23,7 @@ struct MobileSettingsTimeZoneRow: View {
           ?? store.logicalTimezoneName)
       }
     }
+    .disabled(selection.isSaving)
     .accessibilityIdentifier("mobileSettings.timeZone")
     #if DEBUG
       // Dev/QA only: `-lorvexOpenTimeZonePicker` pushes the list so the
@@ -35,16 +37,31 @@ struct MobileSettingsTimeZoneRow: View {
     if let device = LorvexTimeZoneChoice(identifier: TimeZone.current.identifier),
       device.identifier != store.logicalTimezoneName
     {
-      Button(Copy.useDevice(device.summary)) {
-        Task { await store.setLogicalTimeZone(device.identifier) }
+      Button {
+        Task { await choose(device.identifier) }
+      } label: {
+        HStack(spacing: LorvexDesign.Spacing.s) {
+          Text(Copy.useDevice(device.summary))
+          if selection.pendingIdentifier == device.identifier {
+            ProgressView().environment(\.isEnabled, true)
+          }
+        }
       }
+      .disabled(selection.isSaving)
       .accessibilityIdentifier("mobileSettings.timeZone.useDevice")
     }
   }
 
   private var picker: some View {
-    MobileTimeZonePicker(selected: store.logicalTimezoneName) { identifier in
-      Task { await store.setLogicalTimeZone(identifier) }
+    MobileTimeZonePicker(
+      selected: store.logicalTimezoneName, pendingIdentifier: selection.pendingIdentifier,
+      choose: choose)
+  }
+
+  @discardableResult
+  private func choose(_ identifier: String) async -> Bool {
+    await selection.select(identifier, current: store.logicalTimezoneName) {
+      await store.setLogicalTimeZone($0)
     }
   }
 
@@ -80,7 +97,8 @@ struct MobileSettingsTimeZoneRow: View {
 /// and is scrolled into view on open; choosing a zone saves it and goes back.
 private struct MobileTimeZonePicker: View {
   let selected: String
-  let choose: (String) -> Void
+  let pendingIdentifier: String?
+  let choose: (String) async -> Bool
 
   @State private var query = ""
   @State private var choices: [LorvexTimeZoneChoice] = []
@@ -91,8 +109,9 @@ private struct MobileTimeZonePicker: View {
     ScrollViewReader { proxy in
       List(shown) { choice in
         Button {
-          choose(choice.identifier)
-          dismiss()
+          Task {
+            if await choose(choice.identifier) { dismiss() }
+          }
         } label: {
           row(choice)
         }
@@ -100,6 +119,7 @@ private struct MobileTimeZonePicker: View {
         .id(choice.identifier)
         .accessibilityAddTraits(choice.identifier == selected ? .isSelected : [])
       }
+      .disabled(pendingIdentifier != nil)
       .overlay {
         if shown.isEmpty, !choices.isEmpty {
           MobileEmptyState.search(text: query)
@@ -120,10 +140,11 @@ private struct MobileTimeZonePicker: View {
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
     #endif
-    .task {
-      guard choices.isEmpty else { return }
+    .task(id: selected) {
       let kept: Set<String> = [selected]
-      choices = await Task.detached { LorvexTimeZoneChoice.all(keeping: kept) }.value
+      let loaded = await Task.detached { LorvexTimeZoneChoice.all(keeping: kept) }.value
+      guard !Task.isCancelled else { return }
+      choices = loaded
     }
   }
 
@@ -142,10 +163,14 @@ private struct MobileTimeZonePicker: View {
         .font(LorvexDesign.Typography.tertiaryText)
         .foregroundStyle(.secondary)
         .monospacedDigit()
-      Image(systemName: "checkmark")
-        .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
-        .foregroundStyle(LorvexDesign.Palette.accent)
-        .opacity(choice.identifier == selected ? 1 : 0)
+      ZStack {
+        Image(systemName: "checkmark")
+          .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
+          .foregroundStyle(LorvexDesign.Palette.accent)
+          .opacity(choice.identifier == selected && choice.identifier != pendingIdentifier ? 1 : 0)
+        if choice.identifier == pendingIdentifier { ProgressView().environment(\.isEnabled, true) }
+      }
+      .frame(width: 20)
     }
     .contentShape(Rectangle())
   }

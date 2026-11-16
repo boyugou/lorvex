@@ -75,7 +75,7 @@ extension AppStore {
       doneToday: doneTodayCount,
       nowMinutes: nowMinutes,
       logicalDay: logicalTodayDateString,
-      workingHours: workdayWindow)
+      workingHours: workdayWindow, now: Date())
   }
 
   /// Refresh the done-today tasks and count from the canonical completed-today

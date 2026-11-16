@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 struct MobileCalendarWeekStrip: View {
   let visibleDate: Date
+  let today: Date
   let calendar: Calendar
   let selectDay: (Date) -> Void
 
@@ -50,7 +51,7 @@ struct MobileCalendarWeekStrip: View {
     .padding(.vertical, 6)
   }
 
-  private func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
+  private func isToday(_ date: Date) -> Bool { calendar.isDate(date, inSameDayAs: today) }
 
   private func weekdaySymbol(_ date: Date) -> String {
     LorvexDateFormatters.string(date, template: "EEE", timeZone: calendar.timeZone)
@@ -82,7 +83,7 @@ struct MobileCalendarWeekStripPager: View {
       LazyHStack(spacing: 0) {
         ForEach(weekRange, id: \.self) { week in
           MobileCalendarWeekStrip(
-            visibleDate: sameWeekday(inWeek: week), calendar: calendar, selectDay: selectDay
+            visibleDate: sameWeekday(inWeek: week), today: today, calendar: calendar, selectDay: selectDay
           )
           .containerRelativeFrame(.horizontal)
           // The weeks beside the visible one are only there to be swiped to,

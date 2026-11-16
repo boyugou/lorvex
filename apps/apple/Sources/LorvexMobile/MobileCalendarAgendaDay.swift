@@ -35,30 +35,16 @@ struct MobileCalendarAgendaDay: Identifiable, Equatable {
   /// way Today's schedule reads; `events` and `tasks` arrive in their own
   /// display order, which each kind keeps.
   var entries: [Entry] {
-    var allDay: [Entry] = []
-    var timed: [(start: Int, entry: Entry)] = []
-    var untimed: [Entry] = []
-    for event in events {
-      if let span = event.clockSpan(on: key) {
-        timed.append((span.start, .event(event)))
-      } else {
-        allDay.append(.event(event))
+    let rows = LorvexTodayTimeline.build(
+      day: key, events: events, tasks: tasks, times: tasks.times(on: key), nowMinutes: nil)
+    let ordered = rows.compactMap { row -> Entry? in
+      switch row.kind {
+      case .event(let event): .event(event)
+      case .task(let task): .task(task)
+      case .now: nil
       }
     }
-    for task in tasks {
-      if let time = task.time(on: key) {
-        timed.append((time.lowerBound, .task(task)))
-      } else {
-        untimed.append(.task(task))
-      }
-    }
-    let ordered = timed.enumerated()
-      .sorted { lhs, rhs in
-        lhs.element.start != rhs.element.start
-          ? lhs.element.start < rhs.element.start : lhs.offset < rhs.offset
-      }
-      .map(\.element.entry)
-    return allDay + ordered + untimed
+    return ordered + tasks.filter { $0.time(on: key) == nil }.map(Entry.task)
   }
 
   /// Whether the clock has passed `event` on this day: every event of a day
@@ -71,12 +57,10 @@ struct MobileCalendarAgendaDay: Identifiable, Equatable {
   ///   - todayKey: the logical today as `yyyy-MM-dd`.
   ///   - nowMinutes: the current time in minutes since midnight, or `nil`
   ///     when it is unknown.
-  func hasPassed(_ event: CalendarTimelineEvent, todayKey: String, nowMinutes: Int?) -> Bool {
+  func hasPassed(_ event: CalendarTimelineEvent, todayKey: String, nowMinutes: Int?, now: Date? = nil) -> Bool {
     if key < todayKey { return true }
-    guard key == todayKey, let nowMinutes, let end = event.clockSpan(on: key)?.end else {
-      return false
-    }
-    return end <= nowMinutes
+    guard key == todayKey else { return false }
+    return event.hasPassed(on: key, nowMinutes: nowMinutes, now: now)
   }
 
   /// The days an agenda lists out of `days`, in their order.

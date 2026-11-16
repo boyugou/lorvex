@@ -101,7 +101,8 @@ public func memoryEntryAccessibilityLabel(_ entry: MemoryEntry) -> String {
 /// Example: "Standup, 9:00 – 9:30 AM, Zoom"
 public func calendarEventAccessibilityLabel(_ event: CalendarTimelineEvent) -> String {
   let time =
-    event.timedSpanLabel ?? event.startTime.map { lorvexClockRangeLabel(start: $0, end: event.endTime) }
+    event.timedSpanLabel ?? event.offsetClockRangeLabel()
+      ?? event.startTime.map { lorvexClockRangeLabel(start: $0, end: event.endTime) }
   let location = event.location.flatMap { $0.isEmpty ? nil : $0 }
   return [event.title, time, location].compactMap { $0 }.joined(separator: ", ")
 }

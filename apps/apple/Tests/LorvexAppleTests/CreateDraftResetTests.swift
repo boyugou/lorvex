@@ -125,13 +125,13 @@ func createCalendarDraftsTakeTheirEndFromCalendarEventTiming() throws {
   let root = packageRoot()
   let creations = [
     "Sources/LorvexApple/Stores/AppStoreCalendarActions.swift":
-      "draftCalendarTiming = .nextHourBlock(after: Date())",
+      "draftCalendarTiming = .nextHourBlock(",
     "Sources/LorvexApple/Views/CalendarWorkspaceCreateDraft.swift":
-      "store.draftCalendarTiming = .timed(startingAt: start",
+      "store.draftCalendarTiming = .timed(",
     "Sources/LorvexMobile/MobileStoreCalendarActions.swift":
-      "MobileCalendarDraft(timing: .nextHourBlock(after: now()))",
+      "MobileCalendarDraft(timing: .nextHourBlock(",
     "Sources/LorvexMobile/MobileCalendarDayActions.swift":
-      "MobileCalendarDraft.timedDefault(start: start)",
+      "MobileCalendarDraft(timing: .timed(",
   ]
 
   for (file, creation) in creations {

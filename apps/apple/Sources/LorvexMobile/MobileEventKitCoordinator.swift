@@ -86,7 +86,8 @@ actor MobileEventKitCoordinator: MobileEventKitCoordinating {
       rows,
       builtAtMode: accessMode,
       windowStart: windowStart,
-      windowEnd: windowEnd
+      windowEnd: windowEnd,
+      fetchedWindow: from < to ? DateInterval(start: from, end: to) : nil
     )
   }
 }

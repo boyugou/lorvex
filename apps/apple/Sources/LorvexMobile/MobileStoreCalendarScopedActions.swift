@@ -23,7 +23,7 @@ extension MobileStore {
         updates: scopedUpdatesFromDraft(for: event)
       )
       calendarDraft = MobileCalendarDraft(now: now)
-      await reloadCalendarWindowAfterScopedMutation()
+      await reloadCalendarWindowAfterMutation()
       return true
     } catch {
       await presentUserFacingError(error)
@@ -49,7 +49,7 @@ extension MobileStore {
         occurrenceDate: occurrenceDate,
         scope: scope.rawValue
       )
-      await reloadCalendarWindowAfterScopedMutation()
+      await reloadCalendarWindowAfterMutation()
       return true
     } catch {
       await presentUserFacingError(error)
@@ -62,34 +62,25 @@ extension MobileStore {
   /// seeded with THIS occurrence's days, and for `.allEvents`/segment scopes
   /// sending them unchanged would re-anchor the whole series to this
   /// occurrence's day on a time-only or detail-only edit (dropping earlier
-  /// occurrences); see ``CalendarEventTiming/scopedDates(for:)``. Empty location
-  /// / notes strings clear those fields, matching the whole-object
-  /// `updateCalendarEvent` contract.
+  /// occurrences); see ``CalendarEventTiming/scopedDates(for:)``. Fields that
+  /// match the edit baseline remain untouched; empty strings explicitly clear.
   private func scopedUpdatesFromDraft(for event: CalendarTimelineEvent)
     -> ScopedCalendarEventUpdates
   {
+    let baseline = calendarDraft.baseline
+    let timingChanged = baseline.map { !calendarDraft.timing.storesSameFields(as: $0.timing) } ?? true
     let dates = calendarDraft.timing.scopedDates(for: event)
+    let timing = calendarDraft.timing.sourceFields(for: event)
     return ScopedCalendarEventUpdates(
-      title: calendarDraft.trimmedTitle,
-      startDate: dates.startDate,
-      endDate: dates.endDate,
-      startTime: calendarDraft.timing.startTime,
-      endTime: calendarDraft.timing.endTime,
-      allDay: calendarDraft.timing.allDay,
-      location: calendarDraft.trimmedLocation,
-      notes: calendarDraft.trimmedNotes
+      title: calendarDraft.trimmedTitle == baseline?.title ? nil : calendarDraft.trimmedTitle,
+      startDate: timingChanged ? dates.startDate : nil,
+      endDate: timingChanged ? dates.endDate : nil,
+      startTime: timingChanged ? timing.startTime : nil,
+      endTime: timingChanged ? timing.endTime ?? "" : nil,
+      allDay: timingChanged ? calendarDraft.timing.allDay : nil,
+      location: calendarDraft.trimmedLocation == baseline?.location ? nil : calendarDraft.trimmedLocation,
+      notes: calendarDraft.trimmedNotes == baseline?.notes ? nil : calendarDraft.trimmedNotes
     )
   }
 
-  /// Re-fetch the currently loaded timeline window after a scoped mutation, which
-  /// can split a series or create a one-off replacement — changes an in-place
-  /// single-event update cannot capture.
-  private func reloadCalendarWindowAfterScopedMutation() async {
-    guard let window = calendarWindowToReload else { return }
-    do {
-      calendarTimeline = try await core.loadCalendarTimeline(from: window.from, to: window.to)
-    } catch {
-      await presentUserFacingError(error)
-    }
-  }
 }

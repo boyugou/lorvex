@@ -94,7 +94,8 @@ public enum LorvexTodayTimeline {
     events: [CalendarTimelineEvent],
     tasks: [LorvexTask],
     times: [LorvexTask.ID: Range<Int>],
-    nowMinutes: Int?
+    nowMinutes: Int?,
+    now: Date? = nil
   ) -> [LorvexTodayTimelineItem] {
     var timed: [LorvexTodayTimelineItem] = []
     var allDay: [LorvexTodayTimelineItem] = []
@@ -112,8 +113,8 @@ public enum LorvexTodayTimeline {
           kind: .event(event),
           startMinutes: span.start,
           endMinutes: span.end,
-          timeLabel: event.timeLabel(for: part) ?? "",
-          isPast: nowMinutes.map { (span.end ?? span.start) <= $0 } == true,
+          timeLabel: (part == .whole ? event.offsetClockRangeLabel() : nil) ?? event.timeLabel(for: part) ?? "",
+          isPast: event.hasPassed(on: day, nowMinutes: nowMinutes, now: now, includingPointEvents: true),
           eventPart: part))
     }
 
@@ -131,15 +132,24 @@ public enum LorvexTodayTimeline {
 
     // Break ties on arrival index: `sort` does not promise stability, and the
     // contract is that rows sharing a start keep the order they arrived in.
+    let clock = CalendarAgendaClock(day: day, events: events)
+    func position(_ row: LorvexTodayTimelineItem) -> Double {
+      if case .event(let event) = row.kind {
+        return clock.position(event: event, minute: row.startMinutes ?? 0)
+      }
+      return clock.position(minute: row.startMinutes ?? 0)
+    }
     timed = timed.enumerated()
       .sorted { lhs, rhs in
-        let (left, right) = (lhs.element.startMinutes ?? 0, rhs.element.startMinutes ?? 0)
+        let (left, right) = (position(lhs.element), position(rhs.element))
         return left != right ? left < right : lhs.offset < rhs.offset
       }
       .map(\.element)
 
     if let nowMinutes, !timed.isEmpty {
-      let insertAt = timed.firstIndex { ($0.startMinutes ?? 0) > nowMinutes } ?? timed.count
+      let nowPosition = now.flatMap { clock.dayStart == nil ? nil : clock.position(instant: $0) }
+        ?? clock.position(minute: nowMinutes)
+      let insertAt = timed.firstIndex { position($0) > nowPosition } ?? timed.count
       timed.insert(
         LorvexTodayTimelineItem(id: "now", kind: .now, startMinutes: nowMinutes),
         at: insertAt)

@@ -54,7 +54,7 @@ extension AppStore {
         events: todayScheduleEvents,
         tasks: tasks,
         times: tasks.times(on: logicalTodayDateString),
-        nowMinutes: nowMinutes),
+        nowMinutes: nowMinutes, now: Date()),
       doneToday: doneTodayTasks)
   }
 

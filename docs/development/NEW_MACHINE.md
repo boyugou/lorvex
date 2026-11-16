@@ -38,7 +38,7 @@ anything; it names the fix for each failure. Run it first on a new machine.
 
 | File | Holds | Needed for |
 |---|---|---|
-| `secrets/apple-developer.env` | `APPLE_ID`, `APPLE_PASSWORD` (app-specific), `APPLE_TEAM_ID`, `MAS_APP_SIGN_IDENTITY`, `MAS_INSTALLER_SIGN_IDENTITY`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`, Developer ID variables | TestFlight and DMG releases |
+| `secrets/apple-developer.env` | `APPLE_TEAM_ID`, `MAS_APP_SIGN_IDENTITY`, `MAS_INSTALLER_SIGN_IDENTITY`; `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` for API authentication (or legacy `APPLE_ID`/`APPLE_PASSWORD`); Developer ID variables | TestFlight and DMG releases |
 | `~/.appstoreconnect/private_keys/` | The App Store Connect API key file (`AuthKey_<id>.p8`, mode 600) that `ASC_KEY_PATH` names | Headless provisioning in `script/archive_ios.sh`; read-only API checks |
 | `apps/apple/secrets/profiles/` | Provisioning profiles for every target | Store and Developer ID archives |
 | Keychain | Apple Distribution, Mac Installer, and Developer ID certificates with their keys | Signing |

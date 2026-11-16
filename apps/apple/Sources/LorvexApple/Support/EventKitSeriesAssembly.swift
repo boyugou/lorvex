@@ -37,8 +37,9 @@ struct EventKitOccurrence: Equatable {
 ///
 /// The master starts where the series does (`seriesStarts`, the series' first
 /// occurrence as EventKit reports it), not at its first occurrence in the
-/// window: a rule that ends after a number of occurrences counts them from the
-/// series' start, and a series that began earlier still shows on earlier days.
+/// window, retaining the source anchor for rule metadata and legacy COUNT
+/// projection. Zoned timed observations carry their exact occurrence set too;
+/// those instants drive projection, with other cached weeks merged at ingest.
 /// Without a known start, the first occurrence in the window stands in.
 enum EventKitSeriesAssembly {
   /// Hard cap on projected dates examined per series. Daily over the widest
@@ -101,10 +102,13 @@ enum EventKitSeriesAssembly {
       fromYmd: max(master.startDate, windowSlots.min() ?? master.startDate),
       windowEndYmd: windowEndYmd, onRuleDates: onRuleDates)
 
+    let precise =
+      group.allSatisfy { $0.event.occurrenceInstants != nil }
+      ? group.filter { !$0.isDetached }.flatMap { $0.event.occurrenceInstants ?? [] } : nil
     var results = [
       rebuilt(
         master, key: master.key, recurrence: rule,
-        recurrenceExceptions: encodeExceptions(exceptions))
+        recurrenceExceptions: encodeExceptions(exceptions), occurrenceInstants: precise)
     ]
     // Each moved/edited occurrence renders standalone at its real time; its
     // original slot is already excluded from the master's projection above.
@@ -158,7 +162,7 @@ enum EventKitSeriesAssembly {
 
   private static func rebuilt(
     _ event: EventKitFetchedEvent, key: String, recurrence: String?,
-    recurrenceExceptions: String?
+    recurrenceExceptions: String?, occurrenceInstants: [ProviderOccurrenceInstant]? = nil
   ) -> EventKitFetchedEvent {
     EventKitFetchedEvent(
       key: key, title: event.title, notes: event.notes,
@@ -167,6 +171,7 @@ enum EventKitSeriesAssembly {
       allDay: event.allDay, location: event.location, timezone: event.timezone,
       recurrence: recurrence, recurrenceExceptions: recurrenceExceptions,
       color: event.color, organizerEmail: event.organizerEmail,
-      url: event.url, attendees: event.attendees)
+      url: event.url, attendees: event.attendees,
+      occurrenceInstants: recurrence != nil ? occurrenceInstants : event.occurrenceInstants)
   }
 }

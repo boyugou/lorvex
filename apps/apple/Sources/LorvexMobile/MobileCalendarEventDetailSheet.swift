@@ -72,7 +72,7 @@ struct MobileCalendarEventDetailContent: View {
         }
         if event.hasRecurrenceRow {
           row(icon: "repeat", label: MobileCalendarEventCopy.repeats) {
-            valueText(event.recurrenceDescription(generic: MobileCalendarEventCopy.repeatingEvent))
+            MobileCalendarRecurrenceSummary(event: event)
           }
         }
         if let attendees = attendeeNames, !attendees.isEmpty {

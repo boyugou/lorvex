@@ -148,6 +148,9 @@ struct MobileTodayScheduleTimelineSection: View {
   }
 
   private func duration(_ item: LorvexTodayTimelineItem, task: LorvexTask?) -> String? {
+    if case .event(let event) = item.kind, let minutes = event.elapsedMinutes {
+      return LorvexDurationFormat.minutes(minutes)
+    }
     let minutes: Int?
     if let start = item.startMinutes, let end = item.endMinutes, end > start {
       minutes = end - start

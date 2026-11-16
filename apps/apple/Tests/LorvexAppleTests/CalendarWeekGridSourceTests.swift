@@ -234,12 +234,12 @@ func calendarWeekGridShowsNowGuideAcrossEveryDayColumn() throws {
     encoding: .utf8
   )
 
-  #expect(grid.contains("nowLine(now: LorvexPreviewClock.now(in: calendar, tick: context.date), isToday: isToday(day.date))"))
+  #expect(grid.contains("nowLine(minutes: minutes, isToday: isToday(day.date))"))
   #expect(
     !grid.contains(
       "if isToday(day.date) {\n          TimelineView(.periodic(from: .now, by: 60)) { context in\n            nowLine("
     ))
-  #expect(chrome.contains("func nowLine(now: Date, isToday: Bool)"))
+  #expect(chrome.contains("func nowLine(minutes: Int, isToday: Bool)"))
   #expect(chrome.contains("Color.secondary.opacity(0.22)"))
   #expect(chrome.contains("let thickness: CGFloat = isToday ? 1.5 : 1"))
   #expect(chrome.contains("Rectangle().fill(lineColor).frame(height: thickness)"))
@@ -353,9 +353,9 @@ func calendarNowLineRunsUnderOpaqueBlocks() throws {
     ("Sources/LorvexMobile/MobileCalendarDayColumn.swift", ".zIndex(2)"),
   ] {
     let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
-    let line = try #require(source.range(of: "nowLine(now:"))
+    let line = try #require(source.range(of: "nowLine(minutes:"))
     #expect(!source[line.upperBound...].prefix(200).contains(".zIndex("), "\(path) lifts the now line")
-    let dot = try #require(source.range(of: "nowDot(now: LorvexPreviewClock"))
+    let dot = try #require(source.range(of: "nowDot(minutes:"))
     #expect(
       source[dot.upperBound...].prefix(200).contains(dotLayer),
       "\(path) leaves the now dot under the blocks")

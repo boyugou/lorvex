@@ -31,6 +31,8 @@ extension StubCoreService {
   }
   func loadCalendarTimeline(from: String, to: String) async throws -> CalendarTimelineSnapshot {
     loadCalendarTimelineCallCount += 1
+    if let loadCalendarTimelineGate { await loadCalendarTimelineGate(from, to) }
+    if let loadCalendarTimelineError { throw loadCalendarTimelineError }
     return try await preview.loadCalendarTimeline(from: from, to: to)
   }
   func getCalendarEvent(id: CalendarTimelineEvent.ID) async throws -> CalendarTimelineEvent? {

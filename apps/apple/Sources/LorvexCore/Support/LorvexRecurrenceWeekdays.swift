@@ -92,7 +92,7 @@ public enum LorvexRecurrenceWeekdays {
       let code = String(raw.suffix(2))
       let prefix = String(raw.dropLast(2))
       guard let weekday = Self.codes.firstIndex(of: code),
-        prefix.isEmpty || Int(prefix).map({ $0 != 0 }) == true
+        prefix.isEmpty || Int(prefix).map({ $0 != 0 && (-53...53).contains($0) }) == true
       else {
         weekday = nil
         position = nil

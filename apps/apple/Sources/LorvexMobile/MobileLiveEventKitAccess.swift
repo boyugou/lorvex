@@ -136,7 +136,13 @@
         color: hexColor(from: event.calendar?.cgColor),
         organizerEmail: participantEmail(event.organizer),
         url: event.url?.absoluteString,
-        attendees: fetchedAttendees(from: event.attendees)
+        attendees: fetchedAttendees(from: event.attendees),
+        occurrenceInstants: !event.isAllDay && event.timeZone != nil
+          ? [
+            ProviderOccurrenceInstant(
+              date: AllDayEventSpan.dayKey(for: start, timeZone: eventTimeZone),
+              start: start, end: event.endDate)
+          ] : nil
       )
     }
 

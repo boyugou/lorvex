@@ -9,18 +9,19 @@ extension CalendarWorkspaceView {
     // fields as an open inline edit, which is restored when the create sheet
     // dismisses (see `AppStore.stashCalendarDraftForCreate()`).
     store.stashCalendarDraftForCreate()
-    let start = calendar.date(
-      bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: date) ?? date
     store.draftCalendarTitle = ""
     // A drag to the bottom of the grid ends the event at midnight, the start
     // of the next day.
-    store.draftCalendarTiming = .timed(startingAt: start, minutes: max(15, durationMinutes))
+    store.draftCalendarTiming = .timed(
+      on: date, atMinute: minutes, minutes: max(15, durationMinutes),
+      timeZone: store.logicalTimeZone, dayCalendar: calendar)
     store.draftCalendarLocation = ""
     store.draftCalendarNotes = ""
     store.draftCalendarColor = nil
     store.draftCalendarRecurrence = nil
     store.calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
     store.calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
+    store.calendarDraftStorage.draftCalendarEditBaseline = nil
     store.draftCalendarTargetCalendarID = nil
   }
 }

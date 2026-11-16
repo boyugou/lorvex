@@ -7,8 +7,9 @@ import LorvexCore
 /// there.
 extension MobileStore {
   /// Sets the product time zone, then refreshes so the Today snapshot, which
-  /// carries the zone, and every day-scoped surface read in it. Returns false,
-  /// with the error presented, when the core rejects the zone.
+  /// carries the zone, and every day-scoped surface read in it. Reports success
+  /// only once the refreshed snapshot shows the requested zone; read and write
+  /// failures are presented through the store's error surface.
   @discardableResult
   func setLogicalTimeZone(_ identifier: String) async -> Bool {
     do {
@@ -18,6 +19,6 @@ extension MobileStore {
       return false
     }
     _ = await refresh()
-    return true
+    return snapshot.today.timezone == identifier
   }
 }

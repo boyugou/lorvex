@@ -3,7 +3,22 @@ import LorvexDomain
 
 /// Where the clock stands in the product day, for the "now" position every
 /// Today surface draws.
-public enum LorvexProductDayClock {
+public struct LorvexProductDayClock: Equatable, Sendable {
+  public let logicalDay: String
+  public let timeZone: TimeZone
+
+  /// A snapshot of the product day's identity, separate from the device
+  /// calendar used to lay out civil day labels. Cached calendar pages include
+  /// this value so changing the product zone refreshes their clock and chrome.
+  public init(logicalDay: String, timeZone: TimeZone) {
+    self.logicalDay = logicalDay
+    self.timeZone = timeZone
+  }
+
+  public func nowMinutes(at now: Date = Date()) -> Int? {
+    Self.nowMinutes(on: logicalDay, in: timeZone, at: now)
+  }
+
   /// Minutes since midnight in `timeZone`, the product day's own zone, or nil
   /// when the clock there is not on `logicalDay` (`yyyy-MM-dd`), where a "now"
   /// position would be meaningless. A preview run that pins its clock always

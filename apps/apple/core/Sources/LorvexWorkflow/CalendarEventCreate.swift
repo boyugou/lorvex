@@ -3,7 +3,7 @@ import GRDB
 import LorvexDomain
 import LorvexStore
 
-/// Result of ``CalendarEventCreate/createCalendarEvent(_:hlc:eventId:input:)``.
+/// Result of ``CalendarEventCreate/createCalendarEvent(_:hlc:eventId:input:inheritedStart:)``.
 public struct CreateCalendarEventResult: Sendable {
   /// Event id that was written.
   public let eventId: String
@@ -22,7 +22,7 @@ public struct CreateCalendarEventResult: Sendable {
 /// Pipeline:
 ///
 /// 1. Normalize + validate inputs via
-///    ``CalendarNormalization/normalizeCalendarCreate(_:)`` (title hygiene,
+///    ``CalendarNormalization/normalizeCalendarCreate(_:inheritedStart:)`` (title hygiene,
 ///    URL allowlist, recurrence canonicalization with BYMONTHDAY injection,
 ///    field-shape + DST gates).
 /// 2. Validate + serialize the attendee list via
@@ -47,7 +47,8 @@ public enum CalendarEventCreate {
     _ db: Database,
     hlc: HlcSession,
     eventId: String,
-    input: CalendarEventCreateInput
+    input: CalendarEventCreateInput,
+    inheritedStart: CalendarInheritedStart? = nil
   ) throws -> CreateCalendarEventResult {
     let normalized: NormalizedCalendarCreate
     do {
@@ -59,7 +60,8 @@ public enum CalendarEventCreate {
           endTime: input.endTime, allDay: input.allDay,
           description: input.description, location: input.location,
           url: input.url, color: input.color, eventType: input.eventType,
-          personName: input.personName))
+          personName: input.personName),
+        inheritedStart: inheritedStart)
     } catch let e as CalendarEventOpError {
       throw e
     }

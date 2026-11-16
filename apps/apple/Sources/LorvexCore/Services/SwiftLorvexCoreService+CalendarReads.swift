@@ -11,21 +11,24 @@ extension SwiftLorvexCoreService {
     -> CalendarTimelineSnapshot
   {
     try read { db in
-      CalendarTimelineSnapshot(
+      let timezone = try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+      return CalendarTimelineSnapshot(
         from: from,
         to: to,
-        events: try Self.calendarTimelineEvents(db, from: from, to: to),
+        events: try Self.calendarTimelineEvents(db, from: from, to: to, anchorTimezone: timezone),
         truncated: false,
-        nextOffset: nil)
+        nextOffset: nil,
+        timezone: timezone)
     }
   }
 
   /// The events between `from` and `to` (`YYYY-MM-DD`, inclusive), read
   /// inside the caller's transaction, as every calendar surface reads them.
   static func calendarTimelineEvents(
-    _ db: Database, from: String, to: String
+    _ db: Database, from: String, to: String, anchorTimezone: String? = nil
   ) throws -> [CalendarTimelineEvent] {
-    let anchorTimezone = try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+    let anchorTimezone =
+      try anchorTimezone ?? WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
     // Honor the effective calendar AI-access tier so a busy/off read redacts
     // provider detail even if a full-detail row somehow survives at rest —
     // defense in depth behind ingest-time redaction + downgrade purge. Read
@@ -79,7 +82,7 @@ extension SwiftLorvexCoreService {
       events.sort { lhs, rhs in
         if lhs.startDate != rhs.startDate { return lhs.startDate < rhs.startDate }
         switch (lhs.startTime, rhs.startTime) {
-        case let (l?, r?):
+        case (let l?, let r?):
           if l != r { return l < r }
         case (.some, nil):
           return true

@@ -7,7 +7,7 @@ import LorvexStore
 /// ``Patch`` so surfaces can express the three-state contract without a
 /// side channel; `title` and `allDay` stay plain `Optional` because they
 /// have no row-level "clear" state. `startDate` carries ``Patch`` for
-/// surface symmetry but ``CalendarEventUpdate/updateCalendarEvent(_:hlc:input:before:beforeRecurrence:existing:)``
+/// surface symmetry but ``CalendarEventUpdate/updateCalendarEvent(_:hlc:input:before:beforeRecurrence:existing:inheritedStart:)``
 /// rejects ``Patch/clear`` with a validation error (the column is required).
 ///
 /// `attendees: Patch<[CalendarAttendeeInput]>` carries replace-set semantics
@@ -119,7 +119,8 @@ public enum CalendarEventUpdate {
     input: CalendarEventUpdateInput,
     before: JSONValue,
     beforeRecurrence: String?,
-    existing: CalendarUpdateExisting
+    existing: CalendarUpdateExisting,
+    inheritedStart: CalendarInheritedStart? = nil
   ) throws -> UpdateCalendarEventResult {
     // `start_date` is `Patch<String>` on the wire for surface symmetry;
     // the only row-level states are "leave as-is" and "re-anchor".
@@ -144,7 +145,7 @@ public enum CalendarEventUpdate {
           description: input.description, location: input.location,
           url: input.url, color: input.color, eventType: input.eventType,
           personName: input.personName),
-        existing: existing)
+        existing: existing, inheritedStart: inheritedStart)
     } catch let e as CalendarEventOpError {
       throw e
     }

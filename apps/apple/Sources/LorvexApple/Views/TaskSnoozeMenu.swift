@@ -39,7 +39,7 @@ struct TaskSnoozeMenu<MenuLabel: View>: View {
       Button {
         // Seed the custom picker on today so the popover's chip opens on a
         // sensible month even before the user picks.
-        customDate = Date()
+        customDate = store.now()
         showsCustom = true
       } label: {
         Label(
@@ -69,8 +69,10 @@ struct TaskSnoozeMenu<MenuLabel: View>: View {
       ) { selected in
         customDate = selected
         showsCustom = false
-        onSnooze(PlannedDayBridge.storageDate(forLocalInstant: selected))
+        onSnooze(PlannedDayBridge.storageDate(
+          forLocalInstant: selected, timeZone: store.logicalTimeZone))
       }
+      .environment(\.timeZone, store.logicalTimeZone)
       .accessibilityIdentifier("task.snooze.custom.chip")
     }
     .padding(LorvexDesign.Spacing.m)

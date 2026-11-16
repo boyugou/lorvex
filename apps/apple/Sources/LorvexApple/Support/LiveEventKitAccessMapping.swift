@@ -1,11 +1,12 @@
-#if canImport(AppKit)
-  import AppKit
-#endif
 @preconcurrency import EventKit
 import Foundation
 import LorvexCore
 import LorvexDomain
 import LorvexStore
+
+#if canImport(AppKit)
+  import AppKit
+#endif
 
 extension LiveEventKitAccess {
   /// Stable provider event key: the cross-store external identifier when
@@ -41,7 +42,13 @@ extension LiveEventKitAccess {
       color: hexColor(from: event.calendar?.cgColor),
       organizerEmail: participantEmail(event.organizer),
       url: event.url?.absoluteString,
-      attendees: fetchedAttendees(from: event.attendees))
+      attendees: fetchedAttendees(from: event.attendees),
+      occurrenceInstants: !event.isAllDay && event.timeZone != nil
+        ? [
+          ProviderOccurrenceInstant(
+            date: AllDayEventSpan.dayKey(for: start, timeZone: eventTimeZone),
+            start: start, end: event.endDate)
+        ] : nil)
   }
 
   /// EventKit reports an all-day end as the last occupied day at 23:59:59,
@@ -89,7 +96,8 @@ extension LiveEventKitAccess {
   static func participantEmail(_ participant: EKParticipant?) -> String? {
     guard let participant else { return nil }
     let raw = participant.url.absoluteString
-    let email = raw.lowercased().hasPrefix("mailto:")
+    let email =
+      raw.lowercased().hasPrefix("mailto:")
       ? String(raw.dropFirst("mailto:".count)) : raw
     return email.isEmpty ? nil : email
   }
@@ -140,7 +148,8 @@ extension LiveEventKitAccess {
   static func userNotes(fromMarkedNotes notes: String?, lorvexID: String) -> String? {
     guard let notes else { return nil }
     let marker = "\(lorvexCalendarEventPrefix)\(lorvexID)"
-    let preserved = notes
+    let preserved =
+      notes
       .split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
       .filter { $0 != marker }
       .joined(separator: "\n")

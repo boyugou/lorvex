@@ -1,6 +1,7 @@
 #if DEBUG
   import Foundation
   import LorvexCore
+  import Observation
   import SwiftUI
 
   /// Dev/QA only: the `lorvex://firsttask/compose/<checklist|reminder>` screenshot
@@ -34,10 +35,19 @@
   /// calendar opens its New Event sheet on at its next appearance. Consumed
   /// once, so later visits start with the sheet closed.
   enum MobileCalendarDebugState {
+    @MainActor @Observable
+    fileprivate final class DetailRequest {
+      var event: CalendarTimelineEvent?
+    }
+    @MainActor private static let detailRequest = DetailRequest()
+
     @MainActor static var initialCreateDraft: MobileCalendarDraft?
     /// The event the `lorvex://sheet/eventdetail` hook asks Today to open the
-    /// detail of at its next appearance. Consumed once.
-    @MainActor static var pendingDetailEvent: CalendarTimelineEvent?
+    /// detail of. Observed even when the tab is already mounted; consumed once.
+    @MainActor static var pendingDetailEvent: CalendarTimelineEvent? {
+      get { detailRequest.event }
+      set { detailRequest.event = newValue }
+    }
 
     @MainActor static func takeInitialCreateDraft() -> MobileCalendarDraft? {
       defer { initialCreateDraft = nil }
@@ -600,6 +610,9 @@
       // Habit sheet; each of the three takes a `/appearance` suffix that also
       // opens the header's icon and color popover. `lorvex://sheet/eventdetail`
       // opens Today on the read-only detail of a staged mirrored event.
+      // Its /timezone and /timezone-edit variants show the same source Monday
+      // projected onto Tuesday, in the detail and edit presentations.
+      // /advanced and /advanced-edit instead show a custom month-end rule.
       if url.host == "sheet", let name = url.pathComponents.dropFirst().first {
         switch name {
         case "capture":
@@ -610,7 +623,17 @@
           MobileCalendarDebugState.initialCreateDraft = Self.debugEventDraft(kind: kind, now: now())
           selectedTab = .calendar
         case "eventdetail":
-          MobileCalendarDebugState.pendingDetailEvent = Self.debugMirroredEvent(now: now())
+          let variant = url.pathComponents.last
+          let advanced = variant == "advanced" || variant == "advanced-edit"
+          let recurrenceExample = advanced || variant == "timezone" || variant == "timezone-edit"
+            ? MobileCalendarDebugState.recurrenceZoneExample(
+              editable: variant == "timezone-edit" || variant == "advanced-edit", advanced: advanced) : nil
+          let clockExample = variant == "fold" || variant == "fold-edit"
+            ? MobileCalendarDebugState.clockFoldExample(editable: variant == "fold-edit") : recurrenceExample
+          let zoneExample = variant == "optional-end-edit" || variant == "with-end-edit"
+            ? MobileCalendarDebugState.optionalEndExample(hasEndTime: variant == "with-end-edit") : clockExample
+          if let zoneExample, zoneExample.editable { prepareCalendarDraft(for: zoneExample) }
+          MobileCalendarDebugState.pendingDetailEvent = zoneExample ?? Self.debugMirroredEvent(now: now())
           selectedTab = .today
         case "newlist", "editlist":
           MobileSheetDebugState.pending = name == "newlist" ? .newList : .editList

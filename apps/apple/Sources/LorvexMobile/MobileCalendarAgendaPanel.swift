@@ -93,7 +93,7 @@ struct MobileCalendarAgendaPanel: View {
             case .event(let event):
               eventRow(
                 event, dayKey: day.key,
-                isPast: day.hasPassed(event, todayKey: todayKey, nowMinutes: nowMinutes))
+                isPast: day.hasPassed(event, todayKey: todayKey, nowMinutes: nowMinutes, now: Date()))
             case .task(let task):
               MobileCalendarAgendaTaskRow(
                 task: task, dayKey: day.key, isMutating: taskIsMutating(task.id),

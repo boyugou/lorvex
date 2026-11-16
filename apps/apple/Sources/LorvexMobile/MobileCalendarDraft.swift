@@ -8,7 +8,7 @@ public struct MobileCalendarDraft: Equatable, Sendable {
   public var timing: CalendarEventTiming
   public var location: String
   public var notes: String
-  /// The draft as ``init(event:fallbackDate:)`` filled it; nil for a draft of a
+  /// The draft as the event initializer filled it; nil for a draft of a
   /// new event. Saving an edit writes only the fields that differ from it, so a
   /// field another writer changed while the sheet was open keeps that change.
   /// With no baseline every field is written.
@@ -43,26 +43,31 @@ public struct MobileCalendarDraft: Equatable, Sendable {
 
   /// A timed one-hour draft that starts at `start`. Its end may fall on the
   /// next day, so a late start such as 23:30 runs to 00:30.
-  public static func timedDefault(start: Date) -> MobileCalendarDraft {
-    MobileCalendarDraft(timing: .timed(startingAt: start))
+  public static func timedDefault(
+    start: Date, calendar: Calendar = CalendarEventTiming.deviceCalendar
+  ) -> MobileCalendarDraft {
+    MobileCalendarDraft(timing: .timed(startingAt: start, calendar: calendar))
   }
 
   /// A timed one-hour draft on `day` for a New Event that names no time:
   /// from the next full hour when `day` is the day of `now`, as the Mac's
   /// toolbar offers (``CalendarEventTiming/nextHourBlock(after:calendar:)``),
   /// else from 9:00.
-  public static func timedDefault(on day: Date, now: Date, calendar: Calendar) -> MobileCalendarDraft {
-    guard !calendar.isDate(day, inSameDayAs: now) else {
-      return MobileCalendarDraft(timing: .nextHourBlock(after: now, calendar: calendar))
+  public static func timedDefault(
+    on day: Date, now: Date, calendar: Calendar, timeZone: TimeZone? = nil
+  ) -> MobileCalendarDraft {
+    let morning = CalendarEventTiming.timed(
+      on: day, atMinute: 9 * 60, timeZone: timeZone ?? calendar.timeZone, dayCalendar: calendar)
+    guard !morning.calendar.isDate(morning.start, inSameDayAs: now) else {
+      return MobileCalendarDraft(timing: .nextHourBlock(after: now, calendar: morning.calendar))
     }
-    let start = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
-    return timedDefault(start: start)
+    return MobileCalendarDraft(timing: morning)
   }
 
-  public init(event: CalendarTimelineEvent, fallbackDate: Date) {
+  public init(event: CalendarTimelineEvent, fallbackDate: Date, timeZone: TimeZone = .current) {
     self.init(
       title: event.title,
-      timing: CalendarEventTiming(event: event, fallbackDay: fallbackDate),
+      timing: CalendarEventTiming(event: event, fallbackDay: fallbackDate, fallbackTimeZone: timeZone),
       location: event.location ?? "",
       notes: event.notes ?? ""
     )

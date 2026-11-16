@@ -64,6 +64,38 @@ struct LorvexTaskFieldChoicesTests {
     #expect(LorvexTaskFieldChoices.newTime(length: nil, nowMinutes: nil, isToday: true) == 540..<570)
   }
 
+  @Test("Add Time uses the planner's clock even when the device is on another day")
+  func newTimeUsesTheProductZone() throws {
+    let instant = try #require(ISO8601DateFormatter().date(from: "2026-11-10T07:10:00Z"))
+    let losAngeles = try #require(TimeZone(identifier: "America/Los_Angeles"))
+    let tokyo = try #require(TimeZone(identifier: "Asia/Tokyo"))
+    let ninth = try #require(PlannedDayBridge.storageDate(forLogicalDay: "2026-11-09"))
+    let tenth = try #require(PlannedDayBridge.storageDate(forLogicalDay: "2026-11-10"))
+
+    // The same instant is 23:10 on the ninth in LA and 16:10 on the tenth in Tokyo.
+    #expect(LorvexTaskFieldChoices.newTime(length: 30, plannedDay: ninth, timeZone: losAngeles, now: instant) == 1410..<1440)
+    #expect(LorvexTaskFieldChoices.newTime(length: 45, plannedDay: tenth, timeZone: tokyo, now: instant) == 990..<1035)
+    #expect(LorvexTaskFieldChoices.newTime(length: 45, plannedDay: tenth, timeZone: losAngeles, now: instant) == 540..<585)
+    #expect(LorvexTaskFieldChoices.newTime(length: 45, plannedDay: ninth, timeZone: tokyo, now: instant) == 540..<585)
+  }
+
+  @Test("Add Time uses wall-clock minutes across daylight saving changes and fractional offsets")
+  func newTimeUsesWallClockMinutes() throws {
+    let spring = try #require(PlannedDayBridge.storageDate(forLogicalDay: "2026-03-08"))
+    let fall = try #require(PlannedDayBridge.storageDate(forLogicalDay: "2026-11-01"))
+    let losAngeles = try #require(TimeZone(identifier: "America/Los_Angeles"))
+    let kathmandu = try #require(TimeZone(identifier: "Asia/Kathmandu"))
+    for (day, zone, tick, expected) in [
+      (spring, losAngeles, "2026-03-08T10:10:00Z", 210..<240),
+      (fall, losAngeles, "2026-11-01T08:10:00Z", 90..<120),
+      (fall, losAngeles, "2026-11-01T09:10:00Z", 90..<120),
+      (spring, kathmandu, "2026-03-08T10:10:00Z", 960..<990),
+    ] {
+      let instant = try #require(ISO8601DateFormatter().date(from: tick))
+      #expect(LorvexTaskFieldChoices.newTime(length: 30, plannedDay: day, timeZone: zone, now: instant) == expected)
+    }
+  }
+
   @Test("Add Time stays inside the day and keeps a usable length")
   func newTimeStaysInsideTheDay() {
     // 23:50 would propose midnight; the time is pulled back to end at midnight.

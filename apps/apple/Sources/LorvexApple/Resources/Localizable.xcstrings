@@ -211961,6 +211961,192 @@
           }
         }
       }
+    },
+    "calendar.repeat.custom.help": {
+      "comment": "Hint under a Custom calendar repeat pattern: selecting a basic repeat option deliberately replaces the custom date filters. Changing only the interval preserves them.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر خيار تكرار آخر لاستبدال هذا النمط."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই ধরনটি বদলাতে অন্য পুনরাবৃত্তির বিকল্প বেছে নিন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle eine andere Wiederholungsoption, um dieses Muster zu ersetzen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Επιλέξτε άλλη επιλογή επανάληψης για να αντικαταστήσετε αυτό το μοτίβο."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another repeat option to replace this pattern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige otra opción de repetición para sustituir este patrón."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای جایگزینی این الگو، گزینهٔ تکرار دیگری انتخاب کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez une autre option de répétition pour remplacer ce schéma."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לבחור אפשרות חזרה אחרת כדי להחליף את הדפוס הזה."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस पैटर्न को बदलने के लिए दोहराव का कोई दूसरा विकल्प चुनें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pilih opsi pengulangan lain untuk mengganti pola ini."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli un'altra opzione di ripetizione per sostituire questo schema."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このパターンを置き換えるには、別の繰り返しオプションを選択してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 패턴을 바꾸려면 다른 반복 옵션을 선택하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "हा नमुना बदलण्यासाठी पुनरावृत्तीचा दुसरा पर्याय निवडा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pilih pilihan ulangan lain untuk menggantikan corak ini."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een andere herhalingsoptie om dit patroon te vervangen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz inną opcję powtarzania, aby zastąpić ten wzorzec."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha outra opção de repetição para substituir este padrão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alege altă opțiune de repetare pentru a înlocui acest tipar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите другой вариант повторения, чтобы заменить это правило."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்த முறையை மாற்ற, வேறு மீள்நிகழ்வு விருப்பத்தைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ నమూనాను మార్చడానికి మరో పునరావృత ఎంపికను ఎంచుకోండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เลือกตัวเลือกการทำซ้ำอื่นเพื่อแทนที่รูปแบบนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu düzeni değiştirmek için başka bir tekrar seçeneği belirleyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виберіть інший варіант повторення, щоб замінити це правило."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس طرز کو بدلنے کے لیے دہرانے کا دوسرا اختیار منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn tùy chọn lặp lại khác để thay thế quy tắc này."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择其他重复选项会替换此自定义规则。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇其他重複選項會取代此自訂規則。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

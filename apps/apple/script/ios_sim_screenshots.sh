@@ -76,7 +76,16 @@
 #         raised (the DEBUG lorvex://sheet/<newlist|editlist|newhabit> and
 #         lorvex://firsttask/edit hooks); event-detail opens Today on the
 #         read-only detail of a staged event mirrored from a device calendar
-#         (lorvex://sheet/eventdetail). The -appearance variants of the
+#         (lorvex://sheet/eventdetail). event-detail-zone and event-edit-zone
+#         show a New York Monday series projected onto Tuesday in Tokyo, in
+#         its read-only detail and edit form (visual fixtures only).
+#         event-detail-custom and event-edit-custom show an advanced month-end
+#         rule with multiple dates and a matching-day position.
+#         event-detail-fold and event-edit-fold show a half-hour that crosses
+#         fall-back: 01:45 GMT-4 to 01:15 GMT-5 in New York.
+#         event-edit-optional-end and event-edit-with-end check the add/clear
+#         end controls without persisting an event.
+#         The -appearance variants of the
 #         New List, Edit List, and New Habit routes also open the icon and
 #         color popover over the sheet's header.
 #         habit-detail-end opens the first habit's detail scrolled to its end
@@ -164,6 +173,14 @@ url_for() {
     sheet-newhabit-appearance) echo "lorvex://sheet/newhabit/appearance" ;;
     task-edit) echo "lorvex://firsttask/edit" ;;
     event-detail) echo "lorvex://sheet/eventdetail" ;;
+    event-detail-zone) echo "lorvex://sheet/eventdetail/timezone" ;;
+    event-edit-zone) echo "lorvex://sheet/eventdetail/timezone-edit" ;;
+    event-detail-custom) echo "lorvex://sheet/eventdetail/advanced" ;;
+    event-edit-custom) echo "lorvex://sheet/eventdetail/advanced-edit" ;;
+    event-detail-fold) echo "lorvex://sheet/eventdetail/fold" ;;
+    event-edit-fold) echo "lorvex://sheet/eventdetail/fold-edit" ;;
+    event-edit-optional-end) echo "lorvex://sheet/eventdetail/optional-end-edit" ;;
+    event-edit-with-end) echo "lorvex://sheet/eventdetail/with-end-edit" ;;
     *) echo "lorvex://tab/today" ;;
   esac
 }
@@ -212,6 +229,11 @@ xcrun simctl ui "$UDID" content_size large >/dev/null 2>&1
 # capture taken after a contrast run does not silently keep it.
 xcrun simctl ui "$UDID" increase_contrast "${LORVEX_SIM_INCREASE_CONTRAST:-disabled}" >/dev/null 2>&1
 for ROUTE in "${ROUTES[@]}"; do
+  # Today consumes a staged detail when it appears. Start on Calendar so a
+  # launch that already mounted Today cannot miss the later detail request.
+  case "$ROUTE" in
+    event-detail|event-detail-zone|event-edit-zone|event-detail-custom|event-edit-custom|event-detail-fold|event-edit-fold|event-edit-optional-end|event-edit-with-end) ROUTE="calendar+$ROUTE" ;;
+  esac
   LATER=""
   if [[ "$ROUTE" == *+* ]]; then
     LATER="${ROUTE#*+}"

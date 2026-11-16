@@ -30,7 +30,7 @@ extension CalendarTimeline {
       switch item.timezone {
       case .some("UTC"):
         return .utc
-      case let .some(tz) where !tz.isEmpty:
+      case .some(let tz) where !tz.isEmpty:
         return .tzid(tz)
       default:
         return .floating
@@ -80,33 +80,66 @@ extension CalendarTimeline {
         "invalid anchor timezone for calendar event \(item.id): \(anchorTimezone)")
     }
 
-    let sourceStartDate = item.startDate
-    guard let sourceStartTime = item.startTime else {
+    if let projection = item.projection {
+      return projectInstants(
+        item, start: projection.start, end: projection.end,
+        anchorTimezone: anchorTimezone, anchorTz: anchorTz)
+    }
+
+    let sourceStartDate = item.timing.startDate
+    guard let sourceStartTime = item.timing.startTime else {
       throw StoreError.validation("missing start_time for calendar event \(item.id)")
     }
-    let sourceEndDate = item.endDate ?? sourceStartDate
-    let sourceEndTime = item.endTime
+    let sourceEndDate = item.timing.endDate ?? sourceStartDate
+    let sourceEndTime = item.timing.endTime
 
     let anchorStart = try convertNaiveToAnchor(
       sourceStartDate, sourceStartTime, semantics, anchorTz, item.id)
 
-    var anchorEnd: (LorvexDate, TimeOfDay)? = nil
+    var anchorEnd: (LorvexDate, TimeOfDay, Date)? = nil
     if let endTime = sourceEndTime {
       anchorEnd = try convertNaiveToAnchor(sourceEndDate, endTime, semantics, anchorTz, item.id)
     }
 
-    let projectedTiming = CalendarEventTiming.fromFlatFields(
-      startDate: anchorStart.0, startTime: anchorStart.1,
-      endDate: anchorEnd?.0, endTime: anchorEnd?.1, allDay: false)
-    switch projectedTiming {
-    case let .success(t):
-      var projected = item
-      projected.timing = t
-      return projected
-    case let .failure(err):
+    if let end = anchorEnd, end.2 < anchorStart.2 {
       throw StoreError.validation(
-        "projected timing invalid for calendar event \(item.id): \(err.messageString)")
+        "calendar event end instant is before start for \(item.id)")
     }
+    // Source validation is deliberately unchanged. A display projection is
+    // ordered by instants, not wall clocks (01:45 EDT → 01:15 EST is valid).
+    return projectInstants(
+      item, start: anchorStart.2, end: anchorEnd?.2,
+      anchorTimezone: anchorTimezone, anchorTz: anchorTz)
+  }
+
+  static func projectProviderOccurrence(
+    _ template: CalendarTimelineItem, _ occurrence: ProviderOccurrenceInstant,
+    _ anchorTimezone: String
+  ) throws -> CalendarTimelineItem {
+    guard let timing = occurrence.utcTiming, let zone = TimeZone(identifier: anchorTimezone) else {
+      throw StoreError.validation("invalid provider occurrence timing for \(template.eventId)")
+    }
+    var item = template
+    item.timing = timing
+    item.sourceTimeKind = "utc"
+    if item.isRecurring { item.id = "\(item.eventId):occurrence:\(occurrence.date)" }
+    return projectInstants(
+      item, start: occurrence.start, end: occurrence.end,
+      anchorTimezone: anchorTimezone, anchorTz: zone)
+  }
+
+  private static func projectInstants(
+    _ item: CalendarTimelineItem, start: Date, end: Date?,
+    anchorTimezone: String, anchorTz: TimeZone
+  ) -> CalendarTimelineItem {
+    let first = readWallClock(start, anchorTz)
+    let last = end.map { readWallClock($0, anchorTz) }
+    var projected = item
+    projected.projection = CalendarTimelineProjection(
+      timezone: anchorTimezone, start: start, end: end,
+      startDate: first.0, startTime: first.1,
+      endDate: last.flatMap { $0.0 == first.0 ? nil : $0.0 }, endTime: last?.1)
+    return projected
   }
 
   /// Resolve a naive wall clock to a UTC instant under `semantics`, then
@@ -114,7 +147,7 @@ extension CalendarTimeline {
   private static func convertNaiveToAnchor(
     _ date: LorvexDate, _ time: TimeOfDay,
     _ semantics: TemporalSemantics, _ anchorTz: TimeZone, _ eventId: String
-  ) throws -> (LorvexDate, TimeOfDay) {
+  ) throws -> (LorvexDate, TimeOfDay, Date) {
     let naive = NaiveDateTime(
       year: date.ymd.year, month: date.ymd.month, day: date.ymd.day,
       hour: time.hour, minute: time.minute, second: time.second)
@@ -127,7 +160,7 @@ extension CalendarTimeline {
         "invalid floating local datetime for calendar event \(eventId)")
     case .utc:
       instant = utcInstant(naive)
-    case let .tzid(tzid):
+    case .tzid(let tzid):
       guard let sourceTz = TimeZone(identifier: tzid) else {
         throw StoreError.validation(
           "invalid source timezone for calendar event \(eventId): \(tzid)")
@@ -137,7 +170,8 @@ extension CalendarTimeline {
         "invalid source local datetime for calendar event \(eventId)")
     }
 
-    return readWallClock(instant, anchorTz)
+    let wallClock = readWallClock(instant, anchorTz)
+    return (wallClock.0, wallClock.1, instant)
   }
 
   /// Resolve `naive` in `tz`, mapping DST shapes to a single instant:
@@ -147,9 +181,9 @@ extension CalendarTimeline {
     _ naive: NaiveDateTime, _ tz: TimeZone, _ message: String
   ) throws -> Date {
     switch DstResolution.resolveLocalDatetime(timezone: tz, local: naive) {
-    case let .valid(dt): return dt
-    case let .ambiguous(earlier, _): return earlier
-    case let .skipped(_, snappedTo): return snappedTo
+    case .valid(let dt): return dt
+    case .ambiguous(let earlier, _): return earlier
+    case .skipped(_, let snappedTo): return snappedTo
     }
   }
 

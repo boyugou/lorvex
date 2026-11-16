@@ -42,6 +42,9 @@ final class CalendarTimelineTemporalTests: XCTestCase {
         projected.startTime, hm("09:00"), "\(label): wall-clock 09:00 NYC must survive DST")
       XCTAssertEqual(
         projected.endTime, hm("09:30"), "\(label): wall-clock 09:30 NYC must survive DST")
+      let projection = try XCTUnwrap(projected.projection)
+      XCTAssertEqual(projection.timezone, "America/New_York")
+      XCTAssertEqual(projection.end?.timeIntervalSince(projection.start), 30 * 60)
     }
   }
 
@@ -58,6 +61,7 @@ final class CalendarTimelineTemporalTests: XCTestCase {
     let projected = try CalendarTimeline.projectItemToAnchor(item, "America/New_York")
     XCTAssertEqual(projected.startTime, hm("14:30"))
     XCTAssertEqual(projected.startDate, ymd("2025-06-15"))
+    XCTAssertNil(projected.projection)
   }
 
   /// A UTC-kind event projects into the anchor zone by the zone's offset.
@@ -74,5 +78,9 @@ final class CalendarTimelineTemporalTests: XCTestCase {
     XCTAssertEqual(projected.startTime, hm("10:00"))
     XCTAssertEqual(projected.endTime, hm("11:00"))
     XCTAssertEqual(projected.startDate, ymd("2025-06-15"))
+    XCTAssertEqual(
+      projected.projection?.start, ISO8601DateFormatter().date(from: "2025-06-15T14:00:00Z"))
+    XCTAssertEqual(
+      projected.projection?.end, ISO8601DateFormatter().date(from: "2025-06-15T15:00:00Z"))
   }
 }

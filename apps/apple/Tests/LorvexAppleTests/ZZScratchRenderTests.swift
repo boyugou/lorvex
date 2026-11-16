@@ -315,6 +315,7 @@
       func column(days: Int, from start: Date) -> some View {
         MobileCalendarDayColumn(
           startDate: start, dayCount: days, events: events, tasks: [], calendar: calendar,
+          productClock: LorvexProductDayClock(logicalDay: key(0), timeZone: calendar.timeZone),
           onTapEvent: { _ in }, deletion: .inert, onTapTask: { _ in },
           onDropTask: { _, _ in }, onTapEmpty: { _, _ in }, onReschedule: nil)
       }

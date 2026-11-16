@@ -136,21 +136,21 @@ extension SwiftLorvexCoreService {
 
   private static var providerScopeEnabledExistsClause: String {
     """
-      EXISTS ( \
-        SELECT 1 FROM provider_scope_runtime_state psr \
-        WHERE psr.provider_kind = pce.provider_kind \
-          AND psr.provider_scope = pce.provider_scope \
-          AND psr.availability_state = '\(AvailabilityState.enabled)' \
-          AND psr.last_refresh_success_at IS NOT NULL \
-      )
-      """
+    EXISTS ( \
+      SELECT 1 FROM provider_scope_runtime_state psr \
+      WHERE psr.provider_kind = pce.provider_kind \
+        AND psr.provider_scope = pce.provider_scope \
+        AND psr.availability_state = '\(AvailabilityState.enabled)' \
+        AND psr.last_refresh_success_at IS NOT NULL \
+    )
+    """
   }
 
   static func sortLinkedEvents(_ events: inout [CalendarTimelineEvent]) {
     events.sort { lhs, rhs in
       if lhs.startDate != rhs.startDate { return lhs.startDate < rhs.startDate }
       switch (lhs.startTime, rhs.startTime) {
-      case let (left?, right?):
+      case (let left?, let right?):
         if left != right { return left < right }
       case (.some, nil): return true
       case (nil, .some): return false
@@ -163,36 +163,4 @@ extension SwiftLorvexCoreService {
     }
   }
 
-  static func providerEvent(_ row: Row) -> CalendarTimelineEvent {
-    let providerKind: String = row[0]
-    let providerScope: String = row[1]
-    let providerEventKey: String = row[2]
-    let recurrence: String? = row[11]
-    let sourceTimeKind: String = row[12]
-    let sourceTzid: String? = row[13]
-    let timezone: String?
-    switch sourceTimeKind {
-    case "utc": timezone = "UTC"
-    case "tzid": timezone = sourceTzid
-    default: timezone = nil
-    }
-    return CalendarTimelineEvent(
-      id: "\(providerKind):\(providerScope):\(providerEventKey)",
-      title: row[3],
-      source: "provider",
-      editable: false,
-      startDate: row[4],
-      startTime: row[5],
-      endDate: row[6],
-      endTime: row[7],
-      allDay: (row[8] as Int64) != 0,
-      location: row[9],
-      color: row[10],
-      eventType: "event",
-      timezone: timezone,
-      isRecurring: recurrence != nil,
-      recurrenceRule: recurrence,
-      recurrenceSummary: nil
-    )
-  }
 }

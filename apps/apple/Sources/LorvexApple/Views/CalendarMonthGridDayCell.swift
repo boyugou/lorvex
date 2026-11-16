@@ -157,7 +157,7 @@ struct CalendarMonthGridDayCell: View {
     case .task(let task):
       taskChip(
         title: task.title, time: nil, isDone: task.status == .completed,
-        isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
+        isOverdue: store.isOverdue(task)
       )
       .openingAndDraggable(task, open: onOpenTask)
       .contextMenu { WorkspaceTaskContextMenu(store: store, task: task) }

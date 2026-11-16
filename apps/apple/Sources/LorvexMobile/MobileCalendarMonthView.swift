@@ -282,7 +282,8 @@ struct MobileCalendarMonthView: View {
   }
 
   private func createEvent(on day: Date) {
-    store.calendarDraft = .timedDefault(on: day, now: store.now(), calendar: calendar)
+    store.calendarDraft = .timedDefault(
+      on: day, now: store.now(), calendar: calendar, timeZone: store.logicalTimeZone)
     isShowingCreateEvent = true
   }
 

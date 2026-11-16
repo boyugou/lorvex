@@ -355,9 +355,32 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   `LorvexDateFormatters.ymd`, `ymdUTC`, and `hourMinute` pin the Gregorian
   calendar and `en_US_POSIX`; hand-built date keys use a Gregorian calendar.
   Display follows the locale's calendar (`displayCalendar(timeZone:)`).
-- There are two overdue definitions. Today and the widgets use the logical day
-  in the product time zone (`LorvexTaskSections.isOverdue`); rows and the menu
-  bar use the device zone (`task.isOverdue()`).
+- Task due facts use the product day. Today, the menu bar, and widgets use
+  `LorvexTaskSections.isOverdue`; rows pass `lorvexProductTimeZone` into their
+  date helpers. A task editor's date picker may bridge a day into device time,
+  but Add Time reads the planner's clock (`LorvexTaskFieldChoices.newTime`),
+  not the clock of the device displaying that day.
+- Calendar grid dates are device-calendar coordinates for civil day labels,
+  not instants in the product zone. Keep that geometry separate from
+  `LorvexProductDayClock`: the loaded logical day owns Today highlights and
+  overdue markers, and its zone supplies wall minutes for the now line and
+  initial scroll. Include the clock value in cached mobile page inputs so a
+  zone change with unchanged events still redraws. Minute ticks stay inside
+  the line/dot overlays and must not move a user's scroll position.
+- A time-zone picker closes only after the saved zone reaches the Today
+  snapshot. The Mac's ordinary `refresh()` returns early when coalesced;
+  `setLogicalTimeZone` uses `refreshAndWaitForLatest()` so the picker cannot
+  report completion while an old-zone read is still in flight.
+- EventKit's timed, zoned endpoints are instants. Formatting them to `HH:mm`
+  loses the repeated-hour reading before the timeline can project it. Keep
+  `occurrence_instants` through mapping, series assembly, ingest redaction and
+  cache upserts. Exact provider timing normalizes to validated UTC fields;
+  the item's timezone still identifies its original calendar. Never convert a
+  recurring rule's source anchor to UTC or infer uncached provider occurrences
+  from its rule. Window reconciliation must retain observations from other
+  weeks, remove missing in-window observations, and keep the source event id.
+  Pass the captured fetch instant window through the provider protocol: a zone
+  change while EventKit is reading must not change the range being reconciled.
 - EventKit reports an all-day event's end as 23:59:59 on its last day; set
   `isAllDay` before the dates. `CalendarTimelineEvent.occurs(on:)` is the only
   day-membership rule: an event ending exactly at midnight belongs to the
@@ -445,6 +468,75 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   `flushDailyReviewDraftBeforeLogicalDayChange(to:)` on the Mac). In tests,
   roll the day by switching the product `timezone` preference between
   `Pacific/Pago_Pago` and `Pacific/Kiritimati` and refreshing.
+- **MCP clock fields need their own timezone, not the event's stored zone.**
+  The internal model retains the source `timezone`; the wire adapter uses the
+  projection zone for displayed clocks and exposes provenance in `time_context`.
+  UTC endpoints only accompany selected clock fields, never date/title-only
+  projections. Canonical `sourceTiming` retains intended civil values through a
+  recurrence gap; reverse-projecting a snapped instant loses that intent.
+  Whole-series writes need a stored master, not a later occurrence's date.
+  Provider links must reuse the shared exact-instant decoder and privacy gate.
+  Timeline sorting precomputes all temporal keys: mixing an instant comparator
+  with a civil-clock fallback can create a cycle during a repeated hour.
+- **Calendar timeline clocks are projected, mutation results are stored clocks.**
+  `CalendarTimelineEvent.timezone` is the event's source zone; `projection`
+  carries the display zone and exact instants, including which repeated DST
+  hour an event occupies. Forms use `CalendarEventTiming` in that display frame
+  and `sourceFields(for:)` for editor writes: `storing(for:)` alone loses an
+  unchanged recurrence's spring-gap clock after it was snapped for display.
+  Scoped dates and day spans compare in the
+  source frame, preserving the series anchor. A grid's `Date` coordinates are
+  civil labels and must be interpreted in the display zone before conversion.
+  Never insert a raw create/update result into a projected timeline, even as
+  a fallback after a failed read or when the event is outside the window.
+  Reload the last requested window under its supersede token, including a
+  page turn still in flight; events and tasks commit together. Keep inclusive
+  day keys rather than reconstructing a single-day range as a two-day one.
+  Date/time controls use
+  the draft calendar's zone, which stays pinned while the editor is open.
+  Repeat controls instead use `draftCalendarRecurrenceTiming`: timed edits
+  keep the source zone in the edit baseline, new drafts use their pinned zone,
+  and all-day/floating values stay civil. The grid-create path clears the edit
+  baseline too; stash/restore carries it back when that sheet closes.
+  Repeat summaries convert a projected instant back to its source day before
+  inferring an implicit weekday. Pass that day as UTC midnight to the shared
+  recurrence formatter; a device-midnight anchor can shift the weekday again.
+  Name a differing source zone beside the summary rather than presenting a
+  source Monday next to a displayed Tuesday without explanation.
+  Shared/copied events carry both that note and the display clock's zone, plus
+  the year. Use projected instants for offsets; never borrow today's offset
+  or invent a device zone for a floating/all-day event. Across an offset change,
+  format both endpoints separately: `DateIntervalFormatter` can collapse the
+  two readings of 01:30 even with an offset in its template. Endpoint dates,
+  not occupied grid days, decide whether a shared midnight end names a new day.
+  Do not run projected flat fields through source timing validation: 01:45
+  GMT-4 to 01:15 GMT-5 is a valid half-hour. `CalendarTimelineItem.timing`
+  stays in the source frame; its flat accessors read the separate projection.
+  Use `CalendarWallClockSegment` for day-clipped occupancy and grid pieces,
+  retaining the preceding offset at a transition's exclusive end. A planner
+  unions those pieces on its civil clock; labels and elapsed durations keep
+  the actual instants. Never feed a split piece into whole-event drag/resize.
+  Chronological agenda order and past-state checks also need the instants:
+  comparing repeated-hour minute numbers alone can hide a meeting too soon.
+  Picker no-ops must retain both instants, and minute edits in the repeated
+  hour keep the endpoint's existing offset when it remains valid. Try both
+  readings before treating an earlier clock as tomorrow. A start move of a
+  positive event with nonpositive wall duration keeps elapsed duration; the
+  ordinary wall-duration move rule would otherwise make that event invalid.
+  A missing end remains missing: `CalendarEventTiming.end` is only a proposed
+  picker value while `hasEndTime` is false. Do not persist that proposal during
+  a detail edit or grid move; an explicit resize may create an end, and undo
+  must clear it again. Scoped editor patches compare the draft baseline so
+  untouched clocks and concurrently edited metadata survive a save.
+- **A recurrence's frequency is not its whole pattern.** Month-end, multiple
+  month days, ordinal weekdays, month filters, positions, and week starts must
+  survive display and interval-only edits. The calendar picker presents these
+  as Custom, hiding basic controls that cannot represent them. An explicit
+  switch from Custom to Monthly replaces even an already-monthly pattern;
+  rebinding its existing frequency does not. Calendar decoding requires known
+  fields so an unrecognized modifier cannot disappear during an interval edit.
+  Summaries name every supported date filter, keep Gregorian month semantics,
+  and range-check signed ordinals before negation (including `Int.min`).
 - **Habit day scope.** `LorvexHabitSchedule.isListed(on:)` is what is still
   open that day (Today, menu bar, widgets, watch); `isReviewed(on:)` is what
   counted that day (day reviews and `DayReview.habitSummarySQL`).

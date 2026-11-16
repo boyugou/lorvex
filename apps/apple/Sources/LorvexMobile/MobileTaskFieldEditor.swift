@@ -44,7 +44,7 @@ struct MobileTaskFieldEditor: View {
           if draft.hasPlannedDate {
             Section {
               MobileTaskTimeRows(
-                time: $draft.plannedTime, day: draft.plannedDate, today: today,
+                time: $draft.plannedTime, day: draft.plannedDate,
                 length: draft.parsedEstimatedMinutes)
             }
           }
@@ -230,11 +230,10 @@ struct MobileTaskFieldEditor: View {
 /// keeps the length, the way a calendar event moves; an end at or before the
 /// start becomes fifteen minutes after it (``LorvexTaskFieldChoices``).
 struct MobileTaskTimeRows: View {
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
   @Binding var time: Range<Int>?
   /// The planned day at local midnight.
   let day: Date
-  /// The planner's day as local midnight; a new time on it starts after now.
-  var today: Date = .now
   /// How long a new time runs: the task's estimate when it has one.
   let length: Int?
 
@@ -257,11 +256,10 @@ struct MobileTaskTimeRows: View {
       .accessibilityIdentifier("task.field.time.remove")
     } else {
       Button {
-        let now = calendar.dateComponents([.hour, .minute], from: .now)
         lorvexAnimated(.snappy) {
           time = LorvexTaskFieldChoices.newTime(
-            length: length, nowMinutes: (now.hour ?? 0) * 60 + (now.minute ?? 0),
-            isToday: calendar.isDate(day, inSameDayAs: today))
+            length: length, plannedDay: PlannedDayBridge.storageDate(forLocalInstant: day),
+            timeZone: productTimeZone)
         }
       } label: {
         Label(MobileTaskFieldCopy.addTime, systemImage: "clock")

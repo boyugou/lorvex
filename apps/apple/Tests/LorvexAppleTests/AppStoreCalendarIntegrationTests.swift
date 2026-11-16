@@ -303,6 +303,7 @@ func appStoreCreatesPreviewCalendarEvent() async throws {
   let endDate = try #require(components.date)
 
   await store.refresh()
+  try await store.refreshCalendarTimeline(anchorDate: startDate, dayCount: 1)
   store.draftCalendarTitle = "Native planning block"
   store.draftCalendarTiming = CalendarEventTiming(start: startDate, end: endDate, allDay: false)
   store.draftCalendarLocation = "Studio"
@@ -463,7 +464,7 @@ func prepareCalendarDraftDoesNotFallbackToDateNow() throws {
     encoding: .utf8)
 
   #expect(source.contains("func prepareCalendarDraft(for event: CalendarTimelineEvent)"))
-  #expect(source.contains("CalendarEventTiming(event: event, fallbackDay: draftCalendarTiming.start)"))
+  #expect(source.contains("event: event, fallbackDay: draftCalendarTiming.start, fallbackTimeZone: logicalTimeZone"))
   #expect(!source.contains("fallbackDay: Date()"))
 }
 

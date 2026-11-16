@@ -212,7 +212,7 @@ extension CalendarWeekGridView {
   /// for priority. The pill opens the task on a click, Return, or Space.
   private func allDayTaskPill(_ task: LorvexTask, on day: CalendarGridDay) -> some View {
     let isDone = task.status == .completed
-    let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
+    let isOverdue = store.isOverdue(task)
     return HStack(spacing: 3) {
       taskCompletionCircle(for: task)
         .accessibilityIdentifier("calendar.allDay.task.complete")
@@ -420,33 +420,34 @@ extension CalendarWeekGridView {
     .accessibilityHidden(true)
   }
 
-  /// The now line across one day column, centered on `now`'s time of day: red
+  /// The now line across one day column, centered on the product clock: red
   /// on today, a faint guide on the other days so the time reads across the
-  /// week. The grid draws it under the blocks; today's dot is ``nowDot(now:)``.
-  func nowLine(now: Date, isToday: Bool) -> some View {
+  /// week. The grid draws it under the blocks; today's dot is ``nowDot(minutes:)``.
+  func nowLine(minutes: Int, isToday: Bool) -> some View {
     let lineColor = isToday ? LorvexDesign.Palette.nowIndicator : Color.secondary.opacity(0.22)
     let thickness: CGFloat = isToday ? 1.5 : 1
     return Rectangle().fill(lineColor).frame(height: thickness)
-      .offset(y: nowOffset(now) - thickness / 2)
+      .offset(y: nowOffset(minutes) - thickness / 2)
       .accessibilityHidden(true)
   }
 
-  /// Today's now dot, centered on the column's leading edge at `now`'s time of
+  /// Today's now dot, centered on the column's leading edge at the product time of
   /// day. The grid draws it above the blocks, so a block that spans the current
   /// time never covers it while the line itself runs beneath them.
-  func nowDot(now: Date) -> some View {
+  func nowDot(minutes: Int) -> some View {
     Circle().fill(LorvexDesign.Palette.nowIndicator).frame(width: 7, height: 7)
-      .offset(x: -3.5, y: nowOffset(now) - 3.5)
+      .offset(x: -3.5, y: nowOffset(minutes) - 3.5)
       .accessibilityHidden(true)
   }
 
-  /// The distance from the grid's midnight line to `now`'s time of day.
-  private func nowOffset(_ now: Date) -> CGFloat {
-    let minutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
+  /// The distance from the grid's midnight line to the product time of day.
+  private func nowOffset(_ minutes: Int) -> CGFloat {
     return CGFloat(minutes) / 60 * hourHeight
   }
 
-  func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
+  func isToday(_ date: Date) -> Bool {
+    AppStore.ymdFormatter.string(from: date) == productClock.logicalDay
+  }
 
   func eventColor(_ event: CalendarTimelineEvent) -> Color {
     LorvexDesign.Palette.eventTint(event.color)

@@ -49,14 +49,14 @@ struct MobileCalendarEventDetailTests {
         == """
         Team sync
 
-        When: Friday, October 2, \(time)
+        When: Friday, October 2, 2026, \(time)
         Location: Studio
         Attendees: Sam
         URL: https://example.com/room
 
         Bring the roadmap.
         """)
-    #expect(MobileShareText.event(event()) == "Team sync\n\nWhen: Friday, October 2, \(time)")
+    #expect(MobileShareText.event(event()) == "Team sync\n\nWhen: Friday, October 2, 2026, \(time)")
   }
 
   @Test("Every surface that lists events presents the one sheet that picks the detail or the editor")

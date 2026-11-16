@@ -50,9 +50,10 @@ func eventTimingReadsOvernightAndMultiDayEvents() {
   #expect(trip.startTime == nil)
   #expect(trip.endTime == nil)
 
-  // No end time runs one hour; an end date before the start reads as the start.
+  // A missing end offers a one-hour proposal; it remains absent from storage.
   let open = timing(storedEvent(start: "2026-10-02", startTime: "09:30"))
   #expect(open.end == at(2026, 10, 2, 10, 30))
+  #expect(!open.hasEndTime && open.endTime == nil)
   let backwards = timing(storedEvent(start: "2026-10-02", end: "2026-09-30", allDay: true))
   #expect(backwards.endDate == nil)
 }

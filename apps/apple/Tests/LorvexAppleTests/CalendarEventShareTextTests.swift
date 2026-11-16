@@ -29,25 +29,30 @@ struct CalendarEventShareTextTests {
   func timedEvent() {
     #expect(
       CalendarEventShare.text(for: event())
-        == "Team sync\n\nWhen: Friday, October 2, \(timeLabel)")
+        == "Team sync\n\nWhen: Friday, October 2, 2026, \(timeLabel)")
   }
 
   @Test("An all-day event says so after the day, and a run of days is one range")
   func allDayEvents() {
     let one = event(startTime: nil, endTime: nil, allDay: true)
-    #expect(CalendarEventShare.text(for: one) == "Team sync\n\nWhen: Friday, October 2, All day")
+    #expect(CalendarEventShare.text(for: one) == "Team sync\n\nWhen: Friday, October 2, 2026, All day")
 
     let several = event(startTime: nil, end: "2026-10-04", endTime: nil, allDay: true)
-    let range = several.dayRangeLabel
-    #expect(range.hasPrefix("Friday, October 2") && range.hasSuffix("Sunday, October 4"))
-    #expect(CalendarEventShare.text(for: several) == "Team sync\n\nWhen: \(range), All day")
+    let text = CalendarEventShare.text(for: several)
+    #expect(text.hasPrefix("Team sync\n\nWhen: Friday, October 2"))
+    #expect(text.contains("Sunday, October 4, 2026"))
+    #expect(text.hasSuffix(", All day"))
   }
 
   @Test("A timed event that runs into the next day is written as one span")
   func timedEventAcrossMidnight() throws {
     let overnight = event(startTime: "22:00", end: "2026-10-03", endTime: "01:00")
-    let span = try #require(overnight.timedSpanLabel)
-    #expect(CalendarEventShare.text(for: overnight) == "Team sync\n\nWhen: \(span)")
+    let text = CalendarEventShare.text(for: overnight)
+    #expect(text.contains("Friday, October 2"))
+    #expect(text.contains("Saturday, October 3"))
+    #expect(text.contains("2026"))
+    #expect(text.contains(lorvexClockTimeLabel("22:00")))
+    #expect(text.contains(lorvexClockTimeLabel("01:00")))
   }
 
   @Test("Place, repeat rule, attendees, and link follow the time, and the notes close the text")
@@ -64,7 +69,7 @@ struct CalendarEventShareTextTests {
         == """
         Team sync
 
-        When: Friday, October 2, \(timeLabel)
+        When: Friday, October 2, 2026, \(timeLabel)
         Location: Studio
         Repeats: Every week
         Attendees: Sam, lee@example.com
@@ -77,7 +82,7 @@ struct CalendarEventShareTextTests {
   @Test("A blank place, note, link, or attendee list leaves no line, and a series change reads as repeating")
   func blankFieldsAreLeftOut() {
     let blank = event(location: "  ", notes: "\n", url: "", attendees: [])
-    #expect(CalendarEventShare.text(for: blank) == "Team sync\n\nWhen: Friday, October 2, \(timeLabel)")
+    #expect(CalendarEventShare.text(for: blank) == "Team sync\n\nWhen: Friday, October 2, 2026, \(timeLabel)")
 
     let change = event(isRecurring: true)
     #expect(CalendarEventShare.text(for: change).contains("Repeats: Repeating event"))

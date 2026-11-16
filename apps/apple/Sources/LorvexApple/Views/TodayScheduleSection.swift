@@ -119,6 +119,8 @@ struct TodayScheduleSection: View {
   /// day and "Until 1:30 AM" on the last, since a range would cover only the
   /// day's share of the event.
   private static func eventTimeLabel(_ row: LorvexTodayTimelineItem) -> String {
+    if case .event(let event) = row.kind, row.eventPart == .whole,
+      let label = event.offsetClockRangeLabel() { return label }
     guard let start = row.startMinutes else { return TodayCalmCopy.allDay }
     guard row.eventPart == .whole else { return row.timeLabel }
     return TodayCalmCopy.timeRange(start: start, end: row.endMinutes)

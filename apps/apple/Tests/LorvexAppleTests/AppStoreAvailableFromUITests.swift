@@ -217,7 +217,8 @@ func snoozeMenuIsWiredIntoContextAndDetailMenus() throws {
   #expect(menu.contains("struct TaskSnoozeMenu"))
   #expect(menu.contains("let onSnooze: (Date) -> Void"))
   #expect(menu.contains("LorvexDateChip("))
-  #expect(menu.contains("PlannedDayBridge.storageDate(forLocalInstant: selected)"))
+  #expect(menu.contains("forLocalInstant: selected, timeZone: store.logicalTimeZone"))
+  #expect(menu.contains(#".environment(\.timeZone, store.logicalTimeZone)"#))
   #expect(menu.contains(#".accessibilityIdentifier("task.snooze.custom.chip")"#))
 
   let context = try availableFromSource("Sources/LorvexApple/Views/WorkspaceTaskViews.swift")

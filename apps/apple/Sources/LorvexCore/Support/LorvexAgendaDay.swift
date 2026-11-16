@@ -36,7 +36,8 @@ public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
   ) -> [LorvexAgendaDay] {
     (1...dayCount).compactMap { offset in
       guard let key = LorvexDateFormatters.ymdUTCAddingDays(todayKey, days: offset) else { return nil }
-      let dayEvents = events.filter { $0.occurs(on: key) }.sorted { eventOrder($0, $1, on: key) }
+      let clock = CalendarAgendaClock(day: key, events: events)
+      let dayEvents = events.filter { $0.occurs(on: key) }.sorted { eventOrder($0, $1, on: key, clock: clock) }
       let dayTasks = tasks.enumerated()
         .filter { $0.element.status.isActionable && CalendarGridModel.scheduledTaskDayKey($0.element) == key }
         .sorted { lhs, rhs in
@@ -51,13 +52,16 @@ public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
   }
 
   private static func eventOrder(
-    _ lhs: CalendarTimelineEvent, _ rhs: CalendarTimelineEvent, on day: String
+    _ lhs: CalendarTimelineEvent, _ rhs: CalendarTimelineEvent, on day: String, clock: CalendarAgendaClock
   ) -> Bool {
     switch (lhs.clockSpan(on: day)?.start, rhs.clockSpan(on: day)?.start) {
-    case (let left?, let right?) where left != right: left < right
-    case (nil, _?): true
-    case (_?, nil): false
-    default: lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+    case (let left?, let right?):
+      let a = clock.position(event: lhs, minute: left)
+      let b = clock.position(event: rhs, minute: right)
+      return a != b ? a < b : lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+    case (nil, _?): return true
+    case (_?, nil): return false
+    default: return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
     }
   }
 }

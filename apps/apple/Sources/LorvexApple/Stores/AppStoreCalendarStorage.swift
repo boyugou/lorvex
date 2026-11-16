@@ -26,6 +26,7 @@ struct AppStoreCalendarStorage {
   /// overlapping loads (week navigation, the EventKit observer, the today
   /// refetch) can't pair one window's events with another window's tasks.
   var timelineLoadToken = 0
+  var requestedWindow: CalendarTimelineWindow?
   /// The calendar event whose detail inspector is open in the workspace's right
   /// panel. Nil hides the panel. Cleared when the event leaves the visible
   /// timeline (navigation, deletion, or a filter change).
@@ -39,6 +40,8 @@ struct AppStoreCalendarStorage {
   var calendarPendingDayKey: String?
 
   mutating func reset() {
+    timelineLoadToken &+= 1
+    requestedWindow = nil
     calendarTimeline = nil
     calendarScheduledTasks = nil
     calendarUnplannedTasks = nil

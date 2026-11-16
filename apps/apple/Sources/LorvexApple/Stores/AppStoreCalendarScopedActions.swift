@@ -14,22 +14,28 @@ extension AppStore {
           field: "occurrence_date",
           message: "Recurring calendar occurrence is missing its identity.")
       }
+      let baseline = calendarDraftStorage.draftCalendarEditBaseline
+      let title = draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+      let location = draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines)
       let notes = draftCalendarNotes.trimmingCharacters(in: .whitespacesAndNewlines)
+      let timingChanged = baseline.map { !draftCalendarTiming.storesSameFields(as: $0.timing) } ?? true
+      let colorChanged = baseline.map { draftCalendarColor != $0.color } ?? true
       // The draft is seeded with THIS occurrence's days, so its dates go out
       // only when the day or the length in days changed: sending them on a
       // time-only or detail-only edit would re-anchor the whole series.
       let dates = draftCalendarTiming.scopedDates(for: event)
+      let timing = draftCalendarTiming.sourceFields(for: event)
       let updates = ScopedCalendarEventUpdates(
-        title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
-        startDate: dates.startDate,
-        endDate: dates.endDate,
-        startTime: draftCalendarTiming.startTime,
-        endTime: draftCalendarTiming.endTime,
-        allDay: draftCalendarTiming.allDay,
-        location: draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines),
-        notes: notes,
+        title: title == baseline?.title ? nil : title,
+        startDate: timingChanged ? dates.startDate : nil,
+        endDate: timingChanged ? dates.endDate : nil,
+        startTime: timingChanged ? timing.startTime : nil,
+        endTime: timingChanged ? timing.endTime ?? "" : nil,
+        allDay: timingChanged ? draftCalendarTiming.allDay : nil,
+        location: location == baseline?.location ? nil : location,
+        notes: notes == baseline?.notes ? nil : notes,
         recurrence: draftCalendarRecurrencePatch,
-        color: draftCalendarColor ?? ""
+        color: colorChanged ? draftCalendarColor ?? "" : nil
       )
       let result = try await core.editScopedCalendarEvent(
         eventID: event.eventID,
@@ -40,7 +46,7 @@ extension AppStore {
       await mirrorScopedEditToEventKit(
         result, scope: scope, eventID: event.eventID,
         occurrenceDate: event.scopedOccurrenceStartDate,
-        notes: notes.trimmedNilIfEmpty)
+        notes: result.replacementEvent?.notes)
       try await refreshCurrentCalendarTimeline()
       draftCalendarTitle = ""
       draftCalendarLocation = ""
@@ -49,6 +55,7 @@ extension AppStore {
       draftCalendarRecurrence = nil
       calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
       calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
+      calendarDraftStorage.draftCalendarEditBaseline = nil
       selection = .calendar
     }
   }
@@ -228,7 +235,9 @@ extension AppStore {
 extension CalendarTimelineEvent {
   fileprivate var scopedOccurrenceStartDate: Date? {
     var occurrence = self
-    occurrence.startDate = occurrenceDate ?? startDate
+    let timing = CalendarEventTiming(event: self, fallbackDay: .distantPast).storing(for: self)
+    occurrence.startDate = occurrenceDate ?? timing.startDate
+    occurrence.startTime = timing.startTime
     return CalendarEventExport(event: occurrence, notes: nil)?.startDate
   }
 }

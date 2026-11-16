@@ -103,7 +103,7 @@ struct CalendarMonthGridView: View {
         CalendarMonthGridDayCell(
           store: store,
           day: day,
-          isToday: calendar.isDateInToday(day.date),
+          isToday: day.dayKey == store.logicalTodayDateString,
           maxVisibleChips: maxVisibleChips,
           eventColor: eventColor,
           onSelectEvent: selectEvent,

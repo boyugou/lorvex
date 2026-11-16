@@ -2,7 +2,7 @@ import Foundation
 
 /// An event field that can appear as a line of an event's shared text.
 public enum LorvexEventShareField: CaseIterable, Sendable {
-  case when, location, repeats, attendees, url
+  case when, timeZone, location, repeats, attendees, url
 }
 
 /// The words an event's shared text is written in. Each surface supplies them
@@ -15,8 +15,8 @@ public struct LorvexEventShareLabels: Sendable {
   /// A field's name and its value on one line, with the punctuation the
   /// language puts between them ("Location: Studio").
   public var line: @Sendable (_ label: String, _ value: String) -> String
-  /// A day and the time on it ("Friday, October 2, 9:00 – 10:30 AM"), or the
-  /// day and the words for an all-day event ("Friday, October 2, All day").
+  /// A day and the time on it ("Friday, October 2, 2026, 9:00 – 10:30 AM"), or
+  /// the day and the words for an all-day event ("Friday, October 2, 2026, All day").
   public var dayAtTime: @Sendable (_ day: String, _ time: String) -> String
   /// The words for an all-day event ("All day").
   public var allDay: String
@@ -43,9 +43,11 @@ public struct LorvexEventShareLabels: Sendable {
 /// language that read the same in Messages, Mail, Notes, or a Markdown editor.
 /// Blocks are separated by a blank line. Days are written as dates rather than
 /// "tomorrow", since the text is read after the day it was shared on.
+/// Years and known clock zones travel with the text, including a differing
+/// source zone for a repeat rule. Floating clocks and all-day dates stay civil.
 public enum LorvexEventShareText {
   /// The event in the order its detail shows it: the title, one "Label: value"
-  /// line per set field (when, location, repeat rule, attendees, link), and
+  /// line per set field (when, time zone, location, repeat rule, attendees, link), and
   /// the notes. A blank field is left out, so an event with nothing but a time
   /// is its title and its When line.
   public static func text(for event: CalendarTimelineEvent, labels: LorvexEventShareLabels) -> String {
@@ -62,11 +64,15 @@ public enum LorvexEventShareText {
     -> [(field: LorvexEventShareField, value: String)]
   {
     var rows: [(field: LorvexEventShareField, value: String)] = []
-    let when = event.whenLines(allDay: labels.allDay)
-    rows.append((.when, when.second.map { labels.dayAtTime(when.first, $0) } ?? when.first))
+    let timing = LorvexEventShareTiming(event: event, labels: labels)
+    rows.append((.when, timing.when))
+    if let timeZone = timing.timeZone { rows.append((.timeZone, timeZone)) }
     if let location = nonBlank(event.location) { rows.append((.location, location)) }
     if event.hasRecurrenceRow {
-      rows.append((.repeats, event.recurrenceDescription(generic: labels.repeating)))
+      let repeatDescription = [
+        event.recurrenceDescription(generic: labels.repeating), event.recurrenceTimeZoneNote,
+      ].compactMap { $0 }.joined(separator: " · ")
+      rows.append((.repeats, repeatDescription))
     }
     let attendees = (event.attendees ?? []).compactMap { attendee in
       nonBlank(attendee.name) ?? nonBlank(attendee.email)

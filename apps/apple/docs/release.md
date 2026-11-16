@@ -269,6 +269,16 @@ flag, and Xcode 26.3's App Intents metadata processor rejects the `bundle:`
 argument of an `AppShortcut`'s `shortTitle`. `script/doctor.sh --release`
 checks the toolchain and the credentials before anything builds.
 
+API authentication uses `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_PATH` from
+the ignored environment file for validation, upload, and processing status as
+well as Xcode provisioning. The issuer ID is on App Store Connect's Users and
+Access → Integrations → App Store Connect API page; it is distinct from the
+Developer Team ID. The key file stays private on the release Mac. API mode
+requires no account password. A partial API configuration fails explicitly;
+it never silently falls back to another account. Legacy `APPLE_ID` plus
+`APPLE_PASSWORD` (or an exported `APPLE_APP_PASSWORD`) remains supported, with
+the password passed through an environment reference rather than command args.
+
 1. Verify the tree: `script/verify_swift.sh` (build, catalog compile, and the
    full suite; add `--core` when `core/` changed) and
    `script/verify_static_gates.sh`. App Store Connect checks nothing beyond the

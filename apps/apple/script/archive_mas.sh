@@ -45,6 +45,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/script/app_metadata.sh"
 source "$ROOT_DIR/script/require_schema_freeze_gate.sh"
 source "$ROOT_DIR/script/lib_bundle_checks.sh"
+source "$ROOT_DIR/script/lib_altool_auth.sh"
 
 APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
 PKG_PATH="${MAS_PKG_PATH:-"$ROOT_DIR/dist/$APP_NAME-macOS-MAS-$MARKETING_VERSION+$BUILD_VERSION.pkg"}"
@@ -230,29 +231,19 @@ validate_or_upload() {
     echo "run ./script/archive_mas.sh --package first, or set MAS_PKG_PATH" >&2
     exit 2
   fi
-  require_env APPLE_ID
-  require_env APPLE_APP_PASSWORD
+  configure_altool_auth
 
   local action=(--validate-app)
   if [[ "$mode" == "upload" ]]; then
     action=(--upload-app)
   fi
 
-  # Authenticate with the App Store Connect account, NOT the app record. For
-  # --validate-app/--upload-app, altool's `--apple-id` is the app's numeric
-  # Apple ID (a delivery target), while the account is `--username` +
-  # `--password`; passing the account email to `--apple-id` fails with
-  # "username and app password ... required".
-  #
-  # Pass the app-specific password by env-var reference (`@env:`) rather than
-  # its literal value, so it never appears in this process's argv (visible to
-  # any `ps` on the host). altool reads APPLE_APP_PASSWORD from the environment,
-  # which `require_env` above already guarantees is set.
+  # Authentication is independent of the app's numeric delivery-target id.
+  # The shared helper also keeps a legacy password out of the process args.
   xcrun altool "${action[@]}" \
     -f "$PKG_PATH" \
     --type osx \
-    --username "$APPLE_ID" \
-    --password "@env:APPLE_APP_PASSWORD"
+    "${ALTOOL_AUTH_ARGS[@]}"
 }
 
 if [[ $# -ne 1 ]]; then

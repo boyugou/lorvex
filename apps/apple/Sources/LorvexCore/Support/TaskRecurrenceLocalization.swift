@@ -92,10 +92,9 @@ public extension TaskRecurrenceRule.Anchor {
 }
 
 public extension TaskRecurrenceRule {
-  /// The rule's cadence alone: the interval, then the weekdays ("Every week ·
-  /// Mon, Wed", "Every 3 months", "Every month · last Fri"). Long enough to be
-  /// unambiguous and short enough for one row, so the task detail field, the
-  /// iPhone task sentence, and the capture previews show it as is; how the rule
+  /// The rule's cadence: the interval, then its months, weekdays, month days,
+  /// matching-day positions, and explicit week start. Each date filter is
+  /// named, so month-end and day 31 never read as the same rule. How the rule
   /// ends, its anchor, and skipped dates stay in
   /// ``localizedDisplaySummary(exceptions:)``. A stored interval below one
   /// reads as one period.
@@ -110,15 +109,26 @@ public extension TaskRecurrenceRule {
   /// does. A rule that counts from completion, or repeats by another unit,
   /// reads as ``localizedCadence``.
   func localizedCadence(anchorDay: Date?) -> String {
-    let every = freq.localizedEveryInterval(max(1, interval ?? 1))
-    if let byDay, !byDay.isEmpty {
-      return "\(every) · \(LorvexRecurrenceWeekdays.summary(byDay))"
+    var parts = [freq.localizedEveryInterval(max(1, interval ?? 1))]
+    if let byMonth, !byMonth.isEmpty {
+      parts.append(LorvexRecurrenceConstraints.months(byMonth))
     }
-    guard freq == .weekly, anchor == .schedule, let anchorDay else { return every }
-    return "\(every) · \(LorvexRecurrenceWeekdays.summary([TaskRecurrenceWeekday(storedDay: anchorDay).rawValue]))"
+    if let byDay, !byDay.isEmpty {
+      parts.append(LorvexRecurrenceWeekdays.summary(byDay))
+    } else if freq == .weekly, anchor == .schedule, let anchorDay {
+      parts.append(LorvexRecurrenceWeekdays.summary([TaskRecurrenceWeekday(storedDay: anchorDay).rawValue]))
+    }
+    if let byMonthDay, !byMonthDay.isEmpty {
+      parts.append(LorvexRecurrenceConstraints.monthDays(byMonthDay))
+    }
+    if let bySetPos, !bySetPos.isEmpty {
+      parts.append(LorvexRecurrenceConstraints.positions(bySetPos))
+    }
+    if let wkst, !wkst.isEmpty { parts.append(LorvexRecurrenceConstraints.weekStart(wkst)) }
+    return parts.joined(separator: " · ")
   }
 
-  /// The full one-line rule the repeat editors show: the cadence (naming a
+  /// The full rule summary the repeat editors show: the cadence (naming a
   /// plain weekly rule's day from `anchorDay`, as
   /// ``localizedCadence(anchorDay:)`` does), then how the rule ends, its
   /// anchor, and how many dates were skipped ("Every 2 weeks · Mon, Wed · 10

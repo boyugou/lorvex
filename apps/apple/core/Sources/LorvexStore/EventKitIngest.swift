@@ -10,7 +10,8 @@ import LorvexDomain
 /// `calendarItemExternalIdentifier`, falling back to `eventIdentifier`); it
 /// becomes the `provider_event_key` composite-key field. Dates/times are
 /// already rendered to the canonical wire forms (`yyyy-MM-dd`, `HH:mm`) in the
-/// active calendar's timezone so this layer holds no `Date` formatting.
+/// event's source timezone. Zoned timed events also carry exact observations,
+/// because civil clocks alone cannot distinguish a repeated-hour reading.
 public struct EventKitFetchedEvent: Sendable, Equatable {
   public let key: String
   public let title: String?
@@ -40,6 +41,8 @@ public struct EventKitFetchedEvent: Sendable, Equatable {
   /// PARTSTAT subset. Private detail: serialized into `attendees_json` only in
   /// the full-details tier.
   public let attendees: [EventKitFetchedAttendee]
+  /// nil for floating/all-day or legacy snapshots; otherwise the exact fetched set.
+  public let occurrenceInstants: [ProviderOccurrenceInstant]?
 
   public init(
     key: String, title: String?, notes: String?,
@@ -49,7 +52,8 @@ public struct EventKitFetchedEvent: Sendable, Equatable {
     recurrence: String? = nil, recurrenceExceptions: String? = nil,
     color: String? = nil, organizerEmail: String? = nil,
     url: String? = nil,
-    attendees: [EventKitFetchedAttendee] = []
+    attendees: [EventKitFetchedAttendee] = [],
+    occurrenceInstants: [ProviderOccurrenceInstant]? = nil
   ) {
     self.key = key
     self.title = title
@@ -67,6 +71,7 @@ public struct EventKitFetchedEvent: Sendable, Equatable {
     self.organizerEmail = organizerEmail
     self.url = url
     self.attendees = attendees
+    self.occurrenceInstants = occurrenceInstants
   }
 }
 
@@ -145,7 +150,9 @@ public enum EventKitIngest {
         // the full and busy-only tiers.
         color: event.color,
         attendeesJson: full ? attendeesJSON(from: event.attendees) : nil,
-        videoCallUrl: full ? event.url : nil)
+        videoCallUrl: full ? event.url : nil,
+        occurrenceInstants: hasZone
+          ? event.occurrenceInstants.flatMap(ProviderOccurrenceInstant.encode) : nil)
     }
   }
 

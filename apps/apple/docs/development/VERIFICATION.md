@@ -185,6 +185,22 @@ shuts down. Read the script for the route list (`today`, `tasks`,
 `lorvex://findtask/<url-encoded title>/edit` and
 `lorvex://sheet/capture/<text>`).
 
+`event-detail-zone` and `event-edit-zone` show a visual-only recurring event:
+Monday at 23:30 in New York, displayed Tuesday at 13:30 in Tokyo. They check
+that the repeat summary names Monday and explains the source clock. The edit
+fixture is for presentation checks, not saving; no event is persisted.
+`event-detail-custom` and `event-edit-custom` exercise a longer month-end
+pattern, including negative month days, matching weekdays and positions,
+the week start, and an occurrence limit. Use a large text size and Chinese
+to check wrapping and ordinal wording. These are also visual-only fixtures.
+`event-detail-fold` and `event-edit-fold` show a positive half-hour crossing
+the New York fall-back: 01:45 GMT-4 to 01:15 GMT-5. Check both endpoint offsets
+and the editor's valid state, including at large text sizes. These are
+visual-only too; they do not create or edit a real event.
+`event-edit-optional-end` and `event-edit-with-end` check the Add end time and
+clear-end controls in the native editor. Check the latter at a large text size
+to ensure its end picker and clear button both fit. These are visual-only.
+
 Environment: `LORVEX_SIM_UDID` and `LORVEX_SIM_DEVICE` pick the device (pass
 the UDID when two simulators share a name), `LORVEX_SIM_EXTRA_ARGS` carries
 launch arguments, `LORVEX_SIM_SETTLE` sets the wait before a capture (raise it
@@ -263,3 +279,27 @@ Capture hotkey, Open at Login, the Control Center capture control, real-finger
 calendar swipes, watch hardware, iPad hardware-keyboard shortcuts, two-device
 CloudKit sync, and background notification actions. `ROADMAP.md` keeps the
 current list.
+
+## Calendar time regression coverage
+
+EventKit instant preservation: `EventKitInstantBridgeTests` runs unsaved real
+EKEvents through both platform mappers and the in-memory ingest/timeline path.
+`EventKitOccurrenceInstantTests` covers repeated-hour readings, half-hour
+transitions, privacy tiers, cache reconciliation and monotonic upserts;
+`ProviderOccurrenceMigrationTests` upgrades a version-4 fixture with existing
+provider data and task links. These tests never save to the system calendar.
+
+MCP calendar time context: `MCPCalendarTimeContextTests` drives a real in-memory
+registry through compact/full/explicit-field reads, repeated-hour pagination,
+source-coordinate round trips, cross-day scoped edits, recurrence gaps, empty
+window timezone changes, and full/busy provider links. `CalendarTimelineOrderingTests`
+checks every ordering of mixed floating/projected fold clocks, binary-title and
+stable-id ties, and missing-time placement. These use no managed user database.
+
+Human calendar editing: `CalendarSourceTimingPreservationTests` exercises both
+stores and all occurrence scopes with spring-gap clocks, end-only edits,
+cancel/restore, floating zones, and concurrent field changes.
+`CalendarOptionalEndTests` checks adding/removing ends (including overnight
+spans), moving points, and resize undo/redo through real in-memory writes.
+Core `CalendarInheritedStartTests` verifies that inherited-gap permission cannot
+be reused for a different date, clock, zone, or all-day state.

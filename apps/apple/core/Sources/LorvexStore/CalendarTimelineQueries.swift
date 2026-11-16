@@ -29,7 +29,7 @@ public enum CalendarTimelineQueries {
     pce.title, pce.start_date, pce.start_time, pce.end_date, pce.end_time, \
     pce.all_day, pce.location, pce.color, pce.recurrence, pce.recurrence_exceptions, \
     pce.source_time_kind, pce.source_tzid, pce.attendees_json, \
-    pce.description, pce.organizer_email, pce.video_call_url
+    pce.description, pce.organizer_email, pce.video_call_url, pce.occurrence_instants
     """
 
   /// `EXISTS` gate (alias `pce`) restricting provider rows to scopes that are
@@ -224,7 +224,7 @@ public enum CalendarTimelineQueries {
   // -- get_calendar_timeline ----------------------------------------------
 
   /// Retrieve all calendar-event occurrences overlapping `[from, to]`,
-  /// sorted by `(start_date, start_time NULLS LAST, title)`. `accessMode`
+  /// sorted by `(display day, start instant NULLS LAST, title, id)`. `accessMode`
   /// controls provider inclusion + detail redaction.
   public static func getCalendarTimeline(
     _ db: Database, from: String, to: String,
@@ -249,24 +249,7 @@ public enum CalendarTimelineQueries {
       items.append(contentsOf: providerItems)
     }
 
-    items.sort { a, b in
-      if a.startDate != b.startDate { return a.startDate < b.startDate }
-      switch (a.startTime, b.startTime) {
-      case let (at?, bt?):
-        if at != bt { return at < bt }
-      case (.some, nil):
-        return true
-      case (nil, .some):
-        return false
-      case (nil, nil):
-        break
-      }
-      // Byte-wise UTF-8 ordering (Swift's `String <` is Unicode-canonical,
-      // which can diverge on non-ASCII).
-      return a.title.utf8.lexicographicallyPrecedes(b.title.utf8)
-    }
-
-    return items
+    return try CalendarTimeline.sorted(items, anchorTimezone: anchorTimezone)
   }
 
   // -- canonical timeline -------------------------------------------------
@@ -294,31 +277,31 @@ public enum CalendarTimelineQueries {
       + "series_id, recurrence_instance_date, recurrence_generation, occurrence_state, "
       + "series_cutover_id"
     let sql = """
-      SELECT \(cols) \
-      FROM calendar_events \
-      WHERE series_id IS NULL AND recurrence IS NOT NULL AND start_date <= ?2 \
-        AND (recurrence_end_date IS NULL OR recurrence_end_date >= ?1) \
-      UNION ALL \
-      SELECT \(cols) \
-      FROM calendar_events \
-      WHERE series_id IS NULL AND recurrence IS NULL AND start_date <= ?2 \
-        AND end_date IS NOT NULL AND end_date >= ?1 \
-      UNION ALL \
-      SELECT \(cols) \
-      FROM calendar_events \
-      WHERE series_id IS NULL AND recurrence IS NULL AND end_date IS NULL \
-        AND start_date BETWEEN ?1 AND ?2
-      UNION ALL \
-      SELECT \(cols) \
-      FROM calendar_events \
-      WHERE occurrence_state = 'replacement' AND start_date <= ?2 \
-        AND end_date IS NOT NULL AND end_date >= ?1 \
-      UNION ALL \
-      SELECT \(cols) \
-      FROM calendar_events \
-      WHERE occurrence_state = 'replacement' AND end_date IS NULL \
-        AND start_date BETWEEN ?1 AND ?2
-    """
+        SELECT \(cols) \
+        FROM calendar_events \
+        WHERE series_id IS NULL AND recurrence IS NOT NULL AND start_date <= ?2 \
+          AND (recurrence_end_date IS NULL OR recurrence_end_date >= ?1) \
+        UNION ALL \
+        SELECT \(cols) \
+        FROM calendar_events \
+        WHERE series_id IS NULL AND recurrence IS NULL AND start_date <= ?2 \
+          AND end_date IS NOT NULL AND end_date >= ?1 \
+        UNION ALL \
+        SELECT \(cols) \
+        FROM calendar_events \
+        WHERE series_id IS NULL AND recurrence IS NULL AND end_date IS NULL \
+          AND start_date BETWEEN ?1 AND ?2
+        UNION ALL \
+        SELECT \(cols) \
+        FROM calendar_events \
+        WHERE occurrence_state = 'replacement' AND start_date <= ?2 \
+          AND end_date IS NOT NULL AND end_date >= ?1 \
+        UNION ALL \
+        SELECT \(cols) \
+        FROM calendar_events \
+        WHERE occurrence_state = 'replacement' AND end_date IS NULL \
+          AND start_date BETWEEN ?1 AND ?2
+      """
     let rows = try Row.fetchAll(db, sql: sql, arguments: [fromWide, toWide])
     var candidates = CalendarSeriesProjectionIndex.Candidates()
     for row in rows {
@@ -364,7 +347,9 @@ public enum CalendarTimelineQueries {
     return items
   }
 
-  private static func parseCanonicalRow(_ row: Row, recurrence: String?) -> CalendarTimeline.RawCalendarRow? {
+  private static func parseCanonicalRow(_ row: Row, recurrence: String?) -> CalendarTimeline
+    .RawCalendarRow?
+  {
     guard let startDate = parseDate(row[5]) else { return nil }
     guard let startTime = parseOptTime(row[6]) else { return nil }
     guard let endDate = parseOptDate(row[7]) else { return nil }
@@ -391,7 +376,7 @@ public enum CalendarTimelineQueries {
       url: row[14], attendeesJson: row[16], description: row[15],
       seriesId: itemSeriesId, recurrenceInstanceDate: row[18],
       recurrenceGeneration: recurrenceGeneration, occurrenceState: occurrenceState)
-    guard case let .success(item) = made else { return nil }
+    guard case .success(let item) = made else { return nil }
     return CalendarTimeline.RawCalendarRow(
       item: item, recurrence: recurrence, recurrenceExceptions: row[3])
   }
@@ -411,8 +396,15 @@ public enum CalendarTimelineQueries {
     let sql = """
       SELECT \(cols) \
       FROM provider_calendar_events pce \
-      WHERE pce.recurrence IS NOT NULL AND pce.start_date <= ?2 \
+      WHERE pce.recurrence IS NOT NULL AND pce.occurrence_instants IS NULL \
+        AND pce.start_date <= ?2 \
         AND (pce.recurrence_end_date IS NULL OR pce.recurrence_end_date >= ?1) \
+        AND \(scopeExists) \
+      UNION ALL \
+      SELECT \(cols) \
+      FROM provider_calendar_events pce \
+      WHERE pce.recurrence IS NOT NULL AND pce.occurrence_instants IS NOT NULL \
+        AND date(json_extract(pce.occurrence_instants, '$[0].start'), 'unixepoch') <= ?2 \
         AND \(scopeExists) \
       UNION ALL \
       SELECT \(cols) \
@@ -449,7 +441,8 @@ public enum CalendarTimelineQueries {
   /// that the whole series is gone.
   public static func oneOffProviderEventKeysShown(
     _ db: Database, providerKind: String, providerScope: String,
-    from: String, to: String, anchorTimezone: String
+    from: String, to: String, anchorTimezone: String,
+    excludingPreciseOccurrences: Bool = false
   ) throws -> Set<String> {
     guard let fromDate = try? CalendarRecurrence.parseYmd(from),
       let toDate = try? CalendarRecurrence.parseYmd(to), from <= to
@@ -463,9 +456,10 @@ public enum CalendarTimelineQueries {
         FROM provider_calendar_events pce \
         WHERE pce.provider_kind = ?3 AND pce.provider_scope = ?4 \
           AND pce.recurrence IS NULL AND pce.start_date <= ?2 \
-          AND COALESCE(pce.end_date, pce.start_date) >= ?1
+          AND COALESCE(pce.end_date, pce.start_date) >= ?1 \
+          AND (?5 = 0 OR pce.occurrence_instants IS NULL)
         """,
-      arguments: [fromWide, toWide, providerKind, providerScope])
+      arguments: [fromWide, toWide, providerKind, providerScope, excludingPreciseOccurrences])
     var keys = Set<String>()
     for row in rows {
       let key: String = row[2]
@@ -502,9 +496,17 @@ public enum CalendarTimelineQueries {
     case "tzid": timezone = sourceTzid
     default: timezone = nil
     }
+    let preciseJSON: String? = row[19]
+    let occurrences = preciseJSON.flatMap(ProviderOccurrenceInstant.decode)
+    // Corrupt exact data must not silently select the wrong fold reading.
+    if preciseJSON != nil && occurrences == nil { return nil }
+    if let occurrences, occurrences.isEmpty { return nil }
+    let utcTiming = occurrences?.first?.utcTiming
     let made = CalendarTimelineItem.make(
       source: .provider, editable: false, id: compositeId, title: row[3],
-      startDate: startDate, startTime: startTime, endDate: endDate, endTime: endTime,
+      startDate: utcTiming?.startDate ?? startDate, startTime: utcTiming?.startTime ?? startTime,
+      endDate: utcTiming == nil ? endDate : utcTiming?.endDate,
+      endTime: utcTiming == nil ? endTime : utcTiming?.endTime,
       allDay: allDay, location: row[9], color: row[10], eventType: "event",
       // The source-time metadata is authoritative for a timed provider event.
       // Project it into the public timeline timezone too; otherwise schema
@@ -512,11 +514,23 @@ public enum CalendarTimelineQueries {
       // reads (`utc` is represented without a `source_tzid`).
       personName: personName, timezone: timezone,
       providerKind: providerKind, providerScope: providerScope, isRecurring: recurrence != nil,
-      recurrenceRule: recurrence, sourceTimeKind: sourceTimeKind, sourceTzid: sourceTzid,
+      recurrenceRule: recurrence, sourceTimeKind: utcTiming == nil ? sourceTimeKind : "utc",
+      sourceTzid: sourceTzid,
       url: row[18], attendeesJson: row[15], description: row[16])
-    guard case let .success(item) = made else { return nil }
+    guard case .success(var item) = made else { return nil }
+    if let first = occurrences?.first {
+      guard
+        let projected = try? CalendarTimeline.projectProviderOccurrence(
+          item, first, timezone ?? "UTC")
+      else { return nil }
+      item = projected
+      // Search addresses the source series; range expansion assigns each
+      // observed occurrence its own id without changing this stable address.
+      item.id = compositeId
+    }
     return CalendarTimeline.RawCalendarRow(
-      item: item, recurrence: recurrence, recurrenceExceptions: row[12])
+      item: item, recurrence: recurrence, recurrenceExceptions: row[12],
+      providerOccurrences: occurrences)
   }
 
   // -- shared helpers -----------------------------------------------------
@@ -708,8 +722,8 @@ public enum CalendarTimelineQueries {
       endTime: endTime, allDay: allDay)
     let timing: CalendarEventTiming
     switch timingResult {
-    case let .success(t): timing = t
-    case let .failure(err):
+    case .success(let t): timing = t
+    case .failure(let err):
       throw DatabaseError(
         resultCode: .SQLITE_MISMATCH,
         message: "calendar_events temporal fields: \(err.messageString)")
@@ -740,7 +754,7 @@ public enum CalendarTimelineQueries {
   // -- value parsers ------------------------------------------------------
 
   private static func parseDate(_ raw: String?) -> LorvexDate? {
-    guard let raw, case let .success(d) = LorvexDate.parse(raw) else { return nil }
+    guard let raw, case .success(let d) = LorvexDate.parse(raw) else { return nil }
     return d
   }
 
@@ -748,13 +762,13 @@ public enum CalendarTimelineQueries {
   /// SQL NULL (a valid absent value).
   private static func parseOptDate(_ raw: String?) -> LorvexDate?? {
     guard let raw else { return .some(nil) }
-    guard case let .success(d) = LorvexDate.parse(raw) else { return nil }
+    guard case .success(let d) = LorvexDate.parse(raw) else { return nil }
     return .some(d)
   }
 
   private static func parseOptTime(_ raw: String?) -> TimeOfDay?? {
     guard let raw else { return .some(nil) }
-    guard case let .success(t) = TimeOfDay.parse(raw) else { return nil }
+    guard case .success(let t) = TimeOfDay.parse(raw) else { return nil }
     return .some(t)
   }
 }

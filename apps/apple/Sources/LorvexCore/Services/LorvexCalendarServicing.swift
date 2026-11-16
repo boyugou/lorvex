@@ -95,7 +95,8 @@ public protocol LorvexCalendarServicing: Sendable {
 
   /// Patches an existing calendar event. Each nil field is left untouched. A
   /// non-nil `endDate` (YYYY-MM-DD) sets the multi-day span; nil leaves the
-  /// existing end date unchanged.
+  /// existing end date unchanged. Empty `endDate`/`endTime` strings explicitly
+  /// clear those endpoints; removing a multi-day end also clears its end date.
   func updateCalendarEvent(
     id: CalendarTimelineEvent.ID,
     title: String?,

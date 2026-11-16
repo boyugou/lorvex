@@ -48,9 +48,7 @@ extension CalendarWeekGridView {
       active == nil
       ? baseHeight
       : max(baseHeight + preview.resizeBottom - preview.resizeTop, hourHeight / 4)
-    let isEditable =
-      block.event.editable && !block.event.allDay && !block.event.supportsScopedMutation
-      && !block.event.isMultiDay
+    let isEditable = block.canEditOnGrid
     let showsResizeGrips = isSelected || hoveredBlockID == block.event.id
     // Overlap can leave a lane too narrow for a time line or a word: it then
     // shows the title alone, and the tooltip carries the rest.
@@ -197,7 +195,7 @@ extension CalendarWeekGridView {
     .padding(LorvexDesign.Spacing.xxs)
     .background(.background.opacity(0.82), in: Circle())
     .help(
-      String(
+      block.event.crossesClockChange ? calendarEventAccessibilityLabel(block.event) : String(
         localized: "calendar.weekgrid.edit_hint.help",
         defaultValue: "Open the event sheet to edit recurring or multi-day details",
         table: "Localizable",
@@ -211,7 +209,7 @@ extension CalendarWeekGridView {
         bundle: LorvexL10n.bundle)
     )
     .accessibilityHint(
-      String(
+      block.event.crossesClockChange ? calendarEventAccessibilityLabel(block.event) : String(
         localized: "calendar.weekgrid.edit_hint.a11y_hint",
         defaultValue:
           "Recurring and multi-day events cannot be dragged or resized in the calendar grid.",

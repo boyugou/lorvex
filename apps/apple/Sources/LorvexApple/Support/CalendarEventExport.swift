@@ -12,12 +12,15 @@ struct CalendarEventExport: Equatable, Sendable {
   var recurrence: String?
 
   init?(event: CalendarTimelineEvent, notes: String?, calendar: Calendar = .current) {
+    let projection = event.allDay ? nil : event.projection
     guard
-      let startDate = Self.date(from: event.startDate, time: event.startTime, calendar: calendar)
+      let startDate = projection?.start ?? Self.date(from: event.startDate, time: event.startTime, calendar: calendar)
     else { return nil }
 
     let resolvedEndDate: Date
-    if event.allDay {
+    if let projection {
+      resolvedEndDate = projection.end ?? projection.start.addingTimeInterval(30 * 60)
+    } else if event.allDay {
       // Lorvex stores the last occupied day; EventKit's all-day end is that
       // day at 23:59:59. A nil end remains a one-day event.
       let inclusiveEnd =
@@ -48,7 +51,8 @@ struct CalendarEventExport: Equatable, Sendable {
 
     self.title = event.title
     self.startDate = startDate
-    self.endDate = max(resolvedEndDate, startDate.addingTimeInterval(5 * 60))
+    self.endDate = projection?.end.flatMap { $0 > startDate ? $0 : nil }
+      ?? max(resolvedEndDate, startDate.addingTimeInterval(5 * 60))
     self.isAllDay = event.allDay
     self.location = event.location.trimmedNilIfEmpty
     self.notes = notes.trimmedNilIfEmpty

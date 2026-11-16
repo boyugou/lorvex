@@ -2,7 +2,7 @@ import Foundation
 
 /// When a calendar event happens, as the event forms hold it.
 ///
-/// A timed event runs from the `start` instant to the `end` instant, and the
+/// A timed event with an end runs from `start` to `end`, and the
 /// end may fall on a later day: an overnight event such as 22:00 to 01:00, or
 /// one that spans several days. An all-day event covers every day from the day
 /// of `start` through the day of `end`, both included. It keeps its clock times
@@ -12,21 +12,26 @@ import Foundation
 /// All Day off again puts a one-night event's end back on its midnight; a
 /// longer event keeps the end day the span gave it.
 ///
-/// Days and clock times are read in `calendar`: a Gregorian calendar in the
-/// device's time zone unless a caller passes another time zone, which is how
-/// the stored `yyyy-MM-dd` and `HH:mm` event fields are written and read
-/// across the app. Lengths are kept as wall-clock minutes, so moving an event
-/// across a daylight-saving change keeps its clock times.
+/// Days and clock times are read in the Gregorian `calendar`. Event forms use
+/// the timeline's display zone, or the source zone for a raw stored event;
+/// floating and all-day events use the caller's fallback zone. Lengths are
+/// kept as wall-clock minutes, so moving an event
+/// across a daylight-saving change keeps its clock times. A positive span
+/// whose clocks repeat or run backwards instead moves by its elapsed length.
 public struct CalendarEventTiming: Equatable, Sendable {
   public var start: Date
   public var end: Date
+  /// Without an end time, `end` is only the editor's proposed value.
+  public var hasEndTime: Bool
   public var allDay: Bool {
     didSet {
       guard allDay != oldValue else { return }
       if allDay {
-        endAllDaySpanBeforeMidnightEnd()
+        if hasEndTime { endAllDaySpanBeforeMidnightEnd() }
+        else { end = start }
       } else {
-        restoreEndAfterStart()
+        if hasEndTime { restoreEndAfterStart() }
+        else { end = Self.timed(startingAt: start, calendar: calendar).end }
       }
     }
   }
@@ -34,9 +39,13 @@ public struct CalendarEventTiming: Equatable, Sendable {
 
   /// A timing read in `calendar`. A calendar other than the Gregorian one
   /// contributes only its time zone, since the stored day keys are Gregorian.
-  public init(start: Date, end: Date, allDay: Bool, calendar: Calendar = Self.deviceCalendar) {
+  public init(
+    start: Date, end: Date, allDay: Bool, calendar: Calendar = Self.deviceCalendar,
+    hasEndTime: Bool = true
+  ) {
     self.start = start
     self.end = end
+    self.hasEndTime = hasEndTime
     self.allDay = allDay
     self.calendar = Self.gregorian(calendar)
   }
@@ -44,7 +53,7 @@ public struct CalendarEventTiming: Equatable, Sendable {
   /// A Gregorian calendar in the device's current time zone: the reading of the
   /// stored day and clock-time fields.
   public static var deviceCalendar: Calendar {
-    LorvexDateFormatters.gregorianCalendar(timeZone: .autoupdatingCurrent)
+    LorvexDateFormatters.gregorianCalendar(timeZone: .current)
   }
 
   /// A timed event of `minutes` that starts at `start`. Its end may fall on the
@@ -55,8 +64,23 @@ public struct CalendarEventTiming: Equatable, Sendable {
     let calendar = gregorian(calendar)
     let (day, minute) = dayAndMinute(start, in: calendar)
     return CalendarEventTiming(
-      start: start, end: instant(on: day, minute: minute + minutes, in: calendar), allDay: false,
+      start: start, end: instant(on: day, minute: minute + minutes, in: calendar, preservingOffsetOf: start), allDay: false,
       calendar: calendar)
+  }
+
+  /// A block on the grid's civil day in `timeZone`. The day label comes from
+  /// `dayCalendar`; constructing its clock directly in the target zone avoids
+  /// applying a different device zone's daylight-saving gap to the selection.
+  public static func timed(
+    on day: Date, atMinute minute: Int, minutes: Int = 60, timeZone: TimeZone,
+    dayCalendar: Calendar = deviceCalendar
+  ) -> CalendarEventTiming {
+    let calendar = LorvexDateFormatters.gregorianCalendar(timeZone: timeZone)
+    let parts = gregorian(dayCalendar).dateComponents([.year, .month, .day], from: day)
+    let targetDay = calendar.date(from: parts) ?? day
+    return timed(
+      startingAt: instant(on: targetDay, minute: minute, in: calendar),
+      minutes: minutes, calendar: calendar)
   }
 
   /// The one-hour block a new event offers at `now`, as Apple Calendar does:
@@ -70,16 +94,36 @@ public struct CalendarEventTiming: Equatable, Sendable {
     return timed(startingAt: start, calendar: calendar)
   }
 
-  /// The timing of a stored event, its date and time fields read in
-  /// `calendar`. A timed event runs from its start date and time to its end
-  /// date (its start date when it has none) and end time, or for one hour when
-  /// it has no end time. An all-day event has no clock times, so it gets 09:00
+  /// The timing of an event in its timeline's display zone, or its stored zone
+  /// when read outside a timeline. An explicit `calendar` instead reads the
+  /// displayed fields as civil labels, as calendar-grid geometry needs.
+  /// A timed event runs from its start date and time to its end
+  /// date (its start date when it has none) and end time. When it has no end,
+  /// the editor proposes one hour without storing it. An all-day event has no clock times, so it gets 09:00
   /// on its first day and 10:00 on its last: turning All Day off then offers a
   /// one-hour block at each end. `fallbackDay` stands in for a start date that
   /// does not parse, and an end date before the start date reads as the start
   /// date.
-  public init(event: CalendarTimelineEvent, fallbackDay: Date, calendar: Calendar = deviceCalendar) {
-    let calendar = Self.gregorian(calendar)
+  public init(
+    event: CalendarTimelineEvent, fallbackDay: Date, calendar: Calendar? = nil,
+    fallbackTimeZone: TimeZone = .current
+  ) {
+    if calendar == nil, !event.allDay, let projection = event.projection,
+      let zone = TimeZone(identifier: projection.timezone)
+    {
+      let calendar = LorvexDateFormatters.gregorianCalendar(timeZone: zone)
+      self.init(
+        start: projection.start,
+        end: projection.end ?? Self.timed(startingAt: projection.start, calendar: calendar).end,
+        allDay: false, calendar: calendar, hasEndTime: projection.end != nil)
+      return
+    }
+    let sourceCalendar = event.timezone.flatMap(TimeZone.init(identifier:)).map {
+      LorvexDateFormatters.gregorianCalendar(timeZone: $0)
+    }
+    let calendar = Self.gregorian(
+      calendar ?? (event.allDay ? nil : sourceCalendar)
+        ?? LorvexDateFormatters.gregorianCalendar(timeZone: fallbackTimeZone))
     let firstDay =
       Self.day(fromKey: event.startDate, in: calendar) ?? calendar.startOfDay(for: fallbackDay)
     let lastDay = max(
@@ -96,7 +140,9 @@ public struct CalendarEventTiming: Equatable, Sendable {
     case (nil, nil):
       end = Self.instant(on: lastDay, minute: 10 * 60, in: calendar)
     }
-    self.init(start: start, end: end, allDay: event.allDay, calendar: calendar)
+    self.init(
+      start: start, end: end, allDay: event.allDay, calendar: calendar,
+      hasEndTime: event.allDay || event.endTime != nil)
   }
 
   // MARK: Edits
@@ -104,15 +150,28 @@ public struct CalendarEventTiming: Equatable, Sendable {
   /// Moves the start to `newStart` and the end with it, so the event keeps its
   /// length, as Apple Calendar does when the start changes.
   public mutating func moveStart(to newStart: Date) {
+    guard newStart != start else { return }
+    if !allDay, !hasEndTime {
+      start = newStart
+      end = Self.timed(startingAt: newStart, calendar: calendar).end
+      return
+    }
     let length = wallMinutes(from: start, to: end)
+    let elapsed = end.timeIntervalSince(start)
+    if !allDay, length <= 0, elapsed > 0 {
+      start = newStart
+      end = newStart.addingTimeInterval(elapsed)
+      return
+    }
     let (day, minute) = Self.dayAndMinute(newStart, in: calendar)
     start = newStart
-    end = Self.instant(on: day, minute: minute + length, in: calendar)
+    end = Self.instant(on: day, minute: minute + length, in: calendar, preservingOffsetOf: newStart)
   }
 
   /// Moves the event to start on the day of `day`, at the same clock time,
   /// keeping its length.
   public mutating func setStartDay(_ day: Date) {
+    guard !calendar.isDate(day, inSameDayAs: start) else { return }
     let minute = Self.dayAndMinute(start, in: calendar).minute
     moveStart(to: Self.instant(on: calendar.startOfDay(for: day), minute: minute, in: calendar))
   }
@@ -122,30 +181,42 @@ public struct CalendarEventTiming: Equatable, Sendable {
   public mutating func setStartTime(_ time: Date) {
     let day = Self.dayAndMinute(start, in: calendar).day
     let minute = Self.dayAndMinute(time, in: calendar).minute
-    moveStart(to: Self.instant(on: day, minute: minute, in: calendar))
+    guard minute != Self.dayAndMinute(start, in: calendar).minute else { return }
+    moveStart(to: Self.instant(on: day, minute: minute, in: calendar, preservingOffsetOf: start))
   }
 
   /// Ends the event on the day of `day`, at the same clock time.
   public mutating func setEndDay(_ day: Date) {
+    if !allDay { hasEndTime = true }
+    guard !calendar.isDate(day, inSameDayAs: end) else { return }
     let minute = Self.dayAndMinute(end, in: calendar).minute
     end = Self.instant(on: calendar.startOfDay(for: day), minute: minute, in: calendar)
   }
 
   /// Ends the event at the clock time of `time` (its day is ignored). While the
-  /// event ends on its start day or the next, the end lands at the first moment
-  /// after the start that shows that clock time: a 22:00 start and a 01:00 end
+  /// event ends on its start day or the next, a repeated-hour end keeps its
+  /// current reading when valid; otherwise it lands at the first moment after
+  /// the start that shows that clock time: a 22:00 start and a 01:00 end
   /// make an overnight event, and picking 23:00 afterwards brings the end back
   /// to the start day. An event that ends two or more days after it starts
   /// keeps its end day.
   public mutating func setEndTime(_ time: Date) {
+    if !allDay { hasEndTime = true }
     let minute = Self.dayAndMinute(time, in: calendar).minute
-    let (startDay, startMinute) = Self.dayAndMinute(start, in: calendar)
+    if minute == Self.dayAndMinute(end, in: calendar).minute, allDay || end > start { return }
+    let startDay = Self.dayAndMinute(start, in: calendar).day
     let endDay = Self.dayAndMinute(end, in: calendar).day
     if allDay || days(from: startDay, to: endDay) > 1 {
-      end = Self.instant(on: endDay, minute: minute, in: calendar)
+      end = Self.instant(on: endDay, minute: minute, in: calendar, preservingOffsetOf: end)
     } else {
-      end = Self.instant(
-        on: startDay, minute: minute > startMinute ? minute : minute + 24 * 60, in: calendar)
+      // Keep the current reading when possible. Otherwise try both readings
+      // of today's clock before moving an earlier-looking end to tomorrow.
+      let preferred = Self.instant(on: startDay, minute: minute, in: calendar, preservingOffsetOf: end)
+      let first = Self.instant(on: startDay, minute: minute, in: calendar)
+      let last = Self.instant(on: startDay, minute: minute, in: calendar, repeatedTimePolicy: .last)
+      end = preferred > start ? preferred
+        : [first, last].filter { $0 > start }.min()
+          ?? Self.instant(on: startDay, minute: minute + 24 * 60, in: calendar)
     }
   }
 
@@ -154,6 +225,7 @@ public struct CalendarEventTiming: Equatable, Sendable {
   /// (``setEndTime(_:)``); a value on another day is a day change and is kept
   /// as given.
   public mutating func setEnd(_ newEnd: Date) {
+    if !allDay { hasEndTime = true }
     if calendar.isDate(newEnd, inSameDayAs: end) {
       setEndTime(newEnd)
     } else {
@@ -163,19 +235,58 @@ public struct CalendarEventTiming: Equatable, Sendable {
 
   // MARK: Reading
 
-  /// True when the event ends after it starts: a timed event's end instant is
-  /// later than its start, and an all-day event's last day is not before its
-  /// first.
+  /// Expresses this edited instant in the event's storage zone without changing
+  /// that zone or its recurrence semantics. All-day dates and floating clocks
+  /// remain civil values and are never shifted.
+  public func storing(for event: CalendarTimelineEvent) -> CalendarEventTiming {
+    guard !allDay, let identifier = event.timezone,
+      let zone = TimeZone(identifier: identifier)
+    else { return self }
+    return CalendarEventTiming(
+      start: start, end: end, allDay: false,
+      calendar: LorvexDateFormatters.gregorianCalendar(timeZone: zone), hasEndTime: hasEndTime)
+  }
+
+  /// Interprets the same day and clock labels in `timeZone`. Grid coordinates
+  /// use device-local dates as labels; their drops belong to the product zone.
+  /// An unchanged endpoint keeps its original instant so resizing the other
+  /// end cannot jump between the two readings of a repeated fall-back hour.
+  public func interpretingWallClock(
+    in timeZone: TimeZone, preserving projection: CalendarEventProjection? = nil
+  ) -> CalendarEventTiming {
+    let target = LorvexDateFormatters.gregorianCalendar(timeZone: timeZone)
+    func reinterpret(_ date: Date, original: Date?) -> Date {
+      let parts = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+      if let original,
+        parts == target.dateComponents([.year, .month, .day, .hour, .minute], from: original)
+      { return original }
+      return target.date(from: parts) ?? date
+    }
+    return CalendarEventTiming(
+      start: reinterpret(start, original: projection?.start),
+      end: reinterpret(end, original: projection?.end), allDay: allDay, calendar: target,
+      hasEndTime: hasEndTime)
+  }
+
+  /// A localized zone label at the event's start, including its seasonal offset.
+  public var timeZoneSummary: String {
+    LorvexTimeZoneChoice(identifier: calendar.timeZone.identifier, now: start)?.summary
+      ?? calendar.timeZone.identifier
+  }
+
+  /// An explicit timed end must follow the start. An all-day event's last day
+  /// cannot precede its first. A timed event may have no end.
   public var isValid: Bool {
     allDay
       ? calendar.startOfDay(for: end) >= calendar.startOfDay(for: start)
-      : end > start
+      : !hasEndTime || end > start
   }
 
   /// Days from the start day to the end day: 0 for an event within one day, 1
   /// for an overnight one.
   public var daySpan: Int {
-    days(from: calendar.startOfDay(for: start), to: calendar.startOfDay(for: end))
+    !allDay && !hasEndTime ? 0
+      : days(from: calendar.startOfDay(for: start), to: calendar.startOfDay(for: end))
   }
 
   /// The stored `start_date`: the day of `start` as `yyyy-MM-dd`.
@@ -185,6 +296,7 @@ public struct CalendarEventTiming: Equatable, Sendable {
   /// ends on a later day than it starts, and nil when it starts and ends on one
   /// day.
   public var endDate: String? {
+    guard allDay || hasEndTime else { return nil }
     let key = Self.dayKey(end, in: calendar)
     return key == startDate ? nil : key
   }
@@ -192,8 +304,8 @@ public struct CalendarEventTiming: Equatable, Sendable {
   /// The stored `start_time` as `HH:mm`; nil for an all-day event.
   public var startTime: String? { allDay ? nil : Self.clockKey(start, in: calendar) }
 
-  /// The stored `end_time` as `HH:mm`; nil for an all-day event.
-  public var endTime: String? { allDay ? nil : Self.clockKey(end, in: calendar) }
+  /// The stored `end_time` as `HH:mm`; nil for all-day events or an unknown end.
+  public var endTime: String? { allDay || !hasEndTime ? nil : Self.clockKey(end, in: calendar) }
 
   /// True when this timing and `other` store the same `start_date`,
   /// `end_date`, `start_time`, `end_time`, and `all_day`. Turning All Day on
@@ -220,10 +332,15 @@ public struct CalendarEventTiming: Equatable, Sendable {
   public func scopedDates(
     for occurrence: CalendarTimelineEvent
   ) -> (startDate: String?, endDate: String?) {
-    guard startDate != occurrence.startDate || !keepsDaySpan(of: occurrence) else {
+    let stored = sourceFields(for: occurrence)
+    let original = Self(event: occurrence, fallbackDay: start).sourceFields(for: occurrence)
+    guard stored.startDate != original.startDate
+      || Self.daySpan(startDate: stored.startDate, endDate: stored.endDate)
+        != Self.daySpan(startDate: original.startDate, endDate: original.endDate)
+    else {
       return (nil, nil)
     }
-    return (startDate, endDate(updating: occurrence.endDate))
+    return (stored.startDate, stored.endDate ?? stored.startDate)
   }
 
   /// True when this timing spans as many days as `event` does. A scoped edit
@@ -232,7 +349,19 @@ public struct CalendarEventTiming: Equatable, Sendable {
   /// dates, which start on the series' first day rather than this
   /// occurrence's.
   public func keepsDaySpan(of event: CalendarTimelineEvent) -> Bool {
-    daySpan == Self.daySpan(startDate: event.startDate, endDate: event.endDate)
+    let stored = sourceFields(for: event)
+    let original = Self(event: event, fallbackDay: start).sourceFields(for: event)
+    return Self.daySpan(startDate: stored.startDate, endDate: stored.endDate)
+      == Self.daySpan(startDate: original.startDate, endDate: original.endDate)
+  }
+
+  public mutating func addEndTime() {
+    if end <= start { end = Self.timed(startingAt: start, calendar: calendar).end }
+    hasEndTime = true
+  }
+
+  public mutating func removeEndTime() {
+    hasEndTime = false
   }
 
   /// True when saving this timing over the recurring `occurrence` leaves the
@@ -302,13 +431,26 @@ public struct CalendarEventTiming: Equatable, Sendable {
 
   /// The instant `minute` minutes after the start of `day`; minutes past one
   /// day, or before it, carry into the following or preceding days.
-  private static func instant(on day: Date, minute: Int, in calendar: Calendar) -> Date {
+  private static func instant(
+    on day: Date, minute: Int, in calendar: Calendar, repeatedTimePolicy: Calendar.RepeatedTimePolicy = .first
+  ) -> Date {
     let dayOffset = Int((Double(minute) / Double(24 * 60)).rounded(.down))
     let minuteOfDay = minute - dayOffset * 24 * 60
     let shiftedDay = calendar.date(byAdding: .day, value: dayOffset, to: day) ?? day
     return calendar.date(
-      bySettingHour: minuteOfDay / 60, minute: minuteOfDay % 60, second: 0, of: shiftedDay)
+      bySettingHour: minuteOfDay / 60, minute: minuteOfDay % 60, second: 0, of: shiftedDay,
+      matchingPolicy: .nextTime, repeatedTimePolicy: repeatedTimePolicy)
       ?? shiftedDay
+  }
+
+  private static func instant(
+    on day: Date, minute: Int, in calendar: Calendar, preservingOffsetOf original: Date
+  ) -> Date {
+    let first = instant(on: day, minute: minute, in: calendar)
+    guard calendar.isDate(first, inSameDayAs: original) else { return first }
+    let last = instant(on: day, minute: minute, in: calendar, repeatedTimePolicy: .last)
+    return calendar.timeZone.secondsFromGMT(for: last) == calendar.timeZone.secondsFromGMT(for: original)
+      ? last : first
   }
 
   private static func dayKey(_ date: Date, in calendar: Calendar) -> String {

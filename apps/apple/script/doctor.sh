@@ -97,9 +97,16 @@ if (( CHECK_RELEASE == 1 )); then
   if [[ ! -f "$SECRETS" ]]; then
     bad "secrets/apple-developer.env is missing" "copy it from the previous development machine"
   else
-    for name in APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID MAS_APP_SIGN_IDENTITY MAS_INSTALLER_SIGN_IDENTITY ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_PATH; do
+    for name in APPLE_TEAM_ID MAS_APP_SIGN_IDENTITY MAS_INSTALLER_SIGN_IDENTITY; do
       if grep -q "^export $name=" "$SECRETS"; then ok "$name is defined"; else bad "$name is not defined in secrets/apple-developer.env"; fi
     done
+    if auth_check=$( (set -a; source "$SECRETS" >/dev/null 2>&1; set +a
+      source "$ROOT_DIR/script/lib_altool_auth.sh"
+      configure_altool_auth) 2>&1); then
+      ok "App Store Connect authentication is configured"
+    else
+      bad "App Store Connect authentication is incomplete" "$auth_check"
+    fi
     # Read the identities and the key path in a subshell; print only verdicts.
     # shellcheck disable=SC1090
     eval "$( (set -a; source "$SECRETS" >/dev/null 2>&1; set +a

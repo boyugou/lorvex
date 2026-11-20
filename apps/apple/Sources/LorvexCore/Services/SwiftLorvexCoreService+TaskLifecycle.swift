@@ -277,11 +277,17 @@ extension SwiftLorvexCoreService {
   private func applyDeferMutation(
     _ db: Database, hlc: HlcSession, deviceId: String, id: LorvexTask.ID, date: Date, reason: String?
   ) throws -> Bool {
-    let version = hlc.nextVersionString()
     let planned = SwiftLorvexTaskDeserializers.plannedDateFormatter.string(from: date)
+    return try deferTaskInTransaction(db, hlc: hlc, deviceId: deviceId, id: id,
+      plannedDay: planned, reason: reason).updated
+  }
+
+  func deferTaskInTransaction(_ db: Database, hlc: HlcSession, deviceId: String,
+    id: String, plannedDay: String, reason: String?) throws -> TaskDeferral.DeferralResult {
+    let version = hlc.nextVersionString()
     let result = try TaskDeferral.deferTask(
       db, taskId: TaskId(trusted: id),
-      patch: TaskDeferral.DeferralPatch(plannedDate: planned, lastDeferReason: reason),
+      patch: TaskDeferral.DeferralPatch(plannedDate: plannedDay, lastDeferReason: reason),
       version: version, now: SyncTimestampFormat.syncTimestampNow(),
       nextReminderVersion: { hlc.nextVersionString() })
     if result.updated {
@@ -290,7 +296,7 @@ extension SwiftLorvexCoreService {
         db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
         entityIds: result.shiftedReminderIds)
     }
-    return result.updated
+    return result
   }
 
   // MARK: - Transition funnels

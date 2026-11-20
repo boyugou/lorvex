@@ -25,11 +25,13 @@ extension AppStore {
   /// between those lists right away. A failed read keeps what is shown.
   func reloadReviewEvidenceIfShown() async {
     guard selection == .reviews else { return }
-    let day = try? await core.loadDaySummary(date: selectedReviewDate)
-    let week = try? await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
+    let date = selectedReviewDate
+    let anchor = weeklyReviewAnchor
+    let day = try? await core.loadDaySummary(date: date)
+    let week = try? await core.getWeeklyReviewSnapshot(weekOf: anchor)
     lorvexAnimated(.snappy(duration: 0.18)) {
-      if let day { dayReviewEvidence = day }
-      if let week { weeklyReview = week }
+      if let day, selectedReviewDate == date { dayReviewEvidence = day }
+      if let week, weeklyReviewAnchor == anchor { weeklyReview = week }
     }
   }
 }

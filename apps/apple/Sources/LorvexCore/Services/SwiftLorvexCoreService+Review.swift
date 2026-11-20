@@ -285,7 +285,7 @@ extension SwiftLorvexCoreService {
       func item(_ task: DayReview.TaskItem) -> ReviewTaskSummary {
         ReviewTaskSummary(
           id: task.id, title: task.title, status: task.status, deferCount: Int(task.deferCount),
-          plannedDate: task.plannedDate)
+          dueDate: task.dueDate, plannedDate: task.plannedDate)
       }
       return DayReviewSummary(
         date: summary.date,
@@ -294,6 +294,7 @@ extension SwiftLorvexCoreService {
         createdCount: Int(summary.createdCount),
         dueOpenCount: Int(summary.dueOpenCount),
         dueOpenTasks: summary.dueOpenTasks.map(item),
+        unfinishedTasks: summary.unfinishedTasks.map(item),
         habitsCompleted: Int(summary.habitsCompleted),
         habitsTotal: Int(summary.habitsTotal),
         eventCount: Int(summary.eventCount))

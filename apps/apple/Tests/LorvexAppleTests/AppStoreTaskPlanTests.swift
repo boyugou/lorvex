@@ -435,3 +435,31 @@ func aMenuPlanIsUndoneAndNamedLikeADraggedOne() async throws {
       try await core.loadTask(id: id).plannedDate == before.plannedDate
     })
 }
+
+@MainActor
+@Test("Review's Command-Z and redo refresh the workspace's unfinished and tomorrow lists")
+func undoReviewPlanInWorkspace() async throws {
+  let core = try makeInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  store.selection = .reviews
+  let day = store.selectedReviewDate
+  let next = try #require(LorvexDateFormatters.ymdUTCAddingDays(day, days: 1))
+  let plannedDay = try #require(PlannedDayBridge.storageDate(forLogicalDay: day))
+  let task = try await core.createTask(.init(title: "Finish the draft", plannedDate: plannedDay))
+  await store.selectReviewDay(day)
+  let rows = try #require(store.dayReviewEvidence?.unfinishedTasks)
+  let manager = UndoManager()
+  manager.groupsByEvent = false
+  manager.beginUndoGrouping()
+  await store.arrangeReviewTasks(rows, reviewedOn: day, destination: .day(next), undoManager: manager)
+  manager.endUndoGrouping()
+  #expect(store.dayReviewEvidence?.unfinishedTasks.isEmpty == true)
+  #expect(await store.loadTomorrowAgenda()?.tasks.contains { $0.id == task.id } == true)
+  #expect(manager.canUndo)
+  manager.undo()
+  #expect(try await waitUntil { store.dayReviewEvidence?.unfinishedTasks.map(\.id) == [task.id] })
+  #expect(manager.canRedo)
+  manager.redo()
+  #expect(try await waitUntil { store.dayReviewEvidence?.unfinishedTasks.isEmpty == true })
+}

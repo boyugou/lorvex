@@ -85,17 +85,8 @@ extension SwiftLorvexCoreService {
       ids: ids, operation: "batch_defer",
       deferDetail: DeferChangelogDetail(structuredReason: reason, note: note)
     ) { db, hlc, deviceId, id in
-      let result = try TaskDeferral.deferTask(
-        db, taskId: TaskId(trusted: id),
-        patch: TaskDeferral.DeferralPatch(plannedDate: planned, lastDeferReason: reason),
-        version: hlc.nextVersionString(), now: SyncTimestampFormat.syncTimestampNow(),
-        nextReminderVersion: { hlc.nextVersionString() })
-      if result.updated {
-        try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
-        try self.enqueueUpserts(
-          db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
-          entityIds: result.shiftedReminderIds)
-      }
+      let result = try self.deferTaskInTransaction(db, hlc: hlc, deviceId: deviceId, id: id,
+        plannedDay: planned, reason: reason)
       return result.updated ? .changed : .skipped
     }
   }

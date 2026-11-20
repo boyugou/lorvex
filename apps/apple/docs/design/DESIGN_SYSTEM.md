@@ -407,12 +407,9 @@ panel's subtitle carries the nudge to answer it. A placeholder that repeats the
 header tells the writer nothing. The accessibility label keeps the header word,
 so VoiceOver still announces the field by its name.
 
-An action that belongs to a whole section ("Move All to Tomorrow" over a
-review's open tasks) sits at the trailing end of the section's label line as
-plain accent text in the label's size, with no capsule or bordered chrome; a
-capsule beside a quiet label outweighs the rows it acts on. Each row's own
-version of the action is offered where rows offer actions: on hover on macOS,
-and in the context menu and as a VoiceOver action on every platform.
+A bulk Review action sits beside the section label and displays the number of
+eligible tasks. The first five rows form the collapsed preview. The user can
+expand it and open any row's visible menu with a pointer, touch or VoiceOver.
 
 Settings copy that explains a control is a `Section` footer, never a
 secondary-text row inside the card. A control that needs its own explanation

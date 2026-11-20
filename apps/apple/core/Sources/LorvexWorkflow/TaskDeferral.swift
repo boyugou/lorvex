@@ -46,7 +46,7 @@ public enum TaskDeferral {
 
   /// Multi-field snapshot of the pre-mutation deferral state that
   /// `restoreTaskDeferral` stamps back onto the row.
-  public struct DeferralSnapshot: Sendable {
+  public struct DeferralSnapshot: Equatable, Sendable {
     public var plannedDate: String?
     /// The time planned on `plannedDate`, in minutes since midnight.
     public var plannedTime: Range<Int64>?

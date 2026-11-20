@@ -13,15 +13,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 
 ### Apple (Swift)
 - **Daily workflows, in priority order (Mac product review, 2026-11-20).**
-  1. Carry unfinished plans from Today into tomorrow. Daily Review's
-     still-open query matches a deadline on the reviewed day. A task put on
-     Today without a deadline disappears from this decision. Bring planned
-     and due work together, deduplicate by task ID, and let the user keep,
-     reschedule or park individual items with undo. The current list caps
-     due rows at five and its bulk action receives only visible IDs. Test a
-     day with eight eligible tasks so the action states its real scope.
-     Verify the new plan on
-     Today and Calendar the next day, including a task with both dates.
+  1. Daily Review now opens on the entry and includes every open task planned
+     for or due on the reviewed day. Mac and iPhone offer individual date
+     changes, Someday, counted bulk moves across folded rows and undo.
+     Follow up on real use: can someone finish an evening review and trust
+     next morning's plan without reopening the task list?
   2. Help someone resume work after a meeting. The menu bar already features
      the current or next scheduled task. The Mac Today page presents the
      timeline and untimed work in sequence. Prototype a directly accessible

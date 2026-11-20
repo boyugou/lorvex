@@ -923,10 +923,12 @@ private final class AppEntityWalk {
               await store.completeTask(id: task.id)
             })
         }
-        if let ids = store.dayReviewEvidence?.dueOpenTasks.map(\.id), !ids.isEmpty {
+        if let tasks = store.dayReviewEvidence?.unfinishedTasks, !tasks.isEmpty,
+          let tomorrow = LorvexDateFormatters.ymdUTCAddingDays(store.logicalTodayDateString, days: 1) {
           steps.append(
-            Step(weight: 6, name: "review-move-to-tomorrow \(ids.count)") { [self] in
-              await store.moveReviewTasksToTomorrow(ids: ids)
+            Step(weight: 6, name: "review-move-to-tomorrow \(tasks.count)") { [self] in
+              await store.arrangeReviewTasks(tasks, reviewedOn: store.selectedReviewDate,
+                destination: .day(tomorrow), undoManager: nil)
             })
         }
       } else {

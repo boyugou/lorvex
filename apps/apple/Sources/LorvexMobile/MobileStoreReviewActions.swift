@@ -3,6 +3,29 @@ import LorvexCore
 import SwiftUI
 
 extension MobileStore {
+  func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
+    destination: ReviewTaskDestination, tomorrow: String) async {
+    guard selectedReviewDayIsEditable, selectedReviewDate == day else { return }
+    _ = await mutateTaskReturningToday(affectedIDs: tasks.map(\.id)) {
+      let changes = try await core.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
+      if !changes.isEmpty {
+        let message = switch destination {
+        case .day(let key): MobileReviewCalmCopy.plannedFact(key, tomorrowKey: tomorrow)
+        case .someday: LorvexTask.Status.someday.localizedName
+        }
+        offerUndo(message) { [weak self] in
+          guard let self else { return }
+          _ = await self.mutateTaskReturningToday(affectedIDs: changes.map(\.id)) {
+            try await self.core.restoreReviewTasks(changes, undo: true)
+            return try await self.core.loadToday()
+          }
+        }
+        feedbackProvider.playFeedback(.taskDeferred)
+      }
+      return try await core.loadToday()
+    }
+  }
+
   public var selectedReviewDayIsEditable: Bool {
     selectedReviewDate == logicalTodayString
   }

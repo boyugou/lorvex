@@ -48,15 +48,34 @@ extension AppStore {
       endingOn: weeklyReviewAnchor ?? logicalTodayDateString, timeZone: logicalTimeZone, from: core)
   }
 
-  /// Plan `ids` for tomorrow from the day review, then reload what shows
-  /// them, the review's evidence included.
-  func moveReviewTasksToTomorrow(ids: [LorvexTask.ID]) async {
-    guard !ids.isEmpty else { return }
+  func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
+    destination: ReviewTaskDestination, undoManager: UndoManager?) async {
+    guard selectedReviewDate == day, dailyReviewIsEditable(date: day) else { return }
     await perform {
-      let updatedToday = try await core.batchDeferTasks(ids: ids, until: tomorrowDate())
-      feedbackProvider.playFeedback(.taskDeferred)
-      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      let changes = try await core.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
+      if !changes.isEmpty {
+        registerReviewUndo(changes, undo: true, manager: undoManager)
+        feedbackProvider.playFeedback(.taskDeferred)
+      }
+      today = try await core.loadToday()
       try await afterSelectedTaskMutation()
     }
+  }
+
+  private func registerReviewUndo(_ changes: [ReviewTaskChange], undo: Bool, manager: UndoManager?) {
+    guard let manager else { return }
+    manager.registerUndo(withTarget: self) { [weak manager] store in
+      MainActor.assumeIsolated {
+        store.registerReviewUndo(changes, undo: !undo, manager: manager)
+        Task { @MainActor in
+          await store.perform {
+            try await store.core.restoreReviewTasks(changes, undo: undo)
+            store.today = try await store.core.loadToday()
+            try await store.afterSelectedTaskMutation()
+          }
+        }
+      }
+    }
+    manager.setActionName(Self.planTaskTitle)
   }
 }

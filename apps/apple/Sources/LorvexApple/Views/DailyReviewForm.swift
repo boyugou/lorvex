@@ -125,23 +125,23 @@ struct DailyReviewForm: View {
   /// completes the task, and its title opens it in All Tasks.
   @ViewBuilder
   private var stillOpen: some View {
-    if let summary = evidence, !summary.dueOpenTasks.isEmpty {
+    if let summary = evidence, !summary.unfinishedTasks.isEmpty {
       LorvexReviewTaskList(
-        label: Copy.stillOpenLabel, tasks: summary.dueOpenTasks,
-        hiddenCount: max(0, summary.dueOpenCount - summary.dueOpenTasks.count),
+        label: Copy.stillOpenLabel, tasks: summary.unfinishedTasks,
+        hiddenCount: 0, previewLimit: 5,
         moreLine: Copy.moreCount, identifier: "reviews.daily.stillOpen",
         detail: { task in
-          guard let planned = task.plannedDate, let tomorrowKey, planned >= tomorrowKey else {
-            return nil
-          }
-          return Copy.plannedFact(planned, tomorrowKey: tomorrowKey)
+          let deadline = task.reviewDeadline(relativeTo: store.logicalTodayDateString)
+          guard let planned = task.plannedDate, let tomorrowKey, planned >= tomorrowKey else { return deadline }
+          return [deadline, Copy.plannedFact(planned, tomorrowKey: tomorrowKey)].compactMap { $0 }
+            .joined(separator: " · ")
         },
         completion: isReadOnly ? nil : .init(label: TaskDisplayText.completionToggle(isDone: false)) { id in
           await store.completeTask(id: id, undoManager: undoManager)
         },
         deferral: isReadOnly ? nil : tomorrowKey.map { key in
-          .init(tomorrowKey: key, sectionLabel: Copy.moveSection, rowLabel: Copy.moveRow) { ids in
-            await store.moveReviewTasksToTomorrow(ids: ids)
+          .init(tomorrowKey: key, sectionLabel: Copy.moveSection, rowLabel: Copy.moveRow) { tasks, destination in
+            await store.arrangeReviewTasks(tasks, reviewedOn: date, destination: destination, undoManager: undoManager)
           }
         }
       ) { id in

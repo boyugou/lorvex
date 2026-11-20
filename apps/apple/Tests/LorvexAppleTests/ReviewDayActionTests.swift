@@ -25,7 +25,7 @@ struct ReviewDayActionTests {
   @Test("Only tasks not yet planned for tomorrow or later can move")
   func movableTasks() {
     let deferral = LorvexReviewTaskList.Deferral(
-      tomorrowKey: "2026-04-06", sectionLabel: { _ in "" }, rowLabel: "") { _ in }
+      tomorrowKey: "2026-04-06", sectionLabel: { _ in "" }, rowLabel: "") { _, _ in }
     func task(planned: String?) -> ReviewTaskSummary {
       ReviewTaskSummary(id: "t", title: "T", status: "open", deferCount: 0, plannedDate: planned)
     }

@@ -181,6 +181,16 @@ public struct ReviewTaskSummary: Identifiable, Equatable, Sendable {
   }
 }
 
+extension ReviewTaskSummary {
+  /// A deadline remains visible while the task's working day changes.
+  public func reviewDeadline(relativeTo today: String) -> String? {
+    guard let dueDate, let date = PlannedDayBridge.storageDate(forLogicalDay: dueDate) else { return nil }
+    let day = LorvexDayPhrase.phrase(for: date, logicalDay: today, position: .inline)
+    return String(localized: "a11y.task.due_format", defaultValue: "due \(day)",
+      table: "Localizable", bundle: CoreL10n.bundle)
+  }
+}
+
 /// Objective "evidence" for a single calendar day, backing the Review-surface
 /// day panel. Every field is a pure read over the existing tables — no schema
 /// extension, no derived state stored anywhere.
@@ -215,6 +225,8 @@ public struct DayReviewSummary: Equatable, Sendable {
   /// The first still-open tasks due that day, in the canonical task order;
   /// `dueOpenCount` is the total.
   public var dueOpenTasks: [ReviewTaskSummary]
+  /// All still-actionable work planned for or due on the reviewed day.
+  public var unfinishedTasks: [ReviewTaskSummary]
   public var habitsCompleted: Int
   public var habitsTotal: Int
   public var eventCount: Int
@@ -226,6 +238,7 @@ public struct DayReviewSummary: Equatable, Sendable {
     createdCount: Int,
     dueOpenCount: Int,
     dueOpenTasks: [ReviewTaskSummary] = [],
+    unfinishedTasks: [ReviewTaskSummary]? = nil,
     habitsCompleted: Int,
     habitsTotal: Int,
     eventCount: Int
@@ -236,6 +249,7 @@ public struct DayReviewSummary: Equatable, Sendable {
     self.createdCount = createdCount
     self.dueOpenCount = dueOpenCount
     self.dueOpenTasks = dueOpenTasks
+    self.unfinishedTasks = unfinishedTasks ?? dueOpenTasks
     self.habitsCompleted = habitsCompleted
     self.habitsTotal = habitsTotal
     self.eventCount = eventCount

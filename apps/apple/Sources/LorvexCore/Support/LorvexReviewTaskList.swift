@@ -22,20 +22,8 @@ import SwiftUI
 /// the page reloading its evidence then moves the task out of the list. The
 /// circle's action is also offered to VoiceOver as a named action on the row.
 ///
-/// With a ``Deferral``, the label line carries the section's action at its
-/// trailing end as plain accent text ("Move All to Tomorrow", or "Move to
-/// Tomorrow" over a single task), which plans every listed task that is not
-/// yet planned for tomorrow or later for tomorrow. Each such row offers its
-/// own move in its context menu and as a VoiceOver action, and on macOS also
-/// as a button that takes the place of the row's fact while the pointer is
-/// over the row. A moving row dims until the page reloads its evidence; a
-/// moved task stays listed, since moving its plan does not change its due day,
-/// and its fact then says when it is planned.
-///
-/// The list's identifier names the section; each row's identifier appends the
-/// task id ("review.week.overdue.<id>"), the circle's appends ".complete", the
-/// row's move button ".tomorrow", the section action "tomorrow", and the count
-/// line "more".
+/// Daily review can fold a long list and schedule all eligible tasks in one action.
+/// Each editable row also offers tomorrow, a date picker and Someday.
 public struct LorvexReviewTaskList: View {
   /// What a row's circle does: the platform's "Complete" wording, for its
   /// tooltip and VoiceOver action, and the completion itself.
@@ -57,16 +45,16 @@ public struct LorvexReviewTaskList: View {
     public var tomorrowKey: String
     public var sectionLabel: (Int) -> String
     public var rowLabel: String
-    public var move: ([String]) async -> Void
+    public var arrange: ([ReviewTaskSummary], ReviewTaskDestination) async -> Void
 
     public init(
       tomorrowKey: String, sectionLabel: @escaping (Int) -> String, rowLabel: String,
-      move: @escaping ([String]) async -> Void
+      arrange: @escaping ([ReviewTaskSummary], ReviewTaskDestination) async -> Void
     ) {
       self.tomorrowKey = tomorrowKey
       self.sectionLabel = sectionLabel
       self.rowLabel = rowLabel
-      self.move = move
+      self.arrange = arrange
     }
 
     /// Whether `task` still has a move to make: it is not yet planned for
@@ -79,6 +67,7 @@ public struct LorvexReviewTaskList: View {
 
   private let label: String
   private let tasks: [ReviewTaskSummary]
+  private let previewLimit: Int?
   private let hiddenCount: Int
   private let moreLine: (Int) -> String
   private let identifier: String
@@ -91,6 +80,8 @@ public struct LorvexReviewTaskList: View {
   /// a tap target of about 44pt.
   private static let actionTapPadding: CGFloat = 13
 
+  @State private var expanded = false
+  @State private var scheduling: ReviewTaskSummary?
   @State private var hoveredTaskID: String?
   @State private var completingTaskIDs: Set<String> = []
   @State private var movingTaskIDs: Set<String> = []
@@ -100,6 +91,7 @@ public struct LorvexReviewTaskList: View {
     label: String,
     tasks: [ReviewTaskSummary],
     hiddenCount: Int,
+    previewLimit: Int? = nil,
     moreLine: @escaping (Int) -> String,
     identifier: String,
     detail: @escaping (ReviewTaskSummary) -> String? = { _ in nil },
@@ -109,6 +101,7 @@ public struct LorvexReviewTaskList: View {
   ) {
     self.label = label
     self.tasks = tasks
+    self.previewLimit = previewLimit
     self.hiddenCount = hiddenCount
     self.moreLine = moreLine
     self.identifier = identifier
@@ -121,8 +114,20 @@ public struct LorvexReviewTaskList: View {
   public var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
       labelLine
-      ForEach(tasks) { task in
+      let visibleCount = expanded ? tasks.count : min(previewLimit ?? tasks.count, tasks.count)
+      ForEach(tasks.prefix(visibleCount)) { task in
         row(task)
+      }
+      if let previewLimit, tasks.count > previewLimit {
+        Button {
+          lorvexAnimated(.snappy) { expanded.toggle() }
+        } label: {
+          Label(expanded ? ReviewPlanCopy.less : moreLine(tasks.count - previewLimit),
+            systemImage: expanded ? "chevron.up" : "chevron.down")
+            .font(LorvexDesign.Typography.secondaryText)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityIdentifier("\(identifier).expand")
       }
       if hiddenCount > 0 {
         Text(moreLine(hiddenCount))
@@ -133,6 +138,15 @@ public struct LorvexReviewTaskList: View {
     }
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier(identifier)
+    #if os(macOS) || os(iOS)
+    .sheet(item: $scheduling) { task in
+      if let deferral {
+        ReviewScheduleSheet(task: task, tomorrow: deferral.tomorrowKey) { day in
+          await arrange([task], for: .day(day), with: deferral)
+        }
+      }
+    }
+    #endif
   }
 
   @ViewBuilder
@@ -145,12 +159,19 @@ public struct LorvexReviewTaskList: View {
       // offers each of two flexible children half the row, which would wrap
       // or cut the action even where the row has room.
       let action = Button {
-        Task { await move(movable.map(\.id), with: deferral) }
+        Task { await arrange(movable, for: .day(deferral.tomorrowKey), with: deferral) }
       } label: {
         // The words are one line tall. The label's padding lifts the tap
         // target to about 44pt, and the negative padding outside the button
         // gives the layout that height back.
-        Text(deferral.sectionLabel(movable.count))
+        HStack(spacing: LorvexDesign.Spacing.xs) {
+          Text(deferral.sectionLabel(movable.count))
+          if movable.count > 1 {
+            Text(movable.count, format: .number).monospacedDigit()
+              .padding(.horizontal, LorvexDesign.Spacing.xs)
+              .background(.quaternary, in: Capsule())
+          }
+        }
           .padding(.vertical, Self.actionTapPadding)
           .contentShape(Rectangle())
       }
@@ -180,19 +201,36 @@ public struct LorvexReviewTaskList: View {
       if let completion {
         circle(task, completion: completion)
       }
-      openButton(task, showsFact: !showsMoveButton(task))
+      openButton(task)
         .accessibilityActions {
           if let completion {
             Button(completion.label) { Task { await complete(task, with: completion) } }
           }
-          if let deferral, deferral.canMove(task) {
-            Button(deferral.rowLabel) { Task { await move([task.id], with: deferral) } }
-          }
         }
-      #if os(macOS)
-        if showsMoveButton(task), let deferral {
-          moveButton(task, deferral: deferral)
+      #if os(macOS) || os(iOS)
+      if let deferral {
+        Menu {
+          planningActions(task, deferral: deferral)
+        } label: {
+          Image(systemName: "ellipsis.circle")
+            .foregroundStyle(.secondary)
+            #if os(iOS)
+              .frame(width: 44, height: 44)
+            #else
+              .padding(LorvexDesign.Spacing.xs)
+            #endif
+            .contentShape(Rectangle())
         }
+        #if os(macOS)
+          .menuStyle(.borderlessButton)
+        #else
+          .buttonStyle(.borderless)
+        #endif
+        .fixedSize()
+        .disabled(movingTaskIDs.contains(task.id))
+        .accessibilityLabel(ReviewPlanCopy.schedule + ", " + task.title)
+        .accessibilityIdentifier("\(identifier).\(task.id).plan")
+      }
       #endif
     }
     // The fill reaches past the row on both sides, and the negative padding
@@ -221,55 +259,36 @@ public struct LorvexReviewTaskList: View {
           Task { await complete(task, with: completion) }
         }
       }
-      if let deferral, deferral.canMove(task) {
-        Button(deferral.rowLabel, systemImage: "arrow.uturn.forward") {
-          Task { await move([task.id], with: deferral) }
-        }
-      }
+      if let deferral { planningActions(task, deferral: deferral) }
     }
     .transition(.opacity)
   }
 
-  /// Whether the row shows its move button in place of its fact: on macOS,
-  /// while the pointer is over a row that can move and is not moving yet.
-  private func showsMoveButton(_ task: ReviewTaskSummary) -> Bool {
-    #if os(macOS)
-      guard let deferral, hoveredTaskID == task.id else { return false }
-      return deferral.canMove(task) && !movingTaskIDs.contains(task.id)
-    #else
-      false
-    #endif
-  }
-
-  private func moveButton(_ task: ReviewTaskSummary, deferral: Deferral) -> some View {
-    Button {
-      Task { await move([task.id], with: deferral) }
-    } label: {
-      Label(deferral.rowLabel, systemImage: "arrow.uturn.forward")
-        .labelStyle(.titleAndIcon)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(LorvexDesign.Palette.accent)
-        .contentShape(Rectangle())
+  @ViewBuilder
+  private func planningActions(_ task: ReviewTaskSummary, deferral: Deferral) -> some View {
+    if deferral.canMove(task) {
+      Button(deferral.rowLabel, systemImage: "arrow.uturn.forward") {
+        Task { await arrange([task], for: .day(deferral.tomorrowKey), with: deferral) }
+      }
     }
-    .buttonStyle(.plain)
-    .fixedSize()
-    .accessibilityHidden(true)
-    .accessibilityIdentifier("\(identifier).\(task.id).tomorrow")
+    #if os(macOS) || os(iOS)
+    Button(ReviewPlanCopy.setDate, systemImage: "calendar") { scheduling = task }
+    #endif
+    Button(LorvexTask.Status.someday.localizedName, systemImage: "tray") {
+      Task { await arrange([task], for: .someday, with: deferral) }
+    }
   }
 
-  private func move(_ ids: [String], with deferral: Deferral) async {
-    let fresh = ids.filter { !movingTaskIDs.contains($0) }
+  private func arrange(_ tasks: [ReviewTaskSummary], for destination: ReviewTaskDestination,
+    with deferral: Deferral) async {
+    let fresh = tasks.filter { !movingTaskIDs.contains($0.id) }
     guard !fresh.isEmpty else { return }
-    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.formUnion(fresh) }
-    await deferral.move(fresh)
-    // A saved move has already reloaded the list without these rows; a failed
-    // one leaves them, back at full strength.
-    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.subtract(fresh) }
+    let ids = fresh.map(\.id)
+    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.formUnion(ids) }
+    await deferral.arrange(fresh, destination)
+    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.subtract(ids) }
   }
 
-  /// The circle keeps the glyph's size in the layout. Its label's padding is
-  /// the tap target's reach past the glyph, and the negative padding outside
-  /// the button gives the layout that room back.
   private func circle(_ task: ReviewTaskSummary, completion: Completion) -> some View {
     let isCompleting = completingTaskIDs.contains(task.id)
     let outset = LorvexReviewRowMetrics.circleOutset
@@ -301,19 +320,19 @@ public struct LorvexReviewTaskList: View {
     lorvexAnimated(.snappy(duration: 0.18)) { _ = completingTaskIDs.remove(task.id) }
   }
 
-  private func openButton(_ task: ReviewTaskSummary, showsFact: Bool) -> some View {
+  private func openButton(_ task: ReviewTaskSummary) -> some View {
     Button { openTask(task.id) } label: {
       Group {
         if dynamicTypeSize.isAccessibilitySize {
           VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
             title(task)
-            if showsFact, let fact = detail(task) {
+            if let fact = detail(task) {
               factText(fact)
             }
           }
           .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-          titleLine(task, fact: showsFact ? detail(task) : nil)
+          titleLine(task, fact: detail(task))
         }
       }
       .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xxs))

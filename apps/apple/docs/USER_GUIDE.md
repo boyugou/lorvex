@@ -3649,16 +3649,19 @@ The AI client can also trigger ICS export via the `export_calendar_ics` MCP tool
 
 The **Review** workspace opens on today's review, one page per day:
 
-- One sentence reading the day: how many tasks you finished, how many due
-  tasks are still open, and how many habits you kept.
-- **What moved forward**: the tasks you finished that day. The list shows up
-  to five and counts the rest.
-- **Still open**: the tasks due that day that are not done yet. Tap a task's
-  circle to complete it, or its title to open it. **Move All to Tomorrow**
-  beside the heading plans every listed task for tomorrow; to move one task,
-  use its context menu (or, on macOS, the **Move to Tomorrow** button that
-  appears when you point at the row). A moved task stays listed, since it is
-  still due that day, and says when it is planned.
+- The date and a writing area come first. On a wide Mac window, the day's
+  calendar events and habits sit beside the entry.
+- **What moved forward** shows the tasks you finished that day, up to five
+  with a count of the rest.
+- **Still open** includes tasks planned for the day and tasks due on it. A task
+  with both dates appears once. Expand the list to see more than five.
+  Tap the circle to complete a task, the title to open it, or the row menu
+  to move it to tomorrow, choose a date, or park it in **Someday**. Leaving
+  the row alone keeps its plan. The action beside the heading moves every
+  eligible task, including folded rows, and shows how many will move.
+  Tasks already planned for tomorrow or later keep their dates. Moving a
+  plan preserves the deadline and shifts pending reminders. Undo from
+  **Edit → Undo** on Mac or the **Undo** banner on iPhone and iPad.
 - **Habits**: every habit as it stood that day. Tap a habit to check it in on
   that day, so a check-in you forgot can be made up from the review. A habit
   you skipped that day is left out of the list and of the count of habits you

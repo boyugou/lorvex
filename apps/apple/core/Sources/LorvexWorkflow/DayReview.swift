@@ -26,6 +26,7 @@ public enum DayReview {
     public let deferCount: Int64
     /// The day the task is planned for as `YYYY-MM-DD`, when it has one.
     public let plannedDate: String?
+    public let dueDate: String?
   }
 
   public struct DaySummary: Sendable, Equatable {
@@ -37,6 +38,8 @@ public enum DayReview {
     /// The first still-open tasks due that day, in the canonical task order;
     /// ``dueOpenCount`` is the total.
     public let dueOpenTasks: [TaskItem]
+    /// Every actionable task planned for or due on this day, once per task.
+    public let unfinishedTasks: [TaskItem]
     public let habitsCompleted: Int64
     public let habitsTotal: Int64
     public let eventCount: Int64
@@ -52,7 +55,7 @@ public enum DayReview {
            AND completed_at < ?2
     """
   static let completedItemsSQL = """
-    SELECT id, title, status, defer_count, planned_date
+    SELECT id, title, status, defer_count, planned_date, due_date
          FROM tasks
          WHERE status = 'completed'
            AND tasks.archived_at IS NULL
@@ -67,22 +70,12 @@ public enum DayReview {
            AND created_at >= ?1
            AND created_at < ?2
     """
-  /// Still-open tasks whose `due_date` equals the day — "what didn't get
-  /// done". `due_date` is a bare `YYYY-MM-DD` string, compared directly.
-  static let dueOpenCountSQL = """
-    SELECT COUNT(*) FROM tasks
-         WHERE status IN (\(StatusName.actionableStatusSqlList))
-           AND tasks.archived_at IS NULL
-           AND due_date = ?1
-    """
-  static let dueOpenItemsSQL = """
-    SELECT id, title, status, defer_count, planned_date
-         FROM tasks
-         WHERE status IN (\(StatusName.actionableStatusSqlList))
-           AND tasks.archived_at IS NULL
-           AND due_date = ?1
-         ORDER BY \(TaskRepo.taskOrderBy)
-         LIMIT ?2
+  static let unfinishedItemsSQL = """
+    SELECT id, title, status, defer_count, planned_date, due_date
+      FROM tasks
+      WHERE status IN (\(StatusName.actionableStatusSqlList)) AND archived_at IS NULL
+        AND (planned_date = ?1 OR due_date = ?1)
+      ORDER BY \(TaskRepo.taskOrderBy)
     """
   /// The active habits that belong to the day and the subset whose logged
   /// completion `value` met the target on it. `?1` is the day, `?2` its
@@ -154,22 +147,16 @@ public enum DayReview {
     let completedCount =
       try Int64.fetchOne(db, sql: completedCountSQL, arguments: [window.startUtc, window.endUtc])
       ?? 0
-    let topCompleted = try Row.fetchAll(
-      db, sql: completedItemsSQL,
-      arguments: [window.startUtc, window.endUtc, completedLimit]
-    ).map { row in
-      TaskItem(
-        id: row[0], title: row[1], status: row[2], deferCount: row[3], plannedDate: row[4])
+    func item(_ row: Row) -> TaskItem {
+      TaskItem(id: row[0], title: row[1], status: row[2], deferCount: row[3],
+        plannedDate: row[4], dueDate: row[5])
     }
+    let topCompleted = try Row.fetchAll(db, sql: completedItemsSQL,
+      arguments: [window.startUtc, window.endUtc, completedLimit]).map(item)
     let createdCount =
       try Int64.fetchOne(db, sql: createdCountSQL, arguments: [window.startUtc, window.endUtc]) ?? 0
-    let dueOpenCount = try Int64.fetchOne(db, sql: dueOpenCountSQL, arguments: [day]) ?? 0
-    let dueOpenTasks = try Row.fetchAll(
-      db, sql: dueOpenItemsSQL, arguments: [day, dueOpenLimit]
-    ).map { row in
-      TaskItem(
-        id: row[0], title: row[1], status: row[2], deferCount: row[3], plannedDate: row[4])
-    }
+    let unfinished = try Row.fetchAll(db, sql: unfinishedItemsSQL, arguments: [day]).map(item)
+    let due = unfinished.filter { $0.dueDate == day }
 
     // An unparseable day (the window above already rejects one) matches no
     // pinned weekday and no monthly reminder day.
@@ -193,7 +180,8 @@ public enum DayReview {
 
     return DaySummary(
       date: day, completedCount: completedCount, topCompleted: topCompleted,
-      createdCount: createdCount, dueOpenCount: dueOpenCount, dueOpenTasks: dueOpenTasks,
+      createdCount: createdCount, dueOpenCount: Int64(due.count),
+      dueOpenTasks: Array(due.prefix(Int(dueOpenLimit))), unfinishedTasks: unfinished,
       habitsCompleted: habitsCompleted, habitsTotal: habitsTotal, eventCount: eventCount)
   }
 }

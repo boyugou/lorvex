@@ -1,6 +1,6 @@
 import Foundation
 import LorvexCore
-import LorvexMobile
+@testable import LorvexMobile
 import Testing
 
 /// The store's injected clock must agree with the live write window the
@@ -433,4 +433,22 @@ func mobileCompletingAStillOpenTaskMovesItIntoTheDaysDoneList() async throws {
 
   #expect(store.dayReviewEvidence?.dueOpenTasks.isEmpty == true)
   #expect(store.dayReviewEvidence?.topCompleted.map(\.id) == [created.id])
+}
+
+@MainActor
+@Test("The iPhone Review Undo banner restores a planned-only task")
+func undoReviewPlanOnPhone() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  let plannedDay = try #require(PlannedDayBridge.storageDate(forLogicalDay: mobileReviewToday))
+  let task = try await core.createTask(.init(title: "Read on the train", plannedDate: plannedDay))
+  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  await store.refresh()
+  let rows = try #require(store.dayReviewEvidence?.unfinishedTasks)
+  let next = mobileReviewYmdAddingDays(mobileReviewToday, 1)
+  await store.arrangeReviewTasks(rows, reviewedOn: mobileReviewToday, destination: .day(next), tomorrow: next)
+  #expect(store.undoOffer != nil)
+  #expect(store.dayReviewEvidence?.unfinishedTasks.isEmpty == true)
+  await store.performUndoOffer()
+  #expect(store.dayReviewEvidence?.unfinishedTasks.map(\.id) == [task.id])
+  #expect(store.undoOffer == nil)
 }

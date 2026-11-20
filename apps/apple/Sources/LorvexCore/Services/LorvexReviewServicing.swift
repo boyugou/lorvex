@@ -1,6 +1,13 @@
 import Foundation
 
 public protocol LorvexReviewServicing: Sendable {
+  /// Recheck the reviewed day and the task's displayed plan inside one write transaction.
+  func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
+    destination: ReviewTaskDestination) async throws -> [ReviewTaskChange]
+
+  /// Reverts or reapplies the recorded changes only where the affected fields still match.
+  func restoreReviewTasks(_ changes: [ReviewTaskChange], undo: Bool) async throws
+
   func loadDailyReview(date: String?) async throws -> DailyReviewEntry?
 
   /// Canonical full replacement used by MCP and other link-aware writers.

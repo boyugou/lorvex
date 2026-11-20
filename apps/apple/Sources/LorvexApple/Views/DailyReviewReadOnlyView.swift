@@ -1,10 +1,7 @@
 import LorvexCore
 import SwiftUI
 
-/// The saved review of a past day outside the write window, in the calm page
-/// grammar: the two ratings on disabled rating controls and each written field under
-/// its name, or an empty-state note when nothing was written that day. The
-/// page header above it names the day and reads the day's sentence.
+/// A past entry shows only the writing and ratings recorded on that day.
 struct DailyReviewReadOnlyView: View {
   let review: DailyReviewEntry?
 
@@ -13,20 +10,17 @@ struct DailyReviewReadOnlyView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
       if let review, !isEmptyReview(review) {
-        if review.mood != nil || review.energyLevel != nil {
-          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
-            scale(
-              Copy.feelLabel, value: review.mood, dotLabel: Copy.feelDot, word: Copy.feelWord,
-              identifier: "reviews.readonly.mood")
-            scale(
-              Copy.energyLabel, value: review.energyLevel, dotLabel: Copy.energyDot, word: Copy.energyWord, identifier: "reviews.readonly.energy")
-          }
-        }
         written(Copy.noteLabel, review.summary)
         written(Copy.winsLabel, review.wins)
         written(Copy.blockersLabel, review.blockers)
         written(Copy.learningsLabel, review.learnings)
 
+        if let mood = review.mood {
+          rating(Copy.feelLabel, word: Copy.feelWord(mood), value: Copy.feelDot(mood), id: "reviews.readonly.mood")
+        }
+        if let energy = review.energyLevel {
+          rating(Copy.energyLabel, word: Copy.energyWord(energy), value: Copy.energyDot(energy), id: "reviews.readonly.energy")
+        }
         Label(
           String(localized: "reviews.daily.readonly_note", defaultValue: "Older reviews are read-only.", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "lock"
@@ -54,19 +48,11 @@ struct DailyReviewReadOnlyView: View {
       && (review.learnings ?? "").isEmpty
   }
 
-  /// A saved rating on the same rating control the editable review uses, disabled,
-  /// so a rating reads the same in and past the write window.
-  private func scale(
-    _ label: String, value: Int?, dotLabel: @escaping (Int) -> String,
-    word: @escaping (Int) -> String, identifier: String
-  ) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-      LorvexPageLabel(label)
-      LorvexRatingScale(
-        value: .constant(value), levelLabel: word, accessibilityLabel: dotLabel,
-        identifierPrefix: identifier, isEnabled: false)
-    }
-    .frame(maxWidth: .infinity)
+  private func rating(_ label: String, word: String, value: String, id: String) -> some View {
+    LabeledContent(label, value: word)
+      .font(LorvexDesign.Typography.primaryText)
+      .accessibilityValue("\(word), \(value)")
+      .accessibilityIdentifier(id)
   }
 
   /// A written field under its name; nothing when the field was left empty.

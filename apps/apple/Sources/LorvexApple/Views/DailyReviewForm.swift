@@ -1,113 +1,119 @@
 import LorvexCore
 import SwiftUI
 
-/// The macOS day review on the calm page grammar, read top to bottom as the
-/// day's close: the day and one serif sentence reading what happened, what
-/// moved forward, the due tasks still open (each completes, opens, or moves to
-/// tomorrow, and the section moves them all), the habits as they stood that
-/// day (each checks in on that day), two one-click scales for how it felt,
-/// a look at tomorrow while the review is of today, and one note. Wins,
-/// blockers, and learnings fold behind one line until asked for or already
-/// written. The workspace autosaves every edit, so the page has no Save
-/// button. A past day outside the write window shows the saved review
-/// read-only under the same sentence and lists, its habits without check-in.
+/// A dated journal entry with the day's records close at hand. AnyLayout keeps
+/// the text editor and its selection alive when the context moves below it.
 struct DailyReviewForm: View {
   @Bindable var store: AppStore
-  @Environment(\.undoManager) private var undoManager
-  /// Past day (`YYYY-MM-DD`) the editor is anchored to; `nil` = today.
-  var editingDate: String? = nil
-  var onReturnToToday: () -> Void = {}
+  let date: String
   var isReadOnly = false
   var onEditorFocusChange: @MainActor @Sendable (Bool) -> Void = { _ in }
-
-  @State private var showsMoreFields = false
-  /// The active habits as they stood on the reviewed day.
+  @Environment(\.undoManager) private var undoManager
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+  @State private var focusedField: String?
+  @State private var expandedPrompts: Bool?
   @State private var habits: [LorvexHabit] = []
-  /// Tomorrow's agenda, loaded only while the review is of today.
+  @State private var calendar: CalendarTimelineSnapshot?
   @State private var tomorrow: LorvexAgendaDay?
-
   private typealias Copy = ReviewCalmCopy
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
-        header
-        moved
-        stillOpen
-        habitList
-        if isReadOnly {
-          DailyReviewReadOnlyView(review: store.dailyReview)
-        } else {
-          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
-            scale(
-              Copy.feelLabel, value: $store.dailyReviewMood,
-              dotLabel: Copy.feelDot, word: Copy.feelWord, identifier: "review.mood")
-            scale(
-              Copy.energyLabel, value: $store.dailyReviewEnergy, dotLabel: Copy.energyDot, word: Copy.energyWord,
-              identifier: "review.energy")
+    GeometryReader { geometry in
+      let dayEvents = events
+      let wide = geometry.size.width >= 860 && dynamicTypeSize < .xxLarge
+      let layout = wide
+        ? AnyLayout(HStackLayout(alignment: .top, spacing: LorvexDesign.Spacing.xl))
+        : AnyLayout(VStackLayout(alignment: .leading, spacing: LorvexDesign.Spacing.xl))
+      ScrollView {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
+          header
+          Divider()
+          layout {
+            VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
+              if isReadOnly {
+                DailyReviewReadOnlyView(review: store.dailyReview?.date == date ? store.dailyReview : nil)
+              } else {
+                notes
+                ratings
+              }
+              moved
+              stillOpen
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if !habits.isEmpty || !dayEvents.isEmpty || (isReviewingToday && tomorrow != nil) {
+              VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
+                if !dayEvents.isEmpty {
+                  agenda(LorvexAgendaDay(key: date, events: dayEvents, tasks: []),
+                    label: String(localized: SidebarSelection.calendar.macOSLocalizedTitle),
+                    identifier: "reviews.daily.calendar")
+                }
+                habitList
+                tomorrowSection
+              }
+              .frame(width: wide ? min(338, geometry.size.width * 0.31) : nil, alignment: .leading)
+              .frame(maxWidth: wide ? nil : .infinity, alignment: .leading)
+            }
           }
-          tomorrowSection
-          notes
         }
+        .frame(maxWidth: wide ? 1020 : 660, alignment: .leading)
+        .padding(LorvexDesign.Spacing.xl)
+        .frame(maxWidth: .infinity)
       }
-      .padding(.horizontal, LorvexDesign.Spacing.xl)
-      .padding(.vertical, LorvexDesign.Spacing.l)
-      .frame(maxWidth: 680, alignment: .leading)
-      .frame(maxWidth: .infinity)
+    }
+    .background(alignment: .top) {
+      LinearGradient(colors: [LorvexDesign.Palette.Destination.review.opacity(0.065), .clear],
+        startPoint: .top, endPoint: .bottom)
+        .frame(height: 250).ignoresSafeArea(edges: .top)
     }
     .background(.background)
+    .onChange(of: focusedField != nil) { _, focused in onEditorFocusChange(focused) }
     .task(id: store.dayReviewReadKey) { await loadPageReads() }
+    .task(id: [UInt64(store.calendarTimelineLoadToken), store.reviewReadGeneration]) {
+      if let loaded = try? await store.core.loadCalendarTimeline(from: date, to: date), !Task.isCancelled {
+        calendar = loaded
+      }
+    }
   }
 
-  private var isReviewingToday: Bool {
-    store.selectedReviewDate == store.logicalTodayDateString
-  }
+  private var isReviewingToday: Bool { date == store.logicalTodayDateString }
 
   private var tomorrowKey: String? {
     LorvexDateFormatters.ymdUTCAddingDays(store.logicalTodayDateString, days: 1)
   }
 
+  private var evidence: DayReviewSummary? {
+    store.dayReviewEvidence.flatMap { $0.date == date ? $0 : nil }
+  }
+
+  private var events: [CalendarTimelineEvent] {
+    calendar?.groupingDuplicates(store.calendarDuplicateGrouping).eventsOccurring(on: date) ?? []
+  }
+
   private func loadPageReads() async {
-    let date = store.selectedReviewDate
-    if let loaded = await store.loadReviewHabits(date: date), date == store.selectedReviewDate {
-      habits = loaded
-    }
-    if date == store.logicalTodayDateString {
-      if let loaded = await store.loadTomorrowAgenda() { tomorrow = loaded }
-    } else {
-      tomorrow = nil
+    if let loaded = await store.loadReviewHabits(date: date), !Task.isCancelled { habits = loaded }
+    if isReviewingToday, let loaded = await store.loadTomorrowAgenda(), !Task.isCancelled {
+      tomorrow = loaded
     }
   }
 
-  /// The day and its sentence, set apart by the same `xs` gap the week review's
-  /// header uses, so the sentence keeps its place under the date when the
-  /// workspace switches between Daily and Weekly.
   private var header: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-      Text(TodayCalmCopy.dateLine(logicalDay: store.selectedReviewDate))
-        .font(LorvexDesign.Typography.pageLabel)
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+      Label {
+        Text(String(localized: SidebarSelection.reviews.macOSLocalizedTitle))
+      } icon: {
+        Image(systemName: "book.pages").foregroundStyle(LorvexDesign.Palette.Destination.review)
+      }
+        .font(LorvexDesign.Typography.primaryEmphasis)
         .foregroundStyle(.secondary)
+      Text(TodayCalmCopy.dateLine(logicalDay: date), serifVoice: .pageSentence)
+        .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("reviews.daily.date")
-      if let summary = store.dayReviewEvidence {
-        Text(Copy.sentence(LorvexReviewSentence.parts(summary)), serifVoice: .pageSentence)
-          .fixedSize(horizontal: false, vertical: true)
-          .accessibilityAddTraits(.isHeader)
-          .accessibilityIdentifier("reviews.daily.headline")
-      }
-      if editingDate != nil {
-        Button(action: onReturnToToday) {
-          Text(LocalizedStringResource("reviews.daily.back_to_today", defaultValue: "Back to Today", table: "Localizable", bundle: LorvexL10n.bundle))
-        }
-        .buttonStyle(.link)
-        .padding(.top, LorvexDesign.Spacing.xs)
-        .accessibilityIdentifier("reviews.daily.backToToday")
-      }
     }
   }
 
   @ViewBuilder
   private var moved: some View {
-    if let summary = store.dayReviewEvidence, !summary.topCompleted.isEmpty {
+    if let summary = evidence, !summary.topCompleted.isEmpty {
       LorvexReviewMovedList(
         label: Copy.movedLabel, tasks: summary.topCompleted,
         hiddenCount: summary.hiddenCompletedCount, moreLine: Copy.moreCount,
@@ -119,7 +125,7 @@ struct DailyReviewForm: View {
   /// completes the task, and its title opens it in All Tasks.
   @ViewBuilder
   private var stillOpen: some View {
-    if let summary = store.dayReviewEvidence, !summary.dueOpenTasks.isEmpty {
+    if let summary = evidence, !summary.dueOpenTasks.isEmpty {
       LorvexReviewTaskList(
         label: Copy.stillOpenLabel, tasks: summary.dueOpenTasks,
         hiddenCount: max(0, summary.dueOpenCount - summary.dueOpenTasks.count),
@@ -130,10 +136,10 @@ struct DailyReviewForm: View {
           }
           return Copy.plannedFact(planned, tomorrowKey: tomorrowKey)
         },
-        completion: .init(label: TaskDisplayText.completionToggle(isDone: false)) { id in
+        completion: isReadOnly ? nil : .init(label: TaskDisplayText.completionToggle(isDone: false)) { id in
           await store.completeTask(id: id, undoManager: undoManager)
         },
-        deferral: tomorrowKey.map { key in
+        deferral: isReadOnly ? nil : tomorrowKey.map { key in
           .init(tomorrowKey: key, sectionLabel: Copy.moveSection, rowLabel: Copy.moveRow) { ids in
             await store.moveReviewTasksToTomorrow(ids: ids)
           }
@@ -152,9 +158,9 @@ struct DailyReviewForm: View {
     if !habits.isEmpty {
       LorvexReviewHabitList(
         label: Copy.habitsLabel, habits: habits, checkInLabel: Copy.checkIn,
-        identifier: "reviews.daily.habits", isEnabled: !isReadOnly
+        identifier: "reviews.daily.habits", isEnabled: !isReadOnly, layout: .checklist
       ) { habit in
-        let date = store.selectedReviewDate
+        guard date == store.selectedReviewDate else { return }
         await store.checkInHabit(habit, on: date)
         if let loaded = await store.loadReviewHabits(date: date), date == store.selectedReviewDate {
           lorvexAnimated(.snappy(duration: 0.18)) { habits = loaded }
@@ -167,55 +173,78 @@ struct DailyReviewForm: View {
   /// day closes on what comes next.
   @ViewBuilder
   private var tomorrowSection: some View {
-    if isReviewingToday, let tomorrow {
-      LorvexReviewTomorrow(
-        label: Copy.tomorrowLabel, day: tomorrow, emptyLine: Copy.tomorrowEmpty,
-        allDay: TodayCalmCopy.allDay, timeRange: TodayCalmCopy.timeRange(start:end:),
-        identifier: "reviews.daily.tomorrow"
-      ) { id in
-        store.selection = .tasks
-        store.selectedTaskID = id
-      }
+    if isReviewingToday, let tomorrow, tomorrow.key == tomorrowKey {
+      let day = LorvexAgendaDay(key: tomorrow.key,
+        events: store.calendarDuplicateGrouping.events(tomorrow.events), tasks: tomorrow.tasks)
+      agenda(day, label: Copy.tomorrowLabel, identifier: "reviews.daily.tomorrow")
+    }
+  }
+
+  private func agenda(_ day: LorvexAgendaDay, label: String, identifier: String) -> some View {
+    DailyReviewAgenda(day: day, title: label, identifier: identifier) { event in
+      store.showEventInCalendar(event, onDayKey: day.key)
+    } openTask: { id in
+      store.selection = .tasks
+      store.selectedTaskID = id
     }
   }
 
   private var notes: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      LorvexPageLabel(Copy.noteLabel)
-      editor(
-        Copy.notePrompt, label: Copy.noteLabel, text: $store.dailyReviewSummaryDraft,
-        minHeight: 90, id: "review.summary")
-      if showsMoreFields || hasMoreText {
-        labeled(Copy.winsLabel) {
-          editor(
-            Copy.winsPrompt, label: Copy.winsLabel, text: $store.dailyReviewWinsDraft, minHeight: 60,
-            id: "review.wins")
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+      HStack {
+        Label(Copy.reflection, systemImage: "pencil.line")
+          .font(LorvexDesign.Typography.detailTitle)
+          .accessibilityAddTraits(.isHeader)
+        Spacer()
+        if store.dailyReview?.date == date, store.dailyReviewDraftMatchesLoaded {
+          Label(Copy.saved, systemImage: "checkmark")
+            .font(LorvexDesign.Typography.tertiaryText)
+            .foregroundStyle(.secondary)
         }
-        labeled(Copy.blockersLabel) {
-          editor(
-            Copy.blockersPrompt, label: Copy.blockersLabel, text: $store.dailyReviewBlockersDraft,
-            minHeight: 60, id: "review.blockers")
-        }
-        labeled(Copy.learningsLabel) {
-          editor(
-            Copy.learningsPrompt, label: Copy.learningsLabel, text: $store.dailyReviewLearningsDraft,
-            minHeight: 60, id: "review.learnings")
-        }
-      } else {
-        Button {
-          lorvexAnimated(.snappy) { showsMoreFields = true }
-        } label: {
-          HStack(spacing: LorvexDesign.Spacing.xxs) {
-            Text(Copy.moreFields)
-            Image(systemName: "chevron.down").imageScale(.small)
-          }
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
-          .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("reviews.daily.more")
       }
+      editor(Copy.notePrompt, label: Copy.reflection, text: $store.dailyReviewSummaryDraft,
+        minHeight: 96, id: "review.summary")
+      Divider()
+      DisclosureGroup(isExpanded: Binding(
+        get: { expandedPrompts ?? hasMoreText },
+        set: { expandedPrompts = $0 }
+      )) {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+          labeled(Copy.winsLabel) {
+            editor(Copy.winsPrompt, label: Copy.winsLabel, text: $store.dailyReviewWinsDraft,
+              minHeight: 40, id: "review.wins")
+          }
+          labeled(Copy.blockersLabel) {
+            editor(Copy.blockersPrompt, label: Copy.blockersLabel, text: $store.dailyReviewBlockersDraft,
+              minHeight: 40, id: "review.blockers")
+          }
+          labeled(Copy.learningsLabel) {
+            editor(Copy.learningsPrompt, label: Copy.learningsLabel, text: $store.dailyReviewLearningsDraft,
+              minHeight: 40, id: "review.learnings")
+          }
+        }
+        .padding(.vertical, LorvexDesign.Spacing.s)
+      } label: {
+        Text(Copy.moreFields).font(LorvexDesign.Typography.secondaryText)
+      }
+      .accessibilityIdentifier("reviews.daily.more")
+    }
+    .padding(LorvexDesign.Spacing.l)
+    .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card))
+    .overlay {
+      RoundedRectangle(cornerRadius: LorvexDesign.Radius.card)
+        .strokeBorder(focusedField == nil ? LorvexDesign.Palette.separator : LorvexDesign.Palette.accent,
+          lineWidth: focusedField == nil ? 1 : 1.5)
+        .allowsHitTesting(false)
+    }
+  }
+
+  private var ratings: some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+      scale(Copy.feelLabel, symbol: "face.smiling", value: $store.dailyReviewMood,
+        dotLabel: Copy.feelDot, word: Copy.feelWord, identifier: "review.mood")
+      scale(Copy.energyLabel, symbol: "bolt", value: $store.dailyReviewEnergy,
+        dotLabel: Copy.energyDot, word: Copy.energyWord, identifier: "review.energy")
     }
   }
 
@@ -225,48 +254,34 @@ struct DailyReviewForm: View {
   }
 
   private func scale(
-    _ label: String, value: Binding<Int?>,
+    _ label: String, symbol: String, value: Binding<Int?>,
     dotLabel: @escaping (Int) -> String, word: @escaping (Int) -> String, identifier: String
   ) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-      LorvexPageLabel(label)
-      LorvexRatingScale(
-        value: value, levelLabel: word, accessibilityLabel: dotLabel,
-        identifierPrefix: identifier)
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+      Label(label, systemImage: symbol)
+        .font(LorvexDesign.Typography.primaryEmphasis)
+        .accessibilityAddTraits(.isHeader)
+      LorvexRatingScale(value: value, levelLabel: word, accessibilityLabel: dotLabel,
+        identifierPrefix: identifier, compact: true)
     }
-    .frame(maxWidth: .infinity)
   }
 
-  /// A written field keeps its name above it, since its placeholder is gone.
   private func labeled(_ label: String, @ViewBuilder field: () -> some View) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-      Text(label)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-        .accessibilityHidden(true)
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+      Text(label).font(LorvexDesign.Typography.pageLabel)
       field()
     }
-    .padding(.top, LorvexDesign.Spacing.xs)
   }
 
-  /// `prompt` asks the question the field wants answered; `label` names the
-  /// field for VoiceOver.
   private func editor(
     _ prompt: String, label: String, text: Binding<String>, minHeight: CGFloat, id: String
   ) -> some View {
-    LorvexPlainTextEditor(
-      text: text,
-      placeholder: prompt,
-      minHeight: minHeight,
-      fontSize: 14,
-      onFocusChange: onEditorFocusChange
-    )
-    .padding(LorvexDesign.Spacing.s)
-    .background(
-      LorvexDesign.Palette.insetFill,
-      in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous)
-    )
-    .accessibilityLabel(label)
-    .accessibilityIdentifier(id)
+    LorvexPlainTextEditor(text: text, placeholder: prompt, minHeight: minHeight,
+      fontSize: 15, growsWithContent: true, onFocusChange: { focused in
+        if focused { focusedField = id }
+        else if focusedField == id { focusedField = nil }
+      })
+      .accessibilityLabel(label)
+      .accessibilityIdentifier(id)
   }
 }

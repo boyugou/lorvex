@@ -35,12 +35,7 @@ extension AppStore {
   @discardableResult
   func beginEditingDailyReview(date: String) async -> Bool {
     guard dailyReviewIsEditable(date: date) else { return false }
-    guard await settleDailyReviewDraftBeforeMoving() else { return false }
-    let today = logicalTodayDateString
-    dailyReviewEditingDate = date == today ? nil : date
-    selectedReviewDate = date
-    await reloadDailyReviewForEditor()
-    return true
+    return await openReviewEntry(date: date)
   }
 
   /// Return the editor to today's entry, flushing the current day's unsaved
@@ -50,21 +45,10 @@ extension AppStore {
     await selectReviewDay(logicalTodayDateString)
   }
 
-  /// The date strip's unified day selection. Editable days (today or inside the
-  /// write window) open in the daily editor via ``beginEditingDailyReview``; an
-  /// older day loads its saved review read-only — `dailyReview` is populated for
-  /// display while `dailyReviewEditingDate` stays `nil` so the autosave never
-  /// arms on a day the core would reject. Either way the day's objective
-  /// evidence is reloaded for the right-hand panel.
+  /// Opens the entry and its evidence for the chosen date. Older entries use
+  /// the same navigation and stay outside the interactive write window.
   func selectReviewDay(_ date: String) async {
-    if dailyReviewIsEditable(date: date) {
-      guard await beginEditingDailyReview(date: date) else { return }
-    } else {
-      guard await settleDailyReviewDraftBeforeMoving() else { return }
-      dailyReviewEditingDate = nil
-      selectedReviewDate = date
-      await reloadDailyReviewForEditor()
-    }
+    guard await openReviewEntry(date: date) else { return }
     await loadDayReviewEvidence(date: date)
   }
 
@@ -167,16 +151,33 @@ extension AppStore {
     await flushDailyReviewDraftIfNeeded()
   }
 
-  /// Loads the editor's day and makes the fields say exactly what it holds. A
-  /// later selection owns the editor from the moment it moves it, so a result for
-  /// a day the editor already left is dropped.
-  private func reloadDailyReviewForEditor() async {
-    let date = dailyReviewEditorDate
-    await perform {
+  /// Keep the old editor on its own day while the destination is being read.
+  /// Switching the date and its draft together prevents text typed during a
+  /// slow read from landing on the destination or disappearing on arrival.
+  private func openReviewEntry(date: String) async -> Bool {
+    dailyReviewStorage.selectionRequest &+= 1
+    let request = dailyReviewStorage.selectionRequest
+    let sourceDay = selectedReviewDate
+    let entryBeforeRead = dailyReview
+    do {
       let loaded = try await core.loadDailyReview(date: date)
-      guard dailyReviewEditorDate == date else { return }
+      guard dailyReviewStorage.selectionRequest == request, selectedReviewDate == sourceDay else { return false }
+      if date == sourceDay {
+        // A peer update or an autosave may have advanced this entry during the read.
+        if dailyReview == entryBeforeRead { adoptLoadedDailyReview(loaded, readFor: date) }
+        return await settleDailyReviewDraftBeforeMoving()
+      }
+      guard await settleDailyReviewDraftBeforeMoving(),
+        dailyReviewStorage.selectionRequest == request, selectedReviewDate == sourceDay
+      else { return false }
+      dailyReviewEditingDate = dailyReviewIsEditable(date: date) && date != logicalTodayDateString ? date : nil
+      selectedReviewDate = date
       dailyReview = loaded
       syncDailyReviewDraft()
+      return true
+    } catch {
+      if dailyReviewStorage.selectionRequest == request { await presentUserFacingError(error) }
+      return false
     }
   }
 

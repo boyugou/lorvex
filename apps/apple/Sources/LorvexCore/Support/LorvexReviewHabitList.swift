@@ -184,7 +184,8 @@ public struct LorvexHabitRingTile: View {
   }
 }
 
-/// The habits on a day review, as they stood on the reviewed day, in a grid:
+/// Habits on the reviewed day. The Mac journal checklist puts each name
+/// beside its symbol and check-in, with a tally above the rows. In a grid,
 /// each habit is its ring over its name (``LorvexHabitRingTile``), and a tap
 /// checks it in on that day (``LorvexHabitCheckIn``). A habit counted more
 /// than once a day shows its count under its name. As many columns as the
@@ -198,9 +199,11 @@ public struct LorvexHabitRingTile: View {
 /// leave while the write and the reload that follows it run, then the
 /// reloaded habits take over, so a failed write falls back to what is stored.
 ///
-/// The grid's identifier names the section; each tile's identifier appends
+/// The identifier names the section; each habit's identifier appends
 /// the habit id.
 public struct LorvexReviewHabitList: View {
+  public enum Layout { case grid, checklist }
+  private let layout: Layout
   private let label: String
   private let habits: [LorvexHabit]
   private let checkInLabel: String
@@ -217,8 +220,9 @@ public struct LorvexReviewHabitList: View {
 
   public init(
     label: String, habits: [LorvexHabit], checkInLabel: String, identifier: String,
-    isEnabled: Bool = true, checkIn: @escaping (LorvexHabit) async -> Void
+    isEnabled: Bool = true, layout: Layout = .grid, checkIn: @escaping (LorvexHabit) async -> Void
   ) {
+    self.layout = layout
     self.label = label
     self.habits = habits
     self.checkInLabel = checkInLabel
@@ -229,13 +233,21 @@ public struct LorvexReviewHabitList: View {
 
   public var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      LorvexPageLabel(label)
-      LorvexBalancedGrid(
-        minimumColumnWidth: columnWidth, maximumColumnWidth: maximumColumnWidth,
-        columnSpacing: LorvexDesign.Spacing.s, rowSpacing: LorvexDesign.Spacing.m
-      ) {
-        ForEach(habits) { habit in
-          tile(habit)
+      if layout == .checklist {
+        let met = habits.filter {
+          (pendingCounts[$0.id] ?? $0.completionsToday) >= max($0.targetCount, 1)
+        }.count
+        LorvexPageLabel(label, trailing: "\(met.formatted()) / \(habits.count.formatted())")
+        VStack(spacing: 0) {
+          ForEach(habits) { habit in tile(habit) }
+        }
+      } else {
+        LorvexPageLabel(label)
+        LorvexBalancedGrid(
+          minimumColumnWidth: columnWidth, maximumColumnWidth: maximumColumnWidth,
+          columnSpacing: LorvexDesign.Spacing.s, rowSpacing: LorvexDesign.Spacing.m
+        ) {
+          ForEach(habits) { habit in tile(habit) }
         }
       }
     }
@@ -252,16 +264,38 @@ public struct LorvexReviewHabitList: View {
     return Button {
       Task { await perform(stored) }
     } label: {
-      LorvexHabitRingTile(
-        name: habit.name,
-        symbol: LorvexSymbol.name(for: habit.icon, fallback: "repeat"),
-        fraction: Double(habit.completionsToday) / Double(target),
-        tint: LorvexHabitPalette.baseColor(for: habit),
-        diameter: min(ringDiameter, 48),
-        detail: target > 1 ? "\(habit.completionsToday.formatted())/\(target.formatted())" : nil,
-        segments: target)
-        .padding(.vertical, LorvexDesign.Spacing.xxs)
+      if layout == .checklist {
+        HStack(spacing: LorvexDesign.Spacing.s) {
+          Image(systemName: LorvexSymbol.name(for: habit.icon, fallback: "repeat"))
+            .foregroundStyle(LorvexHabitPalette.baseColor(for: habit))
+            .frame(width: 22)
+          Text(userContent: habit.name)
+            .font(LorvexDesign.Typography.primaryText)
+            .foregroundStyle(isMet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+          Spacer(minLength: LorvexDesign.Spacing.s)
+          if target > 1 {
+            Text("\(habit.completionsToday.formatted())/\(target.formatted())")
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(.secondary)
+          }
+          LorvexHabitCheckRing(fraction: Double(habit.completionsToday) / Double(target),
+            tint: isMet ? LorvexDesign.Palette.done : LorvexHabitPalette.baseColor(for: habit),
+            diameter: 16, segments: target)
+        }
+        .padding(.vertical, LorvexDesign.Spacing.sm)
         .contentShape(Rectangle())
+      } else {
+        LorvexHabitRingTile(
+          name: habit.name,
+          symbol: LorvexSymbol.name(for: habit.icon, fallback: "repeat"),
+          fraction: Double(habit.completionsToday) / Double(target),
+          tint: LorvexHabitPalette.baseColor(for: habit),
+          diameter: min(ringDiameter, 48),
+          detail: target > 1 ? "\(habit.completionsToday.formatted())/\(target.formatted())" : nil,
+          segments: target)
+          .padding(.vertical, LorvexDesign.Spacing.xxs)
+          .contentShape(Rectangle())
+      }
     }
     .buttonStyle(LorvexTileButtonStyle())
     .disabled(!isEnabled || action == .none)

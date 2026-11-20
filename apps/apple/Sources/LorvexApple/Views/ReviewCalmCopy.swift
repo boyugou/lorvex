@@ -1,32 +1,13 @@
 import Foundation
 import LorvexCore
 
-/// The words of the macOS day and week reviews. The review-sentence keys
-/// match the iPhone copy so both platforms word the same day the same way.
+/// Localized text for the Mac daily journal and weekly digest.
 enum ReviewCalmCopy {
-  /// The review sentence: each part worded, joined the way its language
-  /// separates sentences (``LorvexReviewSentence/join(_:)``).
-  static func sentence(_ parts: [LorvexReviewSentence.Part]) -> String {
-    LorvexReviewSentence.join(parts.map(word))
+  static var reflection: String {
+    String(localized: "reviews.daily.reflection", defaultValue: "Reflection", table: "Localizable", bundle: LorvexL10n.bundle)
   }
-
-  static func word(_ part: LorvexReviewSentence.Part) -> String {
-    switch part {
-    case .quiet:
-      return String(localized: "review.calm.quiet", defaultValue: "A quiet day.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .finished(let count):
-      return String(localized: "review.calm.finished", defaultValue: "You finished \(count) tasks.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .nothingFinished:
-      return String(localized: "review.calm.nothing_finished", defaultValue: "Nothing was finished.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .stillDue(let count):
-      return String(localized: "review.calm.still_due", defaultValue: "\(count) due tasks are still open.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .habitsAll:
-      return String(localized: "review.calm.habits_all", defaultValue: "Every habit kept.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .habitsSome(let kept, let total):
-      return String(localized: "review.calm.habits_some", defaultValue: "\(kept)\u{00A0}of\u{00A0}\(total) habits kept.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .habitsNone:
-      return String(localized: "review.calm.habits_none", defaultValue: "No habits kept.", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
+  static var saved: String {
+    String(localized: "reviews.daily.saved", defaultValue: "Saved", table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   static var feelLabel: String { String(localized: "review.calm.feel", defaultValue: "How did it feel?", table: "Localizable", bundle: LorvexL10n.bundle) }
@@ -53,7 +34,6 @@ enum ReviewCalmCopy {
   }
   static var movedLabel: String { String(localized: "review.calm.moved", defaultValue: "What moved forward", table: "Localizable", bundle: LorvexL10n.bundle) }
   static var stillOpenLabel: String { String(localized: "review.calm.still_open", defaultValue: "Still open", table: "Localizable", bundle: LorvexL10n.bundle) }
-  /// "2 more": the tasks a capped review list leaves out.
   /// Names one energy choice, 1–5.
   static func energyWord(_ level: Int) -> String {
     switch level {

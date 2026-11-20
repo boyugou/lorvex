@@ -4,6 +4,8 @@ import LorvexCore
 /// Holds runtime state for the daily-review and weekly-review domains:
 /// the loaded review entry, mood/energy scores, and all section drafts.
 struct AppStoreDailyReviewStorage {
+  /// Only the most recent date request may replace the visible entry.
+  var selectionRequest = 0
   var dailyReview: DailyReviewEntry?
   /// Date (`YYYY-MM-DD`) the daily editor is anchored to; `nil` means today.
   /// Only dates inside the staleness write window are ever set here.
@@ -35,6 +37,8 @@ struct AppStoreDailyReviewStorage {
   var weeklyReviewAnchor: String?
 
   mutating func reset() {
+    selectionRequest &+= 1
+    dailyReviewEditingDate = nil
     dailyReview = nil
     dailyReviewSummaryDraft = ""
     dailyReviewWinsDraft = ""

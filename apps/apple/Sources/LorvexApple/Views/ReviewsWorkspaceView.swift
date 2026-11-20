@@ -29,23 +29,19 @@ struct ReviewsWorkspaceView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ReviewsWorkspaceHeader()
-
-      Divider()
-
-      // Day scope is one calm reading column; Week scope keeps the digest
-      // beside the week's evidence.
       switch mode {
       case .daily:
         DailyReviewForm(
           store: store,
-          editingDate: store.dailyReviewEditingDate,
-          onReturnToToday: { Task { await store.endEditingDailyReview() } },
+          date: store.selectedReviewDate,
           isReadOnly: !store.selectedReviewDayIsEditable,
           onEditorFocusChange: { dailyReviewEditorFocused = $0 }
         )
+        .id(store.selectedReviewDate)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
       case .weekly:
+        ReviewsWorkspaceHeader()
+        Divider()
         WeeklyReviewPage(store: store) { date in
           Task {
             await store.selectReviewDay(date)
@@ -95,6 +91,7 @@ struct ReviewsWorkspaceView: View {
         Task { await store.flushDailyReviewDraftIfNeeded() }
       }
     }
+    .onChange(of: store.selectedReviewDate) { dailyReviewEditorFocused = false }
     .onDisappear {
       dailyReviewEditorFocused = false
       Task { await store.flushDailyReviewDraftIfNeeded() }

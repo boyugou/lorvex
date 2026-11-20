@@ -132,12 +132,11 @@ Rules that follow from the table:
   `.secondary` or `.tertiary` inside it compounds: a count beside the title
   would measure about 2.3:1 and a fold chevron about 1.3:1.
 
-- Review ratings are five equal-sized, named choices (`LorvexRatingScale`).
-  The selected choice has an accent border, a tinted fill, and a checkmark;
-  unchosen choices keep their number and word. They do not fill cumulatively,
-  and choosing the selected value again clears it. Every choice names its
-  meaning before selection. Columns adapt to the labels’ measured width, and
-  the controls stack at large text sizes.
+- Review ratings offer five named choices. The Mac journal presents each scale
+  as a compact strip of words. On touch surfaces each choice also shows its
+  number. A checkmark and tint indicate the selection. Choosing it again
+  clears the rating. The layout adapts to translated labels and stacks at
+  large text sizes.
 
 - A button that is a plain row in a `List` or `Form` states its color for the
   whole row, because SwiftUI colors the title from state it never applies to

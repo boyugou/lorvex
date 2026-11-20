@@ -12,6 +12,32 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 ## Next up
 
 ### Apple (Swift)
+- **Daily workflows, in priority order (Mac product review, 2026-11-20).**
+  1. Carry unfinished plans from Today into tomorrow. Daily Review's
+     still-open query matches a deadline on the reviewed day. A task put on
+     Today without a deadline disappears from this decision. Bring planned
+     and due work together, deduplicate by task ID, and let the user keep,
+     reschedule or park individual items with undo. The current list caps
+     due rows at five and its bulk action receives only visible IDs. Test a
+     day with eight eligible tasks so the action states its real scope.
+     Verify the new plan on
+     Today and Calendar the next day, including a task with both dates.
+  2. Help someone resume work after a meeting. The menu bar already features
+     the current or next scheduled task. The Mac Today page presents the
+     timeline and untimed work in sequence. Prototype a directly accessible
+     resume action on the matching row, with the time available before the
+     next meeting. Test a running task, a day without time slots and a day
+     when the next scheduled task conflicts with a meeting.
+  3. Bring habits into the part of the day when they are useful. The Mac
+     Habits board groups by cadence, while Today's main column has no habit
+     check-in. Prototype morning and evening routines with user-chosen
+     membership and order. Test checking three habits directly from Today
+     and reconciling partial counts and skips with Habits and Review.
+  4. Make the weekly digest actionable for someone who journals. The daily
+     rows currently excerpt only the summary, and the decision for repeatedly
+     deferred work offers Someday. Surface written wins and blockers even
+     when the summary is blank. Let a user schedule a concrete next step
+     from a selected blocker and find that task in the following week.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

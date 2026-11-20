@@ -8,6 +8,7 @@ public struct LorvexRatingScale: View {
   public var accessibilityLabel: (Int) -> String
   public var identifierPrefix: String
   public var isEnabled: Bool
+  private let compact: Bool
 
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var hoveredLevel: Int?
@@ -15,12 +16,13 @@ public struct LorvexRatingScale: View {
   public init(
     value: Binding<Int?>, levelLabel: @escaping (Int) -> String,
     accessibilityLabel: @escaping (Int) -> String, identifierPrefix: String,
-    isEnabled: Bool = true
+    isEnabled: Bool = true, compact: Bool = false
   ) {
     self._value = value
     self.levelLabel = levelLabel
     self.accessibilityLabel = accessibilityLabel
     self.identifierPrefix = identifierPrefix
+    self.compact = compact
     self.isEnabled = isEnabled
   }
 
@@ -36,6 +38,9 @@ public struct LorvexRatingScale: View {
         }
       }
     }
+    .padding(compact ? LorvexDesign.Spacing.xs : 0)
+    .background(compact ? LorvexDesign.Palette.insetFill : .clear,
+      in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
     .sensoryFeedback(.selection, trigger: value)
     .onChange(of: isEnabled) { _, enabled in
       if !enabled { hoveredLevel = nil }
@@ -47,7 +52,15 @@ public struct LorvexRatingScale: View {
       lorvexAnimated(.snappy) { value = value == level ? nil : level }
     } label: {
       Group {
-        if stacked {
+        if compact {
+          Text(levelLabel(level))
+            .font(LorvexDesign.Typography.secondaryText.weight(.medium))
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, LorvexDesign.Spacing.m)
+            .overlay(alignment: .leading) {
+              if value == level { Image(systemName: "checkmark").imageScale(.small) }
+            }
+        } else if stacked {
           HStack(spacing: LorvexDesign.Spacing.s) {
             Text(levelLabel(level))
               .font(LorvexDesign.Typography.primaryText)
@@ -68,11 +81,11 @@ public struct LorvexRatingScale: View {
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .padding(.horizontal, LorvexDesign.Spacing.xs)
       .padding(.vertical, LorvexDesign.Spacing.sm)
-      .frame(minHeight: stacked ? 44 : 60)
+      .frame(minHeight: stacked ? 44 : (compact ? 28 : 60))
       .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
     }
     .buttonStyle(
-      RatingButtonStyle(selected: value == level, hovered: isEnabled && hoveredLevel == level))
+      RatingButtonStyle(selected: value == level, hovered: isEnabled && hoveredLevel == level, compact: compact))
     .disabled(!isEnabled)
     #if os(macOS) || os(iOS)
       .onHover { inside in
@@ -101,18 +114,24 @@ public struct LorvexRatingScale: View {
 private struct RatingButtonStyle: ButtonStyle {
   let selected: Bool
   let hovered: Bool
+  let compact: Bool
+
+  private var restingFill: Color {
+    if compact && hovered { return LorvexDesign.Palette.hoverFill }
+    return compact ? .clear : LorvexDesign.Palette.insetFill
+  }
 
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .foregroundStyle(selected ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.primary))
       .background(
-        selected ? LorvexDesign.Palette.selectionFill : LorvexDesign.Palette.insetFill,
+        selected ? LorvexDesign.Palette.selectionFill : restingFill,
         in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m)
       )
       .overlay {
         RoundedRectangle(cornerRadius: LorvexDesign.Radius.m)
           .strokeBorder(
-            selected || hovered ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.secondary),
+            selected || hovered ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(compact ? Color.clear : Color.secondary),
             lineWidth: selected ? 1.5 : 0.5)
       }
       .opacity(configuration.isPressed ? 0.7 : 1)

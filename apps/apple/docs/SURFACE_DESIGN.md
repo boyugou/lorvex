@@ -111,16 +111,15 @@ day, works through Today's list, and drives keyboard-first workflows.
   the control becomes a split button whose menu holds Clear Times, which
   removes the day's times without moving any task off the day (⌘Z undoes it). ✅
 - Workspace loading states for async panes. ✅
-- Review writes the day as a calm page, read top to bottom as the day's close:
-  the sentence, what moved forward, the due tasks still open (complete, open,
-  or move to tomorrow, one at a time or all at once), the habits as they stood
-  that day (checked in on that day), equal-sized rating choices that name every
-  level, tomorrow's events and tasks while the review is of today, one note,
-  and optional wins/blockers/learnings; and the week as a calm page: the week's
-  sentence, what moved forward, the days written about (each opens its day),
-  one decision about the task pushed off most (park it in Someday), the other
-  pushed tasks, and a Someday line. Past days outside the write window read
-  back on the same rating controls. ✅
+- Daily Review opens on a dated journal. The reflection grows as the user
+  writes, with optional wins, blockers and learnings and a saved indicator.
+  The two optional ratings sit below the entry. The review shows the day's
+  calendar occurrences, checkable habits and tomorrow's agenda alongside the
+  entry in a wide window and below it in a narrow one. An occurrence opens
+  its own day in Calendar. Completed and still-due tasks follow the ratings.
+  Older entries show their saved prose and recorded ratings. ✅
+- Weekly Review shows what moved forward, daily entries, overdue and deferred
+  work, and the week ahead. Each daily entry opens its day. ✅
 
 ## iPhone — capture, glance, today
 

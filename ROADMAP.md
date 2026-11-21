@@ -73,13 +73,18 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       iPhone and iPad. An iPhone walkthrough opened a morning task between an
       all-day event and an evening meeting and returned to the saved journal.
       [Build 158](docs/releases/1.0.0-158.md).
-  13. Revisit the mobile daily check-in. Two permanent five-button rows
-      currently take as much vertical space as the journal editor in a short
-      entry. At xxLarge and up they become ten stacked choices. Try a compact
-      rating control that keeps the selected word visible
-      and supports setting and clearing a rating. Compare an unrated and
-      partially rated day on an iPhone at standard and accessibility text sizes,
-      including VoiceOver and the return to a saved entry.
+  13. Two mobile rating menus below the journal show the saved feeling and
+      energy. They stack at larger text sizes. Native iPhone and iPad mini
+      walkthroughs checked setting, clearing, returning to saved values and
+      VoiceOver reading order. A second edit during a save survives a day
+      switch. [TestFlight build 159](docs/releases/1.0.0-159.md).
+  14. Give an unplanned morning a way to choose existing work. A mobile Today
+      with no listed work offers first-task capture only when there are no
+      open tasks anywhere. With an unscheduled Inbox or list task, a person
+      must leave Today to find and plan it. Try an optional picker on the
+      empty day. Verify that choosing an existing task keeps its list and
+      deadline, that the choice can be undone, and that dismissing the picker
+      leaves a free day untouched.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

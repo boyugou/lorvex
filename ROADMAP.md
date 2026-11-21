@@ -94,13 +94,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       the weekly journal. Mac and mobile save independent journal fields
       against the latest local row. Verified a note edit after another writer
       saved a win. [Build 163](docs/releases/1.0.0-163.md).
-  17. Help someone decide which unfinished work to carry into tomorrow. Mac
-      Review currently offers a counted **Move All to Tomorrow** action beside
-      a separate agenda. The agenda lists commitments and tasks but leaves the
-      available time and estimated work for the user to add up. Start with a
-      crowded tomorrow and a quiet one. Show how much estimated work would
-      move, what already occupies the chosen day, and which tasks have no
-      estimate. Verify the choice, the updated agenda and Undo from Review.
+  17. Mac Daily Review previews tomorrow’s work before moving a selection.
+      It counts timed commitments within working hours, merges overlaps,
+      and identifies unestimated tasks. Verified a partial move, Cancel and
+      Undo in the native window and an agenda with more than fifty tasks.
+      [Build 164](docs/releases/1.0.0-164.md).
+  18. Give iPhone and iPad the same choice in Daily Review. Their section
+      button still moves every eligible task immediately. Keep the selection
+      and estimate visible on a small screen while inspecting existing plans,
+      and test moving a subset and undoing it from the mobile review.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

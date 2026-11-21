@@ -9,18 +9,8 @@ struct DailyReviewReadOnlyView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
-      if let review, !isEmptyReview(review) {
-        written(Copy.noteLabel, review.summary)
-        written(Copy.winsLabel, review.wins)
-        written(Copy.blockersLabel, review.blockers)
-        written(Copy.learningsLabel, review.learnings)
-
-        if let mood = review.mood {
-          rating(Copy.feelLabel, word: Copy.feelWord(mood), value: Copy.feelDot(mood), id: "reviews.readonly.mood")
-        }
-        if let energy = review.energyLevel {
-          rating(Copy.energyLabel, word: Copy.energyWord(energy), value: Copy.energyDot(energy), id: "reviews.readonly.energy")
-        }
+      if let review, review.hasJournalContent {
+        LorvexJournalEntryBody(review: review, feeling: Copy.feelWord, energy: Copy.energyWord)
         Label(
           String(localized: "reviews.daily.readonly_note", defaultValue: "Older reviews are read-only.", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "lock"
@@ -40,32 +30,5 @@ struct DailyReviewReadOnlyView: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-  }
-
-  private func isEmptyReview(_ review: DailyReviewEntry) -> Bool {
-    review.summary.isEmpty && review.mood == nil && review.energyLevel == nil
-      && (review.wins ?? "").isEmpty && (review.blockers ?? "").isEmpty
-      && (review.learnings ?? "").isEmpty
-  }
-
-  private func rating(_ label: String, word: String, value: String, id: String) -> some View {
-    LabeledContent(label, value: word)
-      .font(LorvexDesign.Typography.primaryText)
-      .accessibilityValue("\(word), \(value)")
-      .accessibilityIdentifier(id)
-  }
-
-  /// A written field under its name; nothing when the field was left empty.
-  @ViewBuilder
-  private func written(_ label: String, _ text: String?) -> some View {
-    if let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        LorvexPageLabel(label)
-        Text(userContent: text)
-          .font(LorvexDesign.Typography.primaryText)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .textSelection(.enabled)
-      }
-    }
   }
 }

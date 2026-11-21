@@ -2003,7 +2003,7 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/DailyReviewReadOnlyView.swift'), 'LorvexEmptyStatePanel('),
     ('contains', ('file', 'Sources/LorvexApple/Views/DailyReviewReadOnlyView.swift'), 'style: .inline'),
     ('absent', ('file', 'Sources/LorvexApple/Views/DailyReviewReadOnlyView.swift'), 'Text(.lorvex("reviews.daily.readonly_empty"'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/DailyReviewReadOnlyView.swift'), 'LabeledContent(label, value: word)'),
+    ('contains', ('file', 'Sources/LorvexCore/Support/LorvexJournalEntryBody.swift'), 'LabeledContent(label, value: word)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailReminderSection.swift'), 'Text(.lorvex("task_detail.reminders.empty"'),
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsActivitySections.swift'), 'settings.activity.no_changelog_entries.title'),
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsActivitySections.swift'), 'settings.activity.no_recent_logs.title'),

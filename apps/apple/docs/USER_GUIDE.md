@@ -3709,7 +3709,9 @@ The **Review** workspace opens on today's review, one page per day:
 Everything saves as you change it; there is no Save button. On macOS, step to
 an earlier day with the arrows or the date chip in the toolbar. On iPhone and
 iPad, the **Review** tab shows the same page; open an earlier day from the
-week page's day list, and use **Return to today** to come back. Each day has
+week page's day list. A past entry opens with all its written sections and
+the ratings you recorded. You can select the text to copy it. Use **Return
+to today** to write or rate today. Each day has
 one review record, shared by every device and by MCP tools.
 
 ### Weekly Review

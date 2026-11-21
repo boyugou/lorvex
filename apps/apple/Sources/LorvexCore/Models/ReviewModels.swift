@@ -107,6 +107,12 @@ public struct DailyReviewEntry: Equatable, Sendable {
     self.linkedListIDs = linkedListIDs
   }
 
+  /// A journal can consist of a single written field or a rating.
+  public var hasJournalContent: Bool {
+    mood != nil || energyLevel != nil
+      || [summary, wins, blockers, learnings].contains { $0?.trimmedNilIfEmpty != nil }
+  }
+
   /// True when saving a review with these editor fields would leave `review`
   /// (`nil` for a day with no entry) as it is. A save stores every text section
   /// trimmed, so a section that differs from the stored copy only by whitespace

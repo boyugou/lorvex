@@ -7,7 +7,7 @@ struct MobileStoreReviewDayPage: View {
   @FocusState private var focusedField: Field?
   @State private var showsMoreFields = false
   /// The active habits as they stood on the reviewed day.
-  @State private var habits: [LorvexHabit] = []
+  @State private var dayHabits: (date: String, habits: [LorvexHabit])?
   /// Tomorrow's agenda, loaded only while the review is of today.
   @State private var tomorrow: LorvexAgendaDay?
 
@@ -58,7 +58,7 @@ struct MobileStoreReviewDayPage: View {
   private func loadPageReads() async {
     let date = store.selectedReviewDate
     if let loaded = await store.loadReviewHabits(date: date), date == store.selectedReviewDate {
-      habits = loaded
+      dayHabits = (date, loaded)
     }
     if date == store.logicalTodayString {
       if let loaded = await store.loadTomorrowAgenda() { tomorrow = loaded }
@@ -84,51 +84,19 @@ struct MobileStoreReviewDayPage: View {
   @ViewBuilder
   private var dailyReviewFields: some View {
     let editable = store.selectedReviewDayIsEditable
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      LorvexPageLabel(Copy.noteLabel)
-      note(
-        Copy.notePrompt, label: Copy.noteLabel, text: $store.dailyReviewDraft.summary, field: .summary,
-        id: "review.daily.summary")
-      if showsMoreFields {
-        labeled(Copy.winsLabel) {
-          note(
-            Copy.winsPrompt, label: Copy.winsLabel, text: $store.dailyReviewDraft.wins, field: .wins,
-            id: "review.daily.wins")
-        }
-        labeled(Copy.blockersLabel) {
-          note(
-            Copy.blockersPrompt, label: Copy.blockersLabel, text: $store.dailyReviewDraft.blockers,
-            field: .blockers, id: "review.daily.blockers")
-        }
-        labeled(Copy.learningsLabel) {
-          note(
-            Copy.learningsPrompt, label: Copy.learningsLabel, text: $store.dailyReviewDraft.learnings,
-            field: .learnings, id: "review.daily.learnings")
-        }
-      }
-      if editable || hasMoreText {
-        Button {
-          lorvexAnimated(.snappy) { showsMoreFields.toggle() }
-        } label: {
-          // The words are one line tall. The label's padding lifts the tap
-          // target to about 44pt, and the negative padding outside the button
-          // gives the page that height back.
-          HStack(spacing: LorvexDesign.Spacing.xxs) {
-            Text(Copy.moreFields)
-            Image(systemName: showsMoreFields ? "chevron.up" : "chevron.down").imageScale(.small)
-          }
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
-          .padding(.vertical, Self.moreTapPadding)
-          .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.vertical, -Self.moreTapPadding)
-        .accessibilityIdentifier("review.daily.more")
-      }
+    if editable {
+      journalEditor
+    } else if let review = store.dailyReview, review.date == store.selectedReviewDate, review.hasJournalContent {
+      LorvexJournalEntryBody(review: review, feeling: Copy.feelWord, energy: Copy.energyWord)
+    } else if store.reviewDraftDate == store.selectedReviewDate {
+      Text(String(localized: "reviews.daily.readonly_empty", defaultValue: "No review was written on this day.",
+        table: "Localizable", bundle: MobileL10n.bundle))
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier("review.day.empty")
     }
 
-    if let summary = store.dayReviewEvidence, !summary.topCompleted.isEmpty {
+    if let summary = store.dayReviewEvidence, summary.date == store.selectedReviewDate, !summary.topCompleted.isEmpty {
       LorvexReviewMovedList(
         label: Copy.movedLabel, tasks: summary.topCompleted,
         hiddenCount: summary.hiddenCompletedCount, moreLine: Copy.moreCount,
@@ -159,30 +127,22 @@ struct MobileStoreReviewDayPage: View {
       }
     }
 
-    if !habits.isEmpty {
+    if let dayHabits, dayHabits.date == store.selectedReviewDate, !dayHabits.habits.isEmpty {
       LorvexReviewHabitList(
-        label: Copy.habitsLabel, habits: habits, checkInLabel: Copy.checkIn,
+        label: Copy.habitsLabel, habits: dayHabits.habits, checkInLabel: Copy.checkIn,
         identifier: "review.day.habits", isEnabled: editable
       ) { habit in
         let date = store.selectedReviewDate
         await store.checkInHabit(habit, on: date)
         if let loaded = await store.loadReviewHabits(date: date), date == store.selectedReviewDate {
-          lorvexAnimated(.snappy(duration: 0.18)) { habits = loaded }
+          lorvexAnimated(.snappy(duration: 0.18)) { self.dayHabits = (date, loaded) }
         }
       }
     }
 
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
-      scale(
-        Copy.feelLabel, value: $store.dailyReviewDraft.mood,
-        dotLabel: Copy.feelDot, word: Copy.feelWord, identifier: "review.daily.mood",
-        editable: editable)
-      scale(
-        Copy.energyLabel, value: $store.dailyReviewDraft.energy, dotLabel: Copy.energyDot, word: Copy.energyWord,
-        identifier: "review.daily.energy", editable: editable)
-    }
+    if editable { ratingEditor }
 
-    if isReviewingToday, let tomorrow {
+    if isReviewingToday, let tomorrow, tomorrow.key == tomorrowKey {
       LorvexReviewTomorrow(
         label: Copy.tomorrowLabel, day: tomorrow, emptyLine: Copy.tomorrowEmpty,
         allDay: Copy.allDay, timeRange: MobileTodayCalmCopy.timeRange(start:end:),
@@ -193,21 +153,68 @@ struct MobileStoreReviewDayPage: View {
     }
   }
 
-  private var hasMoreText: Bool {
-    let draft = store.dailyReviewDraft
-    return draft.trimmedWins != nil || draft.trimmedBlockers != nil || draft.trimmedLearnings != nil
+  private var journalEditor: some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+      LorvexPageLabel(Copy.noteLabel)
+      note(
+        Copy.notePrompt, label: Copy.noteLabel, text: $store.dailyReviewDraft.summary, field: .summary,
+        id: "review.daily.summary")
+      if showsMoreFields {
+        labeled(Copy.winsLabel) {
+          note(
+            Copy.winsPrompt, label: Copy.winsLabel, text: $store.dailyReviewDraft.wins, field: .wins,
+            id: "review.daily.wins")
+        }
+        labeled(Copy.blockersLabel) {
+          note(
+            Copy.blockersPrompt, label: Copy.blockersLabel, text: $store.dailyReviewDraft.blockers,
+            field: .blockers, id: "review.daily.blockers")
+        }
+        labeled(Copy.learningsLabel) {
+          note(
+            Copy.learningsPrompt, label: Copy.learningsLabel, text: $store.dailyReviewDraft.learnings,
+            field: .learnings, id: "review.daily.learnings")
+        }
+      }
+      Button {
+        lorvexAnimated(.snappy) { showsMoreFields.toggle() }
+      } label: {
+        // The words are one line tall. The label's padding lifts the tap
+        // target to about 44pt, and the negative padding outside the button
+        // gives the page that height back.
+        HStack(spacing: LorvexDesign.Spacing.xxs) {
+          Text(Copy.moreFields)
+          Image(systemName: showsMoreFields ? "chevron.up" : "chevron.down").imageScale(.small)
+        }
+        .font(LorvexDesign.Typography.secondaryText)
+        .foregroundStyle(.secondary)
+        .padding(.vertical, Self.moreTapPadding)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .padding(.vertical, -Self.moreTapPadding)
+      .accessibilityIdentifier("review.daily.more")
+    }
+  }
+
+  private var ratingEditor: some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
+      scale(Copy.feelLabel, value: $store.dailyReviewDraft.mood,
+        dotLabel: Copy.feelDot, word: Copy.feelWord, identifier: "review.daily.mood")
+      scale(Copy.energyLabel, value: $store.dailyReviewDraft.energy,
+        dotLabel: Copy.energyDot, word: Copy.energyWord, identifier: "review.daily.energy")
+    }
   }
 
   private func scale(
     _ label: String, value: Binding<Int?>,
-    dotLabel: @escaping (Int) -> String, word: @escaping (Int) -> String, identifier: String,
-    editable: Bool
+    dotLabel: @escaping (Int) -> String, word: @escaping (Int) -> String, identifier: String
   ) -> some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       LorvexPageLabel(label)
       LorvexRatingScale(
         value: value, levelLabel: word, accessibilityLabel: dotLabel,
-        identifierPrefix: identifier, isEnabled: editable)
+        identifierPrefix: identifier, isEnabled: true)
     }
   }
 

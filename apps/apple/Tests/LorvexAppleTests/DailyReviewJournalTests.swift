@@ -87,3 +87,24 @@ struct DailyReviewJournalTests {
     #expect(try await core.loadDailyReview(date: yesterday) == nil)
   }
 }
+
+@Test("A dated entry can consist of a single field or a rating")
+func journalContentIncludesSparseEntries() {
+  let blank = DailyReviewEntry(date: "2026-09-19", summary: " \n", mood: nil, energyLevel: nil,
+    wins: nil, blockers: "  ", learnings: nil, timezone: nil, updatedAt: nil,
+    linkedTaskIDs: [], linkedListIDs: [])
+  #expect(!blank.hasJournalContent)
+  for field in [\DailyReviewEntry.wins, \.blockers, \.learnings] {
+    var entry = blank
+    entry[keyPath: field] = "先定议程"
+    #expect(entry.hasJournalContent)
+  }
+  var summaryOnly = blank
+  summaryOnly.summary = "One thought."
+  #expect(summaryOnly.hasJournalContent)
+  for field in [\DailyReviewEntry.mood, \.energyLevel] {
+    var entry = blank
+    entry[keyPath: field] = 3
+    #expect(entry.hasJournalContent)
+  }
+}

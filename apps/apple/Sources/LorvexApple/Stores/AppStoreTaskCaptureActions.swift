@@ -170,6 +170,20 @@ extension AppStore {
       })
     else { return nil }
 
+    await reloadAfterTaskCreation()
+    return task
+  }
+
+  func createReviewFollowUp(_ draft: TaskCreateDraft) async throws -> LorvexTask {
+    let task = try await core.createTask(draft)
+    await reloadAfterTaskCreation()
+    await reloadReviewEvidenceIfShown()
+    feedbackProvider.playFeedback(.captureSubmitted)
+    await publishAfterTaskCreate()
+    return task
+  }
+
+  private func reloadAfterTaskCreation() async {
     await reconcileAfterCommittedMutation(source: "macos.task.create_inline.reconcile") {
       today = try await core.loadToday()
       lists = try await core.loadLists()
@@ -178,7 +192,6 @@ extension AppStore {
       try await loadSelectedListDetail()
       try await reloadTaskWorkspaceIfLoadedReportingFailure()
     }
-    return task
   }
 
   /// The fan-out a durable task create owes the rest of the system: the

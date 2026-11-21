@@ -452,3 +452,23 @@ func undoReviewPlanOnPhone() async throws {
   #expect(store.dayReviewEvidence?.unfinishedTasks.map(\.id) == [task.id])
   #expect(store.undoOffer == nil)
 }
+
+@MainActor
+@Test("Scheduling a journal follow-up refreshes the open iPhone calendar and its week-ahead agenda")
+func mobileReviewSchedulesFollowUp() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  let store = MobileStore(core: core)
+  await store.refresh()
+  let today = store.logicalTodayString
+  let chosenDay = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: 4))
+  let date = try #require(PlannedDayBridge.storageDate(forLogicalDay: chosenDay))
+  store.calendarTimeline = try await core.loadCalendarTimeline(from: today, to: chosenDay)
+  let before = store.weekReviewReadKey
+  let task = try await store.createReviewFollowUp(
+    TaskCreateDraft(title: "Call the venue", notes: "Waiting for the floor plan", plannedDate: date))
+  #expect(store.weekReviewReadKey != before)
+  #expect(store.calendarScheduledTasks.contains { $0.id == task.id })
+  let ahead = await store.loadWeekAheadAgenda()
+  #expect(ahead?.first { $0.key == chosenDay }?.tasks.map(\.id) == [task.id])
+  #expect(store.resolveTask(task.id)?.notes == "Waiting for the floor plan")
+}

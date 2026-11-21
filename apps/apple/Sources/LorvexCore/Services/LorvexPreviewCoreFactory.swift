@@ -75,6 +75,15 @@ public enum LorvexPreviewCoreFactory {
       }
       if plannedDay {
         let (date, briefing, times) = LorvexPreviewSeedData.todayPreviewDay()
+        if let yesterday = LorvexDateFormatters.ymdUTCAddingDays(date, days: -1),
+          let earlier = LorvexDateFormatters.ymdUTCAddingDays(date, days: -2) {
+          _ = try await core.upsertDailyReviewPreservingLinks(date: yesterday, summary: "",
+            mood: nil, energyLevel: nil, wins: nil,
+            blockers: text("Waiting on design sign-off for the calendar grid."), learnings: nil)
+          _ = try await core.upsertDailyReviewPreservingLinks(date: earlier, summary: "",
+            mood: 4, energyLevel: nil, wins: text("Closed a few items."), blockers: nil,
+            learnings: text("Batching reviews before noon keeps the afternoon open."))
+        }
         // The briefing, the times, one deferral, and one memory note are the
         // assistant's work, so the changelog under Settings has assistant rows.
         try await SwiftLorvexCoreService.$currentInitiator.withValue(

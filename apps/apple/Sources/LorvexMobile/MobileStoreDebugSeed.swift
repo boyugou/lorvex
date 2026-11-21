@@ -332,8 +332,9 @@
       for offset in 1...3 {
         _ = try? await core.upsertDailyReviewPreservingLinks(
           date: ymd.string(from: day(-offset)),
-          summary: text("Steady progress across tasks."), mood: 3, energyLevel: 3,
-          wins: text("Closed a few items."), blockers: nil, learnings: nil)
+          summary: offset == 1 ? "" : text("Steady progress across tasks."), mood: 3, energyLevel: 3,
+          wins: offset == 1 ? nil : text("Closed a few items."),
+          blockers: offset == 1 ? text("The agenda comes first") : nil, learnings: nil)
       }
 
       // MetricKit-style diagnostics so the Settings "Recent Diagnostics" feed

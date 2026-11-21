@@ -68,15 +68,7 @@ public enum LorvexWeekReviewSentence {
   }
 }
 
-/// The week review on the calm page grammar, shared by macOS and iPhone: the
-/// week, one serif sentence over a bar per day of what was finished, what
-/// moved forward, the days that were written about (each opens its day), one
-/// decision about the task that keeps getting
-/// pushed, the overdue tasks, the other pushed tasks, the week ahead while the
-/// review is of the current week, and one quiet line about Someday. Overdue and
-/// pushed rows open their task through `openTask`, where
-/// the user re-dates, finishes, or parks it. Each platform supplies the words
-/// through ``Words``.
+/// The weekly journal, task activity, and upcoming agenda shared by Mac and iPhone.
 public struct LorvexWeekReviewPage: View {
   public struct Words {
     public var sentence: String
@@ -149,10 +141,22 @@ public struct LorvexWeekReviewPage: View {
   /// once anything was finished; nil while it loads.
   public var shape: (shape: LorvexWeekShape, words: LorvexWeekShapeStrip.Words)?
 
-  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+  public struct FollowUp {
+    let logicalToday: String
+    let create: (TaskCreateDraft) async throws -> LorvexTask
+
+    public init(logicalToday: String, create: @escaping (TaskCreateDraft) async throws -> LorvexTask) {
+      self.logicalToday = logicalToday
+      self.create = create
+    }
+  }
+
+  private let followUp: FollowUp?
+  @State private var scope = WeekJournalScope.all
+  @State private var selectedBlocker: ReviewBlocker?
+  @State private var receipt: (source: ReviewBlocker, task: LorvexTask)?
+  @Environment(\.dynamicTypeSize) private var typeSize
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
-  /// ``LorvexDesign/TextColumn/reviewDay`` scaled with the text.
-  @ScaledMetric(relativeTo: .subheadline) private var dayColumnWidth = LorvexDesign.TextColumn.reviewDay
   /// 1 at the default text size; the mood dot grows with the day label.
   @ScaledMetric(relativeTo: .subheadline) private var moodDotScale: CGFloat = 1
 
@@ -160,10 +164,12 @@ public struct LorvexWeekReviewPage: View {
     dateLine: String, review: WeeklyReviewSnapshot, days: [DailyReviewEntry], words: Words,
     openDay: @escaping (String) -> Void, openTask: @escaping (String) -> Void,
     decide: @escaping (String) -> Void,
+    followUp: FollowUp? = nil,
     completion: LorvexReviewTaskList.Completion? = nil,
     weekAhead: (days: [LorvexAgendaDay], words: LorvexReviewWeekAhead.Words)? = nil,
     shape: (shape: LorvexWeekShape, words: LorvexWeekShapeStrip.Words)? = nil
   ) {
+    self.followUp = followUp
     self.dateLine = dateLine
     self.review = review
     self.days = days
@@ -177,36 +183,48 @@ public struct LorvexWeekReviewPage: View {
   }
 
   public var body: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
+    let visibleDays = self.visibleDays
+    return VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
         Text(dateLine)
           .font(LorvexDesign.Typography.pageLabel)
           .foregroundStyle(.secondary)
           .accessibilityIdentifier("review.week.date")
-        Text(words.sentence, serifVoice: .pageSentence)
-          .fixedSize(horizontal: false, vertical: true)
-          .accessibilityAddTraits(.isHeader)
-          .accessibilityIdentifier("review.week.headline")
-        if let shape, shape.shape.peak > 0 {
-          LorvexWeekShapeStrip(shape: shape.shape, words: shape.words)
-            .padding(.top, LorvexDesign.Spacing.s)
+        let headingLayout = typeSize.stacksTimeColumn
+          ? AnyLayout(VStackLayout(alignment: .leading, spacing: LorvexDesign.Spacing.s))
+          : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s))
+        headingLayout {
+          Text(days.isEmpty ? words.sentence : WeekJournalCopy.journal, serifVoice: .pageSentence)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityIdentifier("review.week.headline")
+          #if os(macOS) || os(iOS)
+          if days.count > 1 && scopes.count > 1 {
+            if !typeSize.stacksTimeColumn { Spacer(minLength: 0) }
+            scopeMenu
+          }
+          #endif
         }
+      }
+      if !days.isEmpty {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+          ForEach(visibleDays, id: \.date) { entry in
+            if entry.date != visibleDays.first?.date { Divider() }
+            dayRow(entry)
+          }
+        }
+        Text(words.sentence)
+          .font(LorvexDesign.Typography.primaryEmphasis)
+          .accessibilityIdentifier("review.week.activity")
+      }
+      if let shape, shape.shape.peak > 0 {
+        LorvexWeekShapeStrip(shape: shape.shape, words: shape.words)
       }
       if !review.topCompleted.isEmpty {
         LorvexReviewMovedList(
           label: words.movedLabel, tasks: review.topCompleted,
           hiddenCount: review.hiddenCompletedCount, moreLine: words.moreLine,
           identifier: "review.week.moved")
-      }
-      if !sortedDays.isEmpty {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-          LorvexPageLabel(words.daysLabel)
-          ForEach(sortedDays, id: \.date) { entry in
-            Button { openDay(entry.date) } label: { dayRow(entry) }
-              .buttonStyle(.plain)
-              .accessibilityIdentifier("review.week.day.\(entry.date)")
-          }
-        }
       }
       if let decision = words.decision {
         LorvexDecisionWell(
@@ -239,9 +257,42 @@ public struct LorvexWeekReviewPage: View {
           .accessibilityIdentifier("review.week.someday")
       }
     }
+    .onChange(of: review.windowTitle) { scope = .all }
+    #if os(iOS) || os(macOS)
+      .sheet(item: $selectedBlocker) { blocker in
+        if let followUp, let monday = ReviewBlocker.nextMonday(after: followUp.logicalToday) {
+          ReviewFollowUpSheet(blocker: blocker, dayLabel: words.dayLabel(blocker.day),
+            create: followUp.create, didCreate: { receipt = (blocker, $0) }, plannedDate: monday)
+        }
+      }
+    #endif
   }
 
-  private var sortedDays: [DailyReviewEntry] { days.sorted { $0.date < $1.date } }
+  private var scopes: [WeekJournalScope] {
+    WeekJournalScope.allCases.filter { scope in days.contains(where: scope.includes) }
+  }
+
+  // A sync or a change of week can remove the last entry matching a filter.
+  private var activeScope: WeekJournalScope { days.count > 1 && scopes.contains(scope) ? scope : .all }
+
+  private var visibleDays: [DailyReviewEntry] {
+    days.filter(activeScope.includes).sorted { $0.date > $1.date }
+  }
+
+  #if os(macOS) || os(iOS)
+  private var scopeMenu: some View {
+    Menu {
+      Picker(words.daysLabel, selection: $scope) {
+        ForEach(scopes, id: \.self) { option in Text(option.title).tag(option) }
+      }
+    } label: {
+      Label(activeScope.title, systemImage: "line.3.horizontal.decrease")
+        .font(.subheadline)
+    }
+    .fixedSize(horizontal: false, vertical: true)
+    .accessibilityIdentifier("review.week.filter")
+  }
+  #endif
 
   private var pastDue: [ReviewTaskSummary] {
     LorvexWeekReviewSentence.pastDue(review, decisionID: words.decision?.taskID)
@@ -261,43 +312,79 @@ public struct LorvexWeekReviewPage: View {
     return words.dueLine(ago)
   }
 
-  /// The day, a dot sized by how the day felt (empty when no rating was
-  /// given), and the note written in that day's review. The day sits in a
-  /// column beside the note, or above it from `.xxLarge` up
-  /// (``SwiftUI/DynamicTypeSize/stacksTimeColumn``), where the column would
-  /// leave the note a few words a line; the note keeps to two lines, and
-  /// shows whole at the accessibility sizes.
   private func dayRow(_ entry: DailyReviewEntry) -> some View {
-    Group {
-      if dynamicTypeSize.stacksTimeColumn {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-          HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-            dayLabel(entry)
-            moodDot(entry)
-          }
-          daySummary(entry)
-            .lineLimitUnlessAccessibilitySize(2)
+    let ratings = [entry.mood.map(WeekJournalCopy.mood), entry.energyLevel.map(WeekJournalCopy.energy)]
+      .compactMap { $0 }.joined(separator: " · ")
+    return VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+      Button { openDay(entry.date) } label: {
+        HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.xs) {
+          Text(words.dayLabel(entry.date)).font(.headline)
+          if entry.mood != nil { moodDot(entry) }
+          Image(systemName: "chevron.forward").font(.caption2).foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-      } else {
-        HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-          dayLabel(entry)
-            .frame(minWidth: dayColumnWidth, alignment: .leading)
-          moodDot(entry)
-          daySummary(entry)
-            .lineLimit(2)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xs))
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .accessibilityValue(ratings)
+      .accessibilityIdentifier("review.week.day.\(entry.date)")
+      if activeScope == .all, let summary = entry.summary.trimmedNilIfEmpty {
+        Text(summary, serifVoice: .assistantSecondary)
+          .userContentTypesetting(summary).lineLimitUnlessAccessibilitySize(3)
+      }
+      if activeScope == .all || activeScope == .wins, let win = entry.wins.trimmedNilIfEmpty {
+        excerpt(win, label: WeekJournalCopy.wins)
+      }
+      ForEach(activeScope == .all || activeScope == .blockers ? ReviewBlocker.entries(in: entry) : []) { blocker in
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+          excerpt(blocker.text, label: WeekJournalCopy.blockers)
+          if let receipt, receipt.source == blocker {
+            Button { openTask(receipt.task.id) } label: {
+              Label {
+                Text(userContent: [receipt.task.title, receipt.task.plannedDate.map { words.dayLabel(LorvexDateFormatters.ymdUTC.string(from: $0)) }]
+                  .compactMap { $0 }.joined(separator: " · "))
+              } icon: { Image(systemName: "checkmark.circle") }
+              .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xxs))
+              .contentShape(Rectangle())
+            }
+            .accessibilityHint(WeekJournalCopy.openTask)
+            .accessibilityIdentifier("review.followup.receipt")
+          } else if followUp != nil {
+            Button { selectedBlocker = blocker } label: {
+              Label(WeekJournalCopy.plan, systemImage: "calendar.badge.plus")
+                .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xxs))
+                .contentShape(Rectangle())
+            }
+            .accessibilityValue(blocker.text)
+            .accessibilityIdentifier("review.followup.plan.\(entry.date).\(blocker.index)")
+          }
+        }
+        .buttonStyle(.borderless)
+        .font(.subheadline.weight(.medium))
+        .padding(.leading, LorvexDesign.Spacing.s)
+        .overlay(alignment: .leading) {
+          Capsule().fill(.tint.opacity(0.4)).frame(width: 2).accessibilityHidden(true)
         }
       }
+      if activeScope == .all || activeScope == .learnings, let learning = entry.learnings.trimmedNilIfEmpty {
+        excerpt(learning, label: WeekJournalCopy.learnings)
+      }
+      if entry.summary.trimmedNilIfEmpty == nil && entry.wins.trimmedNilIfEmpty == nil
+        && entry.blockers.trimmedNilIfEmpty == nil && entry.learnings.trimmedNilIfEmpty == nil && !ratings.isEmpty {
+        Text(ratings).font(.subheadline).foregroundStyle(.secondary)
+      }
     }
-    .padding(.vertical, LorvexReviewRowMetrics.rowPadding(LorvexDesign.Spacing.xs))
-    .contentShape(Rectangle())
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  private func dayLabel(_ entry: DailyReviewEntry) -> some View {
-    Text(words.dayLabel(entry.date))
-      .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
-      .foregroundStyle(.secondary)
+  private func excerpt(_ text: String, label: String) -> some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+      if activeScope == .all {
+        Text(label).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+      }
+      Text(userContent: text).font(.body).lineLimitUnlessAccessibilitySize(3)
+    }
+    .accessibilityElement(children: .combine)
   }
 
   /// The dot's size, its column and its drop below the label's center all
@@ -314,9 +401,4 @@ public struct LorvexWeekReviewPage: View {
       .accessibilityHidden(true)
   }
 
-  private func daySummary(_ entry: DailyReviewEntry) -> some View {
-    Text(entry.summary, serifVoice: .assistantSecondary)
-      .userContentTypesetting(entry.summary)
-      .foregroundStyle(.primary)
-  }
 }

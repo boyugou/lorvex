@@ -3705,16 +3705,27 @@ one review record, shared by every device and by MCP tools.
 ### Weekly Review
 
 Switch the review to **Weekly** (macOS toolbar) or **Week** (iPhone and iPad)
-to read the week on one page:
+to read the week on one page. If you kept a journal, the most recent day
+appears first. Each entry includes the summary, wins, blockers and learnings
+you wrote. Tap its date to read the full entry. With several days of entries,
+use the filter beside **Weekly journal** to read just the wins, blockers or
+learnings across the week.
 
-- One sentence: how many tasks you finished, how many new ones came in, and
+Beside a blocker, choose **Plan a next step**. Name the action and choose a
+planned date. The picker starts on the next Monday after today, including
+when you revisit an older week. **Add a task** creates a task in your default
+list. Its notes keep the date and the blocker you selected. Tap the new task
+beside the blocker to open it, or find it on the planned day in Calendar.
+
+The rest of the page covers the week's activity.
+
+- One sentence summarizes how many tasks you finished, how many new ones came in, and
   how many are overdue.
 - Under it, a bar for each of the week's seven days, as tall as the number
   of tasks you finished that day. It appears once you finished anything that
   week.
 - **What moved forward**: the week's top finished tasks. The list shows up to
   five and counts the rest.
-- **The days**: each day's review, which opens that day.
 - A question about the task pushed off most often, once it has been pushed
   three or more times: **Move to Someday** parks it until it matters.
 - **Overdue**: open tasks past their due date, earliest first, each with how

@@ -85,16 +85,18 @@ struct MobileStoreTodayView: View {
         MobileTodayScheduleList(
           store: store,
           openTask: { task in store.routePath.append(.task(task.id)) },
-          openEvent: { event in
-            store.prepareCalendarDraft(for: event)
-            editingCalendarEvent = event
-          }
+          openEvent: openEvent
         )
         .frame(width: MobileTodayLayout.scheduleWidth)
         .background(alignment: .top) { skyWash }
         .accessibilityIdentifier("today.schedulePane")
       }
     }
+  }
+
+  private func openEvent(_ event: CalendarTimelineEvent) {
+    store.prepareCalendarDraft(for: event)
+    editingCalendarEvent = event
   }
 
   private var chrome: MobileTodayPageChrome {
@@ -109,17 +111,22 @@ struct MobileStoreTodayView: View {
     // Per-minute, so a running time and the strip's now line follow the clock
     // without a reload.
     TimelineView(.everyMinute) { _ in
+      let schedule = store.todaySchedule
+      let minutes = store.nowMinutesInProductDay
       MobileTodayPage(
         store: store,
         page: store.calmToday,
         portion: portion,
-        nowMinutes: store.nowMinutesInProductDay,
+        nowMinutes: minutes,
         editHabit: { habit in
           store.prepareHabitDraft(for: habit)
           editingHabit = habit
         },
         openSchedule: openSchedule,
-        chooseTask: { showsTaskPicker = true })
+        chooseTask: { showsTaskPicker = true },
+        stripSegments: store.todayStripSegments(in: schedule, now: minutes),
+        appointment: MobileTodayAppointment.firstGlance(in: schedule),
+        openEvent: openEvent)
     }
     .scrollContentBackground(.hidden)
     .background(alignment: .top) { skyWash }

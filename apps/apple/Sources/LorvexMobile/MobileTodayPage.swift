@@ -53,6 +53,9 @@ struct MobileTodayPage: View {
   /// stands beside the page (iPad), so the strip is a plain picture.
   let openSchedule: (() -> Void)?
   let chooseTask: () -> Void
+  let stripSegments: [LorvexDayStrip.Segment]
+  let appointment: MobileTodayAppointment?
+  let openEvent: (CalendarTimelineEvent) -> Void
 
   @State private var showsFullBriefing = false
   /// Whether the line limit cuts the briefing at the page's current width
@@ -79,6 +82,9 @@ struct MobileTodayPage: View {
             header
             if showsStrip {
               stripRow
+            }
+            if openSchedule != nil, let appointment {
+              MobileTodayAppointmentRow(appointment: appointment, day: store.logicalTodayString, open: openEvent)
             }
             if let overbooked = page.overbooked {
               overbookedWell(overbooked)
@@ -214,8 +220,8 @@ struct MobileTodayPage: View {
   /// suggested. iPad stands the schedule beside the page, so there the strip
   /// appears only when it has something to draw.
   private var showsStrip: Bool {
-    if openSchedule != nil, !page.items.isEmpty { return true }
-    return !store.todayStripSegments.isEmpty
+    if openSchedule != nil, !page.items.isEmpty || !store.todayScheduleEvents.isEmpty { return true }
+    return !stripSegments.isEmpty
   }
 
   /// The day drawn to scale: meetings, and tasks at their times. On iPhone it
@@ -223,7 +229,7 @@ struct MobileTodayPage: View {
   @ViewBuilder
   private var stripRow: some View {
     let strip = LorvexDayStrip(
-      segments: store.todayStripSegments, nowMinutes: nowMinutes, range: store.todayStripRange)
+      segments: stripSegments, nowMinutes: nowMinutes, range: store.todayStripRange(for: stripSegments))
     if let openSchedule {
       Button(action: openSchedule) {
         // The clock's mark overhangs the strip by 5pt, so the label stands
@@ -236,9 +242,10 @@ struct MobileTodayPage: View {
           }
           .font(LorvexDesign.Typography.pageLabel)
           .foregroundStyle(.secondary)
-          strip
+          if !page.items.isEmpty || !stripSegments.isEmpty { strip }
         }
         .padding(.vertical, LorvexDesign.Spacing.xs)
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
@@ -317,7 +324,7 @@ struct MobileTodayPage: View {
     Section {
       if store.isSetupCompleted && store.doneTodayTasks.isEmpty && store.hasNoOpenTasks {
         LorvexTodayTaskForm(create: store.addTaskForToday)
-      } else if let nowMinutes {
+      } else if appointment == nil, let nowMinutes {
         LorvexSunArc(
           nowMinutes: nowMinutes, startLabel: MobileTodayCalmCopy.sunStart,
           endLabel: MobileTodayCalmCopy.sunEnd

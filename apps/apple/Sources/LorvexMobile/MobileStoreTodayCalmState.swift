@@ -78,9 +78,8 @@ extension MobileStore {
 
   /// The day strip's segments: timed meetings, and timed tasks (the one whose
   /// time contains the clock in full accent, finished ones green).
-  var todayStripSegments: [LorvexDayStrip.Segment] {
-    let now = nowMinutesInProductDay
-    return todaySchedule.compactMap { item in
+  func todayStripSegments(in schedule: [LorvexTodayTimelineItem], now: Int?) -> [LorvexDayStrip.Segment] {
+    schedule.compactMap { item in
       guard let start = item.startMinutes, let end = item.endMinutes, end > start else {
         return nil
       }
@@ -101,8 +100,7 @@ extension MobileStore {
   /// The span the day strip draws: the working hours (8:00–19:00 until they
   /// load), widened to whole hours around anything timed outside them, so no
   /// segment is cut off at the strip's ends.
-  var todayStripRange: ClosedRange<Int> {
-    let segments = todayStripSegments
+  func todayStripRange(for segments: [LorvexDayStrip.Segment]) -> ClosedRange<Int> {
     let start = min(workdayWindow?.lowerBound ?? 8 * 60, segments.map(\.start).min() ?? .max)
     let end = max(workdayWindow?.upperBound ?? 19 * 60, segments.map(\.end).max() ?? 0)
     let lower = start / 60 * 60

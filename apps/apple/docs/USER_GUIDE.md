@@ -3131,7 +3131,12 @@ The **Today** workspace is your day in one list, read top to bottom:
   would
 - **Done** — what you finished today; click or tap its header to fold it
 
-On iPhone and iPad, an empty Today can show **Select a Task** below the sun.
+On iPhone or in a narrow iPad window, Today shows the current meeting or the
+next one with its time. Tap it to open the event, or tap **Schedule** for the
+full day. When only all-day events remain, Today shows the first one. A wide
+iPad window puts the full schedule beside the tasks.
+
+When no tasks are planned on iPhone or iPad, Today can show **Select a Task**.
 Tap it to search unscheduled work by title and choose one task for today.
 Each row shows its list and any deadline. Choosing keeps both, and **Undo**
 returns the task to its previous plan. Tap **Cancel** to leave the day free.

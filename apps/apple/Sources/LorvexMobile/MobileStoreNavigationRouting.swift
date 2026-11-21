@@ -91,15 +91,25 @@ extension MobileStore {
 
   public func openTaskRouteOnCurrentStack(_ id: LorvexTask.ID) {
     selectedTaskID = id
+    pushOnCurrentStack(.task(id))
+  }
+
+  func openCaptureReceipt(_ receipt: MobileCaptureReceipt) {
+    guard captureReceipt?.id == receipt.id else { return }
+    captureReceipt = nil
+    if receipt.entries.count == 1 {
+      openTaskRouteOnCurrentStack(receipt.id)
+    } else {
+      pushOnCurrentStack(.capturedTasks(receipt))
+    }
+  }
+
+  private func pushOnCurrentStack(_ route: MobileRoute) {
     switch selectedTab {
-    case .today:
-      routePath.append(.task(id))
-    case .tasks:
-      tasksRoutePath.append(.task(id))
-    case .calendar:
-      calendarRoutePath.append(.task(id))
-    case .review:
-      reviewRoutePath.append(.task(id))
+    case .today: routePath.append(route)
+    case .tasks: tasksRoutePath.append(route)
+    case .calendar: calendarRoutePath.append(route)
+    case .review: reviewRoutePath.append(route)
     }
   }
 

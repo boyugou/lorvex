@@ -187,6 +187,11 @@ still lands in that list. The next entry reads dates and tags again.
 On iPhone or iPad the choice also applies to each line of a pasted batch.
 In the Mac command palette, choose the **Keep title as typed** result.
 
+On iPhone and iPad, a confirmation shows the saved task and its list. Tap
+**Open** to see its details on the current tab. After adding several lines,
+**Open** shows only the tasks from that capture, with each task's list. Tap a
+task to open it, or keep working on the page you were on.
+
 ### From Any App (macOS)
 
 Quick Capture is also a small window that opens over whatever app you are using,

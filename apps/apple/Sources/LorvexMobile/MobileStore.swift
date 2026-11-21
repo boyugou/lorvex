@@ -13,7 +13,10 @@ public final class MobileStore {
   /// Drives the global quick-capture sheet. Quick capture is a sheet raised by
   /// the tab bar's round ＋ (and ⌘N), not a tab — capture is an action, not a
   /// place.
-  public var isPresentingCapture = false
+  public var isPresentingCapture = false {
+    didSet { if isPresentingCapture { captureReceipt = nil } }
+  }
+  var captureReceipt: MobileCaptureReceipt?
   public internal(set) var isLoading = false
   public internal(set) var isCapturing = false
   public var isMutatingTask: Bool { !mutatingTaskIDs.isEmpty || unscopedTaskMutationCount > 0 }

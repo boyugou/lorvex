@@ -207,6 +207,7 @@ extension MobileStore {
     weekReviewDigest = []
     proposedDayTimes = nil
     selectedTaskID = nil
+    captureReceipt = nil
     invalidateAllViewOwnedData()
   }
 
@@ -215,7 +216,8 @@ extension MobileStore {
     isCapturing = true
     defer { isCapturing = false }
     do {
-      _ = try await submitCaptureDraftTasks()
+      let tasks = try await submitCaptureDraftTasks()
+      let receipt = MobileCaptureReceipt(tasks: tasks, lists: lists?.lists ?? [])
       captureDraft = MobileCaptureDraft()
       // The write is committed; repaint from the on-disk store and close the
       // sheet now. `refresh()` joins the shared single-flight, whose in-flight
@@ -226,13 +228,8 @@ extension MobileStore {
       // fan-out (outbox drain, widgets, sync) follows without gating dismissal.
       invalidateAllViewOwnedData()
       _ = await loadLocalSurfaces(clearOnFailure: false)
-      // Quick capture is a sheet over whatever surface raised it; close it and
-      // let the new task land in the active list, rather than yanking the user
-      // to a different tab. Captured work is undated, so it belongs to the inbox
-      // and not to today — the dismissal plus haptic is the confirmation, and
-      // nothing is selected, since a task with no claim on today would not
-      // resolve against the surfaces the user is left looking at.
       isPresentingCapture = false
+      captureReceipt = receipt
       feedbackProvider.playFeedback(.captureSubmitted)
       Task { await self.refresh() }
     } catch {

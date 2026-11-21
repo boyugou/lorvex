@@ -19,6 +19,8 @@ struct MobileStoreRouteView: View {
   private var routeContent: some View {
     Group {
       switch route {
+      case .capturedTasks(let receipt):
+        MobileCapturedTasksView(receipt: receipt, open: store.openTaskRouteOnCurrentStack)
       case .task(let id):
         Group {
           if let task = store.resolveTask(id) {

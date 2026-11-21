@@ -193,7 +193,7 @@ func mobileRootViewFloatsTheUndoBanner() throws {
   let rootView = try String(
     contentsOf: root.appending(path: "Sources/LorvexMobile/LorvexMobileStoreRootView.swift"),
     encoding: .utf8)
-  #expect(rootView.contains(".lorvexMobileUndoBanner("))
+  #expect(rootView.contains(".lorvexMobileActionBanners("))
   #expect(rootView.contains("store.undoOffer,"))
   #expect(rootView.contains("Task { await store.performUndoOffer() }"))
   #expect(rootView.contains("store.dismissUndoOffer()"))
@@ -201,8 +201,9 @@ func mobileRootViewFloatsTheUndoBanner() throws {
   let banner = try String(
     contentsOf: root.appending(path: "Sources/LorvexMobile/MobileUndoBanner.swift"),
     encoding: .utf8)
-  #expect(banner.contains("mobile.undo.banner"))
-  #expect(banner.contains("mobile.undo.button"))
+  #expect(banner.contains("identifier: \"mobile.undo\""))
+  #expect(banner.contains("identifier + \".banner\""))
+  #expect(banner.contains("identifier + \".button\""))
   #expect(banner.contains("AccessibilityNotification.Announcement(offer.message).post()"))
   // The tab bar keeps one height at every text size, so the clearance above it
   // must not scale with Dynamic Type.

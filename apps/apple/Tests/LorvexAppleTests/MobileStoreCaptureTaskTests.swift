@@ -362,3 +362,40 @@ func mobileCaptureCanSaveOriginalTitlesAcrossABatch() async throws {
     #expect(task.tags.isEmpty && task.notes == "Film club")
   }
 }
+
+@MainActor
+@Test
+func captureReceiptOpensCommittedTasksOnTheCurrentTab() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  await store.refresh()
+  let list = try #require(store.lists?.lists.first { !$0.isInbox })
+  let token = list.name.filter { $0.isLetter || $0.isNumber }
+  store.selectedTab = .calendar
+  store.captureDraft = MobileCaptureDraft(title: "Call the cinema tomorrow #\(token)\nPick seats")
+  await store.submitCaptureDraft()
+
+  let batch = try #require(store.captureReceipt)
+  #expect(batch.entries.map(\.title) == ["Call the cinema", "Pick seats"])
+  #expect(batch.destinations == [list.displayName, LorvexListNaming.localizedInboxName])
+  #expect(store.calendarRoutePath.isEmpty)
+  store.openCaptureReceipt(batch)
+  #expect(store.selectedTab == .calendar)
+  #expect(store.calendarRoutePath == [.capturedTasks(batch)])
+  #expect(store.captureReceipt == nil)
+  store.openTaskRouteOnCurrentStack(batch.entries[1].id)
+  #expect(store.calendarRoutePath.last == .task(batch.entries[1].id))
+
+  store.selectedTab = .today
+  store.captureDraft = MobileCaptureDraft(title: "Find the ticket")
+  await store.submitCaptureDraft()
+  let single = try #require(store.captureReceipt)
+  #expect(single.title == "Find the ticket")
+  #expect(single.destinations == [LorvexListNaming.localizedInboxName])
+  store.openCaptureReceipt(batch)
+  #expect(store.captureReceipt == single)
+  #expect(store.routePath.isEmpty)
+  store.openCaptureReceipt(single)
+  #expect(store.routePath == [.task(single.id)])
+  #expect(store.selectedTaskID == single.id)
+}

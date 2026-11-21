@@ -43,6 +43,7 @@ struct MobileStoreCaptureSheet: View {
           ) {
             store.isPresentingCapture = false
           }
+          .disabled(store.isCapturing)
           .accessibilityIdentifier("mobileCapture.cancel")
         }
         ToolbarItem(placement: .confirmationAction) {
@@ -73,6 +74,7 @@ struct MobileStoreCaptureSheet: View {
         }
       }
     }
+    .interactiveDismissDisabled(store.isCapturing)
     .mobileCompactEditorSheetPresentation(cardHeight: showsAsCard ? Self.cardHeight : nil)
   }
 }

@@ -9,6 +9,7 @@ public struct LorvexMobileStoreRootView: View {
   @AppStorage(AppAppearance.preferenceKey) private var appearanceRaw = AppAppearance.system.rawValue
   private let setupPreferences: MobileSetupPreferences
   @State private var showSetupWizard = false
+  @State private var captureSheetVisible = false
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   public init(
@@ -27,10 +28,14 @@ public struct LorvexMobileStoreRootView: View {
     .lorvexMobileMilestoneCelebration(store.milestoneCelebration) {
       lorvexAnimated(.easeOut(duration: 0.2)) { store.milestoneCelebration = nil }
     }
-    .lorvexMobileUndoBanner(
-      store.undoOffer,
+    .lorvexMobileActionBanners(
+      receipt: captureSheetVisible ? nil : store.captureReceipt, open: store.openCaptureReceipt,
+      dismissReceipt: { receipt in
+        if store.captureReceipt?.id == receipt.id { store.captureReceipt = nil }
+      },
+      undoOffer: store.undoOffer,
       undo: { Task { await store.performUndoOffer() } },
-      dismiss: { store.dismissUndoOffer() })
+      dismissUndo: { store.dismissUndoOffer() })
     .preferredColorScheme(AppAppearance(rawValue: appearanceRaw)?.colorScheme ?? nil)
     .lorvexClockLocale()
     // Task rows count their due days in the synced product zone.
@@ -118,8 +123,9 @@ public struct LorvexMobileStoreRootView: View {
         })
       .interactiveDismissDisabled(true)
     }
-    .sheet(isPresented: $store.isPresentingCapture) {
+    .sheet(isPresented: $store.isPresentingCapture, onDismiss: { captureSheetVisible = false }) {
       MobileStoreCaptureSheet(store: store, showsAsCard: horizontalSizeClass == .regular)
+        .onAppear { captureSheetVisible = true }
     }
     // Last, so the sheets presented from this view (capture, setup) inherit the
     // accent as the sheets inside the tabs do; without it their Cancel button

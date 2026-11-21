@@ -1,13 +1,16 @@
 import LorvexCore
 import SwiftUI
 
-/// The banner that follows a change which can be taken back (completing,
-/// cancelling, or filing tasks into another list): what happened, and an Undo
-/// button, on floating material. At accessibility text sizes the button moves
-/// under the message, so a translated word keeps its line.
-struct MobileUndoBanner: View {
+/// Shared layout for confirmations above the tab bar.
+private struct MobileActionBanner: View {
   let message: String
-  let undo: () -> Void
+  var detail: String? = nil
+  let buttonTitle: String
+  let identifier: String
+  let action: () -> Void
+  var isCaptureReceipt = false
+  @AccessibilityFocusState(for: .voiceOver) private var messageFocused: Bool
+  @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   /// The widest the banner grows, so on an iPad it stays a compact card
@@ -25,13 +28,13 @@ struct MobileUndoBanner: View {
           messageText
           // The button's own side padding is its tap area; pull it back so
           // the word lines up with the message above.
-          undoButton.padding(.leading, -LorvexDesign.Spacing.m)
+          actionButton.padding(.leading, -LorvexDesign.Spacing.m)
         }
       } else {
         HStack(spacing: LorvexDesign.Spacing.l) {
           messageText
           Spacer(minLength: LorvexDesign.Spacing.m)
-          undoButton
+          actionButton
         }
       }
     }
@@ -43,20 +46,38 @@ struct MobileUndoBanner: View {
     .overlay { shape.stroke(Color.primary.opacity(0.08), lineWidth: 1) }
     .shadow(color: .black.opacity(0.16), radius: 16, y: 6)
     .accessibilityElement(children: .contain)
-    .accessibilityIdentifier("mobile.undo.banner")
+    .accessibilityIdentifier(identifier + ".banner")
   }
 
   private var messageText: some View {
-    Text(verbatim: message)
-      .font(LorvexDesign.Typography.primaryText)
-      .foregroundStyle(.primary)
-      .lineLimitUnlessAccessibilitySize(2)
-      .frame(maxWidth: .infinity, alignment: .leading)
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+      Text(verbatim: message)
+        .font(LorvexDesign.Typography.primaryText)
+        .foregroundStyle(.primary)
+        .lineLimit(isCaptureReceipt || !dynamicTypeSize.isAccessibilitySize ? 2 : nil)
+      if let detail {
+        Text(verbatim: detail)
+          .font(LorvexDesign.Typography.secondaryText)
+          .foregroundStyle(.secondary)
+          .lineLimit(isCaptureReceipt || !dynamicTypeSize.isAccessibilitySize ? 2 : nil)
+      }
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityFocused($messageFocused)
+    .task(id: voiceOverEnabled) {
+      // Dismissing the sheet returns the system focus to Today or its tab bar.
+      // Put the receipt and its following Open button into the reading order.
+      guard isCaptureReceipt, voiceOverEnabled else { return }
+      await Task.yield()
+      guard !Task.isCancelled else { return }
+      messageFocused = true
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  private var undoButton: some View {
-    Button(action: undo) {
-      Text(verbatim: MobileUndoCopy.undo)
+  private var actionButton: some View {
+    Button(action: action) {
+      Text(verbatim: buttonTitle)
         .font(LorvexDesign.Typography.primaryEmphasis)
         .foregroundStyle(LorvexDesign.Palette.accent)
         .padding(.horizontal, LorvexDesign.Spacing.m)
@@ -64,16 +85,15 @@ struct MobileUndoBanner: View {
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
-    .accessibilityIdentifier("mobile.undo.button")
+    .accessibilityIdentifier(identifier + ".button")
   }
 }
 
-/// Floats the Undo banner above the bottom of the screen while a change is on
-/// offer: clear of the tab bar on an iPhone, where it floats above the bottom
-/// edge, and near the edge on an iPad, where the tab bar is on top. The
-/// banner is announced to VoiceOver as it appears and goes away by itself
-/// after a few seconds, longer while VoiceOver is on.
-private struct MobileUndoBannerOverlay: ViewModifier {
+/// Keeps both actions reachable when a capture follows an undoable change.
+private struct MobileActionBannerOverlay: ViewModifier {
+  let receipt: MobileCaptureReceipt?
+  let open: (MobileCaptureReceipt) -> Void
+  let dismissReceipt: (MobileCaptureReceipt) -> Void
   let offer: MobileUndoOffer?
   let undo: () -> Void
   let dismiss: () -> Void
@@ -91,33 +111,51 @@ private struct MobileUndoBannerOverlay: ViewModifier {
     horizontalSizeClass == .compact ? Self.tabBarClearance : LorvexDesign.Spacing.l
   }
 
+  private var bannerTransition: AnyTransition {
+    reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
+  }
+
   func body(content: Content) -> some View {
     content
       .overlay(alignment: .bottom) {
-        if let offer {
-          MobileUndoBanner(message: offer.message, undo: undo)
-            .padding(.horizontal)
-            .padding(.bottom, bottomPadding)
-            .transition(
-              reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
-            .task(id: offer.id) {
-              AccessibilityNotification.Announcement(offer.message).post()
-              // Only a genuine timeout dismisses: a cancelled sleep means a
-              // newer change replaced this one, and its own timer takes over.
-              guard (try? await Task.sleep(for: .seconds(voiceOverEnabled ? 12 : 6))) != nil
-              else { return }
-              dismiss()
-            }
+        VStack(spacing: LorvexDesign.Spacing.s) {
+          if let offer {
+            MobileActionBanner(message: offer.message, buttonTitle: MobileUndoCopy.undo, identifier: "mobile.undo", action: undo)
+              .transition(bannerTransition)
+              .task(id: offer.id) {
+                AccessibilityNotification.Announcement(offer.message).post()
+                guard (try? await Task.sleep(for: .seconds(voiceOverEnabled ? 12 : 6))) != nil else { return }
+                dismiss()
+              }
+          }
+          if let receipt {
+            MobileActionBanner(
+              message: receipt.title, detail: receipt.detail, buttonTitle: MobileCaptureReceipt.open,
+              identifier: "capture.receipt", action: { open(receipt) }, isCaptureReceipt: true)
+              .transition(bannerTransition)
+              .accessibilityAction(.escape) { dismissReceipt(receipt) }
+              .id(receipt.id)
+              .task(id: voiceOverEnabled) {
+                // Keep Open reachable while someone explores the screen with VoiceOver.
+                guard !voiceOverEnabled,
+                  (try? await Task.sleep(for: .seconds(8))) != nil else { return }
+                dismissReceipt(receipt)
+              }
+          }
         }
+        .padding(.horizontal)
+        .padding(.bottom, bottomPadding)
       }
   }
 }
 
 extension View {
-  /// Floats the Undo banner for `offer` over this view (``MobileUndoBannerOverlay``).
-  func lorvexMobileUndoBanner(
-    _ offer: MobileUndoOffer?, undo: @escaping () -> Void, dismiss: @escaping () -> Void
+  func lorvexMobileActionBanners(
+    receipt: MobileCaptureReceipt?, open: @escaping (MobileCaptureReceipt) -> Void,
+    dismissReceipt: @escaping (MobileCaptureReceipt) -> Void, undoOffer: MobileUndoOffer?,
+    undo: @escaping () -> Void, dismissUndo: @escaping () -> Void
   ) -> some View {
-    modifier(MobileUndoBannerOverlay(offer: offer, undo: undo, dismiss: dismiss))
+    modifier(MobileActionBannerOverlay(
+      receipt: receipt, open: open, dismissReceipt: dismissReceipt, offer: undoOffer, undo: undo, dismiss: dismissUndo))
   }
 }

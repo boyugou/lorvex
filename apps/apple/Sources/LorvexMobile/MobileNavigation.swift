@@ -118,6 +118,7 @@ public enum MobileDestination: String, CaseIterable, Identifiable, Hashable, Sen
 }
 
 public enum MobileRoute: Hashable, Sendable {
+  case capturedTasks(MobileCaptureReceipt)
   case task(LorvexTask.ID)
   case habit(LorvexHabit.ID)
   /// A scoped task list (a smart collection or a list). A list's screen is

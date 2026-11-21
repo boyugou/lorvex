@@ -10,10 +10,7 @@ import SwiftUI
 /// the style of a contact card's actions: an icon over a short name. The
 /// status transition itself (Complete / Reopen / Move to Open) is the
 /// detail's prominent action (in the toolbar of a screen, in the header row of
-/// a split's pane), so the tiles carry the rest: start or pause, defer (a menu
-/// of days), someday, and cancel in the destructive tint. Cancel on a repeating
-/// task first asks, in a dialog that points at the tile, whether to end this
-/// occurrence or the whole series. A parked (someday) task's toolbar action is
+/// a split's pane), so the tiles offer Start or Pause, Defer and Someday. A parked (someday) task's toolbar action is
 /// Move to Open, so it gets a Complete tile to finish in one tap. Only actions
 /// the task's status allows are shown, and a task that allows none (completed
 /// or cancelled) shows no tiles. At the accessibility text sizes the tiles wrap
@@ -31,15 +28,7 @@ struct MobileTaskActionSection: View {
   var isHeldUp = false
   let actions: MobileTaskRowActions
   let markSomeday: () async -> Void
-  /// Cancels the task when it is not repeating. A repeating task asks first
-  /// (``cancelAsksForScope(_:)``) and cancels through ``cancelRecurring``.
-  let cancel: () async -> Void
-  /// Cancels a repeating task for the scope the person chose.
-  let cancelRecurring: (RecurringTaskCancelScope) async -> Void
-
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-  /// Whether the occurrence-or-series question shows from the Cancel tile.
-  @State private var isChoosingCancelScope = false
   /// The row's width, measured, which the tiles' names are fitted to.
   @State private var rowWidth: CGFloat = 0
   /// The tiles' name size at the default text size (the footnote style's),
@@ -47,24 +36,17 @@ struct MobileTaskActionSection: View {
   @ScaledMetric(relativeTo: .footnote) private var labelBaseSize: CGFloat = 13
 
   enum Tile: Hashable {
-    case start, pause, complete, deferTask, someday, cancel
+    case start, pause, complete, deferTask, someday
   }
 
   /// The tiles `status` allows, in order.
   static func tiles(for status: LorvexTask.Status) -> [Tile] {
     switch status {
-    case .open: [.start, .deferTask, .someday, .cancel]
-    case .inProgress: [.pause, .deferTask, .cancel]
-    case .someday: [.complete, .deferTask, .cancel]
+    case .open: [.start, .deferTask, .someday]
+    case .inProgress: [.pause, .deferTask]
+    case .someday: [.complete, .deferTask]
     case .completed, .cancelled: []
     }
-  }
-
-  /// Whether cancelling `task` first asks which occurrences to cancel. A bare
-  /// cancel of a repeating task spawns its next occurrence, so the person
-  /// chooses between this occurrence and the whole series.
-  nonisolated static func cancelAsksForScope(_ task: LorvexTask) -> Bool {
-    task.recurrence != nil
   }
 
   var body: some View {
@@ -124,10 +106,7 @@ struct MobileTaskActionSection: View {
       String(
         localized: "task_detail.tile.someday", defaultValue: "Someday", table: "Localizable",
         bundle: MobileL10n.bundle)
-    case .cancel:
-      String(
-        localized: "action.cancel_task", defaultValue: "Cancel", table: "Localizable",
-        bundle: MobileL10n.bundle)
+
     }
   }
 
@@ -160,32 +139,18 @@ struct MobileTaskActionSection: View {
       button(tile, "moon", id: "task.detail.moveToSomeday", label: label) {
         await markSomeday()
       }
-    case .cancel:
-      button(
-        tile, "xmark", id: "task.detail.cancel", label: label,
-        tint: LorvexDesign.Palette.destructive
-      ) {
-        if Self.cancelAsksForScope(task) {
-          isChoosingCancelScope = true
-        } else {
-          await cancel()
-        }
-      }
-      .mobileRecurringCancelDialog(isPresented: $isChoosingCancelScope) { scope in
-        Task { await cancelRecurring(scope) }
-      }
     }
   }
 
   private func button(
     _ tile: Tile, _ systemImage: String, id: String, label: MobileTaskActionLabelStyle,
-    tint: Color = LorvexDesign.Palette.accent, action: @escaping () async -> Void
+    action: @escaping () async -> Void
   ) -> some View {
     Button {
       Task { await action() }
     } label: {
       MobileTaskActionTile(
-        title: title(for: tile), systemImage: systemImage, label: label, tint: tint)
+        title: title(for: tile), systemImage: systemImage, label: label)
     }
     .buttonStyle(LorvexTileButtonStyle())
     .accessibilityIdentifier(id)
@@ -316,7 +281,6 @@ struct MobileTaskActionTile: View {
   let title: String
   let systemImage: String
   let label: MobileTaskActionLabelStyle
-  var tint: Color = LorvexDesign.Palette.accent
 
   @Environment(\.isEnabled) private var isEnabled
   /// The symbol's row height. The symbol scales with the text, so a fixed
@@ -341,7 +305,7 @@ struct MobileTaskActionTile: View {
             ? MobileTaskActionLabelFit.height(lines: 2, size: label.size) : nil,
           alignment: .top)
     }
-    .foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
+    .foregroundStyle(isEnabled ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.tertiary))
     .frame(maxWidth: .infinity, minHeight: 64)
     .padding(.horizontal, LorvexDesign.Spacing.xs)
     .padding(.vertical, LorvexDesign.Spacing.s)

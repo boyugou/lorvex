@@ -5,10 +5,8 @@ import SwiftUI
 /// A task's detail: the title and notes, the task's fields as rows with an
 /// Add Detail menu for the rest, the tasks it depends on, assistant context,
 /// the checklist and reminders when it has any, and the secondary actions. As
-/// a screen of its own it carries the "Task" title and a Share toolbar item; in
-/// a split's detail pane (`mobileDetailPresentation`) the header ends with a
-/// row of the pane's actions instead: `paneActions` (the status transition
-/// and Edit) followed by Share.
+/// a screen of its own it carries the "Task" title and a More toolbar menu.
+/// A split detail pane places More beside the status transition and Edit.
 ///
 /// `actions` receives whether a task the detail's task waits on is still
 /// unfinished (``LorvexTask/isHeldUp(by:)``), judged from the same resolved
@@ -37,9 +35,10 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   /// What the Share button sends (``MobileShareText/task(_:listName:logicalDay:)``).
   let shareText: String
   let editField: (MobileTaskField) -> Void
-  /// Deletes the task for good once the person has confirmed; the row that
-  /// asks is the last of the detail. Nil shows no such row.
-  let deleteTask: (() async -> Void)?
+  let isMutating: Bool
+  let cancel: () async -> Void
+  let cancelRecurring: (RecurringTaskCancelScope) async -> Void
+  let deleteTask: () async -> Void
   @ViewBuilder let actions: (_ isHeldUp: Bool) -> Actions
   @ViewBuilder let paneActions: () -> PaneActions
   @Environment(\.mobileDetailPresentation) private var presentation
@@ -50,6 +49,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   @State private var isComposingChecklistItem = false
   @State private var isComposingReminder = false
   @State private var isConfirmingDelete = false
+  @State private var isChoosingCancelScope = false
   /// The tasks this task waits on, as the Waits On section last resolved them.
   @State private var resolvedDependencies: [LorvexTask]?
 
@@ -69,7 +69,10 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     properties: MobileTaskProperties,
     shareText: String,
     editField: @escaping (MobileTaskField) -> Void,
-    deleteTask: (() async -> Void)? = nil,
+    isMutating: Bool,
+    cancel: @escaping () async -> Void,
+    cancelRecurring: @escaping (RecurringTaskCancelScope) async -> Void,
+    deleteTask: @escaping () async -> Void,
     @ViewBuilder actions: @escaping (_ isHeldUp: Bool) -> Actions,
     @ViewBuilder paneActions: @escaping () -> PaneActions
   ) {
@@ -88,6 +91,9 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     self.properties = properties
     self.shareText = shareText
     self.editField = editField
+    self.isMutating = isMutating
+    self.cancel = cancel
+    self.cancelRecurring = cancelRecurring
     self.deleteTask = deleteTask
     self.actions = actions
     self.paneActions = paneActions
@@ -112,7 +118,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
           if presentation == .pane {
             HStack(spacing: LorvexDesign.Spacing.s) {
               paneActions()
-              shareButton
+              moreMenu
                 .buttonStyle(.bordered)
             }
             .padding(.top, LorvexDesign.Spacing.s)
@@ -223,27 +229,6 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
         }
       }
       actions(task.isHeldUp(by: resolvedDependencies ?? []))
-      if let deleteTask {
-        // Last, and apart from the actions above: the one control here that
-        // cannot be taken back. The dialog rises from the row that raised it.
-        Section {
-          Button(role: .destructive) {
-            isConfirmingDelete = true
-          } label: {
-            Label(MobileTaskDeleteCopy.action, systemImage: "trash")
-          }
-          .mobileDestructiveRowStyle()
-          .mobileDeleteConfirmation(
-            isPresented: $isConfirmingDelete,
-            title: MobileTaskDeleteCopy.title(for: task),
-            message: MobileTaskDeleteCopy.message,
-            confirmTitle: MobileTaskDeleteCopy.confirm
-          ) {
-            Task { await deleteTask() }
-          }
-          .accessibilityIdentifier("task.detail.delete")
-        }
-      }
     }
     #if DEBUG
       .onAppear {
@@ -265,7 +250,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
       titleDisplayMode: .inline
     ) {
       ToolbarItem(placement: .automatic) {
-        shareButton
+        moreMenu
       }
     }
   }
@@ -276,6 +261,43 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
 
   private var showsReminders: Bool {
     !task.reminders.isEmpty || isComposingReminder
+  }
+
+  private var moreMenu: some View {
+    Menu {
+      shareButton
+      Divider()
+      if task.status != .completed && task.status != .cancelled {
+        Button(role: .destructive) {
+          if task.cancelAsksForScope {
+            isChoosingCancelScope = true
+          } else {
+            Task { await cancel() }
+          }
+        } label: {
+          Label(String(localized: "task_detail.actions.cancel_task", defaultValue: "Cancel Task",
+            table: "Localizable", bundle: MobileL10n.bundle), systemImage: "xmark.circle")
+        }
+        .disabled(isMutating)
+        .accessibilityIdentifier("task.detail.cancel")
+      }
+      Button(role: .destructive) { isConfirmingDelete = true } label: {
+        Label(MobileTaskDeleteCopy.action, systemImage: "trash")
+      }
+      .disabled(isMutating)
+      .accessibilityIdentifier("task.detail.delete")
+    } label: {
+      Label(String(localized: "common.more", defaultValue: "More", table: "Localizable", bundle: MobileL10n.bundle),
+        systemImage: "ellipsis.circle")
+    }
+    .accessibilityIdentifier("task.detail.more")
+    .mobileRecurringCancelDialog(isPresented: $isChoosingCancelScope) { scope in
+      Task { await cancelRecurring(scope) }
+    }
+    .mobileDeleteConfirmation(
+      isPresented: $isConfirmingDelete, title: MobileTaskDeleteCopy.title(for: task),
+      message: MobileTaskDeleteCopy.message, confirmTitle: MobileTaskDeleteCopy.confirm
+    ) { Task { await deleteTask() } }
   }
 
   private var shareButton: some View {

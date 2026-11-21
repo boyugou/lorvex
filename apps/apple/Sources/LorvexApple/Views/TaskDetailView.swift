@@ -200,7 +200,10 @@ struct TaskDetailView: View {
     }
     let priority = displayPriority(for: task)
     field(
-      "doOn", "calendar", Copy.addWhen, store.taskDetailDoOnSummary,
+      "doOn", "calendar", Copy.addWhen,
+      store.taskDetailDoOnSummary ?? (task.status.isActive ? String(
+        localized: "task_detail.metadata.set_date", defaultValue: "Set Date", table: "Localizable",
+        bundle: LorvexL10n.bundle) : nil),
       tint: store.taskDetailPlannedIsAfterDeadline ? LorvexDesign.Palette.dueSoon : nil)
     field("estimate", "hourglass", Copy.addLength, store.taskDetailEstimateSummary)
     field("due", "flag", Copy.addDue, store.taskDetailDueSummary.map { Self.sentenceCased($0) }, tint: dueTint)

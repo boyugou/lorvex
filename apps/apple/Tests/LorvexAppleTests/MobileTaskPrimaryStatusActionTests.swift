@@ -62,6 +62,6 @@ struct MobileTaskPrimaryStatusActionTests {
     // parked task keeps a Complete tile there.
     #expect(detailView.contains("MobileTaskPrimaryStatusAction(status: task.status)"))
     #expect(!actions.contains("\"action.reopen\""))
-    #expect(actions.contains("case .someday: [.complete, .deferTask, .cancel]"))
+    #expect(actions.contains("case .someday: [.complete, .deferTask]"))
   }
 }

@@ -1,6 +1,10 @@
 import LorvexCore
 import SwiftUI
 
+extension LorvexTask {
+  var cancelAsksForScope: Bool { recurrence != nil }
+}
+
 extension View {
   /// Asks which part of a repeating task a cancel reaches: only the occurrence
   /// in front of the person, or the whole series. A bare cancel of a repeating

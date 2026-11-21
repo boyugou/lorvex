@@ -136,9 +136,8 @@ struct MobileRegularLayoutParityTests {
     // as it is rather than fading the whole tile.
     let actions = try mobileSource("MobileTaskActionViews.swift")
     #expect(
-      actions.contains(".foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))"))
+      actions.contains(".foregroundStyle(isEnabled ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.tertiary))"))
     #expect(actions.contains(".buttonStyle(LorvexTileButtonStyle())"))
-    #expect(actions.contains("tint: LorvexDesign.Palette.destructive"))
 
     // The busy spinner is an overlay on the row, never a replacement label:
     // swapping the label out would resize the row mid-flight.

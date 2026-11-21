@@ -91,8 +91,8 @@ struct MobileTaskPropertiesTests {
       id: "t", title: "Water the plants", notes: "", priority: .p2, status: .open,
       dueDate: nil, estimatedMinutes: nil, tags: ["home", "weekly"], recurrence: rule)
     let properties = MobileTaskProperties(task: task, listName: nil, logicalDay: "2026-09-22")
-    #expect(properties.rows.map(\.field) == [.recurrence, .tags])
-    #expect(properties.rows.first?.value == rule.localizedCadence)
+    #expect(properties.rows.map(\.field) == [.doOn, .recurrence, .tags])
+    #expect(properties.rows.first { $0.field == .recurrence }?.value == rule.localizedCadence)
     #expect(properties.rows.last?.value == "home · weekly")
   }
 
@@ -116,7 +116,7 @@ struct MobileTaskPropertiesTests {
       id: "t", title: "Book the venue", notes: "", priority: .p2, status: .open,
       dueDate: nil, estimatedMinutes: nil, tags: [], dependsOn: ["t1"])
     let properties = MobileTaskProperties(task: task, listName: nil, logicalDay: "2026-09-22")
-    #expect(properties.rows.isEmpty)
+    #expect(properties.rows.map(\.field) == [.doOn])
     #expect(!properties.additions.contains(.waitsOn))
   }
 
@@ -129,9 +129,9 @@ struct MobileTaskPropertiesTests {
       return MobileTaskProperties(task: task, listName: nil, logicalDay: "2026-09-22")
     }
     let hidden = properties(hiddenUntil: "2026-09-25")
-    #expect(hidden.rows.map(\.value) == ["Friday"])
+    #expect(hidden.rows.first { $0.field == .hideUntil }?.value == "Friday")
     for arrived in ["2026-09-22", "2026-09-20"] {
-      #expect(properties(hiddenUntil: arrived).rows.isEmpty)
+      #expect(properties(hiddenUntil: arrived).rows.map(\.field) == [.doOn])
       #expect(properties(hiddenUntil: arrived).additions.contains(.hideUntil))
     }
   }

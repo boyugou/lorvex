@@ -24,7 +24,7 @@ enum MobileTaskField: String, Identifiable, CaseIterable {
 }
 
 /// The task's fields as the iPhone task detail lists them, matching the macOS
-/// inspector: one row per set field, in the order a person plans a task (when
+/// inspector: active tasks always lead with When. Set fields follow in planning order (when
 /// and for how long, the deadline, where it belongs and how urgent it is, then
 /// how it repeats, is tagged, and hides), and the unset fields in the same
 /// order for the Add menu. Days are named by the same rules
@@ -80,7 +80,9 @@ struct MobileTaskProperties: Equatable {
         let day = LorvexDayPhrase.phrase(for: planned, logicalDay: logicalDay, position: .leading)
         let when = task.plannedTime.map { Copy.day(day, at: $0) } ?? day
         return isAfterDeadline ? LorvexDayPhrase.afterDeadline(when) : when
-      },
+      } ?? (task.status.isActive ? String(
+        localized: "task_detail.metadata.set_date", defaultValue: "Set Date", table: "Localizable",
+        bundle: MobileL10n.bundle) : nil),
       tint: isAfterDeadline ? .soon : nil)
     field(.estimate, task.estimatedMinutes.flatMap { $0 > 0 ? LorvexDurationFormat.minutes($0) : nil })
     if let due = task.dueDate {

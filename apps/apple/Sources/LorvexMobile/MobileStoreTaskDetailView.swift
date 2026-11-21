@@ -50,6 +50,7 @@ struct MobileStoreTaskDetailView: View {
       // intact and its row then disappears from the list beneath it. A split's
       // pane has nothing to pop; the eviction empties it. A failure surfaces
       // as the store's error.
+      isMutating: isMutating, cancel: cancel, cancelRecurring: cancelRecurring,
       deleteTask: {
         dismiss()
         await store.permanentlyDeleteTask(task.id)
@@ -60,9 +61,7 @@ struct MobileStoreTaskDetailView: View {
         isMutating: isMutating,
         isHeldUp: isHeldUp,
         actions: actions,
-        markSomeday: markSomeday,
-        cancel: cancel,
-        cancelRecurring: cancelRecurring
+        markSomeday: markSomeday
       )
       MobileTaskDelegationSection(task: task, isMutating: isMutating, delegate: actions.delegate)
     } paneActions: {

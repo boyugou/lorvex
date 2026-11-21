@@ -106,17 +106,15 @@ struct MobileTaskFieldEditor: View {
 
   private func dayEditor(has: Binding<Bool>, date: Binding<Date>, hint: String) -> some View {
     let calendar = Calendar.autoupdatingCurrent
-    let quick: [(String, Date)] = LorvexTaskFieldChoices.quickDays(from: today, calendar: calendar).map { offset, day in
-      let label =
-        offset == 0 ? MobileCaptureCopy.today
-        : offset == 1
-          ? MobileCaptureCopy.tomorrow
-          : day.formatted(Date.FormatStyle(capitalizationContext: .beginningOfSentence).weekday(.wide))
-      return (label, day)
-    }
+    let quick = LorvexTaskFieldChoices.quickDays(from: today, calendar: calendar)
     return Section {
       HStack(spacing: LorvexDesign.Spacing.s) {
-        ForEach(quick, id: \.1) { label, day in
+        ForEach(quick, id: \.offset) { offset, day in
+          let label =
+            offset == 0 ? MobileCaptureCopy.today
+            : offset == 1
+              ? MobileCaptureCopy.tomorrow
+              : day.formatted(Date.FormatStyle(capitalizationContext: .beginningOfSentence).weekday(.wide))
           MobileFieldChip(
             title: label,
             isSelected: has.wrappedValue && calendar.isDate(date.wrappedValue, inSameDayAs: day)
@@ -124,6 +122,7 @@ struct MobileTaskFieldEditor: View {
             has.wrappedValue = true
             date.wrappedValue = day
           }
+          .accessibilityIdentifier("task.field.day.\(offset)")
         }
       }
       monthCalendar(has: has, date: date, calendar: calendar)

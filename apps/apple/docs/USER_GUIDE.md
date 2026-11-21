@@ -3310,11 +3310,11 @@ than normal after the task's title.
   same way.
 - **Mobile Task Detail:** On iPhone and iPad, a task's set fields are rows —
   When, How long, Due, List, Priority, Repeat, Tags, Hide until — each with its
-  value; tap a row to change only that field. **Add Detail** lists the fields
+  value; tap a row to change only that field. For an open task, choose **When → Set Date** to pick a work day. The deadline stays on its own **Due** row. **Add Detail** lists the other fields
   the task does not have yet, plus a checklist and a reminder when it has
   none. Tap **Edit** to change the title and notes. Swipe a checklist item or
   a reminder to delete it, or tap a checklist item's circle to mark it
-  complete. **Share** sends the task as plain text in your language: its
+  complete. **More → Share** sends the task as plain text in your language: its
   title, its status unless it is open, the notes, one line per field with
   days written as dates, the assistant context, and the checklist.
 - **Plans that miss a deadline:** When a task's When day falls after its Due
@@ -3478,8 +3478,7 @@ back: finished or cancelled tasks reopen, and moved tasks return to the lists
 they came from. The banner holds the latest change only.
 
 **Delete a task for good** when even its record is not worth keeping;
-Cancel keeps the record. On iPhone and iPad, open the task, scroll to the end
-of its detail, and tap **Delete Permanently…**. On the Mac, choose the same
+Cancel keeps the record. On iPhone and iPad, open the task and choose **More → Delete Permanently…**. On the Mac, choose the same
 command from the task's right-click menu or its detail. Either way a
 confirmation comes first, and the task with its checklist items, reminders,
 and links is removed. A deleted task cannot be brought back.
@@ -3487,7 +3486,7 @@ and links is removed. A deleted task cannot be brought back.
 **Copy or share a task** as plain text to paste into a message or a note.
 On the Mac, right-click the task and choose **Copy as Text** to put it on the
 clipboard (⌘C does the same for the highlighted tasks, one after another), or **Share** to send it with Mail, Messages, Notes, or AirDrop. On
-iPhone and iPad, tap **Share** in the task's detail. The text is laid out the
+iPhone and iPad, open **More → Share** in the task's detail. The text is laid out the
 same on every device and written in your language: the title, the status
 unless the task is open, the notes, one line per field with days written as
 dates, the assistant context, and the checklist.

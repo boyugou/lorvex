@@ -4,8 +4,8 @@ import Testing
 
 @testable import LorvexApple
 
-/// The macOS task detail's property rows, built from the store's draft: one
-/// row per set field in planning order, an addition for every unset one.
+/// The macOS task detail's property rows, built from the store's draft: active tasks lead
+/// with When. Remaining fields appear in planning order or in Add Detail.
 @MainActor
 @Suite("Task detail properties")
 struct TaskDetailPropertiesTests {
@@ -50,5 +50,30 @@ struct TaskDetailPropertiesTests {
 
     #expect(!content.rows.contains { $0.id == "priority" })
     #expect(content.additions.contains { $0.id == "priority" })
+  }
+
+  @Test("An active undated task can be planned from its first row without changing its deadline")
+  func planFromFirstRowPreservesDeadline() async throws {
+    let store = try await makeStore()
+    await store.refresh()
+    let task = try #require(store.today.tasks.first { $0.status.isActive })
+    store.selectedTaskID = task.id
+    store.syncSelectedTaskDraft()
+    store.setTaskDetailHasPlannedDate(false)
+    store.setTaskDetailHasDueDate(true)
+    await store.saveSelectedTaskDraftIfNeeded()
+    let before = try await store.core.loadTask(id: task.id)
+    #expect(before.plannedDate == nil)
+    #expect(before.dueDate != nil)
+    let content = TaskDetailView(store: store).propertyContent(task: before)
+    #expect(content.rows.first?.id == "doOn")
+    #expect(!content.additions.contains { $0.id == "doOn" })
+    store.setTaskDetailHasPlannedDate(true)
+    store.taskDetailPlannedDatePickerDate = try #require(
+      PlannedDayBridge.displayDate(forLogicalDay: "2026-12-10"))
+    await store.saveSelectedTaskDraftIfNeeded()
+    let saved = try await store.core.loadTask(id: task.id)
+    #expect(saved.plannedDate == LorvexDateFormatters.ymdUTC.date(from: "2026-12-10"))
+    #expect(saved.dueDate == before.dueDate)
   }
 }

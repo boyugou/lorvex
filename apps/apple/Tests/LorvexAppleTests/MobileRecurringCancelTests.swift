@@ -15,7 +15,7 @@ func mobileCancelOfRecurringTaskAsksForScope() async throws {
   let recurring = try await core.loadTask(id: LorvexPreviewSeedID.statusUpdateTask)
 
   #expect(recurring.recurrence != nil)
-  #expect(MobileTaskActionSection.cancelAsksForScope(recurring))
+  #expect(recurring.cancelAsksForScope)
   // Asking cancels nothing by itself.
   #expect((try await core.loadTask(id: recurring.id)).status == .open)
 }
@@ -29,7 +29,7 @@ func mobileCancelOfNonRecurringTaskDoesNotAsk() async throws {
   let nonRecurring = try #require(
     store.snapshot.today.tasks.first { $0.recurrence == nil && $0.status == .open })
 
-  #expect(!MobileTaskActionSection.cancelAsksForScope(nonRecurring))
+  #expect(!nonRecurring.cancelAsksForScope)
 
   await store.cancelTask(nonRecurring.id)
 

@@ -172,7 +172,7 @@ private final class MobileWalk {
       steps.append(
         Step(weight: 4, name: "cancel \(brief(task)) \(task.recurrence == nil ? "" : "(recurring)")") {
           [self] in
-          if MobileTaskActionSection.cancelAsksForScope(task) {
+          if task.cancelAsksForScope {
             let scope: RecurringTaskCancelScope = rng.next() % 2 == 0 ? .thisOccurrence : .all
             trace[trace.count - 1] += " scope=\(scope)"
             await store.cancelRecurringTask(id: task.id, scope: scope)

@@ -10,6 +10,12 @@
     /// selected and no scope or search left behind.
     @MainActor
     static func emitTaskStops(store: AppStore) async {
+      if let unplanned = store.taskWorkspaceOpenTasks.first(where: { $0.status.isActive && $0.plannedDate == nil }) {
+        store.selectedTaskID = unplanned.id
+        try? await Task.sleep(for: .seconds(2.5))
+        await emitStop("tasks-inspector-unplanned")
+        store.selectedTaskID = nil
+      }
       if let first = store.today.tasks.first {
         store.selectedTaskID = first.id
         try? await Task.sleep(for: .seconds(2.5))

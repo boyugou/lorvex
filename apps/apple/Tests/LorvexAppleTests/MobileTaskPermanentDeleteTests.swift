@@ -55,24 +55,17 @@ func mobilePermanentDeleteOfAnUnknownTaskFails() async throws {
   #expect(store.errorMessage != nil)
 }
 
-@Test("The detail ends with a destructive row that asks before deleting, and pops before the delete")
-func mobileTaskDetailEndsWithAConfirmedDelete() throws {
+@Test("The secondary menu asks before permanently deleting")
+func mobileTaskDetailConfirmsMenuDeletion() throws {
   let sources = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     .appending(path: "Sources/LorvexMobile")
-  let content = try String(
-    contentsOf: sources.appending(path: "MobileTaskDetailContent.swift"), encoding: .utf8)
-  let actionsEnd = try #require(content.range(of: "actions(task.isHeldUp(by: resolvedDependencies ?? []))"))
-  let row = try #require(content.range(of: "if let deleteTask {"))
-  #expect(actionsEnd.upperBound <= row.lowerBound)
-  let rowText = content[row.lowerBound...]
-  #expect(rowText.contains("Button(role: .destructive)"))
-  // A list row recolors only a destructive button's title; the style paints the symbol red too.
-  #expect(rowText.contains(".mobileDestructiveRowStyle()"))
-  #expect(rowText.contains(".mobileDeleteConfirmation("))
+  let content = try String(contentsOf: sources.appending(path: "MobileTaskDetailContent.swift"), encoding: .utf8)
+  let menu = try #require(content.range(of: "private var moreMenu: some View"))
+  let rowText = content[menu.lowerBound...]
+  #expect(rowText.contains("Button(role: .destructive) { isConfirmingDelete = true }"))
   #expect(rowText.contains("confirmTitle: MobileTaskDeleteCopy.confirm"))
   #expect(rowText.contains("\"task.detail.delete\""))
-
   let detail = try String(
     contentsOf: sources.appending(path: "MobileStoreTaskDetailView.swift"), encoding: .utf8)
   let dismiss = try #require(detail.range(of: "deleteTask: {\n        dismiss()"))

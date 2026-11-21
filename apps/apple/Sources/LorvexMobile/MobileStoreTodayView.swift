@@ -1,20 +1,49 @@
 import LorvexCore
 import SwiftUI
 
+enum MobileTodayLayout {
+  case single, scheduleBesideTasks, briefBesideTasks
+
+  static let scheduleWidth: CGFloat = 380
+
+  // Leave room for an inset task row, its completion control and its metadata.
+  static func minimumTaskWidth(for typeSize: DynamicTypeSize) -> CGFloat {
+    typeSize >= .xxLarge ? 520 : 440
+  }
+
+  static func resolve(
+    width: CGFloat, regularWidth: Bool, compactHeight: Bool, typeSize: DynamicTypeSize
+  ) -> Self {
+    guard !typeSize.isAccessibilitySize else { return .single }
+    let minimumTaskWidth = minimumTaskWidth(for: typeSize)
+    if regularWidth, width >= minimumTaskWidth + scheduleWidth + 1 { return .scheduleBesideTasks }
+    if compactHeight, width >= minimumTaskWidth + 280 + 1 { return .briefBesideTasks }
+    return .single
+  }
+}
+
 struct MobileStoreTodayView: View {
   @Bindable var store: MobileStore
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @Environment(\.verticalSizeClass) private var verticalSizeClass
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var editingHabit: LorvexHabit?
   @State private var editingCalendarEvent: CalendarTimelineEvent?
-  /// iPhone shows the day's schedule as a sheet opened from the day strip.
   @State private var isShowingSchedule = false
 
   var body: some View {
-    content
-      .environment(\.lorvexTaskRowDay, store.logicalTodayString)
+    GeometryReader { geometry in
+      let layout = MobileTodayLayout.resolve(
+        width: geometry.size.width, regularWidth: horizontalSizeClass == .regular,
+        compactHeight: verticalSizeClass == .compact, typeSize: typeSize)
+      content(layout, width: geometry.size.width)
+        #if DEBUG
+          .task { await suggestTimesForPreviewIfRequested(layout: layout) }
+        #endif
+    }
+    .modifier(chrome)
+    .environment(\.lorvexTaskRowDay, store.logicalTodayString)
     #if DEBUG
-      .task { await suggestTimesForPreviewIfRequested() }
       .onAppear {
         // Dev/QA only: the `lorvex://sheet/eventdetail` screenshot hook opens
         // the detail of a staged mirrored event without a tap.
@@ -32,20 +61,23 @@ struct MobileStoreTodayView: View {
     #endif
   }
 
-  /// iPhone reads the Today list alone and opens the schedule as a sheet from
-  /// the day strip. Regular width (iPad) keeps the list in a readable column
-  /// and stands the schedule beside it, so nothing needs opening. A phone on
-  /// its side (a compact height) has room for little above the first task, so
-  /// it stands the brief, the date, briefing, and day strip, beside the task
-  /// list, each scrolling on its own; the strip still opens the schedule sheet.
-  @ViewBuilder
-  private var content: some View {
-    if horizontalSizeClass == .regular {
-      HStack(spacing: 0) {
-        todayList(openSchedule: nil)
-          .mobileReadableWidth(680)
-        Divider()
-          .ignoresSafeArea()
+  private func content(_ layout: MobileTodayLayout, width: CGFloat) -> some View {
+    HStack(spacing: 0) {
+      if layout == .briefBesideTasks {
+        todayList(.brief, openSchedule: { isShowingSchedule = true })
+          .frame(width: min(360, width - MobileTodayLayout.minimumTaskWidth(for: typeSize) - 1))
+        Divider().ignoresSafeArea()
+      }
+
+      // Keep the list that owns the first-task draft mounted across resizes.
+      todayList(
+        layout == .briefBesideTasks ? .tasks : .whole,
+        openSchedule: layout == .single ? { isShowingSchedule = true } : nil
+      )
+      .mobileReadableWidth(680)
+
+      if layout == .scheduleBesideTasks {
+        Divider().ignoresSafeArea()
         MobileTodayScheduleList(
           store: store,
           openTask: { task in store.routePath.append(.task(task.id)) },
@@ -54,23 +86,10 @@ struct MobileStoreTodayView: View {
             editingCalendarEvent = event
           }
         )
-        .frame(width: 380)
+        .frame(width: MobileTodayLayout.scheduleWidth)
         .background(alignment: .top) { skyWash }
         .accessibilityIdentifier("today.schedulePane")
       }
-      .modifier(chrome)
-    } else if verticalSizeClass == .compact {
-      HStack(spacing: 0) {
-        todayList(.brief, openSchedule: { isShowingSchedule = true })
-          .frame(maxWidth: 360)
-        Divider()
-          .ignoresSafeArea()
-        todayList(.tasks, openSchedule: nil)
-      }
-      .modifier(chrome)
-    } else {
-      todayList(openSchedule: { isShowingSchedule = true })
-        .modifier(chrome)
     }
   }
 
@@ -118,15 +137,14 @@ struct MobileStoreTodayView: View {
   #if DEBUG
     /// The screenshot run's `-lorvexUIPreviewSuggestedTimes` hook: once Today
     /// has loaded and the launch seed has finished, suggest times, and on
-    /// iPhone open the schedule sheet they wait in; iPad shows them in the
-    /// standing pane. A suggestion plans around the calendar as it stands, so
-    /// asking before the seed has written its events would leave them out.
-    private func suggestTimesForPreviewIfRequested() async {
+    /// layouts without a standing schedule, open the sheet they wait in.
+    /// Suggest after seeding so the proposal includes the seeded calendar events.
+    private func suggestTimesForPreviewIfRequested(layout: MobileTodayLayout) async {
       guard CommandLine.arguments.contains("-lorvexUIPreviewSuggestedTimes") else { return }
       await MobileSeedDebugState.waitUntilFinished()
       try? await Task.sleep(for: .seconds(0.5))
       await store.suggestDayTimes()
-      if horizontalSizeClass != .regular { isShowingSchedule = true }
+      if layout != .scheduleBesideTasks { isShowingSchedule = true }
     }
   #endif
 }

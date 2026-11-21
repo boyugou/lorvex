@@ -3149,9 +3149,10 @@ in time order, above the tasks without a time. An event that runs past midnight 
 and "Until" its end at the top of the next day; a day it fills completely
 shows it as all day. Click an event to see its details in the inspector,
 where an event you made in Lorvex can also be edited or deleted; right-click
-it for **Open Details**, **Edit**, and **Delete** without opening it first. On iPad the
-schedule stands beside the list; on iPhone, tap the day strip under the
-briefing to open it.
+it for **Open Details**, **Edit**, and **Delete** without opening it first. When the iPad window has room, the schedule stands beside the task list.
+In narrower windows, on iPhone, or at accessibility text sizes, tap **Schedule**
+under the briefing to open it. At accessibility text sizes, tasks appear before
+the habit routine and the briefing opens on two lines. Tap **Show more** to read it all.
 
 Open Today from the sidebar, by pressing **⌘1**, or by tapping the Today tab
 on iPhone/iPad.

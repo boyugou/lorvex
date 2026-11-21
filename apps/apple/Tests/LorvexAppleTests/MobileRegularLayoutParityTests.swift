@@ -1,5 +1,8 @@
 import Foundation
+import SwiftUI
 import Testing
+
+@testable import LorvexMobile
 
 /// Source-level guards for the decisions that keep the iPad layout in step with
 /// the phone and legible in dark mode: one Today structure, Habits and Memory
@@ -27,10 +30,7 @@ struct MobileRegularLayoutParityTests {
   @Test("The regular Today is the task list beside a standing schedule pane")
   func regularTodayIsTheTaskListBesideTheSchedule() throws {
     let today = try mobileSource("MobileStoreTodayView.swift")
-    #expect(today.contains("todayList(openSchedule: nil)"))
-    #expect(
-      today.contains(
-        "MobileTodayScheduleList(\n          store: store,\n          openTask:"))
+    #expect(today.contains("MobileTodayScheduleList("))
     #expect(today.contains("today.schedulePane"))
     #expect(!today.contains("MobileStoreTodayRegularView"))
 
@@ -48,20 +48,28 @@ struct MobileRegularLayoutParityTests {
   @Test("A phone on its side stands the brief beside the task list, each its own list")
   func sidewaysPhoneTodaySplitsTheBriefFromTheTasks() throws {
     let today = try mobileSource("MobileStoreTodayView.swift")
-    #expect(today.contains("verticalSizeClass == .compact"))
-    #expect(today.contains("todayList(.brief, openSchedule: { isShowingSchedule = true })"))
-    #expect(today.contains("todayList(.tasks, openSchedule: nil)"))
-    // The regular-width layout is tested first, so a Pro Max on its side
-    // keeps the list beside the standing schedule.
-    let regular = try #require(today.range(of: "horizontalSizeClass == .regular {"))
-    let sideways = try #require(today.range(of: "verticalSizeClass == .compact {"))
-    #expect(regular.lowerBound < sideways.lowerBound)
-
+    #expect(today.contains("layout == .briefBesideTasks ? .tasks : .whole"))
     // Each list draws its own part: the ground section only without `.tasks`,
     // the rows only without `.brief`.
     let page = try mobileSource("MobileTodayPage.swift")
     #expect(page.contains("if portion != .tasks {"))
     #expect(page.contains("if portion != .brief {"))
+  }
+
+  @Test("Today reserves a readable task column at the current text size")
+  func todayUsesAvailableWidth() {
+    func layout(
+      _ width: CGFloat, _ size: DynamicTypeSize, regular: Bool = true, compactHeight: Bool = false
+    ) -> MobileTodayLayout {
+      MobileTodayLayout.resolve(
+        width: width, regularWidth: regular, compactHeight: compactHeight, typeSize: size)
+    }
+    #expect(layout(744, .large) == .single)
+    #expect(layout(834, .large) == .scheduleBesideTasks)
+    #expect(layout(834, .xxxLarge) == .single)
+    #expect(layout(1133, .accessibility5) == .single)
+    #expect(layout(780, .large, regular: false, compactHeight: true) == .briefBesideTasks)
+    #expect(layout(640, .large, regular: false, compactHeight: true) == .single)
   }
 
   @Test("The time-of-day wash runs behind both Today panes, so it does not stop at the divider")

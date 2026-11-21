@@ -54,7 +54,7 @@ struct MobileTodayPage: View {
   let openSchedule: (() -> Void)?
 
   @State private var showsFullBriefing = false
-  /// Whether the four-line limit cuts the briefing at the page's current width
+  /// Whether the line limit cuts the briefing at the page's current width
   /// and text size, which is what brings the "Show more" toggle.
   @State private var briefingHidesText = false
   @AppStorage("today.done.collapsed") private var doneCollapsed = false
@@ -94,7 +94,7 @@ struct MobileTodayPage: View {
       }
 
       if portion != .brief {
-        if let catalog = store.habits, catalog.hasConfiguredRoutine {
+        if let catalog = store.habits, catalog.hasConfiguredRoutine, !dynamicTypeSize.isAccessibilitySize {
           habitsSection(catalog)
         }
         if !page.items.isEmpty {
@@ -102,8 +102,9 @@ struct MobileTodayPage: View {
         } else {
           emptyDaySection
         }
-        if let catalog = store.habits, !catalog.hasConfiguredRoutine,
-          !catalog.habits.listed(on: store.logicalTodayString).isEmpty
+        if let catalog = store.habits,
+          (catalog.hasConfiguredRoutine && dynamicTypeSize.isAccessibilitySize)
+            || (!catalog.hasConfiguredRoutine && !catalog.habits.listed(on: store.logicalTodayString).isEmpty)
         {
           habitsSection(catalog)
         }
@@ -158,9 +159,8 @@ struct MobileTodayPage: View {
   }
 
   /// The assistant's briefing in the system face, marked by the sparkles
-  /// glyph rather than italics. One that takes more than four lines at the
-  /// page's width and text size opens on four, with a toggle for the rest; a
-  /// shorter one shows in full and has no toggle. The card is a container
+  /// glyph. A long briefing opens on four lines, or two at accessibility sizes,
+  /// with a toggle for the rest. A shorter one shows in full. The card is a container
   /// without an identifier of its own, which would replace the toggle's.
   private func briefingView(_ text: String) -> some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
@@ -171,7 +171,9 @@ struct MobileTodayPage: View {
         Text(userContent: text)
           .font(LorvexDesign.Typography.briefing)
           .foregroundStyle(.primary)
-          .lorvexLineClamp(4, isClamped: !showsFullBriefing, hidesText: $briefingHidesText)
+          .lorvexLineClamp(
+            dynamicTypeSize.isAccessibilitySize ? 2 : 4,
+            isClamped: !showsFullBriefing, hidesText: $briefingHidesText)
           .accessibilityIdentifier("today.briefing")
         if briefingHidesText {
           Button {

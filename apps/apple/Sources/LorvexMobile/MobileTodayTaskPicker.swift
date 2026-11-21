@@ -31,6 +31,7 @@ extension MobileStore {
 /// Keeps the free day quiet unless there is work that can actually be chosen.
 struct MobileTodayPlanButton: View {
   let store: MobileStore
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var hasCandidates = false
   let openPicker: () -> Void
 
@@ -38,9 +39,17 @@ struct MobileTodayPlanButton: View {
     Group {
       if hasCandidates {
         Button(action: openPicker) {
-          Label(Self.title, systemImage: "text.badge.plus")
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .contentShape(Rectangle())
+          Group {
+            if typeSize.isAccessibilitySize {
+              Text(verbatim: Self.title)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            } else {
+              Label(Self.title, systemImage: "text.badge.plus")
+            }
+          }
+          .frame(maxWidth: .infinity, minHeight: 44)
+          .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)
         .accessibilityIdentifier("today.chooseTask")

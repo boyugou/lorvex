@@ -14,12 +14,14 @@ enum MobileTodayCalmCopy {
   /// so in one sentence instead. `workIsStated` leaves the estimated work out
   /// when the page states it elsewhere (the overbooked well's title), so one
   /// figure is not read twice.
-  static func facts(_ facts: LorvexCalmToday.Facts, workIsStated: Bool = false) -> [String] {
+  static func facts(
+    _ facts: LorvexCalmToday.Facts, workIsStated: Bool = false, hasCalendarEntries: Bool = false
+  ) -> [String] {
     switch facts {
     case .empty:
-      return [emptySentence]
+      return [hasCalendarEntries ? tasksLeft(0) : emptySentence]
     case .allDone:
-      return [allDoneSentence]
+      return [hasCalendarEntries ? tasksLeft(0) : allDoneSentence]
     case .day(let tasks, let workMinutes, let meetings):
       var parts = [tasksLeft(tasks)]
       if !workIsStated, let workMinutes, workMinutes > 0 {

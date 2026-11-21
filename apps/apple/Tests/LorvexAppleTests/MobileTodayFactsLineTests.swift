@@ -33,6 +33,13 @@ struct MobileTodayFactsLineTests {
     #expect(MobileTodayCalmCopy.facts(unsized, workIsStated: true) == MobileTodayCalmCopy.facts(unsized))
   }
 
+  @Test("an all-day or earlier appointment keeps an otherwise quiet day from claiming nothing was planned")
+  func quietCalendarDay() {
+    for facts in [LorvexCalmToday.Facts.empty, .allDone(done: 3)] {
+      #expect(MobileTodayCalmCopy.facts(facts, hasCalendarEntries: true) == ["No tasks left"])
+    }
+  }
+
   @Test("an empty or finished day is one sentence either way")
   func quietDays() {
     for facts in [LorvexCalmToday.Facts.empty, .allDone(done: 3)] {

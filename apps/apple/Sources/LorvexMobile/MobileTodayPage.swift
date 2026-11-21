@@ -153,7 +153,8 @@ struct MobileTodayPage: View {
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("today.date")
       LorvexFactsLine(
-        MobileTodayCalmCopy.facts(page.facts, workIsStated: page.overbooked != nil))
+        MobileTodayCalmCopy.facts(page.facts, workIsStated: page.overbooked != nil,
+          hasCalendarEntries: !store.todayScheduleEvents.isEmpty))
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .accessibilityIdentifier("today.headline")

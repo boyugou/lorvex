@@ -81,17 +81,19 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       [Build 160](docs/releases/1.0.0-160.md) aligns the controls and saves
       the mobile journal while its keyboard stays open. The note shows when
       the write has completed.
-  14. Give an unplanned morning a way to choose existing work. A mobile Today
-      with no listed work offers first-task capture only when there are no
-      open tasks anywhere. With an unscheduled Inbox or list task, a person
-      must leave Today to find and plan it. Try an optional picker on the
-      empty day. Verify that choosing an existing task keeps its list and
-      deadline, that the choice can be undone, and that dismissing the picker
-      leaves a free day untouched. Reproduced on an iPhone 17 Pro in build
-      160 with an open, unscheduled Inbox task: Today showed only the date,
-      the free-day message and the sun arc in its content area. The Mac
-      Calendar already lists visible, actionable tasks without a planned day.
-      Use that same query when offering existing work.
+  14. An empty Today on iPhone and iPad offers a searchable choice of existing,
+      visible work without a planned day. Choosing keeps the task’s list and
+      deadline. Cancel and Undo were verified on both devices, as was opening
+      the saved task from Today after relaunch.
+      [Build 161](docs/releases/1.0.0-161.md).
+  15. Give a meeting-only morning a useful first glance on iPhone. With a
+      10 AM workshop, a 1 PM rehearsal and no planned tasks, Today showed
+      “2 events”, two bars, a sun arc and Select a Task. The next event’s
+      title and time only appear after opening Schedule. Show the current or
+      next timed commitment in place of the extra sun arc and open its details
+      from that row. The same appointment was visible by name on a landscape iPad
+      mini. Keep that layout free of duplicate rows. Check meeting start and
+      end times, a day with only all-day items and the return from event detail.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

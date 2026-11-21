@@ -41,14 +41,6 @@ enum MobileTaskPrimaryStatusAction: Equatable {
     }
   }
 
-  var systemImage: String {
-    switch self {
-    case .complete: return "checkmark.circle"
-    case .reopen: return "arrow.counterclockwise"
-    case .moveToOpen: return "arrow.up.circle"
-    }
-  }
-
   /// Completing is tinted with the done color so it reads as the finishing
   /// step; both reopening actions keep the accent tint (`nil`).
   var tint: Color? {

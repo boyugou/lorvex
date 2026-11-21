@@ -67,6 +67,7 @@ struct MobileStoreTaskDetailView: View {
     } paneActions: {
       paneStatusButton
       editButton
+        .labelStyle(.iconOnly)
         .buttonStyle(.bordered)
     }
     .toolbar {
@@ -77,7 +78,7 @@ struct MobileStoreTaskDetailView: View {
           editButton
         }
         // The status transition is the detail's one prominent control: a tinted
-        // filled capsule at the trailing edge, split from the share/edit group
+        // filled capsule at the trailing edge, split from More and Edit
         // so it reads as the primary action rather than one more icon.
         ToolbarSpacer(.fixed, placement: .primaryAction)
         ToolbarItem(placement: .primaryAction) {
@@ -198,14 +199,13 @@ struct MobileStoreTaskDetailView: View {
   }
 
   /// The same transition as `primaryStatusButton`, as the prominent button of
-  /// a split pane's header row, where an icon beside the title matches the
-  /// Edit and Share buttons next to it.
+  /// a split pane. Edit and More sit beside the full status action title.
   private var paneStatusButton: some View {
     let action = MobileTaskPrimaryStatusAction(status: task.status)
     return Button {
       perform(action)
     } label: {
-      Label(action.title, systemImage: action.systemImage)
+      Text(action.title)
     }
     .buttonStyle(.borderedProminent)
     .tint(action.tint)

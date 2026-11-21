@@ -41,6 +41,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   let deleteTask: () async -> Void
   @ViewBuilder let actions: (_ isHeldUp: Bool) -> Actions
   @ViewBuilder let paneActions: () -> PaneActions
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @Environment(\.mobileDetailPresentation) private var presentation
 
   // A task with no checklist or reminders shows neither section; the Add
@@ -116,12 +117,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
               .frame(maxWidth: .infinity, alignment: .leading)
           }
           if presentation == .pane {
-            HStack(spacing: LorvexDesign.Spacing.s) {
-              paneActions()
-              moreMenu
-                .buttonStyle(.bordered)
-            }
-            .padding(.top, LorvexDesign.Spacing.s)
+            paneControls.padding(.top, LorvexDesign.Spacing.s)
           }
         }
         .padding(.vertical, LorvexDesign.Spacing.xs)
@@ -261,6 +257,18 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
 
   private var showsReminders: Bool {
     !task.reminders.isEmpty || isComposingReminder
+  }
+
+  private var paneControls: some View {
+    let layout = dynamicTypeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: LorvexDesign.Spacing.s))
+      : AnyLayout(HStackLayout(spacing: LorvexDesign.Spacing.s))
+    return layout {
+      paneActions()
+      moreMenu
+        .labelStyle(.iconOnly)
+        .buttonStyle(.bordered)
+    }
   }
 
   private var moreMenu: some View {

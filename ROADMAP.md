@@ -90,13 +90,17 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       the event directly. On wide iPad the agenda remains beside the tasks.
       Verified on a two-meeting morning, during a meeting, after the last
       event, and on an all-day schedule. [Build 162](docs/releases/1.0.0-162.md).
-  16. Let someone finish yesterday's reflection on their phone the following
-      morning. Mac already opens the previous seven days for editing. On iPhone
-      and iPad, only today opens for writing. Give mobile Review a direct path
-      to a recent date, including a day with no previous entry. Verify that
-      writing and ratings appear in the correct day's weekly journal, today's
-      draft survives switching dates, and editing yesterday's words cannot
-      inadvertently complete a task or check a habit for today.
+  16. iPhone and iPad can write a blank recent day or edit a past entry from
+      the weekly journal. Mac and mobile save independent journal fields
+      against the latest local row. Verified a note edit after another writer
+      saved a win. [Build 163](docs/releases/1.0.0-163.md).
+  17. Help someone decide which unfinished work to carry into tomorrow. Mac
+      Review currently offers a counted **Move All to Tomorrow** action beside
+      a separate agenda. The agenda lists commitments and tasks but leaves the
+      available time and estimated work for the user to add up. Start with a
+      crowded tomorrow and a quiet one. Show how much estimated work would
+      move, what already occupies the chosen day, and which tasks have no
+      estimate. Verify the choice, the updated agenda and Undo from Review.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

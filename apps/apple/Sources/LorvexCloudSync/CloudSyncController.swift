@@ -378,6 +378,17 @@ public actor CloudSyncController: CKSyncEngineDelegate {
     } else {
       try reseedIfRequired()
     }
+    // Builds through 147 rejected the two routine keys before retaining the
+    // fetched records. Replay an older cursor once so a routine set up on a
+    // newer device before this upgrade is still delivered. Zone ownership and
+    // the local outbox stay valid. Drop the cursor before recording the new
+    // capability so an interrupted upgrade can safely retry.
+    if try store.cloudSyncEngineCheckpoint(.preferenceCatalog) != "routines-v1" {
+      if try store.cloudSyncEngineCheckpoint(.engineState) != nil {
+        try store.setCloudSyncEngineCheckpoint(.engineState, value: nil)
+      }
+      try store.setCloudSyncEngineCheckpoint(.preferenceCatalog, value: "routines-v1")
+    }
     try discardEngineStateIfRefetchRequired()
     let persisted = try store.cloudSyncEngineCheckpoint(.engineState)
       .flatMap { Data(base64Encoded: $0) }

@@ -25,11 +25,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      task stays in the schedule and names the calendar event. Available in
      [TestFlight build 147](docs/releases/1.0.0-147.md). Evaluate the return
      from a meeting during daily use, including days without time slots.
-  3. Bring habits into the part of the day when they are useful. The Mac
-     Habits board groups by cadence, while Today's main column has no habit
-     check-in. Prototype morning and evening routines with user-chosen
-     membership and order. Test checking three habits directly from Today
-     and reconciling partial counts and skips with Habits and Review.
+  3. Today now supports ordered morning and evening routines on Mac, iPhone,
+     and iPad. Each routine opens around its chosen start time and can be
+     folded or opened manually. Counted habits and excused days share their
+     records with Habits and Daily Review. Evaluate whether the two-hour
+     window suits actual mornings and evenings, especially with unusual
+     schedules or a habit that belongs to both routines.
   4. Make the weekly digest actionable for someone who journals. The daily
      rows currently excerpt only the summary, and the decision for repeatedly
      deferred work offers Someday. Surface written wins and blockers even

@@ -95,6 +95,14 @@ public enum LorvexPreviewCoreFactory {
             key: text("work_rhythm"),
             content: text("Does deep work before lunch and keeps afternoons for meetings and email."))
         }
+        let meditate = try await core.createHabit(
+          name: text("Meditate"), cue: text("Mid-morning"), icon: "brain.head.profile", color: nil,
+          targetCount: 2, cadence: .daily)
+        try await core.saveHabitRoutine(
+          HabitRoutine(startMinutes: 420, habitIDs: [meditate.id]), for: .morning)
+        try await core.saveHabitRoutine(
+          HabitRoutine(startMinutes: 1200, habitIDs: [LorvexPreviewSeedID.eveningWalkHabit,
+            meditate.id, LorvexPreviewSeedID.dailyReviewHabit]), for: .evening)
         let pool = try await seedTodayPool(core, text: text)
         try await seedDelegations(core, pool: pool, text: text)
       }

@@ -25,7 +25,20 @@ extension SwiftLorvexCoreService {
         """,
       arguments: [archived ? 1 : 0])
     let habits = try rows.map { try mapHabitRow(db, row: $0, date: date) }
-    return HabitCatalogSnapshot(habits: habits)
+    var routines = HabitRoutines()
+    if !archived {
+      let rows = try Row.fetchAll(db,
+        sql: "SELECT key, value FROM preferences WHERE key IN (?, ?)",
+        arguments: [PreferenceKeys.prefMorningRoutine, PreferenceKeys.prefEveningRoutine])
+      for row in rows {
+        let key: String = row["key"]
+        let raw: String = row["value"]
+        if let period = HabitRoutinePeriod.allCases.first(where: { $0.preferenceKey == key }) {
+          routines[period] = try JSONDecoder().decode(HabitRoutine.self, from: Data(raw.utf8))
+        }
+      }
+    }
+    return HabitCatalogSnapshot(habits: habits, routines: routines)
   }
 
   static func habitColumnRow(_ db: Database, id: String) throws -> Row? {
@@ -238,7 +251,7 @@ extension SwiftLorvexCoreService {
       milestone.justReached = reached
       habits[index].milestone = milestone
     }
-    return HabitCatalogSnapshot(habits: habits)
+    return HabitCatalogSnapshot(habits: habits, routines: snapshot.routines)
   }
 
   /// The `value` recorded for a habit on `date` (0 when no completion row).

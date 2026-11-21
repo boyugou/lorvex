@@ -37,6 +37,9 @@ struct TodayColumn: View {
         .padding(.top, LorvexDesign.Spacing.m)
         .id(item.id)
       }
+      if let catalog = store.habits, !catalog.habits.isEmpty {
+        routine(catalog).padding(.top, LorvexDesign.Spacing.m)
+      }
       if let overbooked = page.overbooked {
         overbookedWell(overbooked)
           .padding(.top, LorvexDesign.Spacing.l)
@@ -81,6 +84,18 @@ struct TodayColumn: View {
     }
     .frame(maxWidth: 720, alignment: .leading)
     .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
+  }
+
+  private func routine(_ catalog: HabitCatalogSnapshot) -> some View {
+    TodayHabitRoutine(catalog: catalog, day: store.logicalTodayDateString, nowMinutes: nowMinutes,
+      checkIn: { await store.checkInHabit($0, on: store.logicalTodayDateString) },
+      undoOne: { await store.adjustHabitCompletion($0, delta: -1) },
+      skip: { await store.toggleHabitSkip($0) }
+    ) { period, routine in
+      try await store.core.saveHabitRoutine(routine, for: period)
+      store.habits = try await store.core.loadHabits(date: store.logicalTodayDateString)
+      await store.republishSurfacesAfterLocalMutation()
+    }
   }
 
   // MARK: Header

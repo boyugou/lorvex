@@ -94,13 +94,18 @@ struct MobileTodayPage: View {
       }
 
       if portion != .brief {
+        if let catalog = store.habits, catalog.hasConfiguredRoutine {
+          habitsSection(catalog)
+        }
         if !page.items.isEmpty {
           taskSection
         } else {
           emptyDaySection
         }
-        if let habits = store.habits?.habits.listed(on: store.logicalTodayString), !habits.isEmpty {
-          habitsSection(habits)
+        if let catalog = store.habits, !catalog.hasConfiguredRoutine,
+          !catalog.habits.listed(on: store.logicalTodayString).isEmpty
+        {
+          habitsSection(catalog)
         }
         if !store.doneTodayTasks.isEmpty {
           doneSection
@@ -329,8 +334,22 @@ struct MobileTodayPage: View {
 
   // MARK: Habits
 
-  private func habitsSection(_ habits: [LorvexHabit]) -> some View {
-    Section {
+  private func routine(_ catalog: HabitCatalogSnapshot) -> some View {
+    TodayHabitRoutine(catalog: catalog, day: store.logicalTodayString, nowMinutes: nowMinutes,
+      checkIn: { _ = await store.checkInHabit($0, on: store.logicalTodayString) },
+      undoOne: { await store.undoOneHabitCheckIn($0) },
+      skip: { _ = await store.toggleHabitSkip($0) }
+    ) { period, routine in
+      try await store.core.saveHabitRoutine(routine, for: period)
+      store.habits = try await store.core.loadHabits(date: store.logicalTodayString)
+      await store.publishMobileSyncSurfaces()
+    }
+  }
+
+  private func habitsSection(_ catalog: HabitCatalogSnapshot) -> some View {
+    let habits = catalog.unassignedHabits(on: store.logicalTodayString)
+    return Section {
+      routine(catalog)
       if dynamicTypeSize.isAccessibilitySize {
         // A strip column holds a word a line at these sizes, so each habit
         // takes a row of its own: its ring, then its whole name.
@@ -345,7 +364,7 @@ struct MobileTodayPage: View {
           }
           .contextMenu { habitMenu(habit) }
         }
-      } else {
+      } else if !habits.isEmpty {
         habitGrid(habits)
       }
     } header: {

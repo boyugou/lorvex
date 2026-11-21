@@ -326,6 +326,21 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     #expect(try h.core.cloudSyncEngineCheckpoint(.reseedRequired) == nil, "a clean backfill clears it")
   }
 
+  @Test func upgradeReplaysRecordsAnOlderPreferenceCatalogCouldNotDecode() async throws {
+    let h = try await Harness()
+    try h.core.setCloudSyncEngineCheckpoint(.zoneEstablished, value: "1")
+    let saved = Data("old-cursor".utf8)
+    try h.core.setCloudSyncEngineCheckpoint(.engineState, value: saved.base64EncodedString())
+    #expect(await h.controller.start() == .running)
+    #expect(try h.engine.initialState == nil)
+    #expect(try h.zoneCheckpoint() == "1")
+    #expect(try !h.engine.queuesZoneSave)
+    await h.controller.stop()
+    try h.core.setCloudSyncEngineCheckpoint(.engineState, value: saved.base64EncodedString())
+    #expect(await h.controller.start() == .running)
+    #expect(try h.engine.initialState == saved)
+  }
+
   @Test func aRefetchRequestStartsTheNextEngineWithoutSavedState() async throws {
     let h = try await Harness()
     _ = await h.controller.start()

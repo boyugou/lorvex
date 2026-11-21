@@ -16,6 +16,8 @@ public enum PreferenceKeys {
   // ── synced global preferences ──────────────────────────────────────
 
   public static let prefWorkingHours = "working_hours"
+  public static let prefMorningRoutine = "morning_routine"
+  public static let prefEveningRoutine = "evening_routine"
   public static let prefTimezone = "timezone"
   public static let prefDefaultListId = "default_list_id"
   /// How long the `ai_changelog` audit trail is retained. This is a virtual
@@ -107,6 +109,8 @@ public enum PreferenceKeys {
   /// API; see ``localOnlyPreferenceKeys`` and ``isControlPlanePreference(_:)``.
   public static let allKnownPreferenceKeys: [String] = [
     prefWorkingHours,
+    prefMorningRoutine,
+    prefEveningRoutine,
     prefTimezone,
     prefDefaultListId,
     prefAiChangelogRetentionPolicy,

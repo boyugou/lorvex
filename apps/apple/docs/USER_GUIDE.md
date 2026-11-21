@@ -3117,8 +3117,22 @@ The **Today** workspace is your day in one list, read top to bottom:
   would
 - **Done** — what you finished today; click or tap its header to fold it
 
-On Mac a quick-add field sits under the tasks; on iPhone and iPad the day's
-habits follow as rings. Nothing you or the assistant put on today is hidden, unless its hide-until date is after today.
+On Mac a quick-add field sits under the tasks. On iPhone and iPad the day's
+unassigned habits appear as rings. A task's hide-until date controls when it appears.
+
+To check off a morning or evening routine, open **Today → Set up routines**.
+Choose the routine, set its start time, and add habits in the order you do
+them. Use the arrows to reorder the steps. During the first two hours after
+the start, Today opens the steps that are due. Tap the routine heading to
+open or fold them at any time. Its menu switches between morning and evening
+and lets you edit either routine.
+
+Tap a step to check it in. A counted habit advances by one, and its menu can
+remove one check-in. An untouched habit's menu offers **Skip Today**. A skip
+excuses that day's step. A habit in both routines carries its count from the
+morning into the evening. Habits and Daily Review read those same check-ins.
+The order and start times follow you when iCloud sync is enabled.
+
 When you return to **Today** on Mac after a meeting, look under the briefing.
 A task scheduled for the current time offers **Start**. An already-started
 task shows its first unfinished checklist item and offers **Continue**, which

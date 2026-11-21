@@ -3,7 +3,10 @@ import Foundation
 public struct HabitCatalogSnapshot: Equatable, Sendable {
   public var habits: [LorvexHabit]
 
-  public init(habits: [LorvexHabit]) {
+  public var routines: HabitRoutines
+
+  public init(habits: [LorvexHabit], routines: HabitRoutines = HabitRoutines()) {
+    self.routines = routines
     self.habits = habits
   }
 }

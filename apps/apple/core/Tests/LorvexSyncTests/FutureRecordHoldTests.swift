@@ -276,7 +276,7 @@ final class FutureRecordHoldTests: XCTestCase {
             """,
           arguments: [EntityName.task, taskID]))
       XCTAssertEqual(rebuilt["version"] as String, v4)
-      XCTAssertEqual(rebuilt["payload_schema_version"] as Int64, Int64(LorvexVersion.payloadSchemaVersion))
+      XCTAssertEqual(rebuilt["payload_schema_version"] as Int64, Int64(LorvexVersion.compatiblePayloadVersion(for: .task, id: taskID)))
       XCTAssertNil(rebuilt["disposition"] as String?)
       XCTAssertNil(rebuilt["future_record_version"] as String?)
       let payload = try XCTUnwrap(JSONValue.parse(rebuilt["payload"] as String))

@@ -646,7 +646,7 @@ public enum EntityRedirect {
       entityType: .entityRedirect,
       entityId: wireEntityId(sourceType: record.sourceType, sourceId: record.sourceId),
       operation: .upsert, version: version,
-      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
+      payloadSchemaVersion: LorvexVersion.compatiblePayloadVersion(for: .entityRedirect, id: record.sourceId),
       payload: payload, deviceId: deviceId)
   }
 

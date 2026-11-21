@@ -235,6 +235,7 @@ enum ApplyLwwGate {
   private static func localMutationAtSameVersion(
     _ db: Database, envelope: SyncEnvelope
   ) throws -> SyncEnvelope? {
+    let authoredVersion = LorvexVersion.compatiblePayloadVersion(for: envelope.entityType, id: envelope.entityId)
     if let tombstone = try Tombstone.getTombstone(
       db, entityType: envelope.entityType.asString, entityId: envelope.entityId),
       tombstone.version == envelope.version.description
@@ -242,7 +243,7 @@ enum ApplyLwwGate {
       return SyncEnvelope(
         entityType: envelope.entityType, entityId: envelope.entityId,
         operation: .delete, version: envelope.version,
-        payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
+        payloadSchemaVersion: authoredVersion,
         payload: "{}", deviceId: "local-equal-hlc")
     }
 
@@ -280,12 +281,12 @@ enum ApplyLwwGate {
     if let mergedShadow = merged.mergedShadow {
       do {
         schemaVersion = max(
-          LorvexVersion.payloadSchemaVersion,
+          authoredVersion,
           try PayloadShadow.requireWirePayloadSchemaVersion(
             mergedShadow, context: "equal-version collision payload shadow"))
       } catch { throw ApplyError.lift(error) }
     } else {
-      schemaVersion = LorvexVersion.payloadSchemaVersion
+      schemaVersion = authoredVersion
     }
     return SyncEnvelope(
       entityType: envelope.entityType, entityId: envelope.entityId,

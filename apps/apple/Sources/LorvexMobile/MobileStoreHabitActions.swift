@@ -94,6 +94,17 @@ extension MobileStore {
     }
   }
 
+  func undoOneHabitCheckIn(_ habit: LorvexHabit) async {
+    guard habit.targetCount > 1, habit.completionsToday > 0 else { return }
+    _ = await mutateHabit {
+      habits = try await core.adjustHabitCompletion(id: habit.id, date: logicalTodayString, delta: -1)
+    } afterWrite: {
+      feedbackProvider.playFeedback(.habitReset)
+      await refreshHabitDetailIfLoaded(id: habit.id)
+      await reloadReviewEvidenceAfterTaskMutation()
+    }
+  }
+
   @discardableResult
   public func completeHabits(_ ids: [LorvexHabit.ID]) async -> Bool {
     let uniqueIDs = stableUniqueHabitIDs(ids)

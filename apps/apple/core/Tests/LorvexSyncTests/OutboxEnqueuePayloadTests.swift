@@ -556,7 +556,7 @@ final class OutboxEnqueuePayloadTests: XCTestCase {
       XCTAssertEqual(pending[0].envelope.entityId, "01966a3f-7c8b-7d4e-8f3a-000000002163")
       XCTAssertEqual(pending[0].envelope.operation, .upsert)
       XCTAssertEqual(pending[0].envelope.deviceId, "dev-001")
-      XCTAssertEqual(pending[0].envelope.payloadSchemaVersion, LorvexVersion.payloadSchemaVersion)
+      XCTAssertEqual(pending[0].envelope.payloadSchemaVersion, LorvexVersion.compatiblePayloadVersion(for: .task, id: pending[0].envelope.entityId))
       let payload = try XCTUnwrap(JSONValue.parse(pending[0].envelope.payload))
       guard case .object(let obj) = payload else { return XCTFail("payload not object") }
       XCTAssertEqual(obj["title"], .string("Buy milk"))

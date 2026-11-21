@@ -26,6 +26,9 @@ public enum PreferenceValueContract {
     }
 
     switch key {
+    case PreferenceKeys.prefMorningRoutine, PreferenceKeys.prefEveningRoutine:
+      return HabitRoutine.validate(value)
+
     case PreferenceKeys.prefWorkingHours:
       return normalizeWorkingHours(value)
 

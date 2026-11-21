@@ -101,7 +101,7 @@ enum SyncPayloadContractFixture {
     for envelope: SyncEnvelope, contract: Contract? = nil
   ) throws -> [String] {
     SyncPayloadContractRegistry.violations(
-      for: envelope, contract: try contract ?? load())
+      for: envelope, contract: try contract ?? load(version: envelope.payloadSchemaVersion))
   }
 
   static func valueViolations(
@@ -155,6 +155,19 @@ final class SyncPayloadContractTests: XCTestCase {
       XCTAssertEqual(Set(bundled.entities.keys), Set(authority.entities.keys))
       XCTAssertEqual(bundled.goldenFixtureSHA256, authority.goldenFixtureSHA256)
     }
+  }
+
+  func testRoutinesUseNewIdentitiesWhileLegacyPreferencesStillFitBothContracts() throws {
+    let legacy = try SyncPayloadContractFixture.load(version: 3)
+    let routines = try SyncPayloadContractFixture.load(version: 4)
+    let old = try XCTUnwrap(SyncPayloadContractFixture.goldenEnvelopes(contract: legacy).first { $0.entityType == .preference })
+    let new = try XCTUnwrap(SyncPayloadContractFixture.goldenEnvelopes(contract: routines).first { $0.entityType == .preference })
+    XCTAssertEqual(old.entityId, "working_hours")
+    XCTAssertEqual(new.entityId, PreferenceKeys.prefMorningRoutine)
+    XCTAssertFalse(try SyncPayloadContractFixture.violations(for: replacingSchemaVersion(new, 3), contract: legacy).isEmpty)
+    XCTAssertTrue(try SyncPayloadContractFixture.violations(for: new, contract: routines).isEmpty)
+    XCTAssertTrue(try SyncPayloadContractFixture.violations(for: old, contract: legacy).isEmpty)
+    XCTAssertTrue(try SyncPayloadContractFixture.violations(for: replacingSchemaVersion(old, 4), contract: routines).isEmpty)
   }
 
   func testNumberedGoldenFixtureIsIndependentCompleteAndTyped() throws {

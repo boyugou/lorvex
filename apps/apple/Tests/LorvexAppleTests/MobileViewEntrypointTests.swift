@@ -293,7 +293,7 @@ func mobileTodayShowsHabitsAndEventsOnlyWhenLoaded() throws {
   #expect(!page.contains("store.habits?.habits ?? []"))
   #expect(
     page.contains(
-      "if let habits = store.habits?.habits.listed(on: store.logicalTodayString), !habits.isEmpty"))
+      "!catalog.habits.listed(on: store.logicalTodayString).isEmpty"))
   // The schedule list draws today's events and timed tasks as one timeline
   // (events filtered to the logical day, not the raw multi-day window), and
   // its empty line only when that timeline has nothing to draw.

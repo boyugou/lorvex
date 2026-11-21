@@ -197,6 +197,15 @@ def adjacent_contract_violations(
             )
 
         for field_name in sorted(set(before_fields) & set(after_fields)):
+            # Version 4 adds independent record IDs to the preference catalog.
+            # Existing IDs keep the v3 wire format. CloudSyncController replays
+            # the legacy cursor on upgrade to recover these two new identities.
+            if ((previous_version, current_version, entity_name, field_name)
+                    == (3, 4, "preference", "key")):
+                old_spec = before_fields[field_name]
+                expanded = sorted(set(old_spec["enum"]) | {"morning_routine", "evening_routine"})
+                if after_fields[field_name] == {**old_spec, "enum": expanded}:
+                    continue
             if before_fields[field_name] != after_fields[field_name]:
                 violations.append(
                     f"{context} changed recursive wire spec for existing field "

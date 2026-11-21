@@ -51,7 +51,10 @@ public enum SyncMutationSemantics {
       entityId: envelope.entityId,
       operation: envelope.operation,
       version: envelope.version.description,
-      payloadSchemaVersion: envelope.payloadSchemaVersion,
+      // The v3 and v4 interpretations of existing record IDs are identical.
+      // Exact replay must not mint another change when a peer stamps either.
+      payloadSchemaVersion: LorvexVersion.compatiblePayloadVersion(
+        for: envelope.entityType, id: envelope.entityId, version: envelope.payloadSchemaVersion),
       canonicalPayload: try normalizedPayload(
         envelope.payload, operation: envelope.operation,
         version: envelope.version.description,

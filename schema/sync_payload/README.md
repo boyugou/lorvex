@@ -100,8 +100,16 @@ final envelope is compared to both the operation shape and recursive field
 contract. Payload-shadow owned keys are checked separately; they are not treated
 as proof of outbound emission.
 
-`001.json` is a released contract and is frozen; `LorvexVersion.payloadSchemaVersion`
-is `1`. Wire evolution is additive. An existing
+Version 4 adds `morning_routine` and `evening_routine` as independent
+preference record IDs. Their values contain the start minute and ordered habit
+UUIDs. Ordinary records still leave the outbox at version 3 when a newer shadow
+does not require a later version. A client upgrading from the old preference
+catalog fetches the zone once from the beginning. This recovers routine records
+an older binary could have classified as undecodable before advancing its
+cursor. The version adapter admits just these two extra `preference.key` values
+at the 3-to-4 transition.
+
+Wire evolution is additive. An existing
 entity, field specification, required/optional classification, delete semantic,
 or historical metadata entry cannot be removed or reinterpreted. To add a new
 entity or an optional top-level field:

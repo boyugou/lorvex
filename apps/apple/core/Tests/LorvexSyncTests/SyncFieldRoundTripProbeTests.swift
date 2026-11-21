@@ -408,7 +408,7 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
       envelope, "no outbound envelope produced for \(spec.kind.asString)", file: file, line: line)
     XCTAssertEqual(env.operation, .upsert, file: file, line: line)
     XCTAssertEqual(
-      env.payloadSchemaVersion, LorvexVersion.payloadSchemaVersion,
+      env.payloadSchemaVersion, LorvexVersion.compatiblePayloadVersion(for: spec.kind, id: spec.entityId),
       file: file, line: line)
     XCTAssertEqual(
       try SyncPayloadContractFixture.violations(for: env), [],

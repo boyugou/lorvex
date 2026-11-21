@@ -534,6 +534,20 @@ class MonotonicEvolutionTests(unittest.TestCase):
             before, after, previous_version=1, current_version=2
         )
 
+    def test_routine_identity_adapter_accepts_only_the_two_new_preference_keys(self) -> None:
+        root = Path(__file__).resolve().parents[3] / "schema" / "sync_payload"
+        before = json.loads((root / "003.json").read_text())
+        after = json.loads((root / "004.json").read_text())
+        def violations():
+            return adjacent_contract_violations(before, after, previous_version=3, current_version=4)
+        self.assertEqual(violations(), [])
+        field = after["entities"]["preference"]["fields"]["key"]
+        field["enum"].append("unknown_setting")
+        self.assertTrue(violations())
+        field["enum"].remove("unknown_setting")
+        field["enum"].remove("timezone")
+        self.assertTrue(violations())
+
     def test_allows_new_entity_and_safe_optional_top_level_field(self) -> None:
         before = _contract(1)
         after = _multi_entity_contract(2)

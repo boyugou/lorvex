@@ -588,15 +588,16 @@ extension OutboxEnqueue {
     // same-schema peer takes the parse-forward-compat path and re-stashes those
     // keys, rather than parsing fully and reaping its own shadow (dropping the
     // keys). `max` keeps the local schema when it already meets/exceeds it.
+    let authoredVersion = LorvexVersion.compatiblePayloadVersion(for: entityKind, id: entityId)
     let effectiveSchemaVersion: UInt32
     if let mergedShadow {
       let shadowSchemaVersion = try mapStore {
         try PayloadShadow.requireWirePayloadSchemaVersion(
           mergedShadow, context: "outbound payload shadow")
       }
-      effectiveSchemaVersion = max(LorvexVersion.payloadSchemaVersion, shadowSchemaVersion)
+      effectiveSchemaVersion = max(authoredVersion, shadowSchemaVersion)
     } else {
-      effectiveSchemaVersion = LorvexVersion.payloadSchemaVersion
+      effectiveSchemaVersion = authoredVersion
     }
 
     let envelope = SyncEnvelope(
@@ -673,7 +674,7 @@ extension OutboxEnqueue {
     }
     let remappedEnvelope = SyncEnvelope(
       entityType: kind, entityId: chase.finalId, operation: .upsert, version: version,
-      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
+      payloadSchemaVersion: LorvexVersion.compatiblePayloadVersion(for: kind, id: chase.finalId),
       payload: canonical, deviceId: context.deviceId)
     let result: ApplyResult
     do {

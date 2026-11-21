@@ -10,6 +10,9 @@ public enum CloudSyncEngineCheckpoint: String, Sendable, CaseIterable {
   /// base64-encoded. Absent means the next engine starts from scratch and
   /// fetches the whole zone.
   case engineState = "cloudkit.engine_state"
+  /// The set of preference record identities this fetch cursor understands.
+  /// Earlier builds could advance past a routine record as undecodable.
+  case preferenceCatalog = "cloudkit.preference_catalog"
   /// `"1"` once this device has saved to or fetched from the `Lorvex` zone.
   /// It separates the first upload, which must create the zone, from a zone
   /// that disappeared afterwards, which is a deletion and must not be

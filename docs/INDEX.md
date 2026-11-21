@@ -9,6 +9,7 @@ app.
 - [`../CLAUDE.md`](../CLAUDE.md) — operating manual for agents.
 - [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Shared) and open work.
 - [`development/NEW_MACHINE.md`](development/NEW_MACHINE.md) — setting up a development machine, the local files a clone lacks, privacy rules, and releasing.
+- [Build 166 release record](releases/1.0.0-166.md) — compare today’s and tomorrow’s remaining time before moving tasks.
 - [Build 165 release record](releases/1.0.0-165.md) — plan a subset of unfinished tasks against tomorrow’s agenda on iPhone and iPad.
 - [Build 164 release record](releases/1.0.0-164.md) — choose unfinished tasks against tomorrow’s working hours and existing plans on Mac.
 - [Build 163 release record](releases/1.0.0-163.md) — recent mobile journal entries, independent field saves and the direct Mac download.

@@ -102,10 +102,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   18. iPhone and iPad Daily Review now preview a selection against tomorrow’s
       existing work and appointments. Cancel, subset moves, Undo, and large
       text passed native walkthroughs. [Build 165](docs/releases/1.0.0-165.md).
-  19. Revisit the decision on an overbooked Today. Its suggestion can move a
-      batch to tomorrow without showing whether those tasks fit there.
-      Compare the load on both days before committing, and check that one
-      Undo restores the original plans.
+  19. An overbooked Today previews the effect on both working days. Users
+      can keep a suggested task, choose an alternative and undo the move.
+      Mobile cold launch now reads the saved workday after storage is ready.
+      [Build 166](docs/releases/1.0.0-166.md).
+  20. Make it easier to get back to work from mobile Today. Mac has a
+      contextual Start or Continue action. On the phone the appointment and
+      task list are visible, but starting a task takes a swipe or menu.
+      Evaluate what someone sees before, during, and immediately after a
+      meeting, including when a task is already in progress.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

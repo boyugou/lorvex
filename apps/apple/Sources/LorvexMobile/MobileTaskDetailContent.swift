@@ -109,18 +109,23 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
           statusChips
-          if !task.notes.isEmpty {
-            Text(userContent: task.notes)
-              .font(LorvexDesign.Typography.primaryText)
-              .textSelection(.enabled)
-              .foregroundStyle(.secondary)
-              .frame(maxWidth: .infinity, alignment: .leading)
+          if !task.notes.isEmpty, !checklistLeads {
+            taskNotes
           }
           if presentation == .pane {
             paneControls.padding(.top, LorvexDesign.Spacing.s)
           }
         }
         .padding(.vertical, LorvexDesign.Spacing.xs)
+      }
+      if checklistLeads {
+        checklistSection
+        if !task.notes.isEmpty {
+          Section(String(localized: "task_detail.notes.title", defaultValue: "Notes",
+            table: "Localizable", bundle: MobileL10n.bundle)) {
+            taskNotes
+          }
+        }
       }
       MobileTaskPropertiesSection(
         properties: properties,
@@ -150,30 +155,8 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
           .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      if showsChecklist {
-        Section(MobileTaskPropertyCopy.checklist) {
-          ForEach(task.checklistItems.sorted { $0.position < $1.position }) { item in
-            MobileChecklistItemRow(
-              item: item,
-              toggleChecklistItem: toggleChecklistItem,
-              removeChecklistItem: removeChecklistItem
-            )
-          }
-          if let addChecklistItem {
-            if isComposingChecklistItem {
-              MobileChecklistComposerRow(
-                addChecklistItem: addChecklistItem,
-                dismiss: { setComposingChecklistItem(false) })
-            } else {
-              addRow(
-                String(
-                  localized: "checklist.add", defaultValue: "Add Checklist Item",
-                  table: "Localizable", bundle: MobileL10n.bundle),
-                accessibilityIdentifier: "task.detail.checklist.add"
-              ) { setComposingChecklistItem(true) }
-            }
-          }
-        }
+      if showsChecklist, !checklistLeads {
+        checklistSection
       }
       if showsReminders {
         Section {
@@ -247,6 +230,38 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     ) {
       ToolbarItem(placement: .automatic) {
         moreMenu
+      }
+    }
+  }
+
+  private var checklistLeads: Bool {
+    task.status == .inProgress && showsChecklist
+  }
+
+  private var taskNotes: some View {
+    Text(userContent: task.notes)
+      .font(LorvexDesign.Typography.primaryText)
+      .textSelection(.enabled)
+      .foregroundStyle(.secondary)
+      .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  private var checklistSection: some View {
+    Section(MobileTaskPropertyCopy.checklist) {
+      MobileTaskChecklistRows(task: task, isMutating: isMutating, toggle: toggleChecklistItem, remove: removeChecklistItem)
+        .id(task.id)
+      if let addChecklistItem {
+        if isComposingChecklistItem {
+          MobileChecklistComposerRow(
+            addChecklistItem: addChecklistItem,
+            dismiss: { setComposingChecklistItem(false) })
+        } else {
+          addRow(
+            String(localized: "checklist.add", defaultValue: "Add Checklist Item",
+              table: "Localizable", bundle: MobileL10n.bundle),
+            accessibilityIdentifier: "task.detail.checklist.add"
+          ) { setComposingChecklistItem(true) }
+        }
       }
     }
   }

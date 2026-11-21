@@ -31,6 +31,7 @@ struct MobileChecklistItemRow: View {
         : String(
           localized: "task.row.completed.a11y", defaultValue: "Completed", table: "Localizable",
           bundle: MobileL10n.bundle))
+    .accessibilityIdentifier("task.detail.checklist.item.\(item.id)")
     .lorvexSensoryFeedback(.success, trigger: item.completedAt != nil) { _, isDone in isDone }
     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
       if let removeChecklistItem {

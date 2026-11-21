@@ -76,6 +76,15 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  public func loadAgendaTasks(on day: String) async throws -> [LorvexTask] {
+    try read { db in
+      let query = TaskRepo.ListTasksQuery(status: .actionable,
+        scheduledRange: .init(from: day, to: day), limit: .max, offset: 0)
+      let result = try TaskRepo.Read.listTasks(db, query: query)
+      return try Self.enrich(db, rows: result.rows)
+    }
+  }
+
   public func getHiddenScheduledTasks(limit: Int, offset: Int) async throws -> TaskPageResult {
     try read { db in
       let today = try WorkflowTimezone.todayYmdForConn(db)

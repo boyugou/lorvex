@@ -44,24 +44,26 @@ public struct LorvexReviewTaskList: View {
   public struct Deferral {
     public var tomorrowKey: String
     public var sectionLabel: (Int) -> String
+    public var preview: (() -> Void)?
     public var rowLabel: String
     public var arrange: ([ReviewTaskSummary], ReviewTaskDestination) async -> Void
 
     public init(
       tomorrowKey: String, sectionLabel: @escaping (Int) -> String, rowLabel: String,
+      preview: (() -> Void)? = nil,
       arrange: @escaping ([ReviewTaskSummary], ReviewTaskDestination) async -> Void
     ) {
       self.tomorrowKey = tomorrowKey
       self.sectionLabel = sectionLabel
       self.rowLabel = rowLabel
+      self.preview = preview
       self.arrange = arrange
     }
 
     /// Whether `task` still has a move to make: it is not yet planned for
     /// tomorrow or a later day.
     public func canMove(_ task: ReviewTaskSummary) -> Bool {
-      guard let planned = task.plannedDate else { return true }
-      return planned < tomorrowKey
+      task.canMoveToTomorrow(tomorrowKey)
     }
   }
 
@@ -159,7 +161,11 @@ public struct LorvexReviewTaskList: View {
       // offers each of two flexible children half the row, which would wrap
       // or cut the action even where the row has room.
       let action = Button {
-        Task { await arrange(movable, for: .day(deferral.tomorrowKey), with: deferral) }
+        if let preview = deferral.preview {
+          preview()
+        } else {
+          Task { await arrange(movable, for: .day(deferral.tomorrowKey), with: deferral) }
+        }
       } label: {
         // The words are one line tall. The label's padding lifts the tap
         // target to about 44pt, and the negative padding outside the button

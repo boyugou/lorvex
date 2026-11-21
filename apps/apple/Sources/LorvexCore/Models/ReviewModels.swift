@@ -189,10 +189,11 @@ public struct ReviewTaskSummary: Identifiable, Equatable, Sendable {
   public var dueDate: String?
   /// The day the task is planned for as `YYYY-MM-DD`, when it has one.
   public var plannedDate: String?
+  public var estimatedMinutes: Int?
 
   public init(
     id: String, title: String, status: String, deferCount: Int, dueDate: String? = nil,
-    plannedDate: String? = nil
+    plannedDate: String? = nil, estimatedMinutes: Int? = nil
   ) {
     self.id = id
     self.title = title
@@ -200,10 +201,16 @@ public struct ReviewTaskSummary: Identifiable, Equatable, Sendable {
     self.deferCount = deferCount
     self.dueDate = dueDate
     self.plannedDate = plannedDate
+    self.estimatedMinutes = estimatedMinutes
   }
 }
 
 extension ReviewTaskSummary {
+  public func canMoveToTomorrow(_ day: String) -> Bool {
+    guard let plannedDate else { return true }
+    return plannedDate < day
+  }
+
   /// A deadline remains visible while the task's working day changes.
   public func reviewDeadline(relativeTo today: String) -> String? {
     guard let dueDate, let date = PlannedDayBridge.storageDate(forLogicalDay: dueDate) else { return nil }

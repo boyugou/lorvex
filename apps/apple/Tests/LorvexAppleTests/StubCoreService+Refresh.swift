@@ -132,6 +132,10 @@ extension StubCoreService {
     scheduledTasksCallCount += 1
     return try await preview.getScheduledTasks(from: from, to: to, limit: limit)
   }
+  func loadAgendaTasks(on day: String) async throws -> [LorvexTask] {
+    scheduledTasksCallCount += 1
+    return try await preview.loadAgendaTasks(on: day)
+  }
   func getHiddenScheduledTasks(limit: Int, offset: Int) async throws -> TaskPageResult {
     try await preview.getHiddenScheduledTasks(limit: limit, offset: offset)
   }

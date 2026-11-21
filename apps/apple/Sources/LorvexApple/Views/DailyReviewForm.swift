@@ -15,6 +15,8 @@ struct DailyReviewForm: View {
   @State private var habits: [LorvexHabit] = []
   @State private var calendar: CalendarTimelineSnapshot?
   @State private var tomorrow: LorvexAgendaDay?
+  @State private var planningTomorrow = false
+  @State private var loadingTomorrow = true
   private typealias Copy = ReviewCalmCopy
 
   var body: some View {
@@ -60,6 +62,22 @@ struct DailyReviewForm: View {
         .frame(maxWidth: .infinity)
       }
     }
+    .sheet(isPresented: $planningTomorrow) {
+      if let key = tomorrowKey {
+        ReviewTomorrowPlanSheet(dayKey: key,
+          tasks: (evidence?.unfinishedTasks ?? []).filter { $0.canMoveToTomorrow(key) },
+          agenda: groupedTomorrow, loading: loadingTomorrow,
+          workday: store.workdayWindow, retry: {
+            await store.loadWorkdayWindow()
+            await loadTomorrow()
+          }
+        ) { tasks in
+          planningTomorrow = false
+          Task { await store.arrangeReviewTasks(tasks, reviewedOn: date, destination: .day(key), undoManager: undoManager) }
+        }
+      }
+    }
+    .onChange(of: tomorrowKey) { planningTomorrow = false }
     .background(alignment: .top) {
       LinearGradient(colors: [LorvexDesign.Palette.Destination.review.opacity(0.065), .clear],
         startPoint: .top, endPoint: .bottom)
@@ -67,12 +85,29 @@ struct DailyReviewForm: View {
     }
     .background(.background)
     .onChange(of: focusedField != nil) { _, focused in onEditorFocusChange(focused) }
-    .task(id: store.dayReviewReadKey) { await loadPageReads() }
+    .task(id: store.dayReviewReadKey) {
+      if let loaded = await store.loadReviewHabits(date: date), !Task.isCancelled { habits = loaded }
+    }
+    .task(id: TomorrowReadKey(review: store.dayReviewReadKey, calendarToken: store.calendarTimelineLoadToken)) {
+      if isReviewingToday || !isReadOnly { await loadTomorrow() }
+    }
+    .task { await store.loadWorkdayWindow() }
     .task(id: [UInt64(store.calendarTimelineLoadToken), store.reviewReadGeneration]) {
       if let loaded = try? await store.core.loadCalendarTimeline(from: date, to: date), !Task.isCancelled {
         calendar = loaded
       }
     }
+  }
+
+  private struct TomorrowReadKey: Equatable {
+    let review: DayReviewReadKey
+    let calendarToken: Int
+  }
+
+  private var groupedTomorrow: LorvexAgendaDay? {
+    guard let tomorrow, tomorrow.key == tomorrowKey else { return nil }
+    return LorvexAgendaDay(key: tomorrow.key,
+      events: store.calendarDuplicateGrouping.events(tomorrow.events), tasks: tomorrow.tasks)
   }
 
   private var isReviewingToday: Bool { date == store.logicalTodayDateString }
@@ -89,11 +124,12 @@ struct DailyReviewForm: View {
     calendar?.groupingDuplicates(store.calendarDuplicateGrouping).eventsOccurring(on: date) ?? []
   }
 
-  private func loadPageReads() async {
-    if let loaded = await store.loadReviewHabits(date: date), !Task.isCancelled { habits = loaded }
-    if isReviewingToday, let loaded = await store.loadTomorrowAgenda(), !Task.isCancelled {
-      tomorrow = loaded
-    }
+  private func loadTomorrow() async {
+    loadingTomorrow = true
+    let loaded = await store.loadTomorrowAgenda()
+    guard !Task.isCancelled else { return }
+    tomorrow = loaded
+    loadingTomorrow = false
   }
 
   private var header: some View {
@@ -140,7 +176,8 @@ struct DailyReviewForm: View {
           await store.completeTask(id: id, undoManager: undoManager)
         },
         deferral: isReadOnly ? nil : tomorrowKey.map { key in
-          .init(tomorrowKey: key, sectionLabel: Copy.moveSection, rowLabel: Copy.moveRow) { tasks, destination in
+          .init(tomorrowKey: key, sectionLabel: { _ in ReviewTomorrowPlanSheet.title + "…" }, rowLabel: Copy.moveRow,
+            preview: { planningTomorrow = true }) { tasks, destination in
             await store.arrangeReviewTasks(tasks, reviewedOn: date, destination: destination, undoManager: undoManager)
           }
         }
@@ -173,9 +210,7 @@ struct DailyReviewForm: View {
   /// day closes on what comes next.
   @ViewBuilder
   private var tomorrowSection: some View {
-    if isReviewingToday, let tomorrow, tomorrow.key == tomorrowKey {
-      let day = LorvexAgendaDay(key: tomorrow.key,
-        events: store.calendarDuplicateGrouping.events(tomorrow.events), tasks: tomorrow.tasks)
+    if isReviewingToday, let day = groupedTomorrow {
       agenda(day, label: Copy.tomorrowLabel, identifier: "reviews.daily.tomorrow")
     }
   }

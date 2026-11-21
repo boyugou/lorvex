@@ -27,6 +27,7 @@ public enum DayReview {
     /// The day the task is planned for as `YYYY-MM-DD`, when it has one.
     public let plannedDate: String?
     public let dueDate: String?
+    public let estimatedMinutes: Int?
   }
 
   public struct DaySummary: Sendable, Equatable {
@@ -55,7 +56,7 @@ public enum DayReview {
            AND completed_at < ?2
     """
   static let completedItemsSQL = """
-    SELECT id, title, status, defer_count, planned_date, due_date
+    SELECT id, title, status, defer_count, planned_date, due_date, estimated_minutes
          FROM tasks
          WHERE status = 'completed'
            AND tasks.archived_at IS NULL
@@ -71,7 +72,7 @@ public enum DayReview {
            AND created_at < ?2
     """
   static let unfinishedItemsSQL = """
-    SELECT id, title, status, defer_count, planned_date, due_date
+    SELECT id, title, status, defer_count, planned_date, due_date, estimated_minutes
       FROM tasks
       WHERE status IN (\(StatusName.actionableStatusSqlList)) AND archived_at IS NULL
         AND (planned_date = ?1 OR due_date = ?1)
@@ -149,7 +150,7 @@ public enum DayReview {
       ?? 0
     func item(_ row: Row) -> TaskItem {
       TaskItem(id: row[0], title: row[1], status: row[2], deferCount: row[3],
-        plannedDate: row[4], dueDate: row[5])
+        plannedDate: row[4], dueDate: row[5], estimatedMinutes: row[6])
     }
     let topCompleted = try Row.fetchAll(db, sql: completedItemsSQL,
       arguments: [window.startUtc, window.endUtc, completedLimit]).map(item)

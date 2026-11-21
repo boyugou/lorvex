@@ -89,7 +89,7 @@ extension LorvexAgendaDay {
       return LorvexAgendaDay(key: todayKey, events: [], tasks: [])
     }
     async let timeline = core.loadCalendarTimeline(from: key, to: key)
-    async let tasks = core.getScheduledTasks(from: key, to: key, limit: 50)
+    async let tasks = core.loadAgendaTasks(on: key)
     let built = build(todayKey: todayKey, events: try await timeline.events, tasks: try await tasks, dayCount: 1)
     return built.first ?? LorvexAgendaDay(key: key, events: [], tasks: [])
   }

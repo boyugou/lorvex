@@ -28,6 +28,7 @@ extension AppStore {
     }
     do {
       _ = try await core.setPreference(key: "working_hours", value: encoded)
+      await loadWorkdayWindow()
       return true
     } catch {
       await presentUserFacingError(error)

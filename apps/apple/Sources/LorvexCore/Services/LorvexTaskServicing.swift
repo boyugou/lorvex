@@ -67,6 +67,9 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   /// ``CalendarGridModel/windowTaskLimit``.
   func getScheduledTasks(from: String, to: String, limit: Int) async throws -> [LorvexTask]
 
+  /// The complete actionable workload on a single calendar day for planning.
+  func loadAgendaTasks(on day: String) async throws -> [LorvexTask]
+
   /// Returns open tasks currently hidden by a future `available_from`
   /// (defer-until) and not yet overdue — the "Scheduled" section, ordered
   /// `available_from ASC` then the canonical task key. Distinct from

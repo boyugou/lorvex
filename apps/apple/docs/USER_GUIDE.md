@@ -3719,9 +3719,9 @@ The **Review** workspace opens on today's review, one page per day:
   that day, so a check-in you forgot can be made up from the review. A habit
   you skipped that day is left out of the list and of the count of habits you
   kept.
-- Two one-tap scales, **How did it feel?** and **Energy**. The level you pick
-  is named under its dot, from **Rough** to **Great** and from **Drained** to
-  **Full**.
+- On iPhone and iPad, **How did it feel?** and **Energy** sit below the note.
+  Tap either one to choose a rating. Its menu also offers **Clear** once rated.
+  On Mac, select a word on either scale, or select it again to clear it.
 - **Tomorrow** shows the next day while you review today. All-day events
   come first. Timed work and meetings follow in clock order, with untimed
   tasks at the end. On Mac, expand the three-row preview to see the rest.

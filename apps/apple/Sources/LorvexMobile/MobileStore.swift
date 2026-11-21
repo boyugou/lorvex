@@ -37,7 +37,8 @@ public final class MobileStore {
   @ObservationIgnored var timesWhenDayTimesWereSuggested: [LorvexTask.ID: Range<Int>] = [:]
   public internal(set) var isSuggestingDayTimes = false
   public internal(set) var isSavingDayTimes = false
-  public internal(set) var isSavingReview = false
+  var dailyReviewSave: Task<Bool, Never>?
+  public var isSavingReview: Bool { dailyReviewSave != nil }
   public internal(set) var memory: MemorySnapshot?
   public internal(set) var selectedMemoryKey: MemoryEntry.ID?
   public internal(set) var lists: ListCatalogSnapshot?

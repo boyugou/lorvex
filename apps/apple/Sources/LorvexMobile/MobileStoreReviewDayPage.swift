@@ -5,6 +5,7 @@ import SwiftUI
 struct MobileStoreReviewDayPage: View {
   @Bindable var store: MobileStore
   @FocusState private var focusedField: Field?
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var showsMoreFields = false
   /// The active habits as they stood on the reviewed day.
   @State private var dayHabits: (date: String, habits: [LorvexHabit])?
@@ -86,6 +87,7 @@ struct MobileStoreReviewDayPage: View {
     let editable = store.selectedReviewDayIsEditable
     if editable {
       journalEditor
+      ratingEditor
     } else if let review = store.dailyReview, review.date == store.selectedReviewDate, review.hasJournalContent {
       LorvexJournalEntryBody(review: review, feeling: Copy.feelWord, energy: Copy.energyWord)
     } else if store.reviewDraftDate == store.selectedReviewDate {
@@ -139,8 +141,6 @@ struct MobileStoreReviewDayPage: View {
         }
       }
     }
-
-    if editable { ratingEditor }
 
     if isReviewingToday, let tomorrow, tomorrow.key == tomorrowKey {
       LorvexReviewTomorrow(
@@ -198,24 +198,73 @@ struct MobileStoreReviewDayPage: View {
   }
 
   private var ratingEditor: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
-      scale(Copy.feelLabel, value: $store.dailyReviewDraft.mood,
+    let layout = dynamicTypeSize >= .xxLarge
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: LorvexDesign.Spacing.s))
+      : AnyLayout(HStackLayout(alignment: .top, spacing: LorvexDesign.Spacing.s))
+    return layout {
+      ratingMenu(Copy.feelLabel, symbol: "face.smiling", value: $store.dailyReviewDraft.mood,
         dotLabel: Copy.feelDot, word: Copy.feelWord, identifier: "review.daily.mood")
-      scale(Copy.energyLabel, value: $store.dailyReviewDraft.energy,
+      ratingMenu(Copy.energyLabel, symbol: "bolt", value: $store.dailyReviewDraft.energy,
         dotLabel: Copy.energyDot, word: Copy.energyWord, identifier: "review.daily.energy")
     }
   }
 
-  private func scale(
-    _ label: String, value: Binding<Int?>,
+  private func ratingMenu(
+    _ label: String, symbol: String, value: Binding<Int?>,
     dotLabel: @escaping (Int) -> String, word: @escaping (Int) -> String, identifier: String
   ) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-      LorvexPageLabel(label)
-      LorvexRatingScale(
-        value: value, levelLabel: word, accessibilityLabel: dotLabel,
-        identifierPrefix: identifier, isEnabled: true)
+    let add = String(localized: "common.add", defaultValue: "Add", table: "Localizable", bundle: MobileL10n.bundle)
+    let selected = value.wrappedValue
+    return Menu {
+      ForEach(1...5, id: \.self) { level in
+        Button {
+          value.wrappedValue = level
+        } label: {
+          if selected == level {
+            Label(word(level), systemImage: "checkmark")
+          } else {
+            Text(word(level))
+          }
+        }
+        .accessibilityValue(dotLabel(level))
+        .accessibilityAddTraits(selected == level ? .isSelected : [])
+        .accessibilityIdentifier("\(identifier).\(level)")
+      }
+      if selected != nil {
+        Divider()
+        Button {
+          value.wrappedValue = nil
+        } label: {
+          Label(String(localized: "common.clear", defaultValue: "Clear", table: "Localizable", bundle: MobileL10n.bundle),
+            systemImage: "xmark")
+        }
+        .accessibilityIdentifier("\(identifier).clear")
+      }
+    } label: {
+      HStack(spacing: LorvexDesign.Spacing.s) {
+        Image(systemName: symbol).foregroundStyle(LorvexDesign.Palette.Destination.review)
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+          Text(label).font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
+          Text(selected.map(word) ?? add)
+            .font(LorvexDesign.Typography.primaryEmphasis)
+            .foregroundStyle(selected == nil ? Color.accentColor : .primary)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        Spacer(minLength: 0)
+        Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
+      }
+      .padding(.horizontal, LorvexDesign.Spacing.m)
+      .padding(.vertical, LorvexDesign.Spacing.s)
+      .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+      .background(LorvexDesign.Palette.insetFill, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
+      .contentShape(Rectangle())
     }
+    .menuOrder(.fixed)
+    .buttonStyle(.plain)
+    .accessibilityLabel(label)
+    .accessibilityValue(selected.map { [word($0), dotLabel($0)].joined(separator: ", ") } ?? add)
+    .accessibilityIdentifier(identifier)
+    .sensoryFeedback(.selection, trigger: selected)
   }
 
   /// A written field keeps its name above it, since its placeholder is gone.

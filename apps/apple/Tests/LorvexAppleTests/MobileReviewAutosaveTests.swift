@@ -275,3 +275,29 @@ func mobileStoreReviewStaysOnItsDayWhenTheWriteBeforeASwitchFails() async throws
   #expect(store.selectedReviewDate == yesterday)
   #expect(try await core.loadDailyReview(date: today)?.summary == "Worth keeping")
 }
+
+/// Changing days must join a pending write before the new day's load can
+/// replace a second rating the user just picked.
+@MainActor
+@Test
+func mobileReviewDaySwitchWaitsForPendingRatings() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = MobileStore(core: core)
+  await store.refresh()
+  await store.loadDailyReviewDraft()
+  let today = store.selectedReviewDate
+  let yesterday = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: -1))
+  let gate = ReviewGate()
+  core.upsertDailyReviewGate = { await gate.hold() }
+  store.dailyReviewDraft.mood = 4
+  let firstSave = Task { await store.flushDailyReviewDraftIfNeeded() }
+  await gate.waitUntilHeld()
+  store.dailyReviewDraft.energy = 2
+  Task { await gate.release() }
+  await store.selectReviewDay(yesterday)
+  #expect(await firstSave.value)
+  let saved = try #require(try await core.loadDailyReview(date: today))
+  #expect(saved.mood == 4)
+  #expect(saved.energyLevel == 2)
+  #expect(store.selectedReviewDate == yesterday)
+}

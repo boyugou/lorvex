@@ -103,7 +103,7 @@ extension MobileStore {
     // current day. A write that fails does: the review stays on its day with the
     // text intact and the error shown, instead of the next day's load replacing
     // text that was never saved.
-    guard await flushDailyReviewDraftIfNeeded() else { return }
+    guard await finishDailyReviewEdits() else { return }
     selectedReviewDate = date
     await loadDailyReviewDraft()
   }
@@ -122,8 +122,7 @@ extension MobileStore {
   /// one, which is what makes the ended day stop being editable.
   func carryReviewToNewLogicalDay(from previousDay: String, to newDay: String) async {
     guard selectedReviewDate == previousDay, newDay > previousDay else { return }
-    await flushDailyReviewDraftIfNeeded()
-    guard dailyReviewDraftMatchesLoaded else { return }
+    guard await finishDailyReviewEdits(), dailyReviewDraftMatchesLoaded else { return }
     selectedReviewDate = newDay
   }
 
@@ -140,7 +139,7 @@ extension MobileStore {
 
   /// Explicit Save: requires a non-empty summary and valid ratings (the manual
   /// save rule), then commits. Body-only edits reach the store only through the
-  /// non-blocking ``flushDailyReviewDraftIfNeeded()`` auto-flush.
+  /// ``flushDailyReviewDraftIfNeeded()`` auto-flush.
   @discardableResult
   public func saveDailyReviewDraft() async -> Bool {
     guard selectedReviewDayIsEditable, dailyReviewDraft.canSave, !isSavingReview,
@@ -165,11 +164,19 @@ extension MobileStore {
     // Pin the day being saved: a background refresh can move `selectedReviewDate`
     // across the awaits below, which would otherwise mix the saved day's review
     // with a different day's evidence.
-    let savingDate = selectedReviewDate
-    let submitted = dailyReviewDraft
-    isSavingReview = true
-    defer { isSavingReview = false }
+    let date = selectedReviewDate
+    let draft = dailyReviewDraft
+    let save = Task {
+      defer { dailyReviewSave = nil }
+      return await writeDailyReview(draft, on: date, playsFeedback: playsFeedback)
+    }
+    dailyReviewSave = save
+    return await save.value
+  }
 
+  private func writeDailyReview(
+    _ submitted: MobileDailyReviewDraft, on savingDate: String, playsFeedback: Bool
+  ) async -> Bool {
     do {
       let saved = try await core.upsertDailyReviewPreservingLinks(
         date: savingDate,
@@ -248,16 +255,29 @@ extension MobileStore {
   /// Persist the draft when it differs from the loaded entry, regardless of
   /// whether a summary was written — the core accepts a summary-less review, so a
   /// body-only edit (mood / energy / wins / blockers / learnings) must not be
-  /// lost when the editor switches day or view. Best-effort and non-blocking:
-  /// only an editable day is written, and nothing waits on it except a day
-  /// switch, which stays put when the write fails. Returns false only for a write
-  /// that failed, so text that is still unsaved is never discarded by moving on.
+  /// lost when the editor switches day or view. A flush that overlaps a previous write waits
+  /// for its result before comparing the current draft to storage.
   @discardableResult
   public func flushDailyReviewDraftIfNeeded() async -> Bool {
-    guard !dailyReviewDraftMatchesLoaded, selectedReviewDayIsEditable,
-      !isSavingReview, !isLoadingDailyReviewDraft
+    let date = selectedReviewDate
+    while let pending = dailyReviewSave {
+      guard await pending.value else { return false }
+    }
+    guard selectedReviewDate == date, !dailyReviewDraftMatchesLoaded, selectedReviewDayIsEditable,
+      !isLoadingDailyReviewDraft
     else { return true }
     return await commitDailyReviewDraft(playsFeedback: false)
+  }
+
+  /// The editor can accept another change while its snapshot is being saved.
+  /// Finish that change too before replacing the draft or suspending the app.
+  private func finishDailyReviewEdits() async -> Bool {
+    let day = selectedReviewDate
+    repeat {
+      guard await flushDailyReviewDraftIfNeeded() else { return false }
+    } while selectedReviewDate == day && selectedReviewDayIsEditable && !isLoadingDailyReviewDraft
+      && !dailyReviewDraftMatchesLoaded
+    return true
   }
 
   /// Writes the drafts that save on their own, as the app leaves the foreground.
@@ -268,6 +288,6 @@ extension MobileStore {
   /// the same background window, which then sends the saved entry to the
   /// other devices.
   public func flushAutosaveDraftsBeforeSuspension() async {
-    await flushDailyReviewDraftIfNeeded()
+    _ = await finishDailyReviewEdits()
   }
 }

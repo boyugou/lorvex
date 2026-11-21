@@ -485,6 +485,16 @@
       try await render(TaskDetailView(store: store).frame(width: 320, height: 640), named: "planned-after-deadline")
     }
 
+    @Test func firstUseWelcome() async throws {
+      let store = AppStore(core: try makeInMemoryCore())
+      await store.refresh()
+      let suite = "test.firstUse.render.\(UUID().uuidString)"
+      let defaults = try #require(UserDefaults(suiteName: suite))
+      defer { defaults.removePersistentDomain(forName: suite) }
+      let settings = AppSettingsStore(defaults: defaults, environment: [:])
+      try await render(SetupWizardSheet(store: store, settings: settings, onDismiss: {}), named: "welcome")
+    }
+
     func render(_ content: some View, named name: String) async throws {
       let directory = URL(fileURLWithPath: try #require(ProcessInfo.processInfo.environment["LORVEX_SCRATCH_DIR"]))
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

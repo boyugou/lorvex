@@ -98,6 +98,7 @@ public struct LorvexMobileStoreRootView: View {
     }
     .sheet(isPresented: $showSetupWizard) {
       MobileSetupWizard(
+        store: store,
         defaults: setupPreferences.defaults,
         turnOnCloudSync: {
           // The request is made before the task starts, as the Settings
@@ -116,10 +117,6 @@ public struct LorvexMobileStoreRootView: View {
           Task { await store.rescheduleReminders() }
         })
       .interactiveDismissDisabled(true)
-      // Force the full-height detent: a first-run wizard must own the screen.
-      // Without this the sheet adopted a shorter height and clipped the pinned
-      // call-to-action once the welcome copy wrapped to multiple lines.
-      .presentationDetents([.large])
     }
     .sheet(isPresented: $store.isPresentingCapture) {
       MobileStoreCaptureSheet(store: store, showsAsCard: horizontalSizeClass == .regular)

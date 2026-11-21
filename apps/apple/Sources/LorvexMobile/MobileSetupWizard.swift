@@ -2,10 +2,8 @@ import LorvexCore
 import SwiftUI
 import UserNotifications
 
-/// The first-run setup wizard for the iOS/iPadOS surface: a welcome, the
-/// choice to sync through iCloud, notification permission, and a closing page
-/// that names the two ways work gets into Lorvex (capture on any tab, or an
-/// assistant connected on the Mac).
+/// First launch offers a task on Today, an existing iCloud plan, or the
+/// workspace. Deferring sync in its setup opens the optional permissions guide.
 ///
 /// iCloud sync is off until someone turns it on, so the sync page asks: Turn
 /// On runs `turnOnCloudSync` (the same transition Settings runs) without
@@ -22,6 +20,7 @@ public struct MobileSetupWizard: View {
 
   @State private var step: Step
   @State private var permissionsViewModel = PermissionsStatusViewModel()
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @Environment(\.dismiss) private var dismiss
   @Environment(\.openURL) private var openURL
   /// The width of a feature row's symbol column, grown with the text so a
@@ -35,13 +34,16 @@ public struct MobileSetupWizard: View {
   /// `setupCompleted` has been persisted. Lets the host store lift its own
   /// reminder-authorization hold (`MobileStore.isSetupCompleted`) and re-plan
   /// immediately instead of waiting for the next unrelated refresh.
+  private let store: MobileStore
   private let onComplete: () -> Void
 
   public init(
+    store: MobileStore,
     defaults: UserDefaults = .standard,
     turnOnCloudSync: @escaping () -> Void,
     onComplete: @escaping () -> Void = {}
   ) {
+    self.store = store
     self.preferences = MobileSetupPreferences(defaults: defaults)
     self.turnOnCloudSync = turnOnCloudSync
     self.onComplete = onComplete
@@ -71,15 +73,19 @@ public struct MobileSetupWizard: View {
         .navigationTitle(stepTitle)
         #if !os(macOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(step == .welcome ? .hidden : .visible, for: .navigationBar)
         #endif
         .toolbar {
           ToolbarItem(placement: .confirmationAction) {
-            if step != .done {
-              Button(String(localized: "setup.skip", defaultValue: "Skip", table: "Localizable", bundle: MobileL10n.bundle)) { skip() }
+            if step != .done && step != .welcome {
+              Button(String(localized: "setup.skip", defaultValue: "Skip", table: "Localizable", bundle: MobileL10n.bundle)) { finish() }
             }
           }
         }
     }
+    .presentationSizing(SetupPresentationSize(largeText: dynamicTypeSize.isAccessibilitySize))
+    .mobileSystemContentMargins()
+    .presentationDetents(step == .welcome && !dynamicTypeSize.isAccessibilitySize ? [.medium, .large] : [.large])
   }
 
   @ViewBuilder
@@ -104,26 +110,19 @@ public struct MobileSetupWizard: View {
   // MARK: - Steps
 
   private var mobileWelcome: some View {
-    setupPage(
-      systemImage: "checklist",
-      iconTint: .accentColor,
-      title: Text(String(localized: "setup.welcome.title", defaultValue: "Welcome to Lorvex", table: "Localizable", bundle: MobileL10n.bundle))
-    ) {
-      featureRow(
-        systemImage: "sparkles",
-        title: String(localized: "setup.welcome.assistant.title", defaultValue: "Your assistant does the writing", table: "Localizable", bundle: MobileL10n.bundle),
-        detail: String(localized: "setup.welcome.assistant.detail", defaultValue: "Lorvex has no AI of its own. Connect Claude or another MCP assistant to Lorvex on your Mac.", table: "Localizable", bundle: MobileL10n.bundle))
-      featureRow(
-        systemImage: "sun.max",
-        title: String(localized: "setup.welcome.today.title", defaultValue: "Your day in one place", table: "Localizable", bundle: MobileL10n.bundle),
-        detail: String(localized: "setup.welcome.today.detail", defaultValue: "What’s planned, due, or started today, in one list.", table: "Localizable", bundle: MobileL10n.bundle))
-      featureRow(
-        systemImage: "person.crop.circle.badge.checkmark",
-        title: String(localized: "setup.welcome.control.title", defaultValue: "You have the last word", table: "Localizable", bundle: MobileL10n.bundle),
-        detail: String(localized: "setup.welcome.control.detail", defaultValue: "Your assistant suggests and plans; you decide what stays on your list.", table: "Localizable", bundle: MobileL10n.bundle))
-    }
-    .safeAreaBar(edge: .bottom) {
-      actionStack { continueButton }
+    ScrollView {
+      LorvexTodayTaskForm(welcome: .init(
+        context: LorvexProductMetadata.mobileAppDisplayName,
+        sync: advance, skip: finish)
+      ) { title in
+        try await store.addTaskForToday(title)
+        store.selectedTab = .today
+        store.routePath = []
+        finish()
+      }
+      .frame(maxWidth: 440)
+      .padding(LorvexDesign.Spacing.xl)
+      .frame(maxWidth: .infinity)
     }
   }
 
@@ -150,7 +149,7 @@ public struct MobileSetupWizard: View {
       actionStack {
         primaryButton(String(localized: "setup.sync.turn_on", defaultValue: "Turn On iCloud Sync", table: "Localizable", bundle: MobileL10n.bundle)) {
           turnOnCloudSync()
-          advance()
+          finish()
         }
         .accessibilityIdentifier("setup.sync.turnOn")
       } secondary: {
@@ -283,11 +282,8 @@ public struct MobileSetupWizard: View {
     advance()
   }
 
-  /// Skips the remaining steps and finishes setup, so "Skip" leaves onboarding
-  /// rather than merely advancing one step. Mirrors the done step's finish
-  /// action (`setupCompleted` is set once), which is why the toolbar hides Skip
-  /// on the final step.
-  private func skip() {
+  /// Both completing an action and explicitly skipping finish setup.
+  private func finish() {
     preferences.complete()
     onComplete()
     dismiss()
@@ -416,5 +412,16 @@ public struct MobileSetupWizard: View {
 
   private var notNowLabel: String {
     String(localized: "setup.not_now", defaultValue: "Not Now", table: "Localizable", bundle: MobileL10n.bundle)
+  }
+}
+
+/// A larger page gives the returning-plan action room at accessibility sizes.
+/// Switching sizing proposals keeps the text field and its draft mounted.
+private struct SetupPresentationSize: PresentationSizing {
+  var largeText: Bool
+
+  func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
+    if largeText { return PagePresentationSizing.page.proposedSize(for: root, context: context) }
+    return AutomaticPresentationSizing.automatic.proposedSize(for: root, context: context)
   }
 }

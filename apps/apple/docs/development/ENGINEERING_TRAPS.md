@@ -64,8 +64,8 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   `UNUserNotificationCenter.current()` aborts there. Read notification status
   through the store's injected status provider.
 - `CKContainer(identifier:)` traps in a build without the iCloud entitlement,
-  which includes simulator test harnesses. Do not turn on Sync with iCloud in
-  one.
+  so the XcodeGen Debug simulator host includes the development CloudKit
+  entitlements. Use the injected controller for unentitled unit-test hosts.
 - When SwiftUI traps (SIGTRAP), read the newest `.ips` report in
   `~/Library/Logs/DiagnosticReports/` before guessing:
   `LorvexApple-*.ips` comes from a debug build or tour, and

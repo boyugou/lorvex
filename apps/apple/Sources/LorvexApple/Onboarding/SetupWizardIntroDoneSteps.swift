@@ -1,38 +1,6 @@
 import LorvexCore
 import SwiftUI
 
-// MARK: - Welcome
-
-/// The first page: what Lorvex is, in three points — the assistant does the
-/// writing, the day lives on one page, and the person keeps the last word.
-struct WelcomeStep: View {
-  let onNext: () -> Void
-
-  var body: some View {
-    SetupWizardPage(
-      systemImage: "checklist",
-      title: LocalizedStringResource("setup.welcome.title", defaultValue: "Welcome to Lorvex", table: "Localizable", bundle: LorvexL10n.bundle)
-    ) {
-      SetupWizardFeatureList {
-        SetupWizardFeatureRow(
-          systemImage: "sparkles",
-          title: LocalizedStringResource("setup.welcome.assistant.title", defaultValue: "Your assistant does the writing", table: "Localizable", bundle: LorvexL10n.bundle),
-          detail: LocalizedStringResource("setup.welcome.assistant.detail", defaultValue: "Lorvex has no AI of its own. Connect Claude or another MCP assistant on this Mac, and it captures and plans with you.", table: "Localizable", bundle: LorvexL10n.bundle))
-        SetupWizardFeatureRow(
-          systemImage: "sun.max",
-          title: LocalizedStringResource("setup.welcome.today.title", defaultValue: "Your day in one place", table: "Localizable", bundle: LorvexL10n.bundle),
-          detail: LocalizedStringResource("setup.welcome.today.detail", defaultValue: "Everything set for today in one list, with your schedule beside it.", table: "Localizable", bundle: LorvexL10n.bundle))
-        SetupWizardFeatureRow(
-          systemImage: "person.crop.circle.badge.checkmark",
-          title: LocalizedStringResource("setup.welcome.control.title", defaultValue: "You have the last word", table: "Localizable", bundle: LorvexL10n.bundle),
-          detail: LocalizedStringResource("setup.welcome.control.detail", defaultValue: "Your assistant suggests and plans; you decide what stays on your list.", table: "Localizable", bundle: LorvexL10n.bundle))
-      }
-    } actions: {
-      SetupWizardPrimaryButton(String(localized: "setup.action.continue", defaultValue: "Continue", table: "Localizable", bundle: LorvexL10n.bundle), action: onNext)
-    }
-  }
-}
-
 // MARK: - iCloud Sync
 
 /// The iCloud sync page. Sync is off until someone turns it on; Turn On does
@@ -43,6 +11,7 @@ struct CloudSyncStep: View {
   let store: AppStore
   let settings: AppSettingsStore
   let onNext: () -> Void
+  let onSync: () -> Void
 
   var body: some View {
     SetupWizardPage(
@@ -68,7 +37,7 @@ struct CloudSyncStep: View {
         .accessibilityIdentifier("setup.sync.notNow")
       SetupWizardPrimaryButton(String(localized: "setup.sync.turn_on", defaultValue: "Turn On iCloud Sync", table: "Localizable", bundle: LorvexL10n.bundle)) {
         store.turnOnCloudSync(settings: settings)
-        onNext()
+        onSync()
       }
       .accessibilityIdentifier("setup.sync.turnOn")
     }

@@ -25,3 +25,18 @@ func mobileStoreHasNoOpenTasksOnlyWhenNoListHoldsOpenWork() async throws {
   await store.refresh()
   #expect(store.hasNoOpenTasks)
 }
+
+@MainActor
+@Test("The first task keeps a literal title and lands on the product day")
+func firstTaskOnEmptyTodayKeepsTitleAndPlan() async throws {
+  let core = try makeInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "1999-12-31" })
+  await store.refresh()
+  let title = "约明天的会 #42"
+  try await store.addTaskForToday(title)
+  let task = try #require(store.snapshot.today.tasks.first)
+  #expect(task.title == title)
+  #expect(task.plannedDate == PlannedDayBridge.storageDate(forLogicalDay: store.logicalTodayString))
+  #expect(task.dueDate == nil)
+  #expect(!store.hasNoOpenTasks)
+}

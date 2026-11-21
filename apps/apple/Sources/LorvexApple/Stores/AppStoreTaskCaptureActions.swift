@@ -174,7 +174,11 @@ extension AppStore {
     return task
   }
 
-  func createReviewFollowUp(_ draft: TaskCreateDraft) async throws -> LorvexTask {
+  func addTaskForToday(_ title: String) async throws {
+    _ = try await createPlannedTask(TaskCreateDraft(title: title, plannedDate: try storageDate(daysFromLogicalToday: 0)))
+  }
+
+  func createPlannedTask(_ draft: TaskCreateDraft) async throws -> LorvexTask {
     let task = try await core.createTask(draft)
     await reloadAfterTaskCreation()
     await reloadReviewEvidenceIfShown()

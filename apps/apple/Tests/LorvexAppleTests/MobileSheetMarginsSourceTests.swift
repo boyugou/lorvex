@@ -54,12 +54,11 @@ struct MobileSheetMarginsSourceTests {
 
   @Test("a sheet that sets its own detents resets the margin itself")
   func sheetsWithTheirOwnDetentsResetTheInheritedMargin() throws {
-    // The app root presents the setup wizard and capture outside every
-    // readable-width screen, so only the sheets presented from inside a screen
-    // need the reset. A new file that sets detents has to decide which it is.
+    // The root presents capture outside the readable-width screens. The
+    // setup wizard and confirmation sheet own their presentation sizes.
     let customSheets = try mobileSourceNames(containing: ".presentationDetents(")
       .filter { $0 != "MobileEditorSheetPresentation" && $0 != "LorvexMobileStoreRootView" }
-    #expect(customSheets == ["MobileDestructiveConfirmationSheet"])
+    #expect(customSheets == ["MobileDestructiveConfirmationSheet", "MobileSetupWizard"])
     for name in customSheets {
       #expect(
         try mobileSource(name).contains(".mobileSystemContentMargins()"),

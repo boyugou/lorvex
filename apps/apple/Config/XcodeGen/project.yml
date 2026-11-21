@@ -13,7 +13,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    CURRENT_PROJECT_VERSION: "151"
+    CURRENT_PROJECT_VERSION: "152"
     MARKETING_VERSION: "1.0.0"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
@@ -227,11 +227,12 @@ targets:
       # App Store archives (script/archive_ios.sh, -configuration Release)
       # swap in the CloudKit/APNs entitlements; the base entitlements above
       # stay minimal so local/dev Debug builds don't require those
-      # capabilities. This is scoped to this target's Release configuration
-      # only — a command-line CODE_SIGN_ENTITLEMENTS override on xcodebuild is
-      # project-wide and would leak the iPhone app's entitlements onto every
-      # other target in the archive (widgets, watch app, watch complication).
+      # capabilities on development devices. The simulator needs the iCloud
+      # entitlement to construct CKContainer even when signed out. Scope
+      # both overrides to the host so extensions keep their own entitlements.
       configs:
+        Debug:
+          "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": $(SRCROOT)/../../Config/LorvexMobileAppCloudKit.entitlements
         Release:
           CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexMobileAppCloudKitAppStore.entitlements
 

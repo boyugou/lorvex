@@ -362,3 +362,32 @@ func cloudSyncFactoryEnvOverrideBeatsPersistedMode() {
     CloudSyncFactory.resolveMode(
       persistedMode: .live, environment: ["LORVEX_CLOUD_SYNC": "bogus"]) == .off)
 }
+
+@MainActor
+@Test("Turning on sync in an empty install brings the existing task onto Today")
+func firstUseSyncRestoresOnlyTheExistingPlan() async throws {
+  let suite = "test.firstUse.sync.\(UUID().uuidString)"
+  let defaults = try #require(UserDefaults(suiteName: suite))
+  defer { defaults.removePersistentDomain(forName: suite) }
+  let core = try makeInMemoryCore()
+  let sync = TestCloudSync(store: core)
+  let store = MobileStore(core: core, defaults: defaults, cloudSyncController: sync.controller)
+  await store.refresh()
+  let day = try #require(PlannedDayBridge.storageDate(forLogicalDay: store.logicalTodayString))
+  let peer = try await TestCloudSync.peerRecords { peerCore in
+    try await peerCore.createTask(TaskCreateDraft(title: "Meet the team", plannedDate: day))
+  }
+  let controller = sync.controller
+  sync.engines.configure = { engine in
+    engine.onFetch = { await controller.handleFetchedRecords(peer.records) }
+  }
+  let request = store.makeCloudSyncModeRequest(.live)
+  await store.setCloudSyncModeFromSettings(request)
+  // Join the refresh that setup starts without holding the sheet open.
+  await store.refresh()
+
+  #expect(store.snapshot.today.tasks.map(\.id) == [peer.value.id])
+  let tasks = try await core.listTasks(status: "all", listID: nil, priority: nil, text: nil, limit: 10, offset: 0)
+  #expect(tasks.tasks.map(\.id) == [peer.value.id])
+  #expect(MobileSetupPreferences(defaults: defaults).cloudSyncMode == .live)
+}

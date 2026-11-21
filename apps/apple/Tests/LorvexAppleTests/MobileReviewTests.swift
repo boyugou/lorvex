@@ -464,7 +464,7 @@ func mobileReviewSchedulesFollowUp() async throws {
   let date = try #require(PlannedDayBridge.storageDate(forLogicalDay: chosenDay))
   store.calendarTimeline = try await core.loadCalendarTimeline(from: today, to: chosenDay)
   let before = store.weekReviewReadKey
-  let task = try await store.createReviewFollowUp(
+  let task = try await store.createPlannedTask(
     TaskCreateDraft(title: "Call the venue", notes: "Waiting for the floor plan", plannedDate: date))
   #expect(store.weekReviewReadKey != before)
   #expect(store.calendarScheduledTasks.contains { $0.id == task.id })

@@ -1,9 +1,6 @@
 import SwiftUI
 
-/// Empty-state for task lists that funnels the user into capture rather than
-/// dead-ending on a bare "No tasks" label. Lorvex is AI-first — the human's
-/// fastest path is to capture a task (or let the assistant plan), so the empty
-/// state surfaces a prominent Capture button that raises the quick-capture sheet.
+/// A task collection with no matches. New work can be captured from the tab bar.
 struct MobileStoreTaskEmptyState: View {
   @Bindable var store: MobileStore
   var title: String = String(

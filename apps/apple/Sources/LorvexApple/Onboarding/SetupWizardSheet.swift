@@ -30,24 +30,36 @@ struct SetupWizardSheet: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      stepIndicator
-        .padding(.top, 20)
+      if wizardState.currentStep != .welcome {
+        stepIndicator.padding(.top, 20)
+      }
 
       currentStepView
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .transition(.opacity)
         .reduceMotionAnimation(.easeInOut, value: wizardState.currentStep)
     }
-    .frame(width: 540, height: 480)
+    .frame(width: 540, height: wizardState.currentStep == .welcome ? 340 : 480)
   }
 
   @ViewBuilder
   private var currentStepView: some View {
     switch wizardState.currentStep {
     case .welcome:
-      WelcomeStep(onNext: advance)
+      ScrollView {
+        LorvexTodayTaskForm(welcome: .init(
+          context: TodayCalmCopy.dateLine(logicalDay: store.logicalTodayDateString),
+          sync: advance, skip: finish)
+        ) { title in
+          try await store.addTaskForToday(title)
+          store.selection = .today
+          finish()
+        }
+        .padding(32)
+        .frame(maxWidth: 484)
+      }
     case .cloudSync:
-      CloudSyncStep(store: store, settings: settings, onNext: advance)
+      CloudSyncStep(store: store, settings: settings, onNext: advance, onSync: finish)
     case .permissions:
       PermissionsStep(store: store, settings: settings, wizardState: wizardState, onNext: advance)
     case .done:
@@ -64,6 +76,11 @@ struct SetupWizardSheet: View {
           .reduceMotionAnimation(.easeInOut, value: wizardState.currentStep)
       }
     }
+  }
+
+  private func finish() {
+    wizardState.complete(settings: settings)
+    onDismiss()
   }
 
   private func advance() {

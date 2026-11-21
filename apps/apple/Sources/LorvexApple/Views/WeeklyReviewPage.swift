@@ -31,7 +31,7 @@ struct WeeklyReviewPage: View {
               Task { await store.openDeepLinkRoute(.task(id)) }
             },
             decide: { id in Task { await store.parkReviewTaskInSomeday(id) } },
-            followUp: .init(logicalToday: store.logicalTodayDateString, create: store.createReviewFollowUp),
+            followUp: .init(logicalToday: store.logicalTodayDateString, create: store.createPlannedTask),
             completion: .init(label: TaskDisplayText.completionToggle(isDone: false)) { id in
               await store.completeTask(id: id, undoManager: undoManager)
             },

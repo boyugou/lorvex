@@ -98,9 +98,7 @@ struct ContentView: View {
           await store.rescheduleReminders()
         }
       }
-      // Match the mobile wizard: the user must reach the final step (which sets
-      // `setupCompleted`), not Escape-dismiss it — otherwise the wizard re-opens
-      // on every launch. Every step has a Skip/Continue path to the end.
+      // An explicit exit persists setup completion before dismissing the sheet.
       .interactiveDismissDisabled(true)
     }
     .sheet(isPresented: $store.showCommandPalette) {

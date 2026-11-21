@@ -1,4 +1,5 @@
 import Foundation
+import LorvexCore
 import Testing
 
 @testable import LorvexApple
@@ -73,4 +74,16 @@ struct SetupWizardTests {
     let settings2 = AppSettingsStore(defaults: defaults, environment: [:])
     #expect(settings2.setupCompleted)
   }
+}
+
+@MainActor
+@Test("The Mac welcome saves a literal task to Today")
+func macFirstTaskIsPlannedForToday() async throws {
+  let store = AppStore(core: try makeInMemoryCore())
+  await store.refresh()
+  try await store.addTaskForToday("Plan tomorrow’s demo #42")
+  let task = try #require(store.today.tasks.first)
+  #expect(task.title == "Plan tomorrow’s demo #42")
+  #expect(task.plannedDate == PlannedDayBridge.storageDate(forLogicalDay: store.logicalTodayDateString))
+  #expect(task.dueDate == nil)
 }

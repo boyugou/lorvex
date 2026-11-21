@@ -20,13 +20,15 @@ for glancing, confirming, and acting when you want to stay hands-on.
 1. Build or install `Lorvex.app` and open it.
 2. On first launch the app creates managed local storage so you can start
    working immediately.
-3. A short setup follows. It asks whether to sync through iCloud: sync stays
-   off until you turn it on, there or later in **Settings → Cloud Sync**, and
-   starts as soon as you do. Setup then offers the optional permissions
-   (Notifications for reminders, and Calendar on the Mac) and ends by naming
-   the two ways work gets in: capture it yourself, or connect an assistant. On
-   the Mac, **Connect an Assistant…** on that last page opens **Settings →
-   Assistant**.
+3. Write a task on the welcome screen and choose **Add to Today**.
+   Lorvex opens Today with that task planned for the day. The title is saved as
+   written. **Skip** opens the workspace. On an empty iPhone or iPad Today
+   page, you can enter the task there as well.
+4. To bring over an existing plan, choose **Sync with iCloud** on Welcome,
+   then **Turn On iCloud Sync**. Setup closes and the sync starts. You can
+   also enable sync later in **Settings → Cloud Sync**. If you choose **Not
+   Now** on the sync page, setup continues to optional permissions and the
+   assistant connection instructions.
 
 ### Storage
 

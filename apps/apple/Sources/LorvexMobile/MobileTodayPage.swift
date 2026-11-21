@@ -308,13 +308,13 @@ struct MobileTodayPage: View {
     return chips
   }
 
-  /// A day with nothing open: the sun's arc, and, when no list holds an open
-  /// task and nothing was done today, the invitation to capture some work. A
-  /// free day with work waiting in the lists shows the arc alone: the facts
-  /// line already says the day is free, and "No Open Tasks" would be untrue.
+  /// An empty workspace offers a first task. A free day with work elsewhere
+  /// keeps its quiet schedule, as does a day whose work is already complete.
   private var emptyDaySection: some View {
     Section {
-      if let nowMinutes {
+      if store.isSetupCompleted && store.doneTodayTasks.isEmpty && store.hasNoOpenTasks {
+        LorvexTodayTaskForm(create: store.addTaskForToday)
+      } else if let nowMinutes {
         LorvexSunArc(
           nowMinutes: nowMinutes, startLabel: MobileTodayCalmCopy.sunStart,
           endLabel: MobileTodayCalmCopy.sunEnd
@@ -322,9 +322,6 @@ struct MobileTodayPage: View {
         .frame(height: 140)
         .padding(.horizontal, LorvexDesign.Spacing.m)
         .accessibilityIdentifier("today.sun")
-      }
-      if store.doneTodayTasks.isEmpty && store.hasNoOpenTasks {
-        MobileStoreTaskEmptyState(store: store)
       }
     }
     .listRowBackground(Color.clear)

@@ -27,7 +27,7 @@ struct MobileStoreReviewWeekPage: View {
             openDay: openDay,
             openTask: { id in store.openTaskRouteOnCurrentStack(id) },
             decide: { id in Task { await store.parkReviewTaskInSomeday(id) } },
-            followUp: .init(logicalToday: store.logicalTodayString, create: store.createReviewFollowUp),
+            followUp: .init(logicalToday: store.logicalTodayString, create: store.createPlannedTask),
             completion: .init(label: MobileTaskActionCopy.completionToggle(isDone: false)) { id in
               await store.completeTask(id)
             },

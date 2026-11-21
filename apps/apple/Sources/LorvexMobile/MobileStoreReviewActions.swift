@@ -97,22 +97,6 @@ extension MobileStore {
     }
   }
 
-  func createReviewFollowUp(_ draft: TaskCreateDraft) async throws -> LorvexTask {
-    let task = try await core.createTask(draft)
-    replaceKnownTask(task)
-    if let today = try? await core.loadToday() { snapshot.today = today }
-    await reloadSurfacesAfterTaskMutation(ifPlacementsChangedFrom: [:], of: [task.id])
-    invalidateTaskViews()
-    await reloadReviewEvidenceAfterTaskMutation()
-    feedbackProvider.playFeedback(.captureSubmitted)
-    Task {
-      await publishMobileSyncSurfaces()
-      await rescheduleReminders()
-      await updateBadge()
-    }
-    return task
-  }
-
   public func selectReviewDay(_ date: String) async {
     // A body-only edit (mood / energy / wins / blockers / learnings with no
     // summary) is a valid, savable review, so it never holds the user on the

@@ -2,6 +2,26 @@ import Foundation
 import LorvexCore
 
 extension MobileStore {
+  func addTaskForToday(_ title: String) async throws {
+    _ = try await createPlannedTask(TaskCreateDraft(title: title, plannedDate: try captureStorageDate(daysFromLogicalToday: 0)))
+  }
+
+  func createPlannedTask(_ draft: TaskCreateDraft) async throws -> LorvexTask {
+    let task = try await core.createTask(draft)
+    replaceKnownTask(task)
+    if let today = try? await core.loadToday() { snapshot.today = today }
+    await reloadSurfacesAfterTaskMutation(ifPlacementsChangedFrom: [:], of: [task.id])
+    invalidateTaskViews()
+    await reloadReviewEvidenceAfterTaskMutation()
+    feedbackProvider.playFeedback(.captureSubmitted)
+    Task {
+      await publishMobileSyncSurfaces()
+      await rescheduleReminders()
+      await updateBadge()
+    }
+    return task
+  }
+
   @discardableResult
   public func completeTask(_ id: LorvexTask.ID) async -> Bool {
     let didMutate = await mutateTaskReturningToday(id: id) {

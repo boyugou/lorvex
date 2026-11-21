@@ -16,6 +16,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   1. Daily Review now opens on the entry and includes every open task planned
      for or due on the reviewed day. Mac and iPhone offer individual date
      changes, Someday, counted bulk moves across folded rows and undo.
+     Available in [TestFlight build 146](docs/releases/1.0.0-146.md).
      Follow up on real use: can someone finish an evening review and trust
      next morning's plan without reopening the task list?
   2. Help someone resume work after a meeting. The menu bar already features

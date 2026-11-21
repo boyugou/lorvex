@@ -99,10 +99,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       and identifies unestimated tasks. Verified a partial move, Cancel and
       Undo in the native window and an agenda with more than fifty tasks.
       [Build 164](docs/releases/1.0.0-164.md).
-  18. Give iPhone and iPad the same choice in Daily Review. Their section
-      button still moves every eligible task immediately. Keep the selection
-      and estimate visible on a small screen while inspecting existing plans,
-      and test moving a subset and undoing it from the mobile review.
+  18. iPhone and iPad Daily Review now preview a selection against tomorrow’s
+      existing work and appointments. Cancel, subset moves, Undo, and large
+      text passed native walkthroughs. [Build 165](docs/releases/1.0.0-165.md).
+  19. Revisit the decision on an overbooked Today. Its suggestion can move a
+      batch to tomorrow without showing whether those tasks fit there.
+      Compare the load on both days before committing, and check that one
+      Undo restores the original plans.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

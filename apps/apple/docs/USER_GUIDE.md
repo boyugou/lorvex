@@ -3131,6 +3131,11 @@ The **Today** workspace is your day in one list, read top to bottom:
   would
 - **Done** — what you finished today; click or tap its header to fold it
 
+On iPhone and iPad, an empty Today can show **Select a Task** below the sun.
+Tap it to search unscheduled work by title and choose one task for today.
+Each row shows its list and any deadline. Choosing keeps both, and **Undo**
+returns the task to its previous plan. Tap **Cancel** to leave the day free.
+
 On Mac a quick-add field sits under the tasks. On iPhone and iPad the day's
 unassigned habits appear as rings. A task's hide-until date controls when it appears.
 

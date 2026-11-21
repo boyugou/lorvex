@@ -52,6 +52,7 @@ struct MobileTodayPage: View {
   /// Opens the day's schedule from the strip; `nil` when the schedule already
   /// stands beside the page (iPad), so the strip is a plain picture.
   let openSchedule: (() -> Void)?
+  let chooseTask: () -> Void
 
   @State private var showsFullBriefing = false
   /// Whether the line limit cuts the briefing at the page's current width
@@ -310,8 +311,8 @@ struct MobileTodayPage: View {
     return chips
   }
 
-  /// An empty workspace offers a first task. A free day with work elsewhere
-  /// keeps its quiet schedule, as does a day whose work is already complete.
+  /// First capture belongs to a new workspace; on a free morning, offer
+  /// existing unscheduled work only while there is something to choose.
   private var emptyDaySection: some View {
     Section {
       if store.isSetupCompleted && store.doneTodayTasks.isEmpty && store.hasNoOpenTasks {
@@ -324,6 +325,9 @@ struct MobileTodayPage: View {
         .frame(height: 140)
         .padding(.horizontal, LorvexDesign.Spacing.m)
         .accessibilityIdentifier("today.sun")
+      }
+      if store.isSetupCompleted && store.doneTodayTasks.isEmpty && !store.hasNoOpenTasks {
+        MobileTodayPlanButton(store: store, openPicker: chooseTask)
       }
     }
     .listRowBackground(Color.clear)

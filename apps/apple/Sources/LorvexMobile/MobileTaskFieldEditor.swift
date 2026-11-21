@@ -10,7 +10,7 @@ import SwiftUI
 /// the dependency field, whose picker searches the tasks this one can wait on.
 struct MobileTaskFieldEditor: View {
   let field: MobileTaskField
-  @Binding var draft: MobileTaskEditDraft
+  @State var draft: MobileTaskEditDraft
   let lists: [LorvexList]
   let currentListID: LorvexList.ID?
   /// The planner's day as local midnight, from which Today and Tomorrow
@@ -21,7 +21,7 @@ struct MobileTaskFieldEditor: View {
   let searchDependencyCandidates: (String, Set<LorvexTask.ID>) async -> [LorvexTask]
   let resolveDependencyTasks: ([LorvexTask.ID]) async -> [LorvexTask]
   let isSaving: Bool
-  let save: () async -> Void
+  let save: (MobileTaskEditDraft) async -> Void
   let moveToList: (LorvexList.ID) async -> Void
   let cancel: () -> Void
 
@@ -101,7 +101,7 @@ struct MobileTaskFieldEditor: View {
       draft.tags = MobileTagTokenField.merging(pendingTag, into: draft.tags)
       pendingTag = ""
     }
-    await save()
+    await save(draft)
   }
 
   private func dayEditor(has: Binding<Bool>, date: Binding<Date>, hint: String) -> some View {

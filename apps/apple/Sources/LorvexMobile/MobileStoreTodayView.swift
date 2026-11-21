@@ -30,6 +30,7 @@ struct MobileStoreTodayView: View {
   @State private var editingHabit: LorvexHabit?
   @State private var editingCalendarEvent: CalendarTimelineEvent?
   @State private var isShowingSchedule = false
+  @State private var showsTaskPicker = false
 
   var body: some View {
     GeometryReader { geometry in
@@ -42,6 +43,9 @@ struct MobileStoreTodayView: View {
         #endif
     }
     .modifier(chrome)
+    .sheet(isPresented: $showsTaskPicker) {
+      MobileTodayTaskPicker(store: store, day: store.logicalTodayString)
+    }
     .environment(\.lorvexTaskRowDay, store.logicalTodayString)
     #if DEBUG
       .onAppear {
@@ -114,7 +118,8 @@ struct MobileStoreTodayView: View {
           store.prepareHabitDraft(for: habit)
           editingHabit = habit
         },
-        openSchedule: openSchedule)
+        openSchedule: openSchedule,
+        chooseTask: { showsTaskPicker = true })
     }
     .scrollContentBackground(.hidden)
     .background(alignment: .top) { skyWash }

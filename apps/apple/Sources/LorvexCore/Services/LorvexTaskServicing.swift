@@ -91,6 +91,9 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   /// task-context primitive for review/planning agents.
   func listTasks(query: TaskListQueryRequest) async throws -> TaskPageResult
 
+  /// Plans a visible, still-unplanned task and returns the change for guarded undo.
+  func planUnscheduledTask(id: String, on day: String) async throws -> ReviewTaskChange?
+
   /// Searches tasks using the core text index/fallback semantics. Supported
   /// statuses are `all`, `open`, `completed`, `cancelled`, and `someday`.
   func searchTasks(query: String, status: String, limit: Int, offset: Int) async throws

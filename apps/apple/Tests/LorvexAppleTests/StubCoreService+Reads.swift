@@ -48,6 +48,10 @@ extension StubCoreService {
     await loadDailyReviewGate?()
     return review
   }
+  func planUnscheduledTask(id: String, on day: String) async throws -> ReviewTaskChange? {
+    try await preview.planUnscheduledTask(id: id, on: day)
+  }
+
   func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
     destination: ReviewTaskDestination) async throws -> [ReviewTaskChange] {
     try await preview.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)

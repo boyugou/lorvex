@@ -7,7 +7,6 @@ struct MobileStoreTaskDetailView: View {
   /// The field being edited from its property row or the Add menu, with a
   /// draft opened from the task for that one field.
   @State private var editingField: MobileTaskField?
-  @State private var fieldDraft: MobileTaskEditDraft?
   @Environment(\.mobileDetailPresentation) private var presentation
   @Environment(\.dismiss) private var dismiss
 
@@ -106,29 +105,26 @@ struct MobileStoreTaskDetailView: View {
         )
       }
     }
-    .sheet(item: $editingField, onDismiss: { fieldDraft = nil }) { field in
-      if let draft = Binding(unwrapping: $fieldDraft) {
-        MobileTaskFieldEditor(
-          field: field,
-          draft: draft,
-          lists: store.lists?.lists ?? [],
-          currentListID: task.listID,
-          today: PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayString) ?? .now,
-          tagSuggestions: tagSuggestions,
-          searchDependencyCandidates: searchDependencyCandidates,
-          resolveDependencyTasks: resolveDependencyTasks,
-          isSaving: isMutating,
-          save: {
-            guard let fieldDraft else { return }
-            if await saveEditDraft(fieldDraft) { editingField = nil }
-          },
-          moveToList: { listID in
-            await store.moveTask(task.id, toListID: listID)
-            editingField = nil
-          },
-          cancel: { editingField = nil }
-        )
-      }
+    .sheet(item: $editingField) { field in
+      MobileTaskFieldEditor(
+        field: field,
+        draft: MobileTaskEditDraft(task: task),
+        lists: store.lists?.lists ?? [],
+        currentListID: task.listID,
+        today: PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayString) ?? .now,
+        tagSuggestions: tagSuggestions,
+        searchDependencyCandidates: searchDependencyCandidates,
+        resolveDependencyTasks: resolveDependencyTasks,
+        isSaving: isMutating,
+        save: { draft in
+          if await saveEditDraft(draft) { editingField = nil }
+        },
+        moveToList: { listID in
+          await store.moveTask(task.id, toListID: listID)
+          editingField = nil
+        },
+        cancel: { editingField = nil }
+      )
     }
     #if DEBUG
       .onAppear {
@@ -159,7 +155,6 @@ struct MobileStoreTaskDetailView: View {
       store.beginRecurrenceEditing()
       isEditingRecurrence = true
     } else {
-      fieldDraft = MobileTaskEditDraft(task: task)
       editingField = field
     }
   }

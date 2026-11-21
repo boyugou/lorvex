@@ -36,6 +36,27 @@ public struct ReviewTaskChange: Sendable {
 }
 
 extension SwiftLorvexCoreService {
+  public func planUnscheduledTask(id: String, on day: String) async throws -> ReviewTaskChange? {
+    _ = try LorvexDate.parse(day).get()
+    return try withWrite { db, hlc, deviceId -> ReviewTaskChange? in
+      let taskID = TaskId(trusted: id)
+      guard let row = try TaskRepo.Read.getTask(db, taskId: taskID),
+        row.lifecycle.archivedAt == nil, row.scheduling.plannedDate == nil else { return nil }
+      let before = try ReviewTaskChange.State(row)
+      guard before.status.isActionable else { return nil }
+      let visible = TaskReadBuckets.availableVisibilityPredicate(taskAlias: "tasks", datePlaceholder: "?")
+      guard try Bool.fetchOne(db, sql: "SELECT \(visible) FROM tasks WHERE id = ?", arguments: [day, day, id]) == true
+      else { return nil }
+
+      _ = try self.performTaskUpdate(db, hlc: hlc, deviceId: deviceId,
+        input: TaskUpdateInput(id: id, plannedDate: .set(day)))
+      guard let updated = try TaskRepo.Read.getTask(db, taskId: taskID) else {
+        throw StoreError.notFound(entity: EntityName.task, id: id)
+      }
+      return ReviewTaskChange(id: id, before: before, after: try .init(updated), reminders: [])
+    }
+  }
+
   public func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
     destination: ReviewTaskDestination) async throws -> [ReviewTaskChange] {
     let source = try LorvexDate.parse(day).get()

@@ -110,11 +110,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       task after a meeting. The time until the next meeting opens the event.
       The current day stays available when browsing another calendar week.
       [Build 167](docs/releases/1.0.0-167.md).
-  21. Follow Continue into the mobile task detail. On the tested iPhone the
-      next checklist item follows When, duration, due date, list, priority,
-      tags and Add Detail. Bring the work itself into reach on a started task
-      and check the path through completing a step, editing a property and
-      resuming the following step at large text sizes.
+  21. A started task on iPhone and iPad puts its remaining checklist just below
+      the title. Completed steps can be reopened and the next step carries
+      back to Today. Verified alongside a deadline edit, an app relaunch, and
+      Chinese at the largest text size. [Build 168](docs/releases/1.0.0-168.md).
+  22. Revisit how people retrieve their writing in Review. Weekly Review
+      can filter one week by wins, blockers and learnings. Walk through
+      finding a remembered phrase from several weeks ago without knowing its
+      date, opening the matching entry, and returning to the results.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

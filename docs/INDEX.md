@@ -9,6 +9,7 @@ app.
 - [`../CLAUDE.md`](../CLAUDE.md) — operating manual for agents.
 - [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Shared) and open work.
 - [`development/NEW_MACHINE.md`](development/NEW_MACHINE.md) — setting up a development machine, the local files a clone lacks, privacy rules, and releasing.
+- [Build 153 release record](releases/1.0.0-153.md) — adaptive Today, Mac download and TestFlight availability.
 - [Build 152 release record](releases/1.0.0-152.md) — first task, existing-plan setup and TestFlight availability.
 - [Build 151 release record](releases/1.0.0-151.md) — reading past journal entries and TestFlight availability.
 - [Build 150 release record](releases/1.0.0-150.md) — Mac download, TestFlight availability, checksum, and validation.

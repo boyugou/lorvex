@@ -220,13 +220,11 @@ larger canvas, not stretch the phone.
 
 - The same tab bar as iPhone (Today, Calendar, Tasks, Review, +), drawn as the
   floating bar at the top of the window. ✅
-- Today is the iPhone list in a readable column with the day's schedule
-  standing beside it as a pane: the same timeline as the macOS pane (calendar
-  holds and the day's timed tasks in one order, each row a time and a title,
-  the running task's block tinted, rows the clock has cleared folded under
-  "N earlier"), a proposed set of times above it while one waits, and the ⋯
-  menu for Suggest Times and Clear Times. iPhone's schedule sheet is the same
-  list under a title. ✅
+- Today places the schedule beside tasks when both columns have room. Narrow
+  windows and accessibility text sizes open Schedule from the day strip. The
+  pane and sheet share timed tasks, calendar events, suggestions, and the
+  actions to suggest or clear times. The sheet and task draft stay open
+  through window size changes. ✅
 - Tasks workspace uses a query-backed status/search browser; on iPad regular
   width it presents a persistent task list and detail pane instead of stretching
   the phone push flow. ✅

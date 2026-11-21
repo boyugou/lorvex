@@ -3722,8 +3722,9 @@ The **Review** workspace opens on today's review, one page per day:
 - Two one-tap scales, **How did it feel?** and **Energy**. The level you pick
   is named under its dot, from **Rough** to **Great** and from **Drained** to
   **Full**.
-- **Tomorrow**, while you review today: tomorrow's events and the tasks
-  planned for it, or a line saying nothing is planned yet.
+- **Tomorrow** shows the next day while you review today. All-day events
+  come first. Timed work and meetings follow in clock order, with untimed
+  tasks at the end. On Mac, expand the three-row preview to see the rest.
 - A **Note** field. The rarer **Wins**, **Blockers**, and **Learnings** fields
   fold behind one line under it.
 

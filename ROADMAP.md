@@ -32,11 +32,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      [TestFlight build 148](docs/releases/1.0.0-148.md). Evaluate whether the two-hour
      window suits actual mornings and evenings, especially with unusual
      schedules or a habit that belongs to both routines.
-  4. Make the weekly digest actionable for someone who journals. The daily
-     rows currently excerpt only the summary, and the decision for repeatedly
-     deferred work offers Someday. Surface written wins and blockers even
-     when the summary is blank. Let a user schedule a concrete next step
-     from a selected blocker and find that task in the following week.
+  4. Weekly Review opens on the journal, including entries with no summary.
+     Filter the week by wins, blockers or learnings. Plan a dated task from
+     one blocker and find it in Calendar. Available in
+     [TestFlight build 149](docs/releases/1.0.0-149.md).
+  5. Make a task's planned day visible in All Tasks. In the build 149 Mac
+     walkthrough, a follow-up scheduled for Monday showed only its list name
+     under its title. The inspector showed Monday. Check how Mac and iPhone
+     rows represent a work date, a deadline, and both together, and keep the
+     distinction readable in search and list views.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

@@ -14,9 +14,6 @@ struct WorkspaceView: View {
       // jumping. `topLeading` keeps a workspace that does not fill anchored
       // where an unfilled pane child already sits.
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-      // One search field for the window, above the workspace switch, so
-      // moving between All Tasks and Memory keeps the same toolbar item.
-      .lorvexWorkspaceSearchField(store: store, selection: store.selection)
   }
 
   @ViewBuilder

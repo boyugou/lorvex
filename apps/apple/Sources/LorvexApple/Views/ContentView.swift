@@ -56,6 +56,7 @@ struct ContentView: View {
         }
     }
     .navigationSplitViewStyle(.balanced)
+    .lorvexWorkspaceSearchField(store: store, selection: store.selection)
     // Escape collapses the open task/habit inspector, matching its ✕ and the
     // re-click-to-close gesture. A focused text field consumes Escape first
     // (cancelling its edit), so this only fires once nothing else claims it.

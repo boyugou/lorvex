@@ -111,6 +111,29 @@ struct LorvexAgendaDayTests {
     #expect(days.first?.tasks.map(\.title) == ["Morning", "Afternoon", "Untimed"])
   }
 
+  @Test("Tomorrow interleaves work and meetings like Today and keeps untimed tasks in list order")
+  func reviewReadingOrder() throws {
+    let key = "2026-10-02"
+    let days = LorvexAgendaDay.build(
+      todayKey: "2026-10-01",
+      events: [
+        Self.event("Evening", from: key, "19:00", "20:00"),
+        Self.event("Breakfast", from: key, "08:00", "09:00"),
+        Self.event("Holiday", from: key, allDay: true),
+        Self.event("Overnight", from: "2026-10-01", until: key, "23:30", "02:00"),
+      ],
+      tasks: [
+        Self.task("Untimed B", on: key), Self.task("After lunch", on: key, time: 780..<810),
+        Self.task("Early work", on: key, time: 360..<390), Self.task("Untimed A", on: key),
+        Self.task("Breakfast", on: key, time: 480..<510),
+      ])
+    let day = try #require(days.first)
+    #expect(day.reviewItems.map(\.id) == [
+      "event:Holiday", "event:Overnight", "task:Early work", "event:Breakfast", "task:Breakfast",
+      "task:After lunch", "event:Evening", "task:Untimed B", "task:Untimed A",
+    ])
+  }
+
   @Test("Tomorrow is named; later days are spelled out")
   func dayTitles() {
     #expect(MenuBarCopy.dayTitle("2026-10-02", todayKey: "2026-10-01") == "Tomorrow")

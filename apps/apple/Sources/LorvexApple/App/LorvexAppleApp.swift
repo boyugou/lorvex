@@ -29,6 +29,7 @@ struct LorvexAppleApp: App {
         let previewStore = LorvexAppleBootstrap.makeUIPreviewStore()
         _settings = State(initialValue: settings)
         _store = State(initialValue: previewStore)
+        LorvexWorkspaceSearchCheck.runIfRequested(store: previewStore)
         LorvexUIPreview.runTourIfRequested(store: previewStore, settings: settings)
       } else {
         let settings = LorvexAppleBootstrap.makeSettings()

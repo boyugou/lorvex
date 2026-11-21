@@ -1,8 +1,7 @@
 import SwiftUI
 
 /// A day review's look at the next day, shown while the review is of today:
-/// tomorrow's events (a bar in the calendar's color, the title, the time) and
-/// then its scheduled tasks (a small dot, the title, its time), each task
+/// tomorrow's events and tasks in the order the day will run, each task
 /// opening when tapped. An empty tomorrow reads one quiet line saying so, which
 /// is itself the answer the section exists to give. Each row is a
 /// ``LorvexReviewAheadRow``.
@@ -40,8 +39,13 @@ public struct LorvexReviewTomorrow: View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
       LorvexPageLabel(label)
       if let day, !day.events.isEmpty || !day.tasks.isEmpty {
-        ForEach(day.events) { eventRow($0, dayKey: day.key) }
-        ForEach(day.tasks) { taskRow($0, dayKey: day.key) }
+        ForEach(day.reviewItems) { item in
+          switch item.kind {
+          case .event(let event): eventRow(event, dayKey: day.key)
+          case .task(let task): taskRow(task, dayKey: day.key)
+          case .now: EmptyView()
+          }
+        }
       } else {
         Text(emptyLine)
           .font(LorvexDesign.Typography.secondaryText)

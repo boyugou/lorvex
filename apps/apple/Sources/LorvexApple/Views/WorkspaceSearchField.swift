@@ -2,41 +2,15 @@ import LorvexCore
 import SwiftUI
 
 extension View {
-  /// Adds the window-toolbar search field for the workspace `selection`, or
-  /// nothing for a workspace without search (``AppStore/workspaceSearchPrompt(for:)``).
-  ///
-  /// A window applies it once, above whichever workspace it shows, never
-  /// inside each workspace: the window then keeps one search item while the
-  /// user moves between two searchable workspaces and only its prompt
-  /// changes. Two workspace-owned fields would be two toolbar items, and
-  /// AppKit raises when SwiftUI inserts the next one before removing the
-  /// last.
+  /// Mount search beside the split view. Switching workspace can then remove the
+  /// native toolbar item without replacing the content that owns the toolbar.
   func lorvexWorkspaceSearchField(store: AppStore, selection: SidebarSelection) -> some View {
-    modifier(WorkspaceSearchHost(store: store, selection: selection))
-  }
-
-  /// The search field itself, with a fixed prompt. The field edits the store's
-  /// ``AppStore/searchText``, and takes keyboard focus when Find (⌘F) asks for
-  /// it — including a request made just before the workspace appeared.
-  ///
-  /// The field holds the toolbar's trailing edge behind a flexible space the
-  /// system inserts, so a workspace that adds it keeps its own toolbar actions
-  /// at the leading edge: a spacer pushing them toward the field would leave
-  /// them floating mid-toolbar.
-  func lorvexWorkspaceSearchField(store: AppStore, prompt: String) -> some View {
-    modifier(WorkspaceSearchField(store: store, prompt: prompt))
-  }
-}
-
-private struct WorkspaceSearchHost: ViewModifier {
-  @Bindable var store: AppStore
-  let selection: SidebarSelection
-
-  func body(content: Content) -> some View {
-    if let prompt = store.workspaceSearchPrompt(for: selection) {
-      content.lorvexWorkspaceSearchField(store: store, prompt: prompt)
-    } else {
-      content
+    background {
+      if let prompt = store.workspaceSearchPrompt(for: selection) {
+        Color.clear
+          .frame(width: 0, height: 0)
+          .modifier(WorkspaceSearchField(store: store, prompt: prompt))
+      }
     }
   }
 }

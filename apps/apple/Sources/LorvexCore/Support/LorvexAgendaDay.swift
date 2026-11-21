@@ -22,6 +22,18 @@ public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
     self.tasks = tasks
   }
 
+  /// The same all-day and timed rows that Today will show, followed by the
+  /// tasks that still have no time slot. A future agenda has no clock marker.
+  public var reviewItems: [LorvexTodayTimelineItem] {
+    let times = tasks.times(on: key)
+    let scheduled = LorvexTodayTimeline.build(
+      day: key, events: events, tasks: tasks, times: times, nowMinutes: nil)
+    let untimed = tasks.filter { times[$0.id] == nil }.map { task in
+      LorvexTodayTimelineItem(id: "task:\(task.id)", kind: .task(task))
+    }
+    return scheduled + untimed
+  }
+
   /// The `dayCount` days after `todayKey` that have something on them, in
   /// order.
   ///

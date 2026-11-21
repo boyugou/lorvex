@@ -155,6 +155,8 @@ APP_PID=$!
 trap 'kill "$APP_PID" 2>/dev/null; rm -f "$FIFO"; rm -rf "$ACK"' EXIT
 exec 3< "$FIFO"
 WIN=""
+STOP="launch"
+tour_done=false
 while IFS= read -r -t 120 line <&3; do
   echo "$line" >> "$LOG"
   case "$line" in
@@ -167,7 +169,7 @@ while IFS= read -r -t 120 line <&3; do
         echo "no window for $STOP"
       fi
       : > "$ACK/$STOP.ack" ;;
-    LORVEX_UI_PREVIEW_TOUR_DONE) echo "tour done"; break ;;
+    LORVEX_UI_PREVIEW_TOUR_DONE) tour_done=true; echo "tour done"; break ;;
   esac
 done
 kill "$APP_PID" 2>/dev/null
@@ -175,6 +177,11 @@ wait "$APP_PID" 2>/dev/null
 exec 3<&-
 rm -f "$FIFO"
 rm -rf "$ACK"
+
+if [[ "$tour_done" != true ]]; then
+  echo "Tour ended after $STOP without a completion marker. See $LOG" >&2
+  exit 1
+fi
 
 # Two byte-identical PNGs mean one capture landed on a workspace that had
 # already moved on. Reviewed one at a time the pair looks fine, so the round

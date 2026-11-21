@@ -16,30 +16,34 @@ struct DailyReviewAgenda: View {
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
       LorvexPageLabel(title)
-      ForEach(day.events.prefix(expanded ? day.events.count : previewCount)) { event in
-        row(id: "event.\(event.id)", title: event.title,
-          time: event.listTimeLabel(on: day.key, range: TodayCalmCopy.timeRange(start:end:)) ?? TodayCalmCopy.allDay,
-          action: { openEvent(event) }
-        ) {
-          Capsule().fill(LorvexDesign.Palette.eventTint(event.color)).frame(width: 3)
+      let items = day.reviewItems
+      ForEach(items.prefix(expanded ? items.count : previewCount)) { item in
+        switch item.kind {
+        case .event(let event):
+          row(id: "event.\(event.id)", title: event.title,
+            time: event.listTimeLabel(on: day.key, range: TodayCalmCopy.timeRange(start:end:)) ?? TodayCalmCopy.allDay,
+            action: { openEvent(event) }
+          ) {
+            Capsule().fill(LorvexDesign.Palette.eventTint(event.color)).frame(width: 3)
+          }
+        case .task(let task):
+          row(id: task.id, title: task.title,
+            time: task.time(on: day.key).map { TodayCalmCopy.timeRange(start: $0.lowerBound, end: $0.upperBound) },
+            action: { openTask(task.id) }
+          ) {
+            Image(systemName: "list.bullet").foregroundStyle(.secondary)
+          }
+        case .now: EmptyView()
         }
       }
-      if day.events.count > previewCount {
-        Button(expanded ? TodayCalmCopy.briefingLess : ReviewCalmCopy.moreCount(day.events.count - previewCount)) {
+      if items.count > previewCount {
+        Button(expanded ? TodayCalmCopy.briefingLess : ReviewCalmCopy.moreCount(items.count - previewCount)) {
           lorvexAnimated(.snappy) { expanded.toggle() }
         }
         .buttonStyle(.link)
         .font(LorvexDesign.Typography.secondaryText)
       }
-      ForEach(day.tasks) { task in
-        row(id: task.id, title: task.title,
-          time: task.time(on: day.key).map { TodayCalmCopy.timeRange(start: $0.lowerBound, end: $0.upperBound) },
-          action: { openTask(task.id) }
-        ) {
-          Image(systemName: "list.bullet").foregroundStyle(.secondary)
-        }
-      }
-      if day.events.isEmpty && day.tasks.isEmpty {
+      if items.isEmpty {
         Text(ReviewCalmCopy.tomorrowEmpty)
           .font(LorvexDesign.Typography.secondaryText).foregroundStyle(.secondary)
           .accessibilityIdentifier("\(identifier).empty")

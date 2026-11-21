@@ -161,6 +161,12 @@ activates an app, or needs Simulator.app. Shut simulators down afterward.
 
 ### macOS tour
 
+From `apps/apple`, run `swift build --product LorvexApple` followed by
+`./.build/debug/LorvexApple --ui-preview -uiPreviewSearchScene -uiPreviewPlannedDay`
+to exercise the regular Mac window with a seeded, in-memory store. The check
+switches workspaces during toolbar animations, checks each search prompt and
+its absence on other pages, then drives ⌘F, text entry, and Escape.
+
 `script/ui_tour_macos.sh <light|dark> <outdir>` photographs the DEBUG
 `--ui-preview` window, which never becomes key, at about 57 stops over a seeded
 in-memory core with EventKit and CloudKit off. Toolbar and prominent buttons

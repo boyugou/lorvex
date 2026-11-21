@@ -1155,7 +1155,7 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/App/LorvexAppCommands.swift'), 'store.beginSearch()'),
     ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceSearchField.swift'), '.searchable(text: $store.searchText, placement: .toolbar, prompt: Text(prompt))'),
     ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceSearchField.swift'), '.searchFocused($isFocused)'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceView.swift'), '.lorvexWorkspaceSearchField(store: store, selection: store.selection)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/ContentView.swift'), '.lorvexWorkspaceSearchField(store: store, selection: store.selection)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexWorkspaceWindowView.swift'), '.lorvexWorkspaceSearchField(store: store, selection: .tasks)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TasksWorkspaceView.swift'), 'lorvexWorkspaceSearchField('),
     ('absent', ('file', 'Sources/LorvexApple/Views/MemoryWorkspaceView.swift'), 'lorvexWorkspaceSearchField('),

@@ -530,3 +530,15 @@ func mobileReviewEditingWindowIncludesTheOldestDay() async throws {
   await store.returnReviewToToday()
   #expect(try await core.loadDailyReview(date: oldest)?.summary == "Last Saturday.")
 }
+
+@MainActor
+@Test("A mobile cold refresh and a Settings edit both update the day’s working window")
+func mobileTodayUsesStoredHoursAfterLaunch() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  _ = try await core.setPreference(key: "working_hours", value: #"{"start":"09:00","end":"14:00"}"#)
+  let store = MobileStore(core: core)
+  await store.refresh()
+  #expect(store.workdayWindow == 540..<840)
+  #expect(await store.saveWorkingHoursPreference(start: "10:00", end: "16:00"))
+  #expect(store.workdayWindow == 600..<960)
+}

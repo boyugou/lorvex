@@ -9,6 +9,7 @@ struct ReviewTomorrowPlanSheet: View {
   let agenda: LorvexAgendaDay?
   let loading: Bool
   let workday: Range<Int>?
+  let todayRemaining: Int?
   let retry: () async -> Void
   let move: ([ReviewTaskSummary]) -> Void
 
@@ -17,15 +18,16 @@ struct ReviewTomorrowPlanSheet: View {
   @Environment(\.dismiss) private var dismiss
 
   init(dayKey: String, tasks: [ReviewTaskSummary], agenda: LorvexAgendaDay?, loading: Bool, workday: Range<Int>?,
-    retry: @escaping () async -> Void, move: @escaping ([ReviewTaskSummary]) -> Void) {
+    todayRemaining: Int? = nil, suggestedIDs: Set<String>? = nil, retry: @escaping () async -> Void, move: @escaping ([ReviewTaskSummary]) -> Void) {
     self.dayKey = dayKey
     self.tasks = tasks
     self.agenda = agenda
     self.loading = loading
     self.workday = workday
+    self.todayRemaining = todayRemaining
     self.retry = retry
     self.move = move
-    _selectedIDs = State(initialValue: Set(tasks.map(\.id)))
+    _selectedIDs = State(initialValue: suggestedIDs ?? Set(tasks.map(\.id)))
   }
 
   static var title: String {
@@ -93,12 +95,13 @@ struct ReviewTomorrowPlanSheet: View {
         Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: LorvexL10n.bundle)) { dismiss() }
           .keyboardShortcut(.cancelAction)
         Button(ReviewCalmCopy.moveRow) { move(selected) }
-          .disabled(selected.isEmpty).keyboardShortcut(.defaultAction)
+          .disabled(selected.isEmpty || (todayRemaining != nil && (agenda == nil || workday == nil)))
+          .keyboardShortcut(.defaultAction)
           .accessibilityIdentifier("reviews.plan.move")
       }
       .padding(.horizontal, 24).padding(.vertical, 14)
     }
-    .frame(width: 500, height: 500)
+    .frame(width: 500, height: todayRemaining == nil ? 500 : 550)
     .background(.background)
   }
 
@@ -113,19 +116,24 @@ struct ReviewTomorrowPlanSheet: View {
         Spacer()
         Text(TodayCalmCopy.timeRange(start: window.lowerBound, end: window.upperBound)).foregroundStyle(.secondary)
       }
-      Text(caption.visibleText ?? caption.sentence).accessibilityLabel(caption.sentence).font(LorvexDesign.Typography.sectionHeader).fixedSize(horizontal: false, vertical: true)
-      GeometryReader { geometry in
-        let unit = geometry.size.width / CGFloat(max(window.count, load.plannedMinutes))
-        HStack(spacing: 0) {
-          Rectangle().fill(.secondary.opacity(0.6)).frame(width: CGFloat(load.meetingMinutes) * unit)
-          Rectangle().fill(.secondary).frame(width: CGFloat(load.existingMinutes) * unit)
-          Rectangle().fill(LorvexDesign.Palette.Destination.review).frame(width: CGFloat(load.selectedMinutes) * unit)
+      if let todayRemaining {
+        LorvexDayTransferForecast(todayRemaining: todayRemaining, tomorrow: load, window: window)
+          .accessibilityIdentifier("today.transfer.forecast")
+      } else {
+        Text(caption.visibleText ?? caption.sentence).accessibilityLabel(caption.sentence).font(LorvexDesign.Typography.sectionHeader).fixedSize(horizontal: false, vertical: true)
+        GeometryReader { geometry in
+          let unit = geometry.size.width / CGFloat(max(window.count, load.plannedMinutes))
+          HStack(spacing: 0) {
+            Rectangle().fill(.secondary.opacity(0.6)).frame(width: CGFloat(load.meetingMinutes) * unit)
+            Rectangle().fill(.secondary).frame(width: CGFloat(load.existingMinutes) * unit)
+            Rectangle().fill(LorvexDesign.Palette.Destination.review).frame(width: CGFloat(load.selectedMinutes) * unit)
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .background(.quaternary)
+          .clipShape(Capsule())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary)
-        .clipShape(Capsule())
+        .frame(height: 6).accessibilityHidden(true)
       }
-      .frame(height: 6).accessibilityHidden(true)
       if load.unknownCount > 0 {
         HStack(spacing: LorvexDesign.Spacing.xs) {
           Text(String(localized: "review.plan.excluded", defaultValue: "Excluded from time estimate",

@@ -173,7 +173,6 @@ private struct MobileTodayPageChrome: ViewModifier {
   func body(content: Content) -> some View {
     content
       .task {
-        await store.loadWorkdayWindow()
         await store.loadDoneTodayCount()
       }
       .onChange(of: store.snapshot.today) { _, _ in

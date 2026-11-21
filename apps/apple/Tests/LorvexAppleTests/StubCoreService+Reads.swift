@@ -57,6 +57,10 @@ extension StubCoreService {
     try await preview.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
   }
 
+  func moveTodayOverflow(_ tasks: [ReviewTaskSummary], on day: String) async throws -> [ReviewTaskChange] {
+    try await preview.moveTodayOverflow(tasks, on: day)
+  }
+
   func restoreReviewTasks(_ changes: [ReviewTaskChange], undo: Bool) async throws {
     try await preview.restoreReviewTasks(changes, undo: undo)
   }

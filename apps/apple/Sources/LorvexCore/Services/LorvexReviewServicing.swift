@@ -5,6 +5,9 @@ public protocol LorvexReviewServicing: Sendable {
   func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
     destination: ReviewTaskDestination) async throws -> [ReviewTaskChange]
 
+  /// Moves a confirmed Today selection after rechecking the day, visibility, estimate and schedule.
+  func moveTodayOverflow(_ tasks: [ReviewTaskSummary], on day: String) async throws -> [ReviewTaskChange]
+
   /// Reverts or reapplies the recorded changes only where the affected fields still match.
   func restoreReviewTasks(_ changes: [ReviewTaskChange], undo: Bool) async throws
 

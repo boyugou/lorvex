@@ -57,6 +57,7 @@ struct MobileTodayPage: View {
   let appointment: MobileTodayAppointment?
   let openEvent: (CalendarTimelineEvent) -> Void
 
+  @State private var planningDay: String?
   @State private var showsFullBriefing = false
   /// Whether the line limit cuts the briefing at the page's current width
   /// and text size, which is what brings the "Show more" toggle.
@@ -128,6 +129,20 @@ struct MobileTodayPage: View {
     .environment(\.defaultMinListRowHeight, 0)
     .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
     .sensoryFeedback(.success, trigger: store.doneTodayCount)
+    .sheet(isPresented: Binding(get: { planningDay != nil }, set: { if !$0 { planningDay = nil } })) {
+      if let day = planningDay, let tomorrow = LorvexDateFormatters.ymdUTCAddingDays(day, days: 1),
+        let load = page.overbooked {
+        MobileReviewTomorrowPlan(store: store, dayKey: tomorrow, tasks: load.planningRows,
+          todayRemaining: load.freeMinutes - load.workMinutes, suggestedIDs: Set(load.candidates.map(\.id))) { chosen in
+          planningDay = nil
+          Task { await store.moveTodayOverflow(chosen, on: day, tomorrow: tomorrow) }
+        }
+      }
+    }
+    .onChange(of: store.logicalTodayString) { planningDay = nil }
+    .onChange(of: page.overbooked?.candidates.isEmpty != false) { _, unavailable in
+      if unavailable { planningDay = nil }
+    }
   }
 
   /// An empty row that opens or closes the ground section. An inset-grouped
@@ -271,11 +286,10 @@ struct MobileTodayPage: View {
         LorvexDecisionWell(title: title, message: message)
       } else {
         LorvexDecisionWell(
-          title: title, message: message, actionTitle: MobileTodayCalmCopy.overbookedAction,
+          title: title, message: message, actionTitle: MobileReviewTomorrowPlan.title + "…",
           actionIdentifier: "today.overbooked.action"
         ) {
-          let ids = overbooked.candidates.map(\.id)
-          Task { await store.deferTasksToTomorrow(ids) }
+          planningDay = store.logicalTodayString
         }
       }
     }

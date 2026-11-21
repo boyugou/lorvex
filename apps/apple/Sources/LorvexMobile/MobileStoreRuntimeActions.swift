@@ -122,6 +122,9 @@ extension MobileStore {
         today: loadedToday,
         weeklyReview: try await loadedWeeklyReview
       )
+      // The initial Today view can appear while protected storage is still closed.
+      // Read the working hours alongside the day they govern, including after sync.
+      await loadWorkdayWindow()
       rescheduleLogicalDayBoundaryWake()
       // The load above opened the on-disk store, so surface any quarantine
       // recovery now — before the rest of the fan-out — rather than letting a

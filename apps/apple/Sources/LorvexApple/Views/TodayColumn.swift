@@ -16,6 +16,10 @@ struct TodayColumn: View {
   @Bindable var store: AppStore
   /// The day as of this render, built once (``AppStore/todayColumnContent``).
   let content: TodayColumnContent
+  @State private var planningDay: String?
+  @State private var tomorrowAgenda: LorvexAgendaDay?
+  @State private var loadingAgenda = true
+  @Environment(\.undoManager) private var undoManager
   @State private var showsFullBriefing = false
   /// Whether the three-line limit cuts the briefing at the column's current
   /// width, which is what brings the "Show more" toggle.
@@ -84,6 +88,32 @@ struct TodayColumn: View {
     }
     .frame(maxWidth: 720, alignment: .leading)
     .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
+    .sheet(isPresented: Binding(get: { planningDay != nil }, set: { if !$0 { planningDay = nil } })) {
+      if let day = planningDay, let tomorrow = LorvexDateFormatters.ymdUTCAddingDays(day, days: 1),
+        let load = page.overbooked {
+        ReviewTomorrowPlanSheet(dayKey: tomorrow, tasks: load.planningRows,
+          agenda: tomorrowAgenda?.key == tomorrow ? tomorrowAgenda : nil, loading: loadingAgenda,
+          workday: store.workdayWindow, todayRemaining: load.freeMinutes - load.workMinutes, suggestedIDs: Set(load.candidates.map(\.id)),
+          retry: { await loadOverflowAgenda() }) { chosen in
+          planningDay = nil
+          Task { await store.moveTodayOverflow(chosen, on: day, undoManager: undoManager) }
+        }
+        .task(id: store.dayReviewReadKey) { await loadOverflowAgenda() }
+      }
+    }
+    .onChange(of: store.logicalTodayDateString) { planningDay = nil }
+    .onChange(of: page.overbooked?.candidates.isEmpty != false) { _, unavailable in
+      if unavailable { planningDay = nil }
+    }
+  }
+
+  private func loadOverflowAgenda() async {
+    loadingAgenda = true
+    await store.loadWorkdayWindow()
+    let day = await store.loadTomorrowAgenda()
+    guard !Task.isCancelled else { return }
+    tomorrowAgenda = day
+    loadingAgenda = false
   }
 
   private func routine(_ catalog: HabitCatalogSnapshot) -> some View {
@@ -202,11 +232,10 @@ struct TodayColumn: View {
         LorvexDecisionWell(title: title, message: message)
       } else {
         LorvexDecisionWell(
-          title: title, message: message, actionTitle: TodayCalmCopy.overbookedAction,
+          title: title, message: message, actionTitle: ReviewTomorrowPlanSheet.title + "…",
           actionIdentifier: "today.overbooked.action"
         ) {
-          let ids = overbooked.candidates.map(\.id)
-          Task { await store.moveTodayTasksToTomorrow(ids) }
+          planningDay = store.logicalTodayDateString
         }
       }
     }

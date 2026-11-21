@@ -6,8 +6,22 @@ extension MobileStore {
   func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
     destination: ReviewTaskDestination, tomorrow: String) async {
     guard day == logicalTodayString, selectedReviewDate == day else { return }
+    await performTaskArrangement(tasks, destination: destination, tomorrow: tomorrow) {
+      try await self.core.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
+    }
+  }
+
+  func moveTodayOverflow(_ tasks: [ReviewTaskSummary], on day: String, tomorrow: String) async {
+    guard day == logicalTodayString else { return }
+    await performTaskArrangement(tasks, destination: .day(tomorrow), tomorrow: tomorrow) {
+      try await self.core.moveTodayOverflow(tasks, on: day)
+    }
+  }
+
+  private func performTaskArrangement(_ tasks: [ReviewTaskSummary], destination: ReviewTaskDestination, tomorrow: String,
+    move: () async throws -> [ReviewTaskChange]) async {
     _ = await mutateTaskReturningToday(affectedIDs: tasks.map(\.id)) {
-      let changes = try await core.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
+      let changes = try await move()
       if !changes.isEmpty {
         let message = switch destination {
         case .day(let key): MobileReviewCalmCopy.plannedFact(key, tomorrowKey: tomorrow)

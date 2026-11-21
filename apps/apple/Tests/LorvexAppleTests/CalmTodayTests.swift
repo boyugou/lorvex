@@ -192,6 +192,18 @@ func calmTodayOverbookedCandidates() throws {
   #expect(overbooked.candidates.map(\.id) == ["a", "b"])
 }
 
+@Test("Today offers other flexible tasks without selecting them by default")
+func calmTodayOverflowAlternatives() throws {
+  let page = Fixture.page(tasks: [
+    Fixture.task("pinned", due: Fixture.day, estimate: 120),
+    Fixture.task("alternate", estimate: 40), Fixture.task("suggested", estimate: 90),
+  ], now: 9 * 60, workingHours: 9 * 60..<12 * 60)
+  let load = try #require(page.overbooked)
+  #expect(load.candidates.map(\.id) == ["suggested"])
+  #expect(load.alternatives.map(\.id) == ["alternate"])
+  #expect(load.planningRows.map(\.id) == ["suggested", "alternate"])
+}
+
 @Test("a day that fits, or whose working hours are over, is not overbooked")
 func calmTodayNotOverbooked() {
   let fits = Fixture.page(

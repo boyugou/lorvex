@@ -75,10 +75,14 @@ public struct LorvexCalmToday: Equatable, Sendable {
     /// task qualifies; the page then states the fact and offers nothing.
     public var candidates: [LorvexTask]
 
-    public init(workMinutes: Int, freeMinutes: Int, candidates: [LorvexTask]) {
+    /// Other eligible tasks a person can choose instead of a suggestion.
+    public var alternatives: [LorvexTask]
+
+    public init(workMinutes: Int, freeMinutes: Int, candidates: [LorvexTask], alternatives: [LorvexTask] = []) {
       self.workMinutes = workMinutes
       self.freeMinutes = freeMinutes
       self.candidates = candidates
+      self.alternatives = alternatives
     }
   }
 
@@ -214,21 +218,18 @@ public struct LorvexCalmToday: Equatable, Sendable {
     let excess = workMinutes - freeMinutes
     guard excess >= LorvexWeekLoad.overbookedTolerance else { return nil }
 
-    var chosen = Set<LorvexTask.ID>()
-    var moved = 0
-    for item in items.reversed() where moved < excess {
+    let eligible = items.filter { item in
       let task = item.task
-      guard task.status != .inProgress, item.time == nil,
-        let estimate = task.estimatedMinutes, estimate > 0
-      else { continue }
-      if let due = task.dueDate, LorvexDateFormatters.ymdUTC.string(from: due) <= logicalDay {
-        continue
-      }
-      chosen.insert(task.id)
-      moved += estimate
+      guard task.status != .inProgress, item.time == nil, (task.estimatedMinutes ?? 0) > 0 else { return false }
+      return task.dueDate.map { LorvexDateFormatters.ymdUTC.string(from: $0) > logicalDay } ?? true
+    }.map(\.task)
+    var firstSuggested = eligible.endIndex
+    var moved = 0
+    while firstSuggested > eligible.startIndex && moved < excess {
+      firstSuggested -= 1
+      moved += eligible[firstSuggested].estimatedMinutes ?? 0
     }
-    return Overbooked(
-      workMinutes: workMinutes, freeMinutes: freeMinutes,
-      candidates: items.map(\.task).filter { chosen.contains($0.id) })
+    return Overbooked(workMinutes: workMinutes, freeMinutes: freeMinutes,
+      candidates: Array(eligible[firstSuggested...]), alternatives: Array(eligible[..<firstSuggested]))
   }
 }

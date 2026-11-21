@@ -7,21 +7,24 @@ struct MobileReviewTomorrowPlan: View {
   let store: MobileStore
   let dayKey: String
   let tasks: [ReviewTaskSummary]
+  let todayRemaining: Int?
   let move: ([ReviewTaskSummary]) -> Void
 
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.verticalSizeClass) private var verticalSizeClass
   @Environment(\.dynamicTypeSize) private var typeSize
   @State private var selectedIDs: Set<String>
   @State private var showAgenda = false
   @State private var agenda: LorvexAgendaDay?
   @State private var loading = true
 
-  init(store: MobileStore, dayKey: String, tasks: [ReviewTaskSummary], move: @escaping ([ReviewTaskSummary]) -> Void) {
+  init(store: MobileStore, dayKey: String, tasks: [ReviewTaskSummary], todayRemaining: Int? = nil, suggestedIDs: Set<String>? = nil, move: @escaping ([ReviewTaskSummary]) -> Void) {
     self.store = store
     self.dayKey = dayKey
     self.tasks = tasks
+    self.todayRemaining = todayRemaining
     self.move = move
-    _selectedIDs = State(initialValue: Set(tasks.map(\.id)))
+    _selectedIDs = State(initialValue: suggestedIDs ?? Set(tasks.map(\.id)))
   }
 
   static var title: String {
@@ -34,12 +37,14 @@ struct MobileReviewTomorrowPlan: View {
     String(localized: "task_detail.picker.no_length", defaultValue: "No Estimate", table: "Localizable", bundle: MobileL10n.bundle)
   }
 
+  private var forecastScrolls: Bool { typeSize.isAccessibilitySize || verticalSizeClass == .compact }
+
   var body: some View {
     NavigationStack {
       VStack(spacing: 0) {
-        if !typeSize.isAccessibilitySize { forecast.padding() }
+        if !forecastScrolls { forecast.padding() }
         List {
-          if typeSize.isAccessibilitySize { Section { forecast } }
+          if forecastScrolls { Section { forecast } }
           if let agenda {
             Section {
               DisclosureGroup(isExpanded: $showAgenda) {
@@ -92,7 +97,7 @@ struct MobileReviewTomorrowPlan: View {
           .frame(maxWidth: .infinity, minHeight: 34)
         }
         .buttonStyle(.borderedProminent).tint(LorvexDesign.Palette.Destination.review)
-        .disabled(selected.isEmpty)
+        .disabled(selected.isEmpty || (todayRemaining != nil && (agenda == nil || store.workdayWindow == nil)))
         .accessibilityIdentifier("review.plan.move")
         .padding(.horizontal).padding(.vertical, LorvexDesign.Spacing.s)
       }
@@ -122,17 +127,22 @@ struct MobileReviewTomorrowPlan: View {
         .font(LorvexDesign.Typography.pageLabel).foregroundStyle(.secondary)
       if let agenda, let window = store.workdayWindow {
         let load = ReviewTomorrowLoad(agenda: agenda, window: window, selected: selected)
-        let remaining = window.count - load.plannedMinutes
-        let duration = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(abs(remaining)))
-        let caption = remaining < 0
-          ? String(localized: "calendar.week.load.over", defaultValue: "\(duration) over", table: "Localizable", bundle: MobileL10n.bundle)
-          : String(localized: "review.plan.available", defaultValue: "\(duration) free", table: "Localizable", bundle: MobileL10n.bundle)
-        Text(caption, serifVoice: .pageSentence)
-          .fixedSize(horizontal: false, vertical: true)
-          .accessibilityIdentifier("review.plan.forecast")
-        ProgressView(value: Double(min(window.count, load.plannedMinutes)), total: Double(window.count))
-          .tint(LorvexDesign.Palette.Destination.review)
-          .accessibilityHidden(true)
+        if let todayRemaining {
+          LorvexDayTransferForecast(todayRemaining: todayRemaining, tomorrow: load, window: window)
+            .accessibilityIdentifier("today.transfer.forecast")
+        } else {
+          let remaining = window.count - load.plannedMinutes
+          let duration = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(abs(remaining)))
+          let caption = remaining < 0
+            ? String(localized: "calendar.week.load.over", defaultValue: "\(duration) over", table: "Localizable", bundle: MobileL10n.bundle)
+            : String(localized: "review.plan.available", defaultValue: "\(duration) free", table: "Localizable", bundle: MobileL10n.bundle)
+          Text(caption, serifVoice: .pageSentence)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("review.plan.forecast")
+          ProgressView(value: Double(min(window.count, load.plannedMinutes)), total: Double(window.count))
+            .tint(LorvexDesign.Palette.Destination.review)
+            .accessibilityHidden(true)
+        }
         if load.unknownCount > 0 {
           HStack {
             Text(String(localized: "review.plan.excluded", defaultValue: "Excluded from time estimate", table: "Localizable", bundle: MobileL10n.bundle))

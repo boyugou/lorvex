@@ -51,8 +51,21 @@ extension AppStore {
   func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
     destination: ReviewTaskDestination, undoManager: UndoManager?) async {
     guard selectedReviewDate == day, dailyReviewIsEditable(date: day) else { return }
+    await performTaskArrangement(undoManager: undoManager) {
+      try await self.core.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
+    }
+  }
+
+  func moveTodayOverflow(_ tasks: [ReviewTaskSummary], on day: String, undoManager: UndoManager?) async {
+    guard day == logicalTodayDateString else { return }
+    await performTaskArrangement(undoManager: undoManager) {
+      try await self.core.moveTodayOverflow(tasks, on: day)
+    }
+  }
+
+  private func performTaskArrangement(undoManager: UndoManager?, move: () async throws -> [ReviewTaskChange]) async {
     await perform {
-      let changes = try await core.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
+      let changes = try await move()
       if !changes.isEmpty {
         registerReviewUndo(changes, undo: true, manager: undoManager)
         feedbackProvider.playFeedback(.taskDeferred)

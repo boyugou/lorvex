@@ -59,19 +59,42 @@ extension SwiftLorvexCoreService {
 
   public func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
     destination: ReviewTaskDestination) async throws -> [ReviewTaskChange] {
+    try arrangeTasks(tasks, on: day, destination: destination, fromToday: false)
+  }
+
+  public func moveTodayOverflow(_ tasks: [ReviewTaskSummary], on day: String) async throws -> [ReviewTaskChange] {
+    guard let tomorrow = LorvexDateFormatters.ymdUTCAddingDays(day, days: 1) else { return [] }
+    return try arrangeTasks(tasks, on: day, destination: .day(tomorrow), fromToday: true)
+  }
+
+  private func arrangeTasks(_ tasks: [ReviewTaskSummary], on day: String, destination: ReviewTaskDestination,
+    fromToday: Bool) throws -> [ReviewTaskChange] {
     let source = try LorvexDate.parse(day).get()
     if case .day(let key) = destination { _ = try LorvexDate.parse(key).get() }
     return try withWrite { db, hlc, deviceId in
+      var todayIDs: Set<String>?
+      if fromToday {
+        guard try WorkflowTimezone.todayYmdForConn(db) == day else { return [] }
+        todayIDs = Set(try TaskRepo.Read.getTodayPoolTasks(db, today: day).map(\.core.id))
+      }
       var seen = Set<String>()
       var changes: [ReviewTaskChange] = []
       for task in tasks where seen.insert(task.id).inserted {
         let id = TaskId(trusted: task.id)
         guard let row = try TaskRepo.Read.getTask(db, taskId: id), row.lifecycle.archivedAt == nil,
-          row.scheduling.plannedDate == source || row.scheduling.dueDate == source,
           row.scheduling.plannedDate?.asString == task.plannedDate
         else { continue }
         let before = try ReviewTaskChange.State(row)
         guard before.status.isActionable else { continue }
+        if let todayIDs {
+          guard todayIDs.contains(task.id), before.status.rawValue == task.status, before.status != .inProgress,
+            row.scheduling.plannedDate != source || row.scheduling.plannedTime == nil,
+            row.scheduling.dueDate.map({ $0 > source }) ?? true,
+            let estimate = task.estimatedMinutes, estimate > 0, row.scheduling.estimatedMinutes == Int64(estimate)
+          else { continue }
+        } else if row.scheduling.plannedDate != source && row.scheduling.dueDate != source {
+          continue
+        }
         var reminders: [ReviewTaskChange.Reminder] = []
         switch destination {
         case .day(let key):

@@ -22,8 +22,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   2. Mac Today now brings the current task and a Start or Continue action
      below the briefing. Continue opens the task's notes and checklist.
      The task shows the time until the next event. A conflicting upcoming
-     task stays in the schedule and names the calendar event. Evaluate the
-     return from a meeting during daily use, including days without time slots.
+     task stays in the schedule and names the calendar event. Available in
+     [TestFlight build 147](docs/releases/1.0.0-147.md). Evaluate the return
+     from a meeting during daily use, including days without time slots.
   3. Bring habits into the part of the day when they are useful. The Mac
      Habits board groups by cadence, while Today's main column has no habit
      check-in. Prototype morning and evening routines with user-chosen

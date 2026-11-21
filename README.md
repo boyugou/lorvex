@@ -15,9 +15,9 @@
 
 <br>
 
-<img src="docs/images/mac-today.png" alt="Lorvex on the Mac: Today, with the briefing the user's assistant wrote, the day's schedule, and its tasks" width="880">
+<img src="docs/images/mac-today.png" alt="Today on Mac showing a task in progress, its next checklist item and 25 minutes until the next meeting" width="880">
 
-<br><br>
+<br><sub>Mac Today in TestFlight 147</sub><br><br>
 
 <table>
   <tr>
@@ -37,8 +37,8 @@
 ---
 
 Ask your assistant to fit a writing session around your meetings. Open Today
-to see the task alongside your calendar. If the afternoon gets away from you,
-use Daily Review to pick another day. Your assistant sees the revised plan
+after a meeting to pick up the next step on your checklist. If the afternoon
+gets away from you, use Daily Review to pick another day. Your assistant sees the revised plan
 the next time it reads Lorvex.
 
 The Mac app gives a connected assistant 120 tools through the Model Context
@@ -110,13 +110,12 @@ is always on the same releases page.
 
 ### Apple app (macOS)
 
-Requires Xcode 26 or newer (Swift 6 toolchain); the app targets macOS 26, iOS 26, and watchOS 26.
+Use Xcode 26.3 or newer for development and Xcode 27.x for release archives.
+The app targets macOS 26, iOS 26, and watchOS 26.
 
 ```bash
 cd apps/apple
-swift build              # build all targets
-swift test               # app-level test suite
-(cd core && swift test)  # pure-Swift core suite
+./script/verify_swift.sh --core   # build, compile string catalogs, run app and core tests
 ./script/build_and_run.sh --verify   # build, verify, and launch the macOS app
 ```
 
@@ -174,12 +173,10 @@ Full client-by-client instructions (Claude Desktop, Claude Code, and others):
 
 ## Status
 
-Pre-release. The Apple app is feature-complete and in TestFlight, and a
-notarized Mac build is on the
-[releases page](https://github.com/boyugou/lorvex/releases/latest); the data,
-schema, sync, and backup contracts are finalized and gated by
-repository verifiers (`apps/apple/script/verify_all.sh`). See
-[`ROADMAP.md`](ROADMAP.md).
+Mac and iOS updates reach internal testers through TestFlight. Each
+[release record](docs/releases) lists what changed and which builds are
+available. The [public Mac download](https://github.com/boyugou/lorvex/releases/latest)
+is signed and notarized. See the [roadmap](ROADMAP.md) for ongoing work.
 
 ## Privacy
 

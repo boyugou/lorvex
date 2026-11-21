@@ -300,7 +300,7 @@ func mobileTodayShowsHabitsAndEventsOnlyWhenLoaded() throws {
   #expect(schedule.contains("let drawsRows = rows.contains { $0.kind != .now }"))
   #expect(schedule.contains("items: rows"))
   let calmState = try mobileSourceFile("Sources/LorvexMobile/MobileStoreTodayCalmState.swift")
-  #expect(calmState.contains("calendarTimeline?.eventsOccurring(on: logicalTodayString)"))
+  #expect(calmState.contains("todayAgenda?.eventsOccurring(on: logicalTodayString)"))
   // Lists were intentionally removed from Today — they live in their own destination,
   // not as a feature-dump section here.
   #expect(!source.contains("store.lists"))

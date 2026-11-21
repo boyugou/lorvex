@@ -203,6 +203,7 @@ extension MobileStore {
     archivedHabitsAreLoaded = false
     archivedLists = []
     archivedListsAreLoaded = false
+    separateTodayTimeline = nil
     calendarTimeline = nil
     calendarScheduledTasks = []
     dailyReview = nil

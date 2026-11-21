@@ -46,11 +46,13 @@ extension MobileStore {
         // week would otherwise silently empty the viewed days.
         let from = calendarWindowToReload?.from ?? date
         let to = calendarWindowToReload?.to ?? Self.calendarEndDateString(from: date)
-        if let loaded = try? await core.loadCalendarTimeline(from: from, to: to) {
-          calendarTimeline = loaded
+        calendarTimelineLoadToken &+= 1
+        let token = calendarTimelineLoadToken
+        if let loaded = try? await loadCalendarWithToday(from: from, to: to), token == calendarTimelineLoadToken {
+          adoptCalendarWithToday(loaded)
         }
         if let loaded = try? await core.getScheduledTasks(
-          from: from, to: to, limit: CalendarGridModel.windowTaskLimit)
+          from: from, to: to, limit: CalendarGridModel.windowTaskLimit), token == calendarTimelineLoadToken
         {
           calendarScheduledTasks = loaded
         }

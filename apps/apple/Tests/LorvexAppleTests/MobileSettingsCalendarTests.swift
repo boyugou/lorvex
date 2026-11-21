@@ -9,10 +9,9 @@ actor FakeMobileSettingsEventKitCoordinator: MobileEventKitCoordinating {
   var availableCalendarsResult: [EventKitCalendarDescriptor] = []
   var availableCalendarsError: Error?
   private(set) var requestAccessCallCount = 0
-  private(set) var ingestCallCount = 0
+  var ingestCallCount: Int { ingestWindows.count }
   private(set) var lastIngestAccessMode: CalendarAiAccessMode?
-  private(set) var lastIngestWindow: (start: String, end: String)?
-  private(set) var lastIngestRequestedAccess = false
+  private(set) var ingestWindows: [(start: String, end: String, requestedAccess: Bool)] = []
   private let requestAccessResult: Bool
   private let shouldBlockRequestAccess: Bool
   private let shouldBlockFirstIngest: Bool
@@ -61,10 +60,8 @@ actor FakeMobileSettingsEventKitCoordinator: MobileEventKitCoordinating {
     windowEnd: String,
     requestAccess: Bool
   ) async throws -> Int {
-    ingestCallCount += 1
     lastIngestAccessMode = accessMode
-    lastIngestWindow = (windowStart, windowEnd)
-    lastIngestRequestedAccess = requestAccess
+    ingestWindows.append((windowStart, windowEnd, requestAccess))
     if shouldBlockFirstIngest, ingestCallCount == 1 {
       firstIngestStartedContinuation?.resume()
       firstIngestStartedContinuation = nil
@@ -192,8 +189,8 @@ func mobileEventKitIngestReadsPersistedTierFromCore() async throws {
 
   #expect(await coordinator.ingestCallCount == 1)
   #expect(await coordinator.lastIngestAccessMode == .busyOnly)
-  #expect(await coordinator.lastIngestWindow?.start == "2026-07-20")
-  #expect(await coordinator.lastIngestWindow?.end == "2026-07-20")
+  #expect(await coordinator.ingestWindows.last?.start == "2026-07-20")
+  #expect(await coordinator.ingestWindows.last?.end == "2026-07-20")
 }
 
 /// FIX 1 (privacy): the iOS settings-apply path (`applyEventKitSettingsFromSettings`,
@@ -302,16 +299,20 @@ func mobileEventKitSettingsApplyPreservesVisibleWindow() async throws {
   let core = try await makeSeededInMemoryCore()
   let coordinator = FakeMobileSettingsEventKitCoordinator()
   let store = MobileStore(core: core, eventKitCoordinator: coordinator, eventKitEnabled: true)
+  let day = store.logicalTodayString
+  let from = try #require(LorvexDateFormatters.ymdUTCAddingDays(day, days: 42))
+  let to = try #require(LorvexDateFormatters.ymdUTCAddingDays(from, days: 30))
   store.calendarTimeline = CalendarTimelineSnapshot(
-    from: "2026-05-01", to: "2026-05-31", events: [], truncated: false, nextOffset: nil)
+    from: from, to: to, events: [], truncated: false, nextOffset: nil)
 
   await store.applyEventKitSettingsFromSettings(requestAccess: true)
 
-  #expect(await coordinator.lastIngestWindow?.start == "2026-05-01")
-  #expect(await coordinator.lastIngestWindow?.end == "2026-05-31")
-  #expect(await coordinator.lastIngestRequestedAccess)
-  #expect(store.calendarTimeline?.from == "2026-05-01")
-  #expect(store.calendarTimeline?.to == "2026-05-31")
+  let windows = await coordinator.ingestWindows
+  #expect(windows.map(\.start) == [from, day])
+  #expect(windows.map(\.end) == [to, day])
+  #expect(windows.map(\.requestedAccess) == [true, false])
+  #expect(store.calendarTimeline?.from == from)
+  #expect(store.calendarTimeline?.to == to)
 }
 
 @MainActor

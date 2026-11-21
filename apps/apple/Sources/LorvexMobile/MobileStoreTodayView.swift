@@ -110,12 +110,15 @@ struct MobileStoreTodayView: View {
   ) -> some View {
     // Per-minute, so a running time and the strip's now line follow the clock
     // without a reload.
-    TimelineView(.everyMinute) { _ in
-      let schedule = store.todaySchedule
-      let minutes = store.nowMinutesInProductDay
+    TimelineView(.everyMinute) { context in
+      let tick = context.date
+      let schedule = store.todaySchedule(at: tick)
+      let minutes = store.todayMinutes(at: tick)
+      let page = store.calmToday(at: tick)
       MobileTodayPage(
         store: store,
-        page: store.calmToday,
+        page: page,
+        workCue: store.todayWorkCue(for: page, at: tick),
         portion: portion,
         nowMinutes: minutes,
         editHabit: { habit in

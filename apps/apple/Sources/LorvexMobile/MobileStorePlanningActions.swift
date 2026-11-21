@@ -31,7 +31,7 @@ extension MobileStore {
     async let loadedLists = capturePlanningLoad { try await core.loadLists() }
     async let loadedHabits = capturePlanningLoad { try await core.loadHabits(date: date) }
     async let loadedCalendar = capturePlanningLoad {
-      try await core.loadCalendarTimeline(from: calendarFrom, to: calendarTo)
+      try await loadCalendarWithToday(from: calendarFrom, to: calendarTo)
     }
     async let loadedScheduledTasks = capturePlanningLoad {
       try await core.getScheduledTasks(
@@ -62,7 +62,7 @@ extension MobileStore {
     let calendarCurrent = calendarToken == calendarTimelineLoadToken
     switch results.2 {
     case .success(let loadedCalendar):
-      if calendarCurrent { calendarTimeline = loadedCalendar }
+      if calendarCurrent { adoptCalendarWithToday(loadedCalendar) }
     case .failure(let error):
       firstError = firstError ?? error
     }

@@ -91,6 +91,8 @@ public final class MobileStore {
   /// celebration overlay. Set by ``stageMilestoneCelebrationIfReached(habitID:)``
   /// on a crossing and cleared when the overlay dismisses (tap / auto-timeout).
   var milestoneCelebration: MobileHabitMilestoneCelebration?
+  /// A day-only read when the browsed window cannot supply today’s complete agenda.
+  var separateTodayTimeline: CalendarTimelineSnapshot?
   var rawCalendarTimeline: CalendarTimelineSnapshot?
   public internal(set) var calendarTimeline: CalendarTimelineSnapshot? {
     get { rawCalendarTimeline?.groupingDuplicates(calendarDuplicateGrouping) }

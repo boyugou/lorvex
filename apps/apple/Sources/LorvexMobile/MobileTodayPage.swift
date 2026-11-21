@@ -46,6 +46,7 @@ struct MobileTodayPage: View {
 
   @Bindable var store: MobileStore
   let page: LorvexCalmToday
+  let workCue: TodayWorkCue?
   var portion: Portion = .whole
   let nowMinutes: Int?
   let editHabit: (LorvexHabit) -> Void
@@ -84,7 +85,7 @@ struct MobileTodayPage: View {
             if showsStrip {
               stripRow
             }
-            if openSchedule != nil, let appointment {
+            if openSchedule != nil, let appointment, joinedAppointment == nil {
               MobileTodayAppointmentRow(appointment: appointment, day: store.logicalTodayString, open: openEvent)
             }
             if let overbooked = page.overbooked {
@@ -102,12 +103,23 @@ struct MobileTodayPage: View {
       }
 
       if portion != .brief {
+        if let item = featuredItem, let workCue {
+          Section {
+            taskRow(item)
+              .listRowSeparator(.hidden, edges: .bottom)
+            MobileTodayWorkAction(store: store, item: item, cue: workCue, showsCountdown: joinedAppointment == nil)
+            if let joinedAppointment, let next = workCue.upcoming {
+              MobileTodayAppointmentRow(appointment: joinedAppointment, day: store.logicalTodayString,
+                minutesAway: next.minutesAway, open: openEvent)
+            }
+          }
+        }
         if let catalog = store.habits, catalog.hasConfiguredRoutine, !dynamicTypeSize.isAccessibilitySize {
           habitsSection(catalog)
         }
-        if !page.items.isEmpty {
+        if page.items.contains(where: { $0.id != featuredItem?.id }) {
           taskSection
-        } else {
+        } else if page.items.isEmpty {
           emptyDaySection
         }
         if let catalog = store.habits,
@@ -302,24 +314,49 @@ struct MobileTodayPage: View {
   /// Today's list, started tasks first. A running time shows as the row's
   /// "Until" chip in place of its time, since the end is the part that matters
   /// while it runs.
+  private var joinedAppointment: MobileTodayAppointment? {
+    guard portion == .whole, openSchedule != nil, let appointment, appointment.phase == .next,
+      appointment.event.id == workCue?.upcoming?.id else { return nil }
+    return appointment
+  }
+
+  private var featuredItem: LorvexCalmToday.Item? {
+    guard workCue?.bringsTaskToTop == true else { return nil }
+    return page.lead
+  }
+
   private var taskSection: some View {
     Section {
-      ForEach(page.items) { item in
-        MobileActionTaskRow(
-          task: item.task,
-          isBlocked: store.snapshot.blockedTaskIDs.contains(item.task.id),
-          isMutating: store.taskIsMutating(item.task.id),
-          actions: store.rowActions(for: item.task.id),
-          timeLabel: item.time.map {
-            item.isRunning
-              ? MobileTodayCalmCopy.untilLabel(end: $0.upperBound)
-              : MobileTodayCalmCopy.timeRange(start: $0.lowerBound, end: $0.upperBound)
-          },
-          timeIsRunning: item.isRunning && item.time != nil,
-          chips: chips(for: item))
+      ForEach(page.items.filter { $0.id != featuredItem?.id }) { item in
+        taskRow(item)
+        if let workCue, workCue.taskID == item.id, case .reviewConflict(let event) = workCue.action {
+          Label {
+            Text(String(localized: "today.work.conflict", defaultValue: "Overlaps \(event)",
+              table: "Localizable", bundle: MobileL10n.bundle))
+          } icon: {
+            Image(systemName: "calendar")
+          }
+          .font(LorvexDesign.Typography.secondaryText)
+          .foregroundStyle(.secondary)
+        }
       }
     }
     .accessibilityIdentifier("today.list")
+  }
+
+  private func taskRow(_ item: LorvexCalmToday.Item) -> some View {
+    MobileActionTaskRow(
+      task: item.task,
+      isBlocked: store.snapshot.blockedTaskIDs.contains(item.task.id),
+      isMutating: store.taskIsMutating(item.task.id),
+      actions: store.rowActions(for: item.task.id),
+      timeLabel: item.time.map {
+        item.isRunning
+          ? MobileTodayCalmCopy.untilLabel(end: $0.upperBound)
+          : MobileTodayCalmCopy.timeRange(start: $0.lowerBound, end: $0.upperBound)
+      },
+      timeIsRunning: item.isRunning && item.time != nil,
+      chips: chips(for: item))
   }
 
   private func chips(for item: LorvexCalmToday.Item) -> [LorvexTaskRowChip] {

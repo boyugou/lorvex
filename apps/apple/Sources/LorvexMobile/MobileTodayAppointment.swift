@@ -50,7 +50,15 @@ struct MobileTodayAppointment: Equatable {
 struct MobileTodayAppointmentRow: View {
   let appointment: MobileTodayAppointment
   let day: String
+  var minutesAway: Int?
   let open: (CalendarTimelineEvent) -> Void
+
+  private var timingLabel: String {
+    guard let minutesAway else { return appointment.label }
+    let formatter = RelativeDateTimeFormatter()
+    formatter.formattingContext = .beginningOfSentence
+    return formatter.localizedString(from: DateComponents(minute: minutesAway))
+  }
 
   var body: some View {
     Button { open(appointment.event) } label: {
@@ -60,7 +68,7 @@ struct MobileTodayAppointmentRow: View {
           .frame(width: 3)
           .accessibilityHidden(true)
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-          Text(verbatim: appointment.label)
+          Text(verbatim: timingLabel)
             .font(LorvexDesign.Typography.pageLabel).foregroundStyle(.secondary)
           Text(verbatim: appointment.event.title)
             .font(.headline)
@@ -76,8 +84,8 @@ struct MobileTodayAppointmentRow: View {
           .accessibilityHidden(true)
       }
       .fixedSize(horizontal: false, vertical: true)
-      .padding(LorvexDesign.Spacing.m)
-      .background(LorvexDesign.Palette.insetFill, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
+      .padding(minutesAway == nil ? LorvexDesign.Spacing.m : 0)
+      .background(minutesAway == nil ? LorvexDesign.Palette.insetFill : Color.clear, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)

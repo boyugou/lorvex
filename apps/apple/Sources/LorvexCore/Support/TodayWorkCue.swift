@@ -10,6 +10,7 @@ public struct TodayWorkCue: Equatable, Sendable {
   }
 
   public struct UpcomingEvent: Equatable, Sendable {
+    public let id: CalendarTimelineEvent.ID
     public let title: String
     public let minutesAway: Int
   }
@@ -46,13 +47,13 @@ public struct TodayWorkCue: Equatable, Sendable {
     guard isStarted || isCurrent || isFuture else { return nil }
 
     var occupied = false
-    var next: (start: Double, title: String)?
+    var next: (start: Double, event: CalendarTimelineEvent)?
     var conflict: (start: Double, title: String)?
     for event in events where !event.allDay && event.occurs(on: day) {
       guard let interval = clock.eventInterval(event, on: day) else { continue }
       let (start, end) = interval
       if start > current, next.map({ start < $0.start }) ?? true {
-        next = (start, event.title)
+        next = (start, event)
       }
       guard end > current, end > start else { continue }
       if start <= current { occupied = true }
@@ -66,7 +67,7 @@ public struct TodayWorkCue: Equatable, Sendable {
       return Self(taskID: lead.id, action: .reviewConflict(event: conflict.title), upcoming: nil)
     }
     guard !occupied, isStarted || isCurrent, isStarted || !blocked.contains(lead.id) else { return nil }
-    let upcoming = next.map { UpcomingEvent(title: $0.title, minutesAway: Int(ceil($0.start - current))) }
+    let upcoming = next.map { UpcomingEvent(id: $0.event.id, title: $0.event.title, minutesAway: Int(ceil($0.start - current))) }
     return Self(taskID: lead.id, action: isStarted ? .resume : .start, upcoming: upcoming)
   }
 }

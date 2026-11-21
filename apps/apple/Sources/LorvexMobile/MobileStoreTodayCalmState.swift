@@ -2,11 +2,20 @@ import Foundation
 import LorvexCore
 
 extension MobileStore {
+  private var todayAgenda: CalendarTimelineSnapshot? {
+    let day = logicalTodayString
+    if let own = separateTodayTimeline, own.from == day, own.to == day {
+      return own.groupingDuplicates(calendarDuplicateGrouping)
+    }
+    guard let window = calendarTimeline, window.from <= day, day <= window.to else { return nil }
+    return window
+  }
+
   /// Today's calendar events, the day's fixed commitments, filtered out of the
   /// loaded timeline window. Empty when the timeline has not loaded or the day
   /// is clear.
   var todayScheduleEvents: [CalendarTimelineEvent] {
-    calendarTimeline?.eventsOccurring(on: logicalTodayString) ?? []
+    todayAgenda?.eventsOccurring(on: logicalTodayString) ?? []
   }
 
   /// Today on the clock for the schedule: the day's calendar events and its
@@ -16,20 +25,28 @@ extension MobileStore {
   /// Suggested times are left out: a suggestion is a draft the user is still
   /// deciding on, so it keeps its own reviewable rows.
   var todaySchedule: [LorvexTodayTimelineItem] {
+    todaySchedule(at: now())
+  }
+
+  func todaySchedule(at tick: Date) -> [LorvexTodayTimelineItem] {
     let tasks = snapshot.today.tasks.filter(\.status.isActionable) + doneTodayTasks
     return LorvexTodayTimeline.build(
       day: logicalTodayString,
       events: todayScheduleEvents,
       tasks: tasks,
       times: tasks.times(on: logicalTodayString),
-      nowMinutes: nowMinutesInProductDay, now: Date())
+      nowMinutes: todayMinutes(at: tick), now: tick)
   }
 
   /// Minutes since midnight in the product day's own timezone, or `nil` when the
   /// loaded snapshot is not for the current day, where a clock position would
   /// be meaningless.
   var nowMinutesInProductDay: Int? {
-    LorvexProductDayClock.nowMinutes(on: logicalTodayString, in: logicalTimeZone)
+    todayMinutes(at: now())
+  }
+
+  func todayMinutes(at tick: Date) -> Int? {
+    LorvexProductDayClock.nowMinutes(on: logicalTodayString, in: logicalTimeZone, at: tick)
   }
 
   /// The working window in minutes since midnight, or nil until the
@@ -46,13 +63,35 @@ extension MobileStore {
   /// Recomputed on every read, so a view inside a per-minute `TimelineView`
   /// advances a running time without a reload.
   var calmToday: LorvexCalmToday {
+    calmToday(at: now())
+  }
+
+  func calmToday(at tick: Date) -> LorvexCalmToday {
     LorvexCalmToday.build(
       tasks: snapshot.today.tasks,
       events: todayScheduleEvents,
       doneToday: doneTodayCount,
-      nowMinutes: nowMinutesInProductDay,
+      nowMinutes: todayMinutes(at: tick),
       logicalDay: logicalTodayString,
-      workingHours: workdayWindow, now: Date())
+      workingHours: workdayWindow, now: tick)
+  }
+
+  func todayWorkCue(for page: LorvexCalmToday, at tick: Date) -> TodayWorkCue? {
+    guard let agenda = todayAgenda, !agenda.truncated else { return nil }
+    return TodayWorkCue.resolve(lead: page.lead, blocked: snapshot.blockedTaskIDs,
+      events: agenda.eventsOccurring(on: logicalTodayString), day: logicalTodayString,
+      nowMinutes: todayMinutes(at: tick), now: tick)
+  }
+
+  func openTodayWork(_ cue: TodayWorkCue) async {
+    let tick = now()
+    guard selectedTab == .today, routePath.isEmpty, !taskIsMutating(cue.taskID),
+      let live = todayWorkCue(for: calmToday(at: tick), at: tick),
+      live.taskID == cue.taskID, live.action == cue.action else { return }
+    if cue.action == .start {
+      guard await startTask(cue.taskID), selectedTab == .today, routePath.isEmpty else { return }
+    }
+    openTaskRouteOnCurrentStack(cue.taskID)
   }
 
   /// Each of today's timed tasks' time range ("9:45 – 10:45 AM"), keyed by

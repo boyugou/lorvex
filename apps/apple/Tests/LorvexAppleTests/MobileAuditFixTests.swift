@@ -128,7 +128,7 @@ func mobileTodayScheduleListsEveryHoldOfTheDay() throws {
   #expect(!scheduleSource.contains("displayLimit"))
   #expect(!scheduleSource.contains("hiddenEventCount"))
   #expect(!scheduleSource.contains("openMoreDestination(.calendar)"))
-  #expect(calmStateSource.contains("calendarTimeline?.eventsOccurring(on: logicalTodayString)"))
+  #expect(calmStateSource.contains("todayAgenda?.eventsOccurring(on: logicalTodayString)"))
 }
 
 @Test

@@ -165,12 +165,31 @@ extension MobileStore {
     defer { isMutatingCalendarEvent = false }
     do {
       try await core.deleteCalendarEvent(id: event.eventID)
+      separateTodayTimeline?.events.removeAll { $0.id == event.id }
       calendarTimeline?.events.removeAll { $0.id == event.id }
       return true
     } catch {
       await presentUserFacingError(error)
       return false
     }
+  }
+
+  /// A distant or capped grid window cannot establish how much time is free today.
+  /// Keep the grid anchored and read just today's occurrences in that case.
+  func loadCalendarWithToday(from: String, to: String) async throws
+    -> (window: CalendarTimelineSnapshot, today: CalendarTimelineSnapshot?)
+  {
+    let day = logicalTodayString
+    let window = try await core.loadCalendarTimeline(from: from, to: to)
+    guard !(window.from <= day && day <= window.to && !window.truncated),
+      !(from == day && to == day) else { return (window, nil) }
+    let today = try? await core.loadCalendarTimeline(from: day, to: day)
+    return (window, today)
+  }
+
+  func adoptCalendarWithToday(_ read: (window: CalendarTimelineSnapshot, today: CalendarTimelineSnapshot?)) {
+    calendarTimeline = read.window
+    separateTodayTimeline = read.today
   }
 
   /// Loads the calendar timeline window around `anchor` for the day/3-day
@@ -194,13 +213,13 @@ extension MobileStore {
     calendarTimelineLoadToken &+= 1
     let token = calendarTimelineLoadToken
     await reconcileAfterCommittedMutation(source: "ios.calendar.mutation.reconcile") {
-      async let loadedTimeline = core.loadCalendarTimeline(from: window.from, to: window.to)
+      async let loadedTimeline = loadCalendarWithToday(from: window.from, to: window.to)
       async let loadedTasks = core.getScheduledTasks(
         from: window.from, to: window.to, limit: CalendarGridModel.windowTaskLimit)
       let timeline = try await loadedTimeline
       let tasks = try await loadedTasks
       guard token == calendarTimelineLoadToken else { return }
-      calendarTimeline = timeline
+      adoptCalendarWithToday(timeline)
       calendarScheduledTasks = tasks
     }
   }
@@ -214,6 +233,12 @@ extension MobileStore {
   /// would silently empty the viewed days until a >5-day page turn).
   func refreshLoadedCalendarWindow(fallbackAnchor: Date) async {
     if let window = calendarWindowToReload {
+      let day = logicalTodayString
+      if eventKitEnabled, day < window.from || day > window.to {
+        await ingestEventKitWindow(fromDay: day, throughDay: day)
+      }
+      // The person may have paged the grid during the separate Today ingest.
+      let window = calendarWindowToReload ?? window
       await refreshCalendarTimeline(from: window.from, to: window.to)
     } else {
       await refreshCalendarTimeline(around: fallbackAnchor)
@@ -229,14 +254,14 @@ extension MobileStore {
     let token = calendarTimelineLoadToken
     do {
       await ingestEventKitWindow(fromDay: start, throughDay: end)
-      let timeline = try await core.loadCalendarTimeline(from: start, to: end)
+      let timeline = try await loadCalendarWithToday(from: start, to: end)
       let tasks = try await core.getScheduledTasks(
         from: start, to: end, limit: CalendarGridModel.windowTaskLimit)
       // A newer window superseded this load while it was in flight; committing
       // now would pair this window's events with a different window's scheduled
       // tasks, so discard the stale result.
       guard token == calendarTimelineLoadToken else { return }
-      calendarTimeline = timeline
+      adoptCalendarWithToday(timeline)
       calendarScheduledTasks = tasks
     } catch {
       guard token == calendarTimelineLoadToken else { return }
@@ -270,16 +295,20 @@ extension MobileStore {
         fromDay: fromDay,
         throughDay: throughDay,
         requestAccess: requestAccess)
+      let day = logicalTodayString
+      if eventKitEnabled, day < fromDay || day > throughDay {
+        try await ingestEventKitWindowThrowing(fromDay: day, throughDay: day, requestAccess: false)
+      }
       ingestError = nil
     } catch {
       ingestError = error
     }
 
-    let timeline = try await core.loadCalendarTimeline(from: fromDay, to: throughDay)
+    let timeline = try await loadCalendarWithToday(from: fromDay, to: throughDay)
     let tasks = try await core.getScheduledTasks(
       from: fromDay, to: throughDay, limit: CalendarGridModel.windowTaskLimit)
     guard token == calendarTimelineLoadToken else { return }
-    calendarTimeline = timeline
+    adoptCalendarWithToday(timeline)
     calendarScheduledTasks = tasks
     if let ingestError { throw ingestError }
   }

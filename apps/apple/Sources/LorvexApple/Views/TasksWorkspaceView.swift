@@ -51,8 +51,8 @@ struct TasksView: View {
           placeholder: quickAddPlaceholder(for: scopedListID),
           focusToken: store.quickAddFocusToken,
           preview: store.quickAddPreview
-        ) { text in
-          await store.createInlineTask(text, destination: .list(scopedListID))
+        ) { text, keep in
+          await store.createInlineTask(text, destination: .list(scopedListID), keepOriginalTitle: keep)
         }
       } else {
         QuickAddRow(
@@ -62,8 +62,8 @@ struct TasksView: View {
             bundle: LorvexL10n.bundle),
           focusToken: store.quickAddFocusToken,
           preview: store.quickAddPreview
-        ) { text in
-          await store.createInlineTask(text, destination: .inbox)
+        ) { text, keep in
+          await store.createInlineTask(text, destination: .inbox, keepOriginalTitle: keep)
         }
       }
     }

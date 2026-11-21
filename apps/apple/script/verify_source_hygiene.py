@@ -372,7 +372,7 @@ RULES = [
     ('contains', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'priorityFilter = nil'),
     ('absent', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'title: AppCommand.newTask.title'),
     ('absent', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'openWindow(.quickCapture)'),
-    ('contains', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'await store.createInlineTask(text, destination: .inbox)'),
+    ('contains', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'await store.createInlineTask(text, destination: .inbox, keepOriginalTitle: keep)'),
     ('contains', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'focusToken: store.quickAddFocusToken'),
     ('absent', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'if allSectionsEmpty {\n          if store.hasActiveSearch'),
     ('absent', ('join', ['Sources/LorvexApple/Views/TasksWorkspaceView.swift', 'Sources/LorvexApple/Views/TasksWorkspaceState.swift']), 'chips: priorityFilter.map'),

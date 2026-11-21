@@ -35,3 +35,18 @@ struct QuickAddPreviewLine: View {
     .accessibilityIdentifier("workspace.quickAdd.preview")
   }
 }
+
+/// The parsed details disappear as soon as the user chooses the original title.
+struct QuickAddCaptureOptions: View {
+  let preview: LorvexCapturePreview
+  @Binding var keepsOriginalTitle: Bool
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+      if !keepsOriginalTitle {
+        QuickAddPreviewLine(preview: preview)
+      }
+      LorvexCaptureTitleToggle(keepsOriginalTitle: $keepsOriginalTitle)
+    }
+  }
+}

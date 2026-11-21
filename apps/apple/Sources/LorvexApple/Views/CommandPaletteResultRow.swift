@@ -13,6 +13,7 @@ struct CommandPaletteResultRow: View {
     case .openTask(_, _, let subtitle, _, _): subtitle
     case .openHabit(_, _, _, _, let cue): cue
     case .openEvent(_, let subtitle): subtitle
+    case .createOriginalTitle(let line): LorvexCaptureParser.singleLine(line)
     default: nil
     }
   }

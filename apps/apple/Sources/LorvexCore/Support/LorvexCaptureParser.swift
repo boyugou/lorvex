@@ -293,7 +293,7 @@ public enum LorvexCaptureParser {
 
   /// A line read as a title alone: its text on one line, without the
   /// whitespace around it, and no detail.
-  private static func plainTitle(_ text: String) -> LorvexCaptureParse {
+  public static func plainTitle(_ text: String) -> LorvexCaptureParse {
     LorvexCaptureParse(
       title: singleLine(text).trimmingCharacters(in: .whitespacesAndNewlines),
       plannedDayOffset: nil, dueDayOffset: nil, estimatedMinutes: nil, startMinutes: nil,

@@ -180,6 +180,13 @@ quick-add field — under today's tasks on Today, at the top of the Tasks list.
 Lorvex switches to Tasks first if you are on another workspace. Type a task title and press **Return** to
 save it; the field clears and keeps focus so you can add several in a row.
 
+If a date or tag belongs in the title, choose **Keep title as typed** in the
+capture preview. For example, this saves “Watch The Day After Tomorrow” as
+the movie title. On Today the task still lands on today, and in a list it
+still lands in that list. The next entry reads dates and tags again.
+On iPhone or iPad the choice also applies to each line of a pasted batch.
+In the Mac command palette, choose the **Keep title as typed** result.
+
 ### From Any App (macOS)
 
 Quick Capture is also a small window that opens over whatever app you are using,

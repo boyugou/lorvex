@@ -22,6 +22,8 @@ struct MenuBarStatusView: View {
   @FocusState private var quickAddFocused: Bool
   /// The menu-bar capture's own draft, so half-typed text here never bleeds
   /// into a capture field in the main window.
+  @State private var keepsOriginalTitle = false
+  @State private var captureSubmission = 0
   @State private var quickAddText: String
   /// The scope the panel last showed, kept across openings.
   @AppStorage("menubar.scope") private var scope: MenuBarScope = .today
@@ -254,14 +256,17 @@ struct MenuBarStatusView: View {
         .focused($quickAddFocused)
         .onSubmit { submitQuickAdd() }
         .lorvexSingleLine($quickAddText)
+        .onChange(of: quickAddText.isEmpty) { _, empty in
+          if empty { keepsOriginalTitle = false }
+        }
         .accessibilityIdentifier("menubar.quickAdd")
       }
       .padding(.horizontal, LorvexDesign.Spacing.s)
       .padding(.vertical, LorvexDesign.Spacing.sm)
       .background(.quaternary.opacity(0.5), in: Capsule())
 
-      if !preview.words.isEmpty {
-        QuickAddPreviewLine(preview: preview)
+      if !preview.words.isEmpty || keepsOriginalTitle {
+        QuickAddCaptureOptions(preview: preview, keepsOriginalTitle: $keepsOriginalTitle)
           .padding(.horizontal, LorvexDesign.Spacing.s)
           .transition(.opacity)
       }
@@ -273,8 +278,18 @@ struct MenuBarStatusView: View {
   private func submitQuickAdd() {
     let line = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !line.isEmpty else { return }
+    let keep = keepsOriginalTitle
+    captureSubmission += 1
+    let attempt = captureSubmission
+    keepsOriginalTitle = false
     quickAddText = ""
-    Task { await store.captureLine(line) }
+    Task {
+      let created = await store.captureLine(line, keepOriginalTitle: keep)
+      if !created, captureSubmission == attempt, quickAddText.isEmpty {
+        keepsOriginalTitle = keep
+        quickAddText = line
+      }
+    }
   }
 
   // MARK: - Habits

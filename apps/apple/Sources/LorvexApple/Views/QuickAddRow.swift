@@ -21,17 +21,19 @@ struct QuickAddRow: View {
   let placeholder: String
   var focusToken: Int? = nil
   let preview: (String) -> LorvexCapturePreview
-  let submit: (String) async -> Bool
+  let submit: (String, Bool) async -> Bool
 
   @State private var title = ""
+  @State private var keepsOriginalTitle = false
+  @State private var submission = 0
   @FocusState private var isFocused: Bool
 
   var body: some View {
     let current = preview(title)
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
       field
-      if !current.words.isEmpty {
-        QuickAddPreviewLine(preview: current)
+      if !current.words.isEmpty || keepsOriginalTitle {
+        QuickAddCaptureOptions(preview: current, keepsOriginalTitle: $keepsOriginalTitle)
           .padding(.leading, QuickAddRowMetrics.previewLeading)
           .transition(.opacity)
       }
@@ -62,6 +64,9 @@ struct QuickAddRow: View {
         .focused($isFocused)
         .onSubmit(submitTitle)
         .lorvexSingleLine($title)
+        .onChange(of: title.isEmpty) { _, empty in
+          if empty { keepsOriginalTitle = false }
+        }
         .accessibilityIdentifier("workspace.quickAdd.field")
     }
   }
@@ -74,11 +79,17 @@ struct QuickAddRow: View {
   private func submitTitle() {
     let value = title
     guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+    let keep = keepsOriginalTitle
+    submission += 1
+    let attempt = submission
+    keepsOriginalTitle = false
     title = ""
     isFocused = true
     Task {
-      let created = await submit(value)
+      let created = await submit(value, keep)
+      guard submission == attempt else { return }
       if let restored = Self.restoredTitle(submitted: value, created: created, current: title) {
+        keepsOriginalTitle = keep
         title = restored
       }
     }

@@ -128,6 +128,7 @@ func theNewTaskRowNamesTheTitleAndDetailsTheLineWillCreate() throws {
   }
   // The row creates what the line reads as: the title without its details,
   // and the details as words, the same ones the quick-add rows show.
+  #expect(groups.first?.results.last == .createOriginalTitle(line))
   #expect(line == "Call mom tomorrow 5pm")
   #expect(preview.title == "Call mom")
   #expect(preview.words.map(\.id) == ["when", "time"])

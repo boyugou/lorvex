@@ -73,8 +73,8 @@ struct TodayColumn: View {
           table: "Localizable", bundle: LorvexL10n.bundle),
         focusToken: store.quickAddFocusToken,
         preview: store.quickAddPreview
-      ) { text in
-        await store.createInlineTask(text, destination: .today)
+      ) { text, keep in
+        await store.createInlineTask(text, destination: .today, keepOriginalTitle: keep)
       }
       .padding(.top, LorvexDesign.Spacing.m)
       if !content.doneListTasks.isEmpty {

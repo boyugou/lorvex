@@ -31,10 +31,12 @@ extension AppStore {
   /// those saves is not lost. The fan-out that follows (Spotlight, reminders,
   /// badge, widget, one sync cycle) runs after the confirmation; a slow cycle
   /// never holds the capture field.
-  func captureLine(_ line: String) async {
-    guard let receipt = await commitCapture(line) else { return }
+  @discardableResult
+  func captureLine(_ line: String, keepOriginalTitle: Bool = false) async -> Bool {
+    guard let receipt = await commitCapture(line, keepOriginalTitle: keepOriginalTitle) else { return false }
     toastMessage = Self.captureToastMessage(count: 1, listName: receipt.listName)
     await publishAfterTaskCreate()
+    return true
   }
 
   /// Where a global capture landed.
@@ -50,9 +52,9 @@ extension AppStore {
   /// returns, then runs ``publishAfterTaskCreate()`` on its own time. Returns
   /// `nil` for a blank line and when the write failed (the error has already
   /// been presented).
-  func commitCapture(_ line: String) async -> CaptureReceipt? {
+  func commitCapture(_ line: String, keepOriginalTitle: Bool = false) async -> CaptureReceipt? {
     guard let trimmed = line.trimmedNilIfEmpty else { return nil }
-    guard let task = await commitSerialized(trimmed, destination: .inbox) else { return nil }
+    guard let task = await commitSerialized(trimmed, destination: .inbox, keepOriginalTitle: keepOriginalTitle) else { return nil }
     feedbackProvider.playFeedback(.captureSubmitted)
     return CaptureReceipt(listName: listDisplayName(task.listID))
   }
@@ -115,9 +117,9 @@ extension AppStore {
   /// failed write (the error has already been presented), so the row can put
   /// the line back instead of losing it.
   @discardableResult
-  func createInlineTask(_ text: String, destination: InlineCaptureDestination) async -> Bool {
+  func createInlineTask(_ text: String, destination: InlineCaptureDestination, keepOriginalTitle: Bool = false) async -> Bool {
     guard let trimmed = text.trimmedNilIfEmpty else { return false }
-    guard await commitSerialized(trimmed, destination: destination) != nil else { return false }
+    guard await commitSerialized(trimmed, destination: destination, keepOriginalTitle: keepOriginalTitle) != nil else { return false }
     feedbackProvider.playFeedback(.captureSubmitted)
     await publishAfterTaskCreate()
     return true
@@ -128,12 +130,12 @@ extension AppStore {
   /// created task, or `nil` when the write failed (the error has already been
   /// presented).
   private func commitSerialized(
-    _ trimmed: String, destination: InlineCaptureDestination
+    _ trimmed: String, destination: InlineCaptureDestination, keepOriginalTitle: Bool
   ) async -> LorvexTask? {
     let previous = inlineCaptureCommitTail
     let commit = Task { @MainActor in
       await previous?.value
-      return await self.commitInlineTask(trimmed, destination: destination)
+      return await self.commitInlineTask(trimmed, destination: destination, keepOriginalTitle: keepOriginalTitle)
     }
     inlineCaptureCommitTail = Task { @MainActor in _ = await commit.value }
     return await commit.value
@@ -144,9 +146,9 @@ extension AppStore {
   /// presented). Parsing happens here, after any earlier commit, so a `#list`
   /// naming a list created a moment ago resolves.
   private func commitInlineTask(
-    _ trimmed: String, destination: InlineCaptureDestination
+    _ trimmed: String, destination: InlineCaptureDestination, keepOriginalTitle: Bool
   ) async -> LorvexTask? {
-    let parse = captureParse(trimmed)
+    let parse = keepOriginalTitle ? LorvexCaptureParser.plainTitle(trimmed) : captureParse(trimmed)
     guard
       let task = await performCanonicalMutation({
         var draft = TaskCreateDraft(title: parse.title)

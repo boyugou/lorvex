@@ -245,7 +245,7 @@ extension MobileStore {
   private func submitCaptureDraftTasks() async throws -> [LorvexTask] {
     let lines = captureDraft.parsedTitles
     let drafts = try (lines.isEmpty ? [captureDraft.trimmedTitle] : lines).map {
-      try captureTaskDraft(line: $0, notes: captureDraft.notes)
+      try captureTaskDraft(line: $0, notes: captureDraft.notes, keepOriginalTitle: captureDraft.keepsOriginalTitle)
     }
     if drafts.count == 1 {
       return [try await core.createTask(drafts[0])]

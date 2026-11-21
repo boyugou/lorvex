@@ -23,8 +23,10 @@ final class QuickCaptureModel {
   }
 
   /// The line being typed.
+  var keepsOriginalTitle = false
   var text = "" {
     didSet {
+      if text.isEmpty { keepsOriginalTitle = false }
       if case .failed = phase, text != oldValue { phase = .editing }
     }
   }
@@ -99,7 +101,7 @@ final class QuickCaptureModel {
     else { return }
     isSubmitting = true
     let owner = generation
-    let receipt = await store.commitCapture(text)
+    let receipt = await store.commitCapture(text, keepOriginalTitle: keepsOriginalTitle)
     if receipt != nil {
       // The fan-out (Spotlight, reminders, badge, widget, one sync cycle) runs
       // on its own time: the confirmation never waits for it.

@@ -372,3 +372,28 @@ func aBlankGlobalCaptureCreatesNothing() async throws {
   #expect(core.createdTaskTitles.isEmpty)
   #expect(store.toastMessage == nil)
 }
+
+@MainActor
+@Test
+func originalCaptureTitleKeepsItsDestinationAndNextCaptureReadsDates() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let list = try #require(store.orderedLists.first)
+  let title = "讨论 Watch The Day After Tomorrow #work 20 min"
+  #expect(await store.createInlineTask(title, destination: .list(list.id), keepOriginalTitle: true))
+  #expect(await store.createInlineTask("Read Tomorrow", destination: .today, keepOriginalTitle: true))
+  #expect(await store.captureLine("Watch The Day After Tomorrow", keepOriginalTitle: true))
+  #expect(await store.captureLine("Call the cinema tomorrow"))
+
+  let rows = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 100, offset: 0).tasks
+  let scoped = try #require(rows.first { $0.title == title })
+  #expect(scoped.listID == list.id)
+  #expect(scoped.plannedDate == nil && scoped.dueDate == nil && scoped.estimatedMinutes == nil)
+  #expect(scoped.tags.isEmpty)
+  #expect(store.today.tasks.contains { $0.title == "Read Tomorrow" })
+  let movie = try #require(rows.first { $0.title == "Watch The Day After Tomorrow" })
+  #expect(movie.plannedDate == nil && movie.dueDate == nil)
+  let call = try #require(rows.first { $0.title == "Call the cinema" })
+  #expect(call.plannedDate != nil)
+}

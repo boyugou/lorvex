@@ -26,8 +26,8 @@ struct QuickCaptureCard: View {
         field
         if case .failed(let message) = model.phase, !message.isEmpty {
           failure(message)
-        } else if !preview.words.isEmpty {
-          QuickAddPreviewLine(preview: preview)
+        } else if !preview.words.isEmpty || model.keepsOriginalTitle {
+          QuickAddCaptureOptions(preview: preview, keepsOriginalTitle: $model.keepsOriginalTitle)
             .padding(.leading, QuickCaptureMetrics.detailsLeading)
         }
       }

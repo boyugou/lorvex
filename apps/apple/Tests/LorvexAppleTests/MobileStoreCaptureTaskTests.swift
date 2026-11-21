@@ -342,3 +342,23 @@ func mobileCaptureOfSeveralLinesKeepsTimesAndRepeats() async throws {
   #expect(dentist.plannedTime == (16 * 60)..<(16 * 60 + 30))
   #expect(dentist.recurrence == nil)
 }
+
+@MainActor
+@Test
+func mobileCaptureCanSaveOriginalTitlesAcrossABatch() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core)
+  let titles = ["看 Watch The Day After Tomorrow", "Read #work at 3pm"]
+  store.captureDraft = MobileCaptureDraft(title: titles.joined(separator: "\n"), notes: "Film club")
+  store.captureDraft.keepsOriginalTitle = true
+  await store.submitCaptureDraft()
+  #expect(store.captureDraft == MobileCaptureDraft())
+
+  let rows = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 100, offset: 0).tasks
+  for title in titles {
+    let task = try #require(rows.first { $0.title == title })
+    #expect(task.plannedDate == nil && task.dueDate == nil && task.plannedTime == nil)
+    #expect(task.tags.isEmpty && task.notes == "Film club")
+  }
+}

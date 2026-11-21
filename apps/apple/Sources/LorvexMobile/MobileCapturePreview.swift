@@ -34,9 +34,9 @@ extension MobileStore {
   /// any. A line with no day stays undated, so capture keeps landing in the
   /// inbox rather than on today; a line with only a clock time is planned for
   /// today at that time.
-  func captureTaskDraft(line: String, notes: String) throws -> TaskCreateDraft {
+  func captureTaskDraft(line: String, notes: String, keepOriginalTitle: Bool = false) throws -> TaskCreateDraft {
     let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-    let parse = captureParse(trimmed)
+    let parse = keepOriginalTitle ? LorvexCaptureParser.plainTitle(trimmed) : captureParse(trimmed)
     var draft = TaskCreateDraft(title: parse.title, notes: notes)
     draft.listID = parse.listID
     draft.priority = parse.priority ?? draft.priority

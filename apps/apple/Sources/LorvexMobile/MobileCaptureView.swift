@@ -36,11 +36,16 @@ struct MobileCaptureSections: View {
           bundle: MobileL10n.bundle)
       )
       .accessibilityIdentifier("mobileCapture.title")
-      if draft.parsedTitles.count <= 1 {
+      if draft.parsedTitles.count > 1 {
+        LorvexCaptureTitleToggle(keepsOriginalTitle: $draft.keepsOriginalTitle)
+      } else {
         let current = preview(draft.title)
-        if !current.words.isEmpty {
-          MobileCapturePreviewLine(preview: current)
-            .transition(.opacity)
+        if !current.words.isEmpty || draft.keepsOriginalTitle {
+          if !draft.keepsOriginalTitle {
+            MobileCapturePreviewLine(preview: current)
+              .transition(.opacity)
+          }
+          LorvexCaptureTitleToggle(keepsOriginalTitle: $draft.keepsOriginalTitle)
         }
       }
       MobilePlainTextEditor(
@@ -58,13 +63,15 @@ struct MobileCaptureSections: View {
       .onSubmit { submit() }
       .accessibilityIdentifier("mobileCapture.notes")
     } footer: {
-      // Surface the capture vocabulary: one task per line, details in words.
-      Text(
-        String(
-          localized: "capture.footer.words",
-          defaultValue:
-            "One task per line. Words like “tomorrow”, “3pm”, “every Monday”, “20 min”, or “#list” fill in its details.",
-          table: "Localizable", bundle: MobileL10n.bundle))
+      if !draft.keepsOriginalTitle {
+        // Surface the capture vocabulary: one task per line, details in words.
+        Text(
+          String(
+            localized: "capture.footer.words",
+            defaultValue:
+              "One task per line. Words like “tomorrow”, “3pm”, “every Monday”, “20 min”, or “#list” fill in its details.",
+            table: "Localizable", bundle: MobileL10n.bundle))
+      }
     }
   }
 

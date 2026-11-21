@@ -36,6 +36,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
   /// title left once its details are read out, and the details as words), empty
   /// when the line is a plain title.
   case createTask(line: String, preview: LorvexCapturePreview)
+  case createOriginalTitle(String)
   /// Run a global app command (refresh, new task window, …).
   case action(AppCommand)
 
@@ -47,6 +48,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
     case .openHabit(let id, _, _, _, _): "habit.\(id)"
     case .openEvent(let event, _): "event.\(event.id)"
     case .createTask: "create"
+    case .createOriginalTitle: "createOriginalTitle"
     case .action(let command): "action.\(command.id)"
     }
   }
@@ -80,6 +82,8 @@ enum CommandPaletteResult: Identifiable, Equatable {
           bundle: LorvexL10n.bundle
         ),
         preview.words.isEmpty ? LorvexCaptureParser.singleLine(line) : preview.title)
+    case .createOriginalTitle:
+      return LorvexCaptureTitleToggle.title
     case .action(let command):
       return command.title
     }
@@ -94,6 +98,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
     case .openHabit: "repeat.circle"
     case .openEvent: "calendar"
     case .createTask: "plus.circle"
+    case .createOriginalTitle: "textformat"
     case .action(let command): command.systemImage
     }
   }
@@ -218,8 +223,10 @@ enum CommandPaletteResults {
     if query.isEmpty {
       groups = jumps
     } else {
-      let capture = CommandPaletteGroup(
-        title: "New Task", results: [.createTask(line: query, preview: capturePreview(query))])
+      let preview = capturePreview(query)
+      var choices: [CommandPaletteResult] = [.createTask(line: query, preview: preview)]
+      if !preview.words.isEmpty { choices.append(.createOriginalTitle(query)) }
+      let capture = CommandPaletteGroup(title: "New Task", results: choices)
       let isJump =
         matchedDestinations.contains { names(of: $0).contains { beginsNameOrWord($0, query: query) } }
         || matchedLists.contains { beginsNameOrWord($0.displayName, query: query) }

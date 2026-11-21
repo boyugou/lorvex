@@ -2,7 +2,10 @@ import Foundation
 import LorvexCore
 
 public struct MobileCaptureDraft: Equatable, Sendable {
-  public var title: String
+  public var keepsOriginalTitle = false
+  public var title: String {
+    didSet { if title.isEmpty { keepsOriginalTitle = false } }
+  }
   public var notes: String
 
   public init(title: String = "", notes: String = "") {

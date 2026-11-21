@@ -30,8 +30,8 @@ struct ListDetailPane: View {
               placeholder: AppStore.quickAddPlaceholder(listName: detail.list.displayName),
               focusToken: store.quickAddFocusToken,
               preview: store.quickAddPreview
-            ) { text in
-              await store.createInlineTask(text, destination: .list(detail.list.id))
+            ) { text, keep in
+              await store.createInlineTask(text, destination: .list(detail.list.id), keepOriginalTitle: keep)
             }
             .padding(.horizontal, LorvexDesign.Spacing.m)
             .padding(.top, LorvexDesign.Spacing.s)

@@ -224,6 +224,8 @@ struct CommandPaletteView: View {
       store.applyRouteNavigation(.habit(id))
     case .openEvent(let event, _):
       store.showEventInCalendar(event, onDayKey: event.startDate)
+    case .createOriginalTitle(let line):
+      Task { await store.captureLine(line, keepOriginalTitle: true) }
     case .createTask(let line, _):
       Task { await store.captureLine(line) }
     case .action(let command):

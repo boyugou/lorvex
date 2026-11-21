@@ -321,7 +321,10 @@ enum CommandPaletteResults {
     case .completed, .cancelled:
       parts.append(task.status.localizedName)
     case .open, .inProgress, .someday:
-      if let due = task.cachedDueRelativeLabel(now: now, timeZone: timeZone) {
+      if let plan = LorvexTaskRowPlan(task, now: now, timeZone: timeZone) {
+        parts.append(plan.work)
+        if let deadline = plan.deadline { parts.append(deadline) }
+      } else if let due = task.cachedDueRelativeLabel(now: now, timeZone: timeZone) {
         parts.append(
           String(
             format: String(

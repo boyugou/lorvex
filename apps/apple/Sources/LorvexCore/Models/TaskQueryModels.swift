@@ -73,6 +73,7 @@ public struct TaskListQueryRequest: Equatable, Sendable {
   /// tasks unless overdue), `hidden` (only not-yet-available, non-overdue tasks),
   /// or `all`/nil (no filter). Ignored for non-open status lanes.
   public var availability: String?
+  public var requiresScheduledDate: Bool
   public var scheduledFrom: String?
   public var scheduledTo: String?
   public var completedFrom: String?
@@ -107,6 +108,7 @@ public struct TaskListQueryRequest: Equatable, Sendable {
     availableFromFrom: String? = nil,
     availableFromTo: String? = nil,
     availability: String? = nil,
+    requiresScheduledDate: Bool = false,
     scheduledFrom: String? = nil,
     scheduledTo: String? = nil,
     completedFrom: String? = nil,
@@ -137,6 +139,7 @@ public struct TaskListQueryRequest: Equatable, Sendable {
     self.availableFromFrom = availableFromFrom
     self.availableFromTo = availableFromTo
     self.availability = availability
+    self.requiresScheduledDate = requiresScheduledDate
     self.scheduledFrom = scheduledFrom
     self.scheduledTo = scheduledTo
     self.completedFrom = completedFrom

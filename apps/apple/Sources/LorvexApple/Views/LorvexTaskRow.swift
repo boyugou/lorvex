@@ -217,6 +217,8 @@ struct LorvexTaskRow: View {
   /// always reads `.secondary`. The due date is rendered separately so it can
   /// carry its own (overdue) tint. A row showing Today's time drops the
   /// estimate, since the time already says how long the work takes.
+  @Environment(\.lorvexTaskRowDay) private var rowDay
+
   private var calmMetadata: [String] {
     var parts: [String] = []
     if timeLabel == nil, let minutes = task.estimatedMinutes {
@@ -231,8 +233,12 @@ struct LorvexTaskRow: View {
   /// today or tomorrow), and finally estimate and tags. Rendered only when at least one piece exists, so an empty row stays a clean title.
   @ViewBuilder
   private var metadataLine: some View {
+    let plan = LorvexTaskRowPlan(task, timeZone: productTimeZone, dayInHeading: rowDay,
+      timeAlreadyShown: timeLabel != nil)
+    if let plan { LorvexTaskRowPlanLine(plan) }
     let delegation = LorvexTaskDelegationMarker(task: task)
-    let dueLabel = task.cachedDueRelativeLabel(timeZone: productTimeZone)
+    let dueLabel = plan == nil
+      ? task.cachedDueRelativeLabel(timeZone: productTimeZone).map(LorvexTaskRowPlan.dueLabel) : nil
     let isDueOverdue = task.isOverdue(timeZone: productTimeZone)
     let isDueSoon = !isDueOverdue && task.isDueSoon(timeZone: productTimeZone)
     // Hidden-until only surfaces on rows that reach a list at all (Scheduled

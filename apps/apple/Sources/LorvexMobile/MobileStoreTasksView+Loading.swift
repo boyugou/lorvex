@@ -182,12 +182,15 @@ extension MobileStoreTasksView {
     }
   }
 
-  /// Mirrors the in-memory filter `taskWorkspacePage` applies when building a
-  /// page, so an off-window selected task is judged in/out of scope the same way
-  /// the loaded rows are.
+  /// Keep an offscreen selection only while it still belongs to this collection.
   private func scopeIncludesTask(_ task: LorvexTask) -> Bool {
-    scope.baseStatus.includes(task) && scope.matches(task)
-      && (scope.listID == nil || task.listID == scope.listID)
+    guard scope.baseStatus.includes(task) else { return false }
+    switch scope {
+    case .scheduled: return task.plannedDate != nil || task.dueDate != nil
+    case .priority: return task.priority == .p1
+    case .list(let id): return task.listID == id
+    default: return true
+    }
   }
 
   var keyboardSelectedTaskID: LorvexTask.ID? {

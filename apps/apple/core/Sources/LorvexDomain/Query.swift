@@ -37,17 +37,23 @@ public struct SearchPredicate: Sendable, Equatable {
   public var statusFilter: [String]?
   public var listFilter: [String]?
   public var tagFilter: [String]?
+  public var priority: Int?
+  public var requiresScheduledDate: Bool
 
   public init(
     query: String,
     statusFilter: [String]? = nil,
     listFilter: [String]? = nil,
-    tagFilter: [String]? = nil
+    tagFilter: [String]? = nil,
+    priority: Int? = nil,
+    requiresScheduledDate: Bool = false
   ) {
     self.query = query
     self.statusFilter = statusFilter
     self.listFilter = listFilter
     self.tagFilter = tagFilter
+    self.priority = priority
+    self.requiresScheduledDate = requiresScheduledDate
   }
 }
 

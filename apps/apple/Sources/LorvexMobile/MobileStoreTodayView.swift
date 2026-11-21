@@ -12,6 +12,7 @@ struct MobileStoreTodayView: View {
 
   var body: some View {
     content
+      .environment(\.lorvexTaskRowDay, store.logicalTodayString)
     #if DEBUG
       .task { await suggestTimesForPreviewIfRequested() }
       .onAppear {

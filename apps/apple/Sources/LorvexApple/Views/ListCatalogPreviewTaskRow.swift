@@ -2,7 +2,7 @@ import LorvexCore
 import SwiftUI
 
 /// One open task previewed on a Lists catalog card: a small ring, the title on
-/// one line, and the task's due day when it has one, in red once it has
+/// one line, and the work day or deadline when present, in red once a deadline has
 /// passed. Clicking it opens the task; the pointer draws a faint fill.
 struct ListCatalogPreviewTaskRow: View {
   let task: LorvexTask
@@ -19,17 +19,21 @@ struct ListCatalogPreviewTaskRow: View {
           .frame(width: 8, height: 8)
           .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
           .accessibilityHidden(true)
-        Text(task.title)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.primary)
-          .lineLimit(1)
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+          Text(task.title)
+            .font(LorvexDesign.Typography.secondaryText)
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+          if let plan = LorvexTaskRowPlan(task, timeZone: productTimeZone) {
+            LorvexTaskRowPlanLine(plan)
+          }
+        }
         Spacer(minLength: LorvexDesign.Spacing.s)
-        if let due = dueLabel {
-          Text(due.text)
+        if task.plannedDate == nil, let due = dueLabel {
+          Text(LorvexTaskRowPlan.dueLabel(due.text))
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(due.tint)
             .lineLimit(1)
-            .fixedSize()
         }
       }
       .padding(.vertical, 3)

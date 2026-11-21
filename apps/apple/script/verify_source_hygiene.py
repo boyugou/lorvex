@@ -559,7 +559,7 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'private var metadataLine: some View'),
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'private var calmMetadata: [String]'),
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'LorvexWholeLabelsLine('),
-    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'let dueLabel = task.cachedDueRelativeLabel(timeZone: productTimeZone)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'task.cachedDueRelativeLabel(timeZone: productTimeZone)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'let isDueOverdue = task.isOverdue(timeZone: productTimeZone)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'isDueSoon ? AnyShapeStyle(LorvexDesign.Palette.dueSoon) : AnyShapeStyle(.secondary)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'TaskDueBadge'),

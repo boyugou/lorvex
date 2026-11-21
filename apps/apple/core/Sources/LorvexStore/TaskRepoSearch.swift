@@ -189,9 +189,7 @@ extension TaskRepo {
       ]
       var args: [any DatabaseValueConvertible] = [ftsQuery, tagLike]
 
-      applyStatusFilter(pred, &conditions, &args)
-      applyListFilter(pred, &conditions, &args)
-      applyTagFilterExists(pred, &conditions, &args)
+      applyFilters(pred, &conditions, &args)
 
       let whereClause = conditions.joined(separator: " AND ")
 
@@ -241,9 +239,7 @@ extension TaskRepo {
       ]
       var args: [any DatabaseValueConvertible] = [escaped, escaped]
 
-      applyStatusFilter(pred, &conditions, &args)
-      applyListFilter(pred, &conditions, &args)
-      applyTagFilterExists(pred, &conditions, &args)
+      applyFilters(pred, &conditions, &args)
 
       let whereClause = conditions.joined(separator: " AND ")
 
@@ -315,9 +311,7 @@ extension TaskRepo {
             + "JOIN tags tg ON tg.id = tt2.tag_id WHERE \(fold)(tg.display_name) \(like)))")
       }
 
-      applyStatusFilter(pred, &conditions, &args)
-      applyListFilter(pred, &conditions, &args)
-      applyTagFilterExists(pred, &conditions, &args)
+      applyFilters(pred, &conditions, &args)
 
       // Each text is folded once per row here, not once per use below.
       let foldedTexts =
@@ -370,14 +364,27 @@ extension TaskRepo {
     ) -> (tagJoin: String, whereExtra: String) {
       var conditions = ["t.archived_at IS NULL"]
 
-      applyStatusFilter(pred, &conditions, &args)
-      applyListFilter(pred, &conditions, &args)
-
-      applyTagFilterExists(pred, &conditions, &args)
+      applyFilters(pred, &conditions, &args)
       let tagJoin = ""
 
       let whereExtra = conditions.isEmpty ? "" : " AND \(conditions.joined(separator: " AND "))"
       return (tagJoin, whereExtra)
+    }
+
+    private static func applyFilters(
+      _ pred: SearchPredicate, _ conditions: inout [String],
+      _ args: inout [any DatabaseValueConvertible]
+    ) {
+      applyStatusFilter(pred, &conditions, &args)
+      applyListFilter(pred, &conditions, &args)
+      applyTagFilterExists(pred, &conditions, &args)
+      if let priority = pred.priority {
+        args.append(priority)
+        conditions.append("t.priority = ?\(args.count)")
+      }
+      if pred.requiresScheduledDate {
+        conditions.append("COALESCE(t.planned_date, t.due_date) IS NOT NULL")
+      }
     }
 
     static func applyStatusFilter(

@@ -3307,12 +3307,22 @@ than normal after the task's title.
   orange ("Tomorrow · after the deadline") on the Mac, iPhone, and iPad, since
   working on it that day would finish it late. Once the deadline has passed,
   the Due row says how late the task is instead.
-- **Mobile Task Rows:** A task row's circle is tinted by priority and
-  completes the task. Under the title, capsules mark a task that is started or
-  waiting on another task, and Today adds its own ("Until 3:00 PM",
-  "Pushed 4 times"). One line of metadata follows: the task's saved time, the
-  due date, a repeat glyph, the estimate, and up to two tags, which drop whole
-  when the line runs short.
+- **Reading task dates.** In Mac and mobile task lists, **Planned for**
+  gives the day you intend to work, with its time if you chose one. **Due**
+  gives the deadline. A shared day reads **Planned and due**. A deadline
+  can turn orange or red as it approaches or passes. An earlier work day
+  alone carries no overdue warning. On Today, the heading and timeline
+  already give today's date and time. The Mac tasks table keeps the work
+  day under the title and the deadline in the Due column.
+- **Scheduled on iPhone and iPad.** In Tasks, open **Scheduled** to find
+  open and in-progress tasks with either date, including a next step
+  created from Weekly Review. The count covers the whole collection, and
+  searching it narrows that same collection.
+- **Mobile task rows.** Tap a task's priority-colored circle to complete
+  it. Under the title, labels mark started tasks and tasks waiting on
+  another task. Today also marks tasks with a time limit or a history of
+  being pushed back. The metadata includes a repeat indicator, the estimate
+  and up to two tags when they fit.
 - **Tasks that wait on others:** Task Detail's **Waits on** field names the
   tasks a task waits on; on the Mac its row shows the task's title, or how many
   tasks when there are several. Until each of them is done, canceled, or

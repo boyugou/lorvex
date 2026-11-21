@@ -139,6 +139,11 @@ public enum LorvexPreviewCoreFactory {
       _ core: SwiftLorvexCoreService, text: LorvexSampleText
     ) async throws -> TodayPool {
       let anchor = logicalDayAnchor()
+      _ = try await core.createTask(TaskCreateDraft(
+        title: text("Read the GRPO paper"), plannedDate: day(anchor, daysAgo: -3)))
+      _ = try await core.createTask(TaskCreateDraft(
+        title: text("Renew passport"), dueDate: day(anchor, daysAgo: -7),
+        plannedDate: day(anchor, daysAgo: -5)))
       _ = try await core.createTask(
         TaskCreateDraft(
           title: text("Renew the car registration"), priority: .p2, estimatedMinutes: 20,

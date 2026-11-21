@@ -39,13 +39,14 @@ struct MobileTaskRow: View, Equatable {
   var searchMatch: LorvexTaskSearchMatch? = nil
   /// See ``MobileTaskRowContent/timeZone``.
   var timeZone: TimeZone = .autoupdatingCurrent
+  var rowDay: String? = nil
 
   var body: some View {
     NavigationLink(value: MobileRoute.task(task.id)) {
       MobileTaskRowContent(
         task: task, isBlocked: isBlocked, showsLeadingCircle: showsLeadingCircle,
         timeLabel: timeLabel, timeIsRunning: timeIsRunning, chips: chips,
-        searchMatch: searchMatch, timeZone: timeZone
+        searchMatch: searchMatch, timeZone: timeZone, rowDay: rowDay
       )
       .equatable()
     }
@@ -93,6 +94,7 @@ struct MobileTaskRowContent: View, Equatable {
   /// value rather than an environment read, so the synthesized equality that
   /// lets the row skip redraws also notices a change of zone.
   var timeZone: TimeZone = .autoupdatingCurrent
+  var rowDay: String? = nil
 
   /// The tags the metadata line shows. A search match in one of these needs no
   /// excerpt, because the row already shows it.
@@ -204,8 +206,12 @@ struct MobileTaskRowContent: View, Equatable {
 
   @ViewBuilder
   private var metadataLine: some View {
+    let plan = LorvexTaskRowPlan(task, timeZone: timeZone, dayInHeading: rowDay,
+      timeAlreadyShown: timeLabel != nil)
+    if let plan { LorvexTaskRowPlanLine(plan) }
     let delegation = LorvexTaskDelegationMarker(task: task)
-    let dueLabel = task.cachedDueRelativeLabel(timeZone: timeZone)
+    let dueLabel = plan == nil
+      ? task.cachedDueRelativeLabel(timeZone: timeZone).map(LorvexTaskRowPlan.dueLabel) : nil
     let calm = calmMetadata
     if delegation != nil || timeLabel != nil || dueLabel != nil || task.recurrence != nil
       || !calm.isEmpty
@@ -252,6 +258,7 @@ struct MobileActionTaskRow: View {
   /// The search the list is filtered by; empty outside a search. See
   /// ``LorvexTask/mobileSearchMatch(for:)``.
   var searchQuery = ""
+  @Environment(\.lorvexTaskRowDay) private var rowDay
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
@@ -267,7 +274,7 @@ struct MobileActionTaskRow: View {
       MobileTaskRow(
         task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
         timeIsRunning: timeIsRunning, chips: chips,
-        searchMatch: task.mobileSearchMatch(for: searchQuery), timeZone: productTimeZone
+        searchMatch: task.mobileSearchMatch(for: searchQuery), timeZone: productTimeZone, rowDay: rowDay
       )
       .equatable()
     }

@@ -199,6 +199,7 @@ private struct TaskTablePriorityCell: View {
 }
 
 private struct TaskTableTitleCell: View {
+  @Environment(\.lorvexProductTimeZone) private var zone
   let task: LorvexTask
   /// Why the task is in the search results when its title does not show the
   /// searched word, quoted under the title as in list mode
@@ -215,6 +216,7 @@ private struct TaskTableTitleCell: View {
 
   private var secondaryText: String? {
     var parts: [String] = []
+    if let plan = LorvexTaskRowPlan(task, timeZone: zone) { parts.append(plan.workOnly) }
     if let minutes = task.estimatedMinutes { parts.append(LorvexDurationFormat.minutes(minutes)) }
     parts.append(contentsOf: task.tags.prefix(3))
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
@@ -225,6 +227,7 @@ private struct TaskTableTitleCell: View {
   /// abbreviation and the middle dots the line draws.
   private var secondarySpokenText: String? {
     var parts: [String] = []
+    if let plan = LorvexTaskRowPlan(task, timeZone: zone) { parts.append(plan.workOnly) }
     if let minutes = task.estimatedMinutes {
       parts.append(LorvexDurationFormat.minutes(minutes, style: .spoken))
     }

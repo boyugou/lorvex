@@ -392,17 +392,10 @@ public struct MobileStoreTasksHomeView: View {
     store.lists?.lists ?? []
   }
 
-  /// Loads every count the overview shows. The grid's scopes need a wide page
-  /// because two of them (Scheduled, Priority) narrow in memory, so their total
-  /// is the size of the filtered page. The history scopes do not narrow, so
-  /// their total is the query's own and one row is enough to read it — which
-  /// matters most for Completed, the one scope that grows without bound.
-  /// Only when every count is zero does it ask whether the store holds any
-  /// task at all, since a task the counts leave out still makes the grid
-  /// worth showing.
+  /// Each scope counts its full matching set in the store. Read just one row.
   private func reloadSmartCounts() async {
     for collection in MobileTaskSmartCollection.grid {
-      let page = await store.taskWorkspacePage(scope: collection.scope, query: "", limit: 200)
+      let page = await store.taskWorkspacePage(scope: collection.scope, query: "", limit: 1)
       smartCounts[String(describing: collection.scope)] = page.totalMatching
     }
     for scope in [MobileTasksScope.completed, .cancelled] {

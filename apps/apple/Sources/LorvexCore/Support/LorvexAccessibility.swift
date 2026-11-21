@@ -35,11 +35,14 @@ public func taskAccessibilityLabel(
   if let timeLabel {
     facts.append(timeLabel)
   }
+  let plan = LorvexTaskRowPlan(task, timeZone: timeZone, timeAlreadyShown: timeLabel != nil)
+  if let plan { facts.append(plan.work) }
   facts.append(contentsOf: details)
   if let minutes = task.estimatedMinutes {
     facts.append(LorvexDurationFormat.minutes(minutes, style: .spoken))
   }
-  if let due = taskDueAccessibilityPhrase(task, timeZone: timeZone) {
+  if plan?.sharesDeadline != true || plan?.overdue == true,
+    let due = taskDueAccessibilityPhrase(task, timeZone: timeZone) {
     facts.append(due)
   }
   if task.recurrence != nil {

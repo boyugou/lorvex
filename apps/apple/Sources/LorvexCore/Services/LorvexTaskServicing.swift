@@ -96,6 +96,12 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   func searchTasks(query: String, status: String, limit: Int, offset: Int) async throws
     -> TaskSearchResult
 
+  /// Applies collection membership before relevance ranking, total count and pagination.
+  func searchTasks(
+    query: String, status: String, listID: String?, priority: Int?, requiresScheduledDate: Bool,
+    limit: Int, offset: Int
+  ) async throws -> TaskSearchResult
+
   /// Returns tasks surfaced by the core as deferred, preserving core pagination
   /// and list scoping semantics.
   func getDeferredTasks(listID: LorvexList.ID?, limit: Int, offset: Int) async throws

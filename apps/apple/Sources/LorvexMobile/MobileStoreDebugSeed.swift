@@ -199,8 +199,8 @@
         .init(
           title: text("Buy groceries for the week"), listID: personal?.id, priority: .p2,
           plannedDate: day(0), tags: text(["home"])),
-        .init(title: text("Read the GRPO paper"), priority: .p2, tags: text(["research"])),
-        .init(title: text("Renew passport"), priority: .p3, dueDate: day(5)),
+        .init(title: text("Read the GRPO paper"), priority: .p2, plannedDate: day(3), tags: text(["research"])),
+        .init(title: text("Renew passport"), priority: .p3, dueDate: day(7), plannedDate: day(5)),
         .init(title: text("Plan the spring offsite"), priority: .p3, tags: text(["someday"])),
       ]
       var created: [LorvexTask] = []

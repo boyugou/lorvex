@@ -92,10 +92,6 @@ struct MobileTaskWorkspacePage: Equatable, Sendable {
   var tasks: [LorvexTask]
   var totalMatching: Int
   var nextOffset: Int?
-  /// True when the scope narrows the raw status/list query in memory, so each
-  /// page's `totalMatching` is only that page's post-filter count rather than a
-  /// stable global total. Governs how ``appending(_:)`` combines the counts.
-  var isNarrowed: Bool = false
   /// The ids of the page's tasks that wait on an unfinished task, read with
   /// the page (``LorvexTaskServicing/blockedTaskIDs(in:)``): their rows show
   /// Blocked and offer no Start.
@@ -104,19 +100,10 @@ struct MobileTaskWorkspacePage: Equatable, Sendable {
   static let empty = MobileTaskWorkspacePage(tasks: [], totalMatching: 0, nextOffset: nil)
 
   func appending(_ page: MobileTaskWorkspacePage) -> MobileTaskWorkspacePage {
-    // Non-narrowing scopes carry the same global DB total on every page, so
-    // keeping the newest page's `totalMatching` is correct. Narrowing scopes
-    // carry only a per-page filtered count; last-wins would make the header
-    // read the last page's slice (e.g. "30 tasks" over 70 visible rows) and
-    // even decrease as more loads. Summing yields the rows loaded so far — the
-    // honest count for a narrowed set whose true corpus total is unknown without
-    // scanning every window.
-    let narrowed = isNarrowed || page.isNarrowed
-    return MobileTaskWorkspacePage(
+    MobileTaskWorkspacePage(
       tasks: tasks + page.tasks,
-      totalMatching: narrowed ? totalMatching + page.totalMatching : page.totalMatching,
+      totalMatching: page.totalMatching,
       nextOffset: page.nextOffset,
-      isNarrowed: narrowed,
       blockedTaskIDs: blockedTaskIDs.union(page.blockedTaskIDs)
     )
   }

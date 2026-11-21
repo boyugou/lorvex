@@ -159,6 +159,7 @@ extension TaskRepo {
     /// product's calendar places tasks on. `NULL` on both sides never matches,
     /// so no separate presence filter is needed.
     public var scheduledRange: TaskDateRange?
+    public var requiresScheduledDate: Bool
     public var completedRange: TaskDateRange?
     public var createdRange: TaskDateRange?
     public var updatedRange: TaskDateRange?
@@ -189,6 +190,7 @@ extension TaskRepo {
       dueRange: TaskDateRange? = nil,
       plannedRange: TaskDateRange? = nil,
       scheduledRange: TaskDateRange? = nil,
+      requiresScheduledDate: Bool = false,
       completedRange: TaskDateRange? = nil,
       createdRange: TaskDateRange? = nil,
       updatedRange: TaskDateRange? = nil,
@@ -212,6 +214,7 @@ extension TaskRepo {
       self.dueRange = dueRange
       self.plannedRange = plannedRange
       self.scheduledRange = scheduledRange
+      self.requiresScheduledDate = requiresScheduledDate
       self.completedRange = completedRange
       self.createdRange = createdRange
       self.updatedRange = updatedRange
@@ -344,6 +347,9 @@ extension TaskRepo.Read {
       into: &out, values: &values, column: "available_from", range: query.availableFromRange,
       widening: .date)
 
+    if query.requiresScheduledDate {
+      out += " AND COALESCE(planned_date, due_date) IS NOT NULL"
+    }
     pushDatePresence(into: &out, column: "due_date", filter: query.duePresence)
     pushDatePresence(into: &out, column: "planned_date", filter: query.plannedPresence)
 

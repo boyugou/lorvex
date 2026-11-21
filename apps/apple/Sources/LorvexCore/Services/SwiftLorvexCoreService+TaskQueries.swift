@@ -136,6 +136,7 @@ extension SwiftLorvexCoreService {
         dueRange: Self.range(from: request.dueFrom, to: request.dueTo),
         plannedRange: Self.range(from: request.plannedFrom, to: request.plannedTo),
         scheduledRange: Self.range(from: request.scheduledFrom, to: request.scheduledTo),
+        requiresScheduledDate: request.requiresScheduledDate,
         completedRange: Self.range(from: request.completedFrom, to: request.completedTo),
         createdRange: Self.range(from: request.createdFrom, to: request.createdTo),
         updatedRange: Self.range(from: request.updatedFrom, to: request.updatedTo),
@@ -165,13 +166,22 @@ extension SwiftLorvexCoreService {
   public func searchTasks(query: String, status: String, limit: Int, offset: Int) async throws
     -> TaskSearchResult
   {
+    try await searchTasks(query: query, status: status, listID: nil, priority: nil,
+      requiresScheduledDate: false, limit: limit, offset: offset)
+  }
+
+  public func searchTasks(
+    query: String, status: String, listID: String?, priority: Int?, requiresScheduledDate: Bool,
+    limit: Int, offset: Int
+  ) async throws -> TaskSearchResult {
     return try read { db in
       let clampedLimit = min(max(1, limit), 500)
       // Upper-bound the offset so the UInt32 narrowing below can never trap on a
       // hostile/huge `offset` from an MCP client (saturates instead of crashing).
       let clampedOffset = min(max(0, offset), Int(UInt32.max))
       let predicate = SearchPredicate(
-        query: query, statusFilter: Self.statusSearchFilter(status))
+        query: query, statusFilter: Self.statusSearchFilter(status),
+        listFilter: listID.map { [$0] }, priority: priority, requiresScheduledDate: requiresScheduledDate)
       let page = Pagination(limit: UInt32(clampedLimit), offset: UInt32(clampedOffset))
       let result = try TaskRepo.Search.searchTasksWithFallback(
         db, predicate: predicate, page: page)

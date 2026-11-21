@@ -97,6 +97,21 @@ extension StubCoreService {
   ) async throws -> LorvexTask {
     try await preview.deferTaskReturningTask(id: id, until: date, reason: reason, note: note)
   }
+  func searchTasks(
+    query: String, status: String, listID: String?, priority: Int?, requiresScheduledDate: Bool,
+    limit: Int, offset: Int
+  ) async throws -> TaskSearchResult {
+    try await preview.searchTasks(query: query, status: status, listID: listID, priority: priority,
+      requiresScheduledDate: requiresScheduledDate, limit: limit, offset: offset)
+  }
+
+  func listTasks(query: TaskListQueryRequest) async throws -> TaskPageResult {
+    listTasksCallCount += 1
+    if let listTasksError { throw listTasksError }
+    if let listTasksGate { await listTasksGate() }
+    return try await preview.listTasks(query: query)
+  }
+
   func searchTasks(query: String, status: String, limit: Int, offset: Int) async throws
     -> TaskSearchResult
   {
@@ -110,21 +125,8 @@ extension StubCoreService {
     limit: Int,
     offset: Int
   ) async throws -> TaskPageResult {
-    listTasksCallCount += 1
-    if let listTasksError {
-      throw listTasksError
-    }
-    if let listTasksGate {
-      await listTasksGate()
-    }
-    return try await preview.listTasks(
-      status: status,
-      listID: listID,
-      priority: priority,
-      text: text,
-      limit: limit,
-      offset: offset
-    )
+    try await listTasks(query: TaskListQueryRequest(
+      status: status, listID: listID, priority: priority, text: text, limit: limit, offset: offset))
   }
   func getScheduledTasks(from: String, to: String, limit: Int) async throws -> [LorvexTask] {
     scheduledTasksCallCount += 1

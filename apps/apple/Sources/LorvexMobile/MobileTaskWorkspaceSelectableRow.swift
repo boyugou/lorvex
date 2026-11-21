@@ -15,6 +15,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
   /// The search the list is filtered by; empty outside a search. See
   /// ``LorvexTask/mobileSearchMatch(for:)``.
   var searchQuery = ""
+  @Environment(\.lorvexTaskRowDay) private var rowDay
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   private var searchMatch: LorvexTaskSearchMatch? {
@@ -70,7 +71,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
           batchSelectionCheckbox
           MobileTaskRowContent(
             task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
-            searchMatch: searchMatch, timeZone: productTimeZone)
+            searchMatch: searchMatch, timeZone: productTimeZone, rowDay: rowDay)
             .equatable()
         }
         .contentShape(Rectangle())
@@ -84,7 +85,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
         Button(action: select) {
           MobileTaskRowContent(
             task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
-            searchMatch: searchMatch, timeZone: productTimeZone)
+            searchMatch: searchMatch, timeZone: productTimeZone, rowDay: rowDay)
             .equatable()
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())

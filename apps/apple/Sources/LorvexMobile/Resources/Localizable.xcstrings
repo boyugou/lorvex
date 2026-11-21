@@ -99931,187 +99931,187 @@
       }
     },
     "tasks.empty.scheduled.message": {
-      "comment": "Empty-state message of the Scheduled collection in the Tasks tab; says which tasks the collection holds.",
+      "comment": "Empty Scheduled collection. A planned day, a deadline, or both qualify an open task.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تظهر هنا المهام غير المكتملة التي لها تاريخ استحقاق."
+            "value": "تظهر هنا المهام المفتوحة التي لها يوم مخطط أو موعد نهائي."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "শেষ তারিখ আছে এমন বাকি টাস্কগুলি এখানে দেখা যায়।"
+            "value": "পরিকল্পিত দিন বা শেষ তারিখ দেওয়া অসমাপ্ত কাজ এখানে দেখা যায়।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Offene Aufgaben mit Fälligkeitsdatum erscheinen hier."
+            "value": "Hier erscheinen offene Aufgaben mit einem geplanten Tag oder einer Frist."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Οι ανοιχτές εργασίες που έχουν προθεσμία εμφανίζονται εδώ."
+            "value": "Εδώ εμφανίζονται οι ανοιχτές εργασίες με προγραμματισμένη ημέρα ή προθεσμία."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open tasks that have a due date appear here."
+            "value": "Open tasks with a planned day or a deadline appear here."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las tareas pendientes con fecha de vencimiento aparecen aquí."
+            "value": "Aquí aparecen las tareas pendientes que tienen un día planificado o una fecha límite."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "کارهای باز دارای تاریخ سررسید در اینجا نمایش داده می‌شوند."
+            "value": "کارهای بازی که روز برنامه‌ریزی‌شده یا مهلت دارند اینجا نمایش داده می‌شوند."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les tâches à faire qui ont une échéance apparaissent ici."
+            "value": "Les tâches en cours avec un jour prévu ou une échéance apparaissent ici."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "משימות פתוחות עם תאריך יעד מופיעות כאן."
+            "value": "כאן מופיעות משימות פתוחות עם יום מתוכנן או מועד אחרון."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "नियत तिथि वाले लंबित कार्य यहाँ दिखते हैं।"
+            "value": "जिन अधूरे कामों का दिन तय है या जिनकी समय सीमा है, वे यहाँ दिखते हैं।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tugas yang belum selesai dan memiliki tanggal jatuh tempo muncul di sini."
+            "value": "Tugas terbuka dengan hari yang direncanakan atau tenggat muncul di sini."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le attività da fare con una scadenza appaiono qui."
+            "value": "Qui compaiono le attività aperte con un giorno pianificato o una scadenza."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "期限が設定された未完了のタスクは、ここに表示されます。"
+            "value": "予定日または期限がある未完了のタスクがここに表示されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "기한이 있는 미완료 할 일이 여기에 표시됩니다."
+            "value": "계획일이나 마감일이 있는 미완료 작업이 여기에 표시됩니다."
           }
         },
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "देय दिनांक असलेली प्रलंबित कार्ये येथे दिसतात."
+            "value": "नियोजित दिवस किंवा अंतिम मुदत असलेली अपूर्ण कामे येथे दिसतात."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tugas yang belum selesai dan mempunyai tarikh jangka dipaparkan di sini."
+            "value": "Tugas terbuka dengan hari yang dirancang atau tarikh akhir muncul di sini."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open taken met een vervaldatum verschijnen hier."
+            "value": "Hier staan openstaande taken met een geplande dag of een deadline."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zadania do zrobienia z terminem pojawiają się tutaj."
+            "value": "Tutaj pojawiają się otwarte zadania z zaplanowanym dniem lub terminem."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As tarefas pendentes com prazo aparecem aqui."
+            "value": "As tarefas em aberto com um dia planejado ou prazo aparecem aqui."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sarcinile de făcut care au o scadență apar aici."
+            "value": "Aici apar sarcinile deschise care au o zi planificată sau un termen-limită."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Здесь появляются невыполненные задачи, у которых есть срок."
+            "value": "Здесь показываются открытые задачи с запланированным днём или крайним сроком."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "காலக்கெடு தேதி உள்ள நிலுவைப் பணிகள் இங்கே தோன்றும்."
+            "value": "திட்டமிட்ட நாள் அல்லது காலக்கெடு உள்ள முடிக்காத பணிகள் இங்கே தோன்றும்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "గడువు తేదీ ఉన్న పెండింగ్ టాస్క్‌లు ఇక్కడ కనిపిస్తాయి."
+            "value": "ప్రణాళిక తేదీ లేదా గడువు ఉన్న అసంపూర్తి పనులు ఇక్కడ కనిపిస్తాయి."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "งานที่ยังไม่เสร็จและมีวันถึงกำหนดจะแสดงที่นี่"
+            "value": "งานที่ยังไม่เสร็จและมีวันที่วางแผนไว้หรือมีกำหนดส่งจะแสดงที่นี่"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Son tarihi olan açık görevler burada görünür."
+            "value": "Planlanan günü veya son tarihi olan açık görevler burada görünür."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Тут з’являються невиконані завдання, які мають термін."
+            "value": "Тут відображаються відкриті завдання із запланованим днем або кінцевим терміном."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "مقررہ تاریخ والے نامکمل کام یہاں نظر آتے ہیں۔"
+            "value": "جن نامکمل کاموں کا دن یا آخری تاریخ مقرر ہے وہ یہاں دکھائی دیتے ہیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Các nhiệm vụ chưa hoàn thành có ngày đến hạn xuất hiện tại đây."
+            "value": "Các việc chưa hoàn thành có ngày dự kiến hoặc hạn chót sẽ xuất hiện ở đây."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "设置了截止日期的未完成任务会显示在这里。"
+            "value": "设有计划日或截止日期的未完成任务会显示在这里。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "設定了到期日的未完成任務會顯示在這裡。"
+            "value": "設有計畫日或截止日期的未完成任務會顯示在這裡。"
           }
         }
       }

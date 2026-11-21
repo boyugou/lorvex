@@ -163,6 +163,7 @@ struct TodayTaskRow: View {
         timeIsRunning: timeIsRunning,
         chips: chips
       )
+      .environment(\.lorvexTaskRowDay, store.logicalTodayDateString)
       if let workCue {
         TodayWorkActionLine(store: store, task: task, cue: workCue)
       }

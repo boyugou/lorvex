@@ -7,7 +7,7 @@ import SwiftUI
 public enum MobileTasksScope: Hashable, Sendable {
   /// All open tasks.
   case all
-  /// Open tasks that carry a due date.
+  /// Open tasks with a planned day or deadline.
   case scheduled
   /// Open top-priority tasks.
   case priority
@@ -31,7 +31,7 @@ public enum MobileTasksScope: Hashable, Sendable {
   }
 
   /// The empty-state title for this scope. Scheduled and Priority can be empty
-  /// while open tasks exist (none has a due date, none is high priority), so
+  /// while open tasks exist (none has a date, none is high priority), so
   /// they name what they hold; every other scope shows its status lane's title.
   var emptyTitle: String {
     switch self {
@@ -56,7 +56,7 @@ public enum MobileTasksScope: Hashable, Sendable {
     case .scheduled:
       String(
         localized: "tasks.empty.scheduled.message",
-        defaultValue: "Open tasks that have a due date appear here.",
+        defaultValue: "Open tasks with a planned day or a deadline appear here.",
         table: "Localizable", bundle: MobileL10n.bundle)
     case .priority:
       String(
@@ -72,25 +72,6 @@ public enum MobileTasksScope: Hashable, Sendable {
   var listID: LorvexList.ID? {
     if case .list(let id) = self { return id }
     return nil
-  }
-
-  /// An extra in-memory predicate beyond the status/list query (the cross-list
-  /// smart cuts the core query can't express directly).
-  func matches(_ task: LorvexTask) -> Bool {
-    switch self {
-    case .scheduled: return task.dueDate != nil
-    case .priority: return task.priority == .p1
-    default: return true
-    }
-  }
-
-  /// Whether the scope filters in memory beyond the status/list query, so the
-  /// page total should reflect the filtered page rather than the raw query total.
-  var narrowsInMemory: Bool {
-    switch self {
-    case .scheduled, .priority, .list: true
-    case .all, .someday, .completed, .cancelled: false
-    }
   }
 
   /// The navigation-title name for this scope. For a list, resolves the live

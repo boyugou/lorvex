@@ -11,47 +11,21 @@ extension MobileStore {
     do {
       let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
       let status = scope.baseStatus
-      // A smart-cut scope (Scheduled / Priority) or a list scope narrows the
-      // result in memory beyond what the status query expresses, so the page
-      // count reflects the filtered page rather than the raw query total.
-      let narrowsInMemory = scope.narrowsInMemory
+      let priority = scope == .priority ? 1 : nil
+      let requiresDate = scope == .scheduled
       let page: MobileTaskWorkspacePage
       if trimmed.isEmpty {
-        let result = try await core.listTasks(
-          status: status.coreStatus,
-          listID: scope.listID,
-          priority: nil,
-          text: nil,
-          limit: limit,
-          offset: offset
-        )
-        let tasks = result.tasks.filter { status.includes($0) && scope.matches($0) }
-        page = MobileTaskWorkspacePage(
-          tasks: tasks,
-          totalMatching: narrowsInMemory ? tasks.count : result.totalMatching,
-          nextOffset: result.nextOffset,
-          isNarrowed: narrowsInMemory,
-          blockedTaskIDs: await blockedTaskIDs(in: tasks)
-        )
+        let result = try await core.listTasks(query: TaskListQueryRequest(
+          status: status.coreStatus, listID: scope.listID, priority: priority,
+          requiresScheduledDate: requiresDate, limit: limit, offset: offset))
+        page = MobileTaskWorkspacePage(tasks: result.tasks, totalMatching: result.totalMatching,
+          nextOffset: result.nextOffset, blockedTaskIDs: await blockedTaskIDs(in: result.tasks))
       } else {
-        // searchTasks has no list/smart filter — narrow in memory.
-        let result = try await core.searchTasks(
-          query: trimmed,
-          status: status.coreStatus,
-          limit: limit,
-          offset: offset
-        )
-        let tasks = result.tasks.filter { task in
-          status.includes(task) && scope.matches(task)
-            && (scope.listID == nil || task.listID == scope.listID)
-        }
-        page = MobileTaskWorkspacePage(
-          tasks: tasks,
-          totalMatching: narrowsInMemory ? tasks.count : result.totalMatching,
-          nextOffset: result.nextOffset,
-          isNarrowed: narrowsInMemory,
-          blockedTaskIDs: await blockedTaskIDs(in: tasks)
-        )
+        let result = try await core.searchTasks(query: trimmed, status: status.coreStatus,
+          listID: scope.listID, priority: priority, requiresScheduledDate: requiresDate,
+          limit: limit, offset: offset)
+        page = MobileTaskWorkspacePage(tasks: result.tasks, totalMatching: result.totalMatching,
+          nextOffset: result.nextOffset, blockedTaskIDs: await blockedTaskIDs(in: result.tasks))
       }
       cacheTasks(page.tasks)
       return page

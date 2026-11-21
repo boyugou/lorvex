@@ -228,6 +228,9 @@ larger canvas, not stretch the phone.
 - Tasks workspace uses a query-backed status/search browser; on iPad regular
   width it presents a persistent task list and detail pane instead of stretching
   the phone push flow. ✅
+- Calendar Week can display a chronological agenda or a seven-day time grid.
+  The agenda opens by default at accessibility text sizes. Each presentation
+  uses the same visible week and event editor. ✅
 - Calendar's Day mode uses a regular-width agenda workspace: the 2- or 3-day
   time grid remains primary while a pinned agenda inspector lists the visible
   days that have something on them (and today whenever it is visible), with

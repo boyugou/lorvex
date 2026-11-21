@@ -48,6 +48,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      existing plan can choose iCloud sync directly. Skipping opens the
      workspace, with the same task field on an empty mobile Today.
      [TestFlight build 152](docs/releases/1.0.0-152.md).
+  8. Let people keep the exact title during quick capture. In a build 154
+     simulator walkthrough, entering “Watch The Day After Tomorrow” saved
+     “Watch The Day After” and planned it for tomorrow. The preview reports
+     the interpretation, but it offers no way to reject it at capture time.
+     Give the preview a per-entry choice to keep the original line, honoring
+     the destination the person chose. Check Mac quick-add and mobile capture,
+     mixed-language titles, and a second entry that really does name a date.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),
@@ -57,11 +64,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   Rotating an iPad mini kept the schedule sheet open, preserved the selected
   task, and let an unsaved title survive the round trip. Available in
   [build 153](docs/releases/1.0.0-153.md).
-  Next, make the week calendar readable at accessibility sizes. At maximum
-  type on iPad mini, seven fixed day columns clipped even short event names
-  and the grid labels stayed small. Keep the selected week, event and day
-  when switching between the overview and a readable list of that week's
-  appointments. Check overlapping events, days with no events, and rotation.
+  The mobile Week agenda now gives each appointment and task a readable row
+  and keeps the same week when switching back to the time grid. The largest
+  text size opens the agenda on the focused day. Overlapping appointments,
+  an empty week, rotation with a draft and the handoff to Day were checked
+  on iPad mini. Available in [build 154](docs/releases/1.0.0-154.md).
   Validate outer and inner displays, folding, rotation, Split View, side-mounted
   navigation and toolbars, and reserved regions. Keep the current navigation,
   selection, scroll position, and unsaved draft through layout changes. Cover

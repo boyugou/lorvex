@@ -28,7 +28,8 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   3. Today now supports ordered morning and evening routines on Mac, iPhone,
      and iPad. Each routine opens around its chosen start time and can be
      folded or opened manually. Counted habits and excused days share their
-     records with Habits and Daily Review. Evaluate whether the two-hour
+     records with Habits and Daily Review. Available in
+     [TestFlight build 148](docs/releases/1.0.0-148.md). Evaluate whether the two-hour
      window suits actual mornings and evenings, especially with unusual
      schedules or a habit that belongs to both routines.
   4. Make the weekly digest actionable for someone who journals. The daily

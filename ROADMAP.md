@@ -86,14 +86,17 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       deadline. Cancel and Undo were verified on both devices, as was opening
       the saved task from Today after relaunch.
       [Build 161](docs/releases/1.0.0-161.md).
-  15. Give a meeting-only morning a useful first glance on iPhone. With a
-      10 AM workshop, a 1 PM rehearsal and no planned tasks, Today showed
-      “2 events”, two bars, a sun arc and Select a Task. The next event’s
-      title and time only appear after opening Schedule. Show the current or
-      next timed commitment in place of the extra sun arc and open its details
-      from that row. The same appointment was visible by name on a landscape iPad
-      mini. Keep that layout free of duplicate rows. Check meeting start and
-      end times, a day with only all-day items and the return from event detail.
+  15. Compact Today names the current or next appointment. Its title opens
+      the event directly. On wide iPad the agenda remains beside the tasks.
+      Verified on a two-meeting morning, during a meeting, after the last
+      event, and on an all-day schedule. [Build 162](docs/releases/1.0.0-162.md).
+  16. Let someone finish yesterday's reflection on their phone the following
+      morning. Mac already opens the previous seven days for editing. On iPhone
+      and iPad, only today opens for writing. Give mobile Review a direct path
+      to a recent date, including a day with no previous entry. Verify that
+      writing and ratings appear in the correct day's weekly journal, today's
+      draft survives switching dates, and editing yesterday's words cannot
+      inadvertently complete a task or check a habit for today.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

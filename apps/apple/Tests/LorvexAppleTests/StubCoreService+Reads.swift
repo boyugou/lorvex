@@ -117,6 +117,13 @@ extension StubCoreService {
       date: date, summary: summary, mood: mood, energyLevel: energyLevel,
       wins: wins, blockers: blockers, learnings: learnings)
   }
+  func saveDailyReviewEdits(date: String, base: DailyReviewDraftFields, draft: DailyReviewDraftFields)
+    async throws -> DailyReviewEntry
+  {
+    await upsertDailyReviewGate?()
+    if let upsertDailyReviewError { throw upsertDailyReviewError }
+    return try await preview.saveDailyReviewEdits(date: date, base: base, draft: draft)
+  }
   func loadMemory() async throws -> MemorySnapshot {
     loadMemoryCallCount += 1
     await loadMemoryGate?()

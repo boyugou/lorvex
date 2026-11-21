@@ -171,34 +171,27 @@ extension MobileStore {
     // with a different day's evidence.
     let date = selectedReviewDate
     let draft = dailyReviewDraft
+    let base = MobileDailyReviewDraft(review: dailyReview)
     let save = Task {
       defer { dailyReviewSave = nil }
-      return await writeDailyReview(draft, on: date, playsFeedback: playsFeedback)
+      return await writeDailyReview(draft, base: base, on: date, playsFeedback: playsFeedback)
     }
     dailyReviewSave = save
     return await save.value
   }
 
   private func writeDailyReview(
-    _ submitted: MobileDailyReviewDraft, on savingDate: String, playsFeedback: Bool
+    _ submitted: MobileDailyReviewDraft, base: MobileDailyReviewDraft, on savingDate: String, playsFeedback: Bool
   ) async -> Bool {
     do {
-      let saved = try await core.upsertDailyReviewPreservingLinks(
-        date: savingDate,
-        summary: submitted.trimmedSummary,
-        mood: submitted.mood,
-        energyLevel: submitted.energy,
-        wins: submitted.trimmedWins,
-        blockers: submitted.trimmedBlockers,
-        learnings: submitted.trimmedLearnings
-      )
+      let saved = try await core.saveDailyReviewEdits(date: savingDate, base: base, draft: submitted)
       // Commit the saved day-scoped state before the weekly reload, so a weekly
       // failure can't discard a successful daily save. Guarded on the saved day:
       // a background refresh can move `selectedReviewDate` across these awaits,
       // and if it did the new day's own load owns this state.
       if selectedReviewDate == savingDate {
         dailyReview = saved
-        if dailyReviewDraft == submitted { refreshDailyReviewDraft() }
+        dailyReviewDraft = dailyReviewDraft.rebased(from: submitted, onto: .init(review: saved))
         adoptDayReviewEvidence(try await core.loadDaySummary(date: savingDate), readFor: savingDate)
       }
       // Week-scoped state is day-independent and always adopts the latest values.
@@ -228,14 +221,13 @@ extension MobileStore {
 
   /// Adopts a review that a refresh read for `date`, the review's day when the
   /// read started. A result for a day the review has left is dropped: the
-  /// selection that moved it loads its own day. The fields follow the review only
-  /// if they held no unsaved edit at the moment it is adopted, checked in the
-  /// same step, so text typed while the read ran stays in the editor.
+  /// selection that moved it loads its own day. Each untouched field follows
+  /// the incoming review while the field being edited keeps the user’s text.
   func adoptLoadedDailyReview(_ loaded: DailyReviewEntry?, readFor date: String) {
     guard selectedReviewDate == date else { return }
-    let editorHadNoEdits = dailyReviewDraftMatchesLoaded
+    let base = MobileDailyReviewDraft(review: dailyReview)
     dailyReview = loaded
-    if editorHadNoEdits { refreshDailyReviewDraft() }
+    dailyReviewDraft = dailyReviewDraft.rebased(from: base, onto: .init(review: loaded))
   }
 
   /// Adopts a day's evidence that was read for `date`, unless the review moved to
@@ -245,16 +237,6 @@ extension MobileStore {
   func adoptDayReviewEvidence(_ loaded: DayReviewSummary?, readFor date: String) {
     guard selectedReviewDate == date else { return }
     dayReviewEvidence = loaded
-  }
-
-  /// Brings the fields up to date after the loaded review of the day the page is
-  /// already on was re-read and the fields hold no unsaved edit. Fields that
-  /// already say what the review holds are left as they are: a save trims the
-  /// whitespace around a section, and replacing the text would delete a space or
-  /// a line break the user typed since.
-  func refreshDailyReviewDraft() {
-    guard !dailyReviewDraft.isStored(as: dailyReview) else { return }
-    dailyReviewDraft = MobileDailyReviewDraft(review: dailyReview)
   }
 
   /// Persist the draft when it differs from the loaded entry, regardless of

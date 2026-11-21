@@ -3747,7 +3747,9 @@ earlier mobile review show the day’s context while you write.
 Select a date in the weekly journal to read its writing and ratings. On mobile,
 choose **Edit** to amend a recent entry. On Mac, use the arrows or date chip
 in the toolbar to open another day. Each date has one review record shared by
-devices and MCP tools.
+devices and MCP tools. If a change to a different field has already reached
+this device while the editor is open, saving keeps it. For example, you can
+change the note and keep a newly saved energy rating.
 
 ### Weekly Review
 

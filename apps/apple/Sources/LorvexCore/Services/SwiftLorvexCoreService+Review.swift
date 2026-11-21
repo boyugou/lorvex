@@ -100,20 +100,47 @@ extension SwiftLorvexCoreService {
   ) async throws -> DailyReviewEntry {
     try withWrite { db, hlc, deviceId in
       let resolved = try Self.resolveReviewDate(db, requestedDate: date)
-      let timezone =
-        try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
-      let params = UpsertDailyReviewParams(
-        date: resolved, summary: summary, mood: mood.map(Int64.init),
-        energyLevel: energyLevel.map(Int64.init), wins: wins, blockers: blockers,
-        learnings: learnings, timezone: timezone,
-        version: hlc.nextVersionString(), now: SyncTimestampFormat.syncTimestampNow())
-      let applied = try DailyReviewOpsRepo.upsertDailyReview(db, params: params)
-      try DailyReviewOpsRepo.requireDailyReviewWriteApplied(applied, date: resolved)
-      return try Self.finishDailyReviewWrite(
-        db, service: self, hlc: hlc, deviceId: deviceId, date: resolved,
-        operation: SyncNaming.opUpsert,
-        linkedTaskIds: linkedTaskIDs, linkedListIds: linkedListIDs)
+      return try persistDailyReview(db, hlc: hlc, deviceId: deviceId, date: resolved,
+        summary: summary, mood: mood, energyLevel: energyLevel, wins: wins, blockers: blockers,
+        learnings: learnings, linkedTaskIDs: linkedTaskIDs, linkedListIDs: linkedListIDs)
     }
+  }
+
+  public func saveDailyReviewEdits(date: String, base: DailyReviewDraftFields, draft: DailyReviewDraftFields)
+    async throws -> DailyReviewEntry
+  {
+    try withWrite { db, hlc, deviceId in
+      let day = try Self.resolveReviewDate(db, requestedDate: date)
+      let stored = try DailyReviewOpsRepo.getDailyReviewRow(db, date: day)
+        .map(SwiftLorvexReviewDeserializers.dailyReview)
+      return try persistDailyReview(db, hlc: hlc, deviceId: deviceId, date: day,
+        summary: draft.trimmedSummary == base.trimmedSummary ? (stored?.summary ?? "") : draft.trimmedSummary,
+        mood: draft.mood == base.mood ? stored?.mood : draft.mood,
+        energyLevel: draft.energy == base.energy ? stored?.energyLevel : draft.energy,
+        wins: draft.trimmedWins == base.trimmedWins ? stored?.wins : draft.trimmedWins,
+        blockers: draft.trimmedBlockers == base.trimmedBlockers ? stored?.blockers : draft.trimmedBlockers,
+        learnings: draft.trimmedLearnings == base.trimmedLearnings ? stored?.learnings : draft.trimmedLearnings,
+        linkedTaskIDs: nil, linkedListIDs: nil)
+    }
+  }
+
+  private func persistDailyReview(_ db: Database, hlc: HlcSession, deviceId: String, date: String,
+    summary: String, mood: Int?, energyLevel: Int?, wins: String?, blockers: String?,
+    learnings: String?, linkedTaskIDs: [String]?, linkedListIDs: [String]?
+  ) throws -> DailyReviewEntry {
+    let timezone =
+      try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+    let params = UpsertDailyReviewParams(
+      date: date, summary: summary, mood: mood.map(Int64.init),
+      energyLevel: energyLevel.map(Int64.init), wins: wins, blockers: blockers,
+      learnings: learnings, timezone: timezone,
+      version: hlc.nextVersionString(), now: SyncTimestampFormat.syncTimestampNow())
+    let applied = try DailyReviewOpsRepo.upsertDailyReview(db, params: params)
+    try DailyReviewOpsRepo.requireDailyReviewWriteApplied(applied, date: date)
+    return try Self.finishDailyReviewWrite(
+      db, service: self, hlc: hlc, deviceId: deviceId, date: date,
+      operation: SyncNaming.opUpsert,
+      linkedTaskIds: linkedTaskIDs, linkedListIds: linkedListIDs)
   }
 
   public func importDailyReview(

@@ -38,6 +38,11 @@ public protocol LorvexReviewServicing: Sendable {
     learnings: String?
   ) async throws -> DailyReviewEntry
 
+  /// Saves the fields the editor changed since it loaded its base. Other
+  /// fields and links come from the row inside the same write transaction.
+  func saveDailyReviewEdits(date: String, base: DailyReviewDraftFields, draft: DailyReviewDraftFields)
+    async throws -> DailyReviewEntry
+
   func loadWeeklyReview() async throws -> WeeklyReviewSnapshot
 
   /// Applies only the provided fields from `patch` to the existing review for `date`.

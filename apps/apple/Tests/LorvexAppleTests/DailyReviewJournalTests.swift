@@ -64,6 +64,11 @@ struct DailyReviewJournalTests {
     #expect(store.dailyReviewSummaryDraft == editor.string)
     let selection = NSRange(location: 4, length: 5)
     editor.setSelectedRange(selection)
+    let changedElsewhere = try await core.upsertDailyReviewPreservingLinks(
+      date: day, summary: "", mood: nil, energyLevel: nil, wins: "Booked the studio.",
+      blockers: nil, learnings: nil)
+    store.adoptLoadedDailyReview(changedElsewhere, readFor: day)
+    #expect(store.dailyReviewWinsDraft == "Booked the studio.")
 
     for width in [1060, 700, 1060] {
       window.setContentSize(NSSize(width: width, height: 570))
@@ -83,6 +88,7 @@ struct DailyReviewJournalTests {
     await store.selectReviewDay(yesterday)
     let saved = try await core.loadDailyReview(date: day)
     #expect(saved?.summary == "One thing worth remembering.")
+    #expect(saved?.wins == "Booked the studio.")
     #expect(store.dailyReviewSummaryDraft.isEmpty)
     #expect(try await core.loadDailyReview(date: yesterday) == nil)
   }

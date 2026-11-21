@@ -180,19 +180,12 @@ extension AppStore {
   func saveDailyReviewDraft() async {
     let savingDate = dailyReviewEditorDate
     let submitted = dailyReviewDraftValues
+    let base = DailyReviewDraftValues(review: dailyReview)
     await perform {
-      let saved = try await core.upsertDailyReviewPreservingLinks(
-        date: savingDate,
-        summary: submitted.summary.trimmingCharacters(in: .whitespacesAndNewlines),
-        mood: submitted.mood,
-        energyLevel: submitted.energy,
-        wins: submitted.wins.trimmedNilIfEmpty,
-        blockers: submitted.blockers.trimmedNilIfEmpty,
-        learnings: submitted.learnings.trimmedNilIfEmpty
-      )
+      let saved = try await core.saveDailyReviewEdits(date: savingDate, base: base, draft: submitted)
       if dailyReviewEditorDate == savingDate {
         dailyReview = saved
-        if dailyReviewDraftValues == submitted { refreshDailyReviewDraft() }
+        dailyReviewDraftValues = dailyReviewDraftValues.rebased(from: submitted, onto: .init(review: saved))
       }
       weeklyReview = try await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
     }
@@ -211,42 +204,17 @@ extension AppStore {
   /// Makes the editor's fields say exactly what the loaded review holds
   /// (nothing, for a day with no entry), replacing whatever they hold.
   func syncDailyReviewDraft() {
-    guard let dailyReview else {
-      dailyReviewSummaryDraft = ""
-      dailyReviewWinsDraft = ""
-      dailyReviewBlockersDraft = ""
-      dailyReviewLearningsDraft = ""
-      dailyReviewMood = nil
-      dailyReviewEnergy = nil
-      return
-    }
-    dailyReviewSummaryDraft = dailyReview.summary
-    dailyReviewWinsDraft = dailyReview.wins ?? ""
-    dailyReviewBlockersDraft = dailyReview.blockers ?? ""
-    dailyReviewLearningsDraft = dailyReview.learnings ?? ""
-    dailyReviewMood = dailyReview.mood
-    dailyReviewEnergy = dailyReview.energyLevel
+    dailyReviewDraftValues = .init(review: dailyReview)
   }
 
   /// Adopts a review that a refresh read for `date`, the editor's day when the
   /// read started. A result for a day the editor has left is dropped: the
-  /// selection that moved it loads its own day. The fields follow the review only
-  /// if they held no unsaved edits at the moment it is adopted, checked in the
-  /// same step, so text typed while the read ran stays in the editor.
+  /// selection that moved it loads its own day. Untouched fields follow the
+  /// incoming review and the Mac field being edited keeps the user's text.
   func adoptLoadedDailyReview(_ loaded: DailyReviewEntry?, readFor date: String) {
     guard dailyReviewEditorDate == date else { return }
-    let editorHadNoEdits = dailyReviewDraftMatchesLoaded
+    let base = DailyReviewDraftValues(review: dailyReview)
     dailyReview = loaded
-    if editorHadNoEdits { refreshDailyReviewDraft() }
-  }
-
-  /// Brings the editor up to date after the loaded review of the day it is
-  /// already on was re-read and the editor has no unsaved edits. Fields that
-  /// already say what the review holds are left as they are: a save trims the
-  /// whitespace around a body section, and replacing the text would delete a
-  /// space or a line break the user typed since.
-  func refreshDailyReviewDraft() {
-    guard !dailyReviewDraftValues.isStored(as: dailyReview) else { return }
-    syncDailyReviewDraft()
+    dailyReviewDraftValues = dailyReviewDraftValues.rebased(from: base, onto: .init(review: loaded))
   }
 }

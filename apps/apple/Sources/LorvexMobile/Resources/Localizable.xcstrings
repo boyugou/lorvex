@@ -142939,6 +142939,7 @@
     },
     "today.appointment.up_next": {
       "comment": "Label above the next timed calendar event on Today",
+      "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {

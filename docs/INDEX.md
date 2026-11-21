@@ -9,6 +9,7 @@ app.
 - [`../CLAUDE.md`](../CLAUDE.md) — operating manual for agents.
 - [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Shared) and open work.
 - [`development/NEW_MACHINE.md`](development/NEW_MACHINE.md) — setting up a development machine, the local files a clone lacks, privacy rules, and releasing.
+- [Build 160 release record](releases/1.0.0-160.md) — write and autosave a daily note on iPhone and iPad.
 - [Build 159 release record](releases/1.0.0-159.md) — mobile daily check-in, VoiceOver, and overlapping saves.
 - [Build 158 release record](releases/1.0.0-158.md) — Daily Review agenda order, Mac workspace navigation and download.
 - [Build 157 release record](releases/1.0.0-157.md) — scheduling an Inbox task, iPad split layout and Mac download.

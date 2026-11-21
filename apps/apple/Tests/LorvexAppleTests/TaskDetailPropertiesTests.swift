@@ -55,8 +55,13 @@ struct TaskDetailPropertiesTests {
   @Test("An active undated task can be planned from its first row without changing its deadline")
   func planFromFirstRowPreservesDeadline() async throws {
     let store = try await makeStore()
+    let inbox = LorvexListNaming.inboxID
+    let created = try await store.core.createTask(title: "Reserve a reading room", notes: "")
+    _ = try await store.core.moveTask(id: created.id, toListID: inbox)
     await store.refresh()
-    let task = try #require(store.today.tasks.first { $0.status.isActive })
+    store.openTaskListScope(inbox)
+    await store.loadTaskWorkspace()
+    let task = try #require(store.taskWorkspaceOpenTasks.first { $0.id == created.id })
     store.selectedTaskID = task.id
     store.syncSelectedTaskDraft()
     store.setTaskDetailHasPlannedDate(false)
@@ -75,5 +80,10 @@ struct TaskDetailPropertiesTests {
     let saved = try await store.core.loadTask(id: task.id)
     #expect(saved.plannedDate == LorvexDateFormatters.ymdUTC.date(from: "2026-12-10"))
     #expect(saved.dueDate == before.dueDate)
+    store.selectedTaskID = nil
+    await store.loadTaskWorkspace()
+    #expect(store.selection == .tasks)
+    #expect(store.taskWorkspaceListScopeID == inbox)
+    #expect(store.taskWorkspaceOpenTasks.contains { $0.id == task.id })
   }
 }

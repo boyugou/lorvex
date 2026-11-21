@@ -58,15 +58,25 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      VoiceOver walkthrough read the saved title and list, reached Open in the
      next step and opened the task after the usual timeout. Verified on iPhone
      and iPad mini. [TestFlight build 156](docs/releases/1.0.0-156.md).
-  10. Give an undated task a clear path from Inbox to a planned day. In an
-      iPhone walkthrough, the detail screen showed Start, Defer, Someday,
-      Cancel, Hand to Assistant and Delete Permanently. Choosing a work date
-      required Add Detail → When before the date picker appeared. The Mac
-      inspector also places an unset work date among optional additions.
-      Bring the existing work-date picker into the main detail, give
-      cancellation and deletion a secondary location, and test both platforms.
-      Verify that rescheduling preserves the deadline and that going back
-      returns to the task's original list.
+  10. Active tasks now show **When → Set Date** at the top of their properties.
+      iPhone and iPad put Share, Cancel Task and Delete Permanently in More.
+      Mac inspector and persistence checks, plus iPhone and narrow iPad
+      walkthroughs verified scheduling with a separate deadline.
+      [TestFlight and Mac download, build 157](docs/releases/1.0.0-157.md).
+  11. Resolve the Mac search toolbar crash while moving between workspaces.
+      The native sample-data tour twice stopped during Calendar → Today →
+      Calendar navigation, once after Day and once after Month. A debugger
+      captured AppKit rejecting a second item named `com.apple.SwiftUI.search`.
+      Calendar, Tasks and Memory install the search field; Today removes it.
+      Exercise those transitions in an isolated normal window, keep one search
+      item and verify its prompt, ⌘F and dismissal in each searchable workspace.
+      Reproduction in a production window remains unverified.
+  12. Make tomorrow's commitments readable in time order during an evening
+      Review. Both Review implementations currently list calendar events
+      before all tasks, so a morning work block can appear below an evening
+      event. Walk through a day with all-day entries, timed work, meetings
+      and untimed tasks. Use the next morning's Today screen to check the
+      order, then verify that returning from an item keeps the journal entry.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

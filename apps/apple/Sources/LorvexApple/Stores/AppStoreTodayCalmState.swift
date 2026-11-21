@@ -68,14 +68,14 @@ extension AppStore {
 
   /// ``calmToday`` with the clock at `nowMinutes`, so a caller that reads the
   /// clock once builds the page and the rest of the day at the same minute.
-  func calmToday(nowMinutes: Int?) -> LorvexCalmToday {
+  func calmToday(nowMinutes: Int?, events: [CalendarTimelineEvent]? = nil, now: Date = Date()) -> LorvexCalmToday {
     LorvexCalmToday.build(
       tasks: today.tasks,
-      events: todayScheduleEvents,
+      events: events ?? todayScheduleEvents,
       doneToday: doneTodayCount,
       nowMinutes: nowMinutes,
       logicalDay: logicalTodayDateString,
-      workingHours: workdayWindow, now: Date())
+      workingHours: workdayWindow, now: now)
   }
 
   /// Refresh the done-today tasks and count from the canonical completed-today

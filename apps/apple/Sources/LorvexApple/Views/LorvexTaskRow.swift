@@ -70,6 +70,9 @@ struct LorvexTaskRow: View {
   /// excerpt, because the row already shows it.
   static let visibleTagCount = 3
 
+  static let completionTarget: CGFloat = 24
+  static var titleInset: CGFloat { LorvexDesign.Spacing.s + completionTarget + LorvexDesign.Spacing.m }
+
   private var isDone: Bool { task.status == .completed }
   private var isCancelled: Bool { task.status == .cancelled }
   /// Started work carries a restrained "Started" marker; the leading circle is
@@ -155,7 +158,7 @@ struct LorvexTaskRow: View {
         // small bounce on the state change so completion feels rewarding.
         .contentTransition(.symbolEffect(.replace))
         .reduceMotionBounce(value: isDone)
-        .frame(width: 24, height: 24)
+        .frame(width: Self.completionTarget, height: Self.completionTarget)
         .contentShape(Circle())
     }
     .buttonStyle(.plain)

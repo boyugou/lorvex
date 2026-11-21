@@ -19,12 +19,11 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      Available in [TestFlight build 146](docs/releases/1.0.0-146.md).
      Follow up on real use: can someone finish an evening review and trust
      next morning's plan without reopening the task list?
-  2. Help someone resume work after a meeting. The menu bar already features
-     the current or next scheduled task. The Mac Today page presents the
-     timeline and untimed work in sequence. Prototype a directly accessible
-     resume action on the matching row, with the time available before the
-     next meeting. Test a running task, a day without time slots and a day
-     when the next scheduled task conflicts with a meeting.
+  2. Mac Today now brings the current task and a Start or Continue action
+     below the briefing. Continue opens the task's notes and checklist.
+     The task shows the time until the next event. A conflicting upcoming
+     task stays in the schedule and names the calendar event. Evaluate the
+     return from a meeting during daily use, including days without time slots.
   3. Bring habits into the part of the day when they are useful. The Mac
      Habits board groups by cadence, while Today's main column has no habit
      check-in. Prototype morning and evening routines with user-chosen

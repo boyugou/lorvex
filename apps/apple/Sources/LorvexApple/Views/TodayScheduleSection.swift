@@ -21,6 +21,7 @@ struct TodayScheduleSection: View {
   @Bindable var store: AppStore
   let rows: [LorvexTodayTimelineItem]
   let nowMinutes: Int?
+  var workCue: TodayWorkCue? = nil
   /// Today's list entries by task id, for the chips a row carries.
   let items: [LorvexTask.ID: LorvexCalmToday.Item]
   @Environment(\.undoManager) private var undoManager
@@ -71,7 +72,8 @@ struct TodayScheduleSection: View {
         task: task, store: store, isBlocked: store.isBlocked(task),
         timeLabel: timeLabel(row, isRunning: isRunning),
         timeIsRunning: isRunning,
-        chips: items[task.id].map(TodayColumn.chips(for:)) ?? []
+        chips: items[task.id].map(TodayColumn.chips(for:)) ?? [],
+        workCue: workCue?.taskID == task.id ? workCue : nil
       )
       .id(task.id)
     case .event(let event):

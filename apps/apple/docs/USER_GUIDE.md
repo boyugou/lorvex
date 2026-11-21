@@ -3119,9 +3119,17 @@ The **Today** workspace is your day in one list, read top to bottom:
 
 On Mac a quick-add field sits under the tasks; on iPhone and iPad the day's
 habits follow as rings. Nothing you or the assistant put on today is hidden, unless its hide-until date is after today.
-On Mac the day's schedule leads the page, under the briefing: your calendar
-events and the day's timed tasks in time order, above the tasks without a
-time. An event that runs past midnight shows its start on the day it begins
+When you return to **Today** on Mac after a meeting, look under the briefing.
+A task scheduled for the current time offers **Start**. An already-started
+task shows its first unfinished checklist item and offers **Continue**, which
+opens its notes and checklist. The row shows
+the time until your next calendar event when one is scheduled. If a meeting
+occupies the current time, the task stays in the list. An overlapping
+upcoming task names the conflicting event and offers **Open Details**.
+Starting work or continuing it keeps its planned time and deadline.
+
+The Mac schedule combines your calendar events and the remaining timed tasks
+in time order, above the tasks without a time. An event that runs past midnight shows its start on the day it begins
 and "Until" its end at the top of the next day; a day it fills completely
 shows it as all day. Click an event to see its details in the inspector,
 where an event you made in Lorvex can also be edited or deleted; right-click

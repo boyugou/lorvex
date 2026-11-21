@@ -11,8 +11,8 @@ struct TodayView: View {
         todaySelectionBar
         Divider()
       }
-      TimelineView(.everyMinute) { _ in
-        let content = store.todayColumnContent
+      TimelineView(.everyMinute) { tick in
+        let content = store.todayColumnContent(at: tick.date)
         ScrollViewReader { scroll in
           ScrollView {
             mainColumn(content)
@@ -137,27 +137,35 @@ struct TodayTaskRow: View {
   /// See ``LorvexTaskRow/chips``.
   var chips: [LorvexTaskRowChip] = []
 
+  var workCue: TodayWorkCue? = nil
+
   private var isBatchSelected: Bool {
     store.todaySelectedTaskIDs.contains(task.id)
   }
 
   var body: some View {
-    WorkspaceSelectableTaskRow(
-      task: task,
-      store: store,
-      selectionSurface: .today,
-      isBatchSelected: isBatchSelected,
-      batchAccessibilityIdentifier: "today.row.batchSelect.\(task.id)",
-      toggleBatchSelection: { store.toggleTodayTaskBatchSelection(task.id) },
-      openTask: { store.selectOnlyTodayTask(task.id) },
-      isBlocked: isBlocked,
-      // Today mixes tasks from every list, so each row shows its owning list.
-      showsOwningList: true,
-      // Starting and deferring are the day's own verbs, one hover away.
-      showsTodayActions: true,
-      timeLabel: timeLabel,
-      timeIsRunning: timeIsRunning,
-      chips: chips
-    )
+    VStack(alignment: .leading, spacing: 0) {
+      WorkspaceSelectableTaskRow(
+        task: task,
+        store: store,
+        selectionSurface: .today,
+        isBatchSelected: isBatchSelected,
+        batchAccessibilityIdentifier: "today.row.batchSelect.\(task.id)",
+        toggleBatchSelection: { store.toggleTodayTaskBatchSelection(task.id) },
+        openTask: { store.selectOnlyTodayTask(task.id) },
+        isBlocked: isBlocked,
+        // Today mixes tasks from every list, so each row shows its owning list.
+        showsOwningList: true,
+        // Starting and deferring are the day's own verbs, one hover away.
+        showsTodayActions: true,
+        showsRowStart: workCue == nil || task.status == .inProgress,
+        timeLabel: timeLabel,
+        timeIsRunning: timeIsRunning,
+        chips: chips
+      )
+      if let workCue {
+        TodayWorkActionLine(store: store, task: task, cue: workCue)
+      }
+    }
   }
 }

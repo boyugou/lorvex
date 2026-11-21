@@ -3,7 +3,7 @@ import LorvexCore
 
 extension AppStore {
   /// Today's selectable rows in the order the main column draws them: the
-  /// schedule's unfinished timed tasks in time order, the tasks without a
+  /// featured task, the schedule's remaining timed tasks, the tasks without a
   /// time, then, while the Done section is open, what it lists. Arrow keys,
   /// shift-click ranges, Select All, batch actions, and the inspector's
   /// refresh check all read this one order, so none of them reaches a row the
@@ -18,7 +18,8 @@ extension AppStore {
     let untimed = content.untimedItems.map(\.task)
     let done = isTodayDoneCollapsed ? [] : content.doneListTasks
     var seen = Set<LorvexTask.ID>()
-    return (timed + untimed + done).filter { seen.insert($0.id).inserted }
+    let featured = content.featured.map { [$0.task] } ?? []
+    return (featured + timed + untimed + done).filter { seen.insert($0.id).inserted }
   }
 
   func taskSelectionCount(on surface: AppStoreBatchCancelSurface) -> Int {
@@ -111,7 +112,7 @@ extension AppStore {
   }
 
   /// Today's arrow-key stops in the order the main column draws them: the
-  /// schedule's events and unfinished timed tasks in time order (an event the
+  /// featured task, then the schedule's events and unfinished timed tasks (an event the
   /// schedule folds behind its "earlier" line is not drawn, so it is not a
   /// stop), the tasks without a time, then what the Done section lists while
   /// it is open. An event's stop is its calendar id, which never equals a task id.
@@ -119,7 +120,7 @@ extension AppStore {
     let content = todayColumnContent
     let fold = LorvexTodayTimeline.earlierFold(content.schedule)
     var eventIDs = Set<String>()
-    var ids = [String]()
+    var ids = content.featured.map { [$0.id] } ?? []
     for (index, row) in content.schedule.enumerated() {
       switch row.kind {
       case .task(let task) where task.status.isActionable:

@@ -614,6 +614,12 @@ chip. The schedule beside the list (on iPhone, a sheet opened from the day
 strip) draws only what has a time: calendar holds and the day's timed tasks
 (`LorvexTodayTimeline.timedItems`).
 
+On the Mac, after the briefing, the current task row offers Start or
+Continue while the calendar permits work. It shows the time until the next
+timed event. It occurs once, leading both visual and keyboard order, and
+Continue opens its inspector. Future tasks retain their chronological place.
+An overlap on the upcoming lead names the event alongside Open Details.
+
 While day hours remain and the day's estimated work exceeds the free
 working time left, one well says so ("About 6 hr of work, 4 hr free") and
 offers to move the named tasks to tomorrow. With nothing that can move on its

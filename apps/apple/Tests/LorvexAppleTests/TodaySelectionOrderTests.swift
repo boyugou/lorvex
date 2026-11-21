@@ -43,10 +43,13 @@ func todaySelectableRowsFollowTheColumnOrder() async throws {
   // the same millisecond tie-break arbitrarily.
   let untimed = try await core.createTask(
     TaskCreateDraft(title: "Planned, no time", priority: .p1, plannedDate: dueToday))
+  // Keep the saved time away from now so the explicitly started task leads
+  // regardless of the host's current hour.
+  let slot = (store.nowMinutesInProductDay ?? 0) < 720 ? 18 * 60 : 6 * 60
   let timed = try await core.createTask(
     TaskCreateDraft(
-      title: "Planned at 2 PM", priority: .p3, plannedDate: dueToday,
-      plannedTime: 14 * 60..<14 * 60 + 30))
+      title: "Another scheduled task", priority: .p3, plannedDate: dueToday,
+      plannedTime: slot..<slot + 30))
   let overdue = try await core.createTask(TaskCreateDraft(title: "Missed deadline", dueDate: dueYesterday))
   let alsoToday = try await core.createTask(TaskCreateDraft(title: "Due today", dueDate: dueToday))
   let started = try await core.createTask(TaskCreateDraft(title: "Started, undated", priority: .p3))
@@ -56,10 +59,9 @@ func todaySelectableRowsFollowTheColumnOrder() async throws {
   await store.refresh()
   await store.loadDoneTodayCount()
 
-  // The schedule at the top of the column draws the timed task first; then the
-  // tasks without a time, started work leading and the rest in the canonical
-  // order (priority, then due date with undated last).
-  let open = [timed.id, started.id, untimed.id, overdue.id, alsoToday.id]
+  // The started task leads once, followed by the remaining schedule, untimed
+  // work in canonical order, and the visible Done section.
+  let open = [started.id, timed.id, untimed.id, overdue.id, alsoToday.id]
   #expect(store.orderedTaskIDs(on: .today) == open + [finished.id])
 
   store.isTodayDoneCollapsed = true
@@ -87,4 +89,64 @@ func todayKeepsTheInspectorOnADoneRowWhileTheFoldIsOpen() async throws {
   store.isTodayDoneCollapsed = true
   store.reconcileSelectedTaskAfterRefresh()
   #expect(store.selectedTaskID == nil, "a row the fold hides has left the page")
+}
+
+@MainActor
+@Test func todayContinueOpensTheOneFeaturedRowAndKeepsItsWorkStarted() async throws {
+  let fixture = try await TodayFixture.make()
+  defer { fixture.tearDown() }
+  let (store, core) = (fixture.store, fixture.core)
+  let writing = try await core.createTask(title: "Write the abstract", notes: "Continue at paragraph two.")
+  _ = try await core.startTask(id: writing.id)
+  await store.refresh()
+  await store.loadTodaySchedule()
+
+  let content = store.todayColumnContent
+  let cue = try #require(content.workCue)
+  #expect(cue.action == .resume)
+  #expect(content.featured?.id == writing.id)
+  #expect(!content.untimedItems.contains { $0.id == writing.id })
+  #expect(store.todayArrowKeyStops().ids == [writing.id])
+  #expect(store.orderedTaskIDs(on: .today) == [writing.id])
+  await store.performTodayWorkAction(cue)
+  #expect(store.selectedTaskID == writing.id)
+  #expect(store.selectedTask?.notes == "Continue at paragraph two.")
+  #expect(try await core.loadTask(id: writing.id).status == .inProgress)
+
+  _ = try await core.completeTask(id: writing.id)
+  await store.refresh()
+  store.selectedTaskID = nil
+  await store.performTodayWorkAction(cue)
+  #expect(store.selectedTaskID == nil)
+  #expect(try await core.loadTask(id: writing.id).status == .completed)
+}
+
+@MainActor
+@Test func todayStartUsesTheSavedSlotAndRejectsAStaleOfferDuringAMeeting() async throws {
+  let fixture = try await TodayFixture.make()
+  defer { fixture.tearDown() }
+  let (store, core) = (fixture.store, fixture.core)
+  let day = store.logicalTodayDateString
+  let planned = try #require(LorvexDateFormatters.ymdUTC.date(from: day))
+  let task = try await core.createTask(TaskCreateDraft(title: "Edit outline",
+    plannedDate: planned, plannedTime: 600..<660))
+  await store.refresh()
+  let event = CalendarTimelineEvent(id: "call", title: "Call", source: "canonical", editable: true,
+    startDate: day, startTime: "10:30", endDate: day, endTime: "11:00", allDay: false,
+    location: nil, color: nil, eventType: "event", timezone: nil, isRecurring: false)
+  store.calendarTimeline = CalendarTimelineSnapshot(from: day, to: day, events: [event], truncated: false, nextOffset: nil)
+  let calendar = LorvexDateFormatters.gregorianCalendar(timeZone: store.logicalTimeZone)
+  let morning = try #require(calendar.date(bySettingHour: 10, minute: 0, second: 0, of: Date()))
+  let meetingStart = morning.addingTimeInterval(1800)
+  let offer = try #require(store.todayColumnContent(at: morning).workCue)
+  #expect(offer.action == .start)
+  #expect(offer.upcoming?.minutesAway == 30)
+  #expect(store.todayColumnContent(at: meetingStart).workCue?.action == .reviewConflict(event: "Call"))
+  await store.performTodayWorkAction(offer, at: meetingStart)
+  #expect(try await core.loadTask(id: task.id).status == .open)
+  await store.performTodayWorkAction(offer, at: morning)
+  let saved = try await core.loadTask(id: task.id)
+  #expect(saved.status == .inProgress)
+  #expect(saved.time(on: day) == 600..<660)
+  #expect(store.selectedTaskID == task.id)
 }

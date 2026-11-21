@@ -213,3 +213,76 @@ func calmTodayBriefingIsTrimmedOrAbsent() {
   #expect(LorvexCalmToday.briefing(from: "   \n") == nil)
   #expect(LorvexCalmToday.briefing(from: nil) == nil)
 }
+
+@Suite
+struct TodayWorkCueTests {
+  private func cue(_ tasks: [LorvexTask], _ events: [CalendarTimelineEvent], at minute: Int?,
+    blocked: Set<String> = []) -> TodayWorkCue? {
+    TodayWorkCue.resolve(
+      lead: Fixture.page(tasks: tasks, events: events, now: minute).lead,
+      blocked: blocked, events: events, day: Fixture.day, nowMinutes: minute)
+  }
+
+  @Test func resumeBetweenAppointments() throws {
+    let task = Fixture.task("draft", status: .inProgress)
+    let standup = Fixture.event("Standup", start: "09:30", end: "10:00")
+    let review = Fixture.event("Review", start: "10:35", end: "11:00")
+    let events = [review, Fixture.event("Trip", start: nil, allDay: true), standup]
+    #expect(cue([task], events, at: 599) == nil)
+    let result = try #require(cue([task], events, at: 600))
+    #expect(result.action == .resume)
+    #expect(result.bringsTaskToTop)
+    #expect(result.upcoming?.title == "Review")
+    #expect(result.upcoming?.minutesAway == 35)
+    #expect(cue([task], events, at: 635) == nil)
+    #expect(cue([task], events, at: 660)?.upcoming == nil)
+    #expect(cue([task], [], at: 690)?.action == .resume)
+  }
+
+  @Test func showConflictsInPlaceAndStartOnlyAtUsableTimes() {
+    let timed = Fixture.task("draft", time: 600..<660)
+    let review = Fixture.event("Review", start: "10:30", end: "11:00")
+    #expect(cue([timed], [review], at: 590)?.action == .reviewConflict(event: "Review"))
+    #expect(cue([timed], [review], at: 590)?.bringsTaskToTop == false)
+    #expect(cue([timed], [review], at: 600)?.action == .start)
+    #expect(cue([timed], [review], at: 600)?.upcoming?.minutesAway == 30)
+    #expect(cue([timed], [review], at: 630)?.action == .reviewConflict(event: "Review"))
+    #expect(cue([timed], [review], at: 660) == nil)
+    #expect(cue([timed], [], at: 600, blocked: ["draft"]) == nil)
+    #expect(cue([timed], [], at: 590) == nil)
+    #expect(cue([Fixture.task("no plan")], [], at: 600) == nil)
+    #expect(cue([Fixture.task("started", status: .inProgress)], [], at: nil) == nil)
+    #expect(cue([Fixture.task("done", status: .completed)], [], at: 600) == nil)
+  }
+
+  @Test func midnightAndPointEvents() {
+    let task = Fixture.task("task", status: .inProgress)
+    var overnight = Fixture.event("Travel", start: "22:00", end: "09:00")
+    overnight.startDate = "2026-05-22"
+    #expect(cue([task], [overnight], at: 539) == nil)
+    #expect(cue([task], [overnight], at: 540)?.action == .resume)
+    let point = Fixture.event("Reminder", start: "10:00", end: "10:00")
+    #expect(cue([task], [point], at: 600)?.action == .resume)
+    let reminder = Fixture.event("Collect parcel", start: "10:00")
+    #expect(cue([task], [reminder], at: 595)?.upcoming?.minutesAway == 5)
+    #expect(cue([task], [reminder], at: 605)?.action == .resume)
+  }
+
+  @Test func elapsedTimeAcrossTheRepeatedClockHour() throws {
+    let day = "2026-11-01"
+    let date = ISO8601DateFormatter()
+    let first0130 = try #require(date.date(from: "2026-11-01T08:30:00Z"))
+    let second0115 = try #require(date.date(from: "2026-11-01T09:15:00Z"))
+    var event = Fixture.event("Call", start: "01:15", end: "01:40")
+    event.startDate = day
+    event.endDate = day
+    event.projection = CalendarEventProjection(timezone: "America/Los_Angeles", start: second0115,
+      end: second0115.addingTimeInterval(1500))
+    let lead = LorvexCalmToday.Item(task: Fixture.task("notes", status: .inProgress))
+    let first = TodayWorkCue.resolve(lead: lead, blocked: [], events: [event], day: day,
+      nowMinutes: 90, now: first0130)
+    #expect(first?.upcoming?.minutesAway == 45)
+    #expect(TodayWorkCue.resolve(lead: lead, blocked: [], events: [event], day: day,
+      nowMinutes: 75, now: second0115) == nil)
+  }
+}

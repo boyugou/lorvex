@@ -27,13 +27,23 @@ struct TodayColumn: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       header
+      if let item = content.featured, let cue = content.workCue {
+        TodayTaskRow(
+          task: item.task, store: store, isBlocked: store.isBlocked(item.task),
+          timeLabel: item.time.map { TodayCalmCopy.timeRange(start: $0.lowerBound, end: $0.upperBound) },
+          timeIsRunning: item.isRunning, chips: Self.chips(for: item), workCue: cue)
+        .padding(LorvexDesign.Spacing.s)
+        .background(LorvexDesign.Palette.insetFill, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
+        .padding(.top, LorvexDesign.Spacing.m)
+        .id(item.id)
+      }
       if let overbooked = page.overbooked {
         overbookedWell(overbooked)
           .padding(.top, LorvexDesign.Spacing.l)
       }
       if showsSchedule {
         TodayScheduleSection(
-          store: store, rows: content.schedule, nowMinutes: nowMinutes,
+          store: store, rows: content.schedule, nowMinutes: nowMinutes, workCue: content.workCue,
           items: Dictionary(page.items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }))
           .padding(.top, LorvexDesign.Spacing.l)
       }

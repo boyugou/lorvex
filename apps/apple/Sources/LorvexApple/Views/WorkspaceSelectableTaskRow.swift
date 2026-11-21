@@ -25,6 +25,7 @@ struct WorkspaceSelectableTaskRow: View {
   /// list, where starting a task and pushing it to another day are the
   /// dominant inline actions.
   var showsTodayActions = false
+  var showsRowStart = true
   /// See ``LorvexTaskRow/timeLabel``.
   var timeLabel: String? = nil
   /// See ``LorvexTaskRow/timeIsRunning``.
@@ -93,7 +94,7 @@ struct WorkspaceSelectableTaskRow: View {
           if showsTodayActions, task.status.isActionable {
             // A task held up by an unfinished one shows no Start: its
             // blocked badge already says why.
-            if !store.startIsHeldUp(for: task) {
+            if showsRowStart, !store.startIsHeldUp(for: task) {
               WorkspaceRowStartButton(store: store, task: task, isVisible: isHovering)
             }
             WorkspaceRowDeferButton(store: store, task: task, isVisible: isHovering)

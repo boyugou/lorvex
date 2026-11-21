@@ -853,9 +853,8 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayColumn.swift'), 'TodayScheduleSection('),
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayColumn.swift'), 'ForEach(untimedItems)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayScheduleSection.swift'), 'TodayTaskRow('),
-    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreActiveTaskSelectionRouting.swift'), 'return (timed + untimed + done).filter'),
-    # A task whose time is running is a schedule row whose time segment reads
-    # "Until …", not a separate card.
+    # TodaySelectionOrderTests exercises the actual visual and keyboard order for the featured task.
+    # A running task still in the schedule shows its end time.
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayScheduleSection.swift'), 'if isRunning, let end = row.endMinutes { return TodayCalmCopy.untilLabel(end: end) }'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayColumn.swift'), 'LorvexDecisionWell('),
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayColumn.swift'), 'TodayTaskRow('),

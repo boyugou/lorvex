@@ -39,6 +39,14 @@ struct MobileStoreReviewDayPage: View {
     }
     .scrollDismissesKeyboard(.interactively)
     .mobileReviewScrollAnchor()
+    .task(id: store.dailyReviewDraft) {
+      let date = store.selectedReviewDate
+      guard store.reviewDraftDate == date, store.selectedReviewDayIsEditable,
+        !store.dailyReviewDraftMatchesLoaded else { return }
+      try? await Task.sleep(for: .milliseconds(1200))
+      guard !Task.isCancelled, store.selectedReviewDate == date else { return }
+      await store.flushDailyReviewDraftIfNeeded()
+    }
     .onChange(of: store.dailyReviewDraft.mood) { flush() }
     .onChange(of: store.dailyReviewDraft.energy) { flush() }
     .onChange(of: focusedField) { old, _ in if old != nil { flush() } }
@@ -155,7 +163,18 @@ struct MobileStoreReviewDayPage: View {
 
   private var journalEditor: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      LorvexPageLabel(Copy.noteLabel)
+      HStack {
+        LorvexPageLabel(Copy.noteLabel)
+        Spacer()
+        if store.dailyReview?.date == store.selectedReviewDate, store.dailyReviewDraftMatchesLoaded {
+          Label(String(localized: "reviews.daily.saved", defaultValue: "Saved", table: "Localizable",
+            bundle: MobileL10n.bundle), systemImage: "checkmark")
+            .font(LorvexDesign.Typography.tertiaryText)
+            .foregroundStyle(.secondary)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("review.daily.saved")
+        }
+      }
       note(
         Copy.notePrompt, label: Copy.noteLabel, text: $store.dailyReviewDraft.summary, field: .summary,
         id: "review.daily.summary")
@@ -207,6 +226,7 @@ struct MobileStoreReviewDayPage: View {
       ratingMenu(Copy.energyLabel, symbol: "bolt", value: $store.dailyReviewDraft.energy,
         dotLabel: Copy.energyDot, word: Copy.energyWord, identifier: "review.daily.energy")
     }
+    .fixedSize(horizontal: false, vertical: true)
   }
 
   private func ratingMenu(
@@ -245,17 +265,19 @@ struct MobileStoreReviewDayPage: View {
         Image(systemName: symbol).foregroundStyle(LorvexDesign.Palette.Destination.review)
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           Text(label).font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
-          Text(selected.map(word) ?? add)
-            .font(LorvexDesign.Typography.primaryEmphasis)
-            .foregroundStyle(selected == nil ? Color.accentColor : .primary)
+          HStack(spacing: LorvexDesign.Spacing.xs) {
+            Text(selected.map(word) ?? add)
+              .font(LorvexDesign.Typography.primaryEmphasis)
+              .foregroundStyle(selected == nil ? Color.accentColor : .primary)
+            Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
+          }
         }
         .fixedSize(horizontal: false, vertical: true)
-        Spacer(minLength: 0)
-        Image(systemName: "chevron.down").font(.caption2).foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
       }
       .padding(.horizontal, LorvexDesign.Spacing.m)
       .padding(.vertical, LorvexDesign.Spacing.s)
-      .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+      .frame(maxWidth: .infinity, minHeight: 44, maxHeight: .infinity, alignment: .leading)
       .background(LorvexDesign.Palette.insetFill, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
       .contentShape(Rectangle())
     }

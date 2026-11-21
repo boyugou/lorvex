@@ -3728,7 +3728,8 @@ The **Review** workspace opens on today's review, one page per day:
 - A **Note** field. The rarer **Wins**, **Blockers**, and **Learnings** fields
   fold behind one line under it.
 
-Everything saves as you change it; there is no Save button. On macOS, step to
+On iPhone and iPad, pause while writing to see **Saved** beside **Note**.
+The keyboard can stay open while the entry saves. On macOS, step to
 an earlier day with the arrows or the date chip in the toolbar. On iPhone and
 iPad, the **Review** tab shows the same page; open an earlier day from the
 week page's day list. A past entry opens with all its written sections and

@@ -14,6 +14,20 @@ final class ReviewRatingTests: XCTestCase {
     XCTAssertGreaterThanOrEqual(mood.frame.height, 44)
     XCTAssertGreaterThanOrEqual(energy.frame.height, 44)
     XCTAssertEqual(mood.frame.minY, energy.frame.minY, accuracy: 1)
+    XCTAssertEqual(mood.frame.height, energy.frame.height, accuracy: 1)
+
+    // The note should reach storage while the keyboard is still up.
+    let note = app.textFields["review.daily.summary"]
+    note.tap()
+    note.typeText("Leave room for a walk. ")
+    let editedNote = try XCTUnwrap(note.value as? String)
+    XCTAssertTrue(editedNote.contains("Leave room for a walk."))
+    let saved = app.descendants(matching: .any).matching(identifier: "review.daily.saved").firstMatch
+    XCTAssertTrue(saved.waitForExistence(timeout: 8))
+    XCTAssertTrue(app.keyboards.firstMatch.exists)
+    launchReview(app)
+    XCTAssertTrue(note.waitForExistence(timeout: 8))
+    XCTAssertEqual(note.value as? String, editedNote.trimmingCharacters(in: .whitespacesAndNewlines))
 
     choose("Good", in: mood, app: app)
     choose("Low", in: energy, app: app)

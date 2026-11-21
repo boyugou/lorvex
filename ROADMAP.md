@@ -48,13 +48,17 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      existing plan can choose iCloud sync directly. Skipping opens the
      workspace, with the same task field on an empty mobile Today.
      [TestFlight build 152](docs/releases/1.0.0-152.md).
-  8. Let people keep the exact title during quick capture. In a build 154
-     simulator walkthrough, entering “Watch The Day After Tomorrow” saved
-     “Watch The Day After” and planned it for tomorrow. The preview reports
-     the interpretation, but it offers no way to reject it at capture time.
-     Give the preview a per-entry choice to keep the original line, honoring
-     the destination the person chose. Check Mac quick-add and mobile capture,
-     mixed-language titles, and a second entry that really does name a date.
+  8. Quick capture lets people keep a title containing a date or another
+     recognized detail. An iPhone walkthrough saved the movie name “Watch The
+     Day After Tomorrow” and scheduled a second task for tomorrow. Mac quick
+     capture respects the list or Today where the task was entered.
+     [TestFlight and Mac download, build 155](docs/releases/1.0.0-155.md).
+  9. Make it clear where a mobile capture landed. In a simulator walkthrough,
+     adding an undated task from Today returned to Today. The task landed in
+     the inbox, while the screen offered no visible confirmation or way to
+     open it. Show the saved destination and let the person open the new task
+     from the confirmation. Verify single entries, a pasted batch, large text
+     and VoiceOver, and keep the current tab when the confirmation is ignored.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

@@ -53,6 +53,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),
   [Duo design guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo),
   and [macOS SDK release notes](https://developer.apple.com/documentation/macos-release-notes).
+  Start with Today. In the build 152 iPad mini portrait walkthrough at the
+  largest accessibility text size, the fixed 380-point schedule occupied
+  about half the screen. The date wrapped to three lines, the briefing
+  truncated, and the first-screen task list fell below the fold. Let the
+  available width and text size decide when the schedule needs its own
+  presentation. Check that opening a task or the schedule survives a resize.
   Validate outer and inner displays, folding, rotation, Split View, side-mounted
   navigation and toolbars, and reserved regions. Keep the current navigation,
   selection, scroll position, and unsaved draft through layout changes. Cover

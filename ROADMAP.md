@@ -40,12 +40,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      Scheduled finds a Weekly Review follow-up even when it has only a
      planned day. Collection counts and searches cover every page.
      [TestFlight and Mac download, build 150](docs/releases/1.0.0-150.md).
-  6. Make past daily entries readable on iPhone and iPad. In the build 150
-     iPhone walkthrough, a blocker was visible in Weekly, but opening that
-     date showed a disabled empty note field and ten rating choices. The
-     blocker sat behind the prompts disclosure. Show what was written and
-     the recorded ratings on arrival. Check blocker-only, ratings-only and
-     empty days, plus returning to today's editable entry.
+  6. Past daily entries open with their saved writing and ratings on iPhone,
+     iPad and Mac. From the weekly journal you can read yesterday's blocker
+     and return to today's editor. Verified with a saved note across relaunch.
+     [TestFlight build 151](docs/releases/1.0.0-151.md).
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

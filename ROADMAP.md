@@ -106,11 +106,15 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       can keep a suggested task, choose an alternative and undo the move.
       Mobile cold launch now reads the saved workday after storage is ready.
       [Build 166](docs/releases/1.0.0-166.md).
-  20. Make it easier to get back to work from mobile Today. Mac has a
-      contextual Start or Continue action. On the phone the appointment and
-      task list are visible, but starting a task takes a swipe or menu.
-      Evaluate what someone sees before, during, and immediately after a
-      meeting, including when a task is already in progress.
+  20. Mobile Today can start work in its scheduled time and resume a started
+      task after a meeting. The time until the next meeting opens the event.
+      The current day stays available when browsing another calendar week.
+      [Build 167](docs/releases/1.0.0-167.md).
+  21. Follow Continue into the mobile task detail. On the tested iPhone the
+      next checklist item follows When, duration, due date, list, priority,
+      tags and Add Detail. Bring the work itself into reach on a started task
+      and check the path through completing a step, editing a property and
+      resuming the following step at large text sizes.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

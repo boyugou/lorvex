@@ -15,6 +15,7 @@ struct MobileStoreReviewDayPage: View {
   @State private var dayHabits: (date: String, habits: [LorvexHabit])?
   /// Tomorrow's agenda, loaded only while the review is of today.
   @State private var tomorrow: LorvexAgendaDay?
+  @State private var planningDay: String?
 
   private enum Field { case summary, wins, blockers, learnings }
 
@@ -59,10 +60,20 @@ struct MobileStoreReviewDayPage: View {
     .onChange(of: focusedField) { old, _ in if old != nil { flush() } }
     .onDisappear { flush() }
     .onChange(of: store.selectedReviewDate) {
+      planningDay = nil
       expandedFields = nil
       focusedField = nil
     }
     .task(id: store.dayReviewReadKey) { await loadPageReads() }
+    .sheet(isPresented: Binding(get: { planningDay != nil }, set: { if !$0 { planningDay = nil } })) {
+      if let day = planningDay, let key = tomorrowKey, let evidence = store.dayReviewEvidence, evidence.date == day {
+        MobileReviewTomorrowPlan(store: store, dayKey: key,
+          tasks: evidence.unfinishedTasks.filter { $0.canMoveToTomorrow(key) }) { chosen in
+          planningDay = nil
+          Task { await store.arrangeReviewTasks(chosen, reviewedOn: day, destination: .day(key), tomorrow: key) }
+        }
+      }
+    }
     .accessibilityIdentifier("review.day")
   }
 
@@ -178,7 +189,11 @@ struct MobileStoreReviewDayPage: View {
           await store.completeTask(id)
         },
         deferral: !isReviewingToday ? nil : tomorrowKey.map { key in
-          .init(tomorrowKey: key, sectionLabel: Copy.moveSection, rowLabel: Copy.moveRow) { tasks, destination in
+          .init(tomorrowKey: key, sectionLabel: { _ in MobileReviewTomorrowPlan.title + "…" }, rowLabel: Copy.moveRow,
+            preview: {
+              focusedField = nil
+              planningDay = summary.date
+            }) { tasks, destination in
             await store.arrangeReviewTasks(tasks, reviewedOn: summary.date, destination: destination, tomorrow: key)
           }
         }

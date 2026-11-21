@@ -77,11 +77,6 @@ enum MobileReviewCalmCopy {
   }
   static var tomorrowEmpty: String { String(localized: "review.calm.tomorrow.empty", defaultValue: "Nothing planned yet.", table: "Localizable", bundle: MobileL10n.bundle) }
   /// The still-open section's action over `count` tasks to move.
-  static func moveSection(_ count: Int) -> String {
-    count == 1
-      ? moveRow
-      : String(localized: "review.calm.move_all", defaultValue: "Move All to Tomorrow", table: "Localizable", bundle: MobileL10n.bundle)
-  }
   static var moveRow: String { String(localized: "review.calm.move_one", defaultValue: "Move to Tomorrow", table: "Localizable", bundle: MobileL10n.bundle) }
   /// A still-open task's fact once it is planned for `plannedKey`, a day
   /// after the reviewed one: "Planned for tomorrow", or the day.

@@ -215,24 +215,3 @@ struct ReviewTomorrowPlanSheet: View {
     .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
-
-struct ReviewTomorrowLoad {
-  let meetingMinutes: Int
-  let existingMinutes: Int
-  let selectedMinutes: Int
-  let unknownCount: Int
-  var plannedMinutes: Int { meetingMinutes + existingMinutes + selectedMinutes }
-
-  init(agenda: LorvexAgendaDay, window: Range<Int>, selected: [ReviewTaskSummary]) {
-    let input = LorvexWeekLoad.DayInput(key: agenda.key, events: agenda.events, tasks: agenda.tasks)
-    let load = LorvexWeekLoad.build(days: [input], todayKey: agenda.key,
-      workStart: window.lowerBound, workEnd: window.upperBound).days[0]
-    meetingMinutes = load.meetingMinutes
-    existingMinutes = load.taskMinutes
-    let estimates = selected.compactMap(\.estimatedMinutes)
-    selectedMinutes = estimates.reduce(0, +)
-    unknownCount = selected.count - estimates.count + agenda.tasks.filter {
-      $0.estimatedMinutes == nil && $0.time(on: agenda.key) == nil
-    }.count
-  }
-}

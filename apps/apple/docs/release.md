@@ -449,10 +449,10 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 151 went up on
+- **TestFlight builds expire 90 days after upload.** Build 152 went up on
   2026-11-21 on iOS and macOS. Both are available to internal testers through
   2027-02-19. Upload a fresh build by 2027-02-05 while testers use TestFlight.
-  See the [build 151 TestFlight record](../../../docs/releases/1.0.0-151.md)
+  See the [build 152 TestFlight record](../../../docs/releases/1.0.0-152.md)
   and the [public Mac download for build 150](../../../docs/releases/1.0.0-150.md).
 - **Signing material.** The Apple Distribution and Mac installer certificates,
   and every iOS and Mac App Store profile that embeds them, expire on

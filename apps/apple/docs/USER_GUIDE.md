@@ -2,14 +2,14 @@
 
 ## Welcome to Lorvex
 
-Lorvex is an AI-first task manager built for the Apple platform. Rather than
-replacing your thinking, it serves as a structured memory that AI clients can
-read and write through the Model Context Protocol (MCP). Your tasks,
-calendar events, habits, and reviews live in Lorvex-managed local
-storage; an external AI client such as Claude connects to the Lorvex MCP
-host and acts as your intelligent co-pilot — capturing, organizing, and
-reviewing work on your behalf. The native SwiftUI app surfaces the same data
-for glancing, confirming, and acting when you want to stay hands-on.
+Plan your day on Mac, iPhone or iPad. Add a task to Today, open Calendar to
+see where it fits around your meetings, and use Review at the end of the day
+to decide what to carry forward. Lorvex keeps your tasks, events, habits and
+journal on your device. You can sync them through your own iCloud account.
+
+If you work with an AI assistant, connect it to Lorvex on your Mac through
+the Model Context Protocol (MCP). It can read the same plan, capture tasks
+and schedule work. Open Today to see what it scheduled and adjust it there.
 
 ---
 

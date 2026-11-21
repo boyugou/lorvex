@@ -44,15 +44,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      iPad and Mac. From the weekly journal you can read yesterday's blocker
      and return to today's editor. Verified with a saved note across relaunch.
      [TestFlight build 151](docs/releases/1.0.0-151.md).
-  7. Let someone opening Lorvex for the first time put one real task on
-     Today. In the build 151 fresh-install iPhone walkthrough, the first
-     feature on Welcome explains connecting an assistant on a Mac. Continuing
-     leads through sync, notifications and a closing screen. Skipping reaches
-     an empty Today that suggests adding a task, with the add button across
-     the screen in the tab bar. Try a direct first-task action here and on
-     Welcome. Keep an explicit path for someone syncing an existing plan.
-     Verify that one saved task appears on Today after relaunch, and that
-     choosing sync brings the existing plan back without creating sample work.
+  7. A first task entered on Welcome appears on Today. People with an
+     existing plan can choose iCloud sync directly. Skipping opens the
+     workspace, with the same task field on an empty mobile Today.
+     [TestFlight build 152](docs/releases/1.0.0-152.md).
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

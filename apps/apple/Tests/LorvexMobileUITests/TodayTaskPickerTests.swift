@@ -12,9 +12,16 @@ final class TodayTaskPickerTests: XCTestCase {
     let field = app.descendants(matching: .any).matching(identifier: "mobileCapture.title").firstMatch
     field.tap()
     field.typeText(title)
+    XCTAssertEqual(field.value as? String, String(title))
     app.buttons["mobileCapture.confirm"].tap()
+    let captureSaved = NSPredicate(format: "exists == false OR value != %@", String(title))
+    XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: captureSaved, object: field)], timeout: 10), .completed)
     let choose = app.buttons["today.chooseTask"]
     XCTAssertTrue(choose.waitForExistence(timeout: 10))
+    // Start from a saved Inbox item, including on a first launch when the
+    // capture sheet can still be finishing its dismissal.
+    app.terminate()
+    app.launch()
     app.buttons["Tasks"].firstMatch.tap()
     let inbox = app.descendants(matching: .any).matching(identifier: "mobileTasks.list.inbox").firstMatch
     if inbox.waitForExistence(timeout: 3) { inbox.tap() }

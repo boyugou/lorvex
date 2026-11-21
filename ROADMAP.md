@@ -53,12 +53,20 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
      Day After Tomorrow” and scheduled a second task for tomorrow. Mac quick
      capture respects the list or Today where the task was entered.
      [TestFlight and Mac download, build 155](docs/releases/1.0.0-155.md).
-  9. Make it clear where a mobile capture landed. In a simulator walkthrough,
-     adding an undated task from Today returned to Today. The task landed in
-     the inbox, while the screen offered no visible confirmation or way to
-     open it. Show the saved destination and let the person open the new task
-     from the confirmation. Verify single entries, a pasted batch, large text
-     and VoiceOver, and keep the current tab when the confirmation is ignored.
+  9. A mobile quick capture now confirms its title and destination. Open a
+     single task or the just-saved batch on the current tab. An iOS 27
+     VoiceOver walkthrough read the saved title and list, reached Open in the
+     next step and opened the task after the usual timeout. Verified on iPhone
+     and iPad mini. [TestFlight build 156](docs/releases/1.0.0-156.md).
+  10. Give an undated task a clear path from Inbox to a planned day. In an
+      iPhone walkthrough, the detail screen showed Start, Defer, Someday,
+      Cancel, Hand to Assistant and Delete Permanently. Choosing a work date
+      required Add Detail → When before the date picker appeared. The Mac
+      inspector also places an unset work date among optional additions.
+      Bring the existing work-date picker into the main detail, give
+      cancellation and deletion a secondary location, and test both platforms.
+      Verify that rescheduling preserves the deadline and that going back
+      returns to the task's original list.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

@@ -509,7 +509,26 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         APPLICATION_EXTENSION_API_ONLY: YES
 
+  LorvexMobileUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests/LorvexMobileUITests]
+    dependencies:
+      - target: LorvexMobileApp
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.qa.mobile-ui
+        TEST_TARGET_NAME: LorvexMobileApp
+        SUPPORTED_PLATFORMS: iphonesimulator
 schemes:
+  LorvexMobileUITests:
+    build:
+      targets:
+        LorvexMobileApp: all
+        LorvexMobileUITests: [test]
+    test:
+      targets: [LorvexMobileUITests]
   LorvexMobileApp:
     build:
       targets:

@@ -8,6 +8,15 @@ directory outside the repository.
 
 ## Builds and tests
 
+- The **LorvexMobileUITests** scheme in the generated Xcode project checks the
+  spoken result of a quick capture. In Xcode 27 or later, choose a fresh iOS 27
+  iPhone simulator and run the scheme's tests (⌘U). The test creates an undated
+  task, enables VoiceOver, checks the title and list after the ordinary
+  confirmation timeout, then follows the next spoken control into task detail.
+  It restores the simulator's VoiceOver setting afterward. Run
+  `script/ios_sim_build.sh` to generate the project under
+  `dist/xcode-LorvexMobileApp`.
+
 - `script/verify_swift.sh` is the one command for the whole Swift tree: it runs
   `swift build -j 4 --build-tests`, `script/compile_xcstrings.sh`, and
   `swift test --skip-build -j 4`, passes its arguments to `swift test`, and

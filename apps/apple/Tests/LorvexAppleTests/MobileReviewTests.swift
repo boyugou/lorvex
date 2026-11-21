@@ -472,3 +472,56 @@ func mobileReviewSchedulesFollowUp() async throws {
   #expect(ahead?.first { $0.key == chosenDay }?.tasks.map(\.id) == [task.id])
   #expect(store.resolveTask(task.id)?.notes == "Waiting for the floor plan")
 }
+
+@MainActor
+@Test("A recent empty day accepts a journal and ratings without changing today's draft or yesterday's planned task")
+func mobileReviewEditsYesterdayInItsOwnRecord() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let yesterday = mobileReviewYmdAddingDays(mobileReviewToday, -1)
+  let planned = try #require(PlannedDayBridge.storageDate(forLogicalDay: yesterday))
+  let task = try await core.createTask(.init(title: "Call the gallery", plannedDate: planned))
+  await store.loadDailyReviewDraft()
+  store.dailyReviewDraft.summary = "Bring the sketchbook."
+  await store.selectReviewDay(yesterday, forEditing: true)
+  #expect(store.selectedReviewDayIsEditable)
+  #expect(store.dailyReview == nil)
+  let rows = try #require(store.dayReviewEvidence?.unfinishedTasks)
+  #expect(rows.map(\.id) == [task.id])
+  await store.arrangeReviewTasks(rows, reviewedOn: yesterday, destination: .day(mobileReviewToday), tomorrow: mobileReviewToday)
+  #expect(store.undoOffer == nil)
+  let unchanged = try await core.loadDaySummary(date: yesterday)
+  #expect(unchanged.unfinishedTasks.map(\.id) == [task.id])
+  store.dailyReviewDraft.blockers = "Need the floor plan."
+  store.dailyReviewDraft.energy = 3
+  await store.returnReviewToToday()
+  #expect(store.dailyReviewDraft.summary == "Bring the sketchbook.")
+  #expect(store.dailyReviewDraft.energy == nil)
+  let entry = try #require(store.weekReviewDigest.first { $0.date == yesterday })
+  #expect(entry.blockers == "Need the floor plan.")
+  #expect(entry.energyLevel == 3)
+  await store.selectReviewDay(yesterday)
+  #expect(!store.selectedReviewDayIsEditable)
+  await store.selectReviewDay(yesterday, forEditing: true)
+  #expect(store.dailyReviewDraft.blockers == entry.blockers)
+}
+
+@MainActor
+@Test("The journal date menu includes the seventh previous date and excludes future dates")
+func mobileReviewEditingWindowIncludesTheOldestDay() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let oldest = mobileReviewYmdAddingDays(mobileReviewToday, -7)
+  #expect(store.recentReviewDates.first == mobileReviewToday)
+  #expect(store.recentReviewDates.count == 8)
+  #expect(store.recentReviewDates.last == oldest)
+  await store.selectReviewDay(oldest, forEditing: true)
+  #expect(store.selectedReviewDayIsEditable)
+  store.dailyReviewDraft.summary = "Last Saturday."
+  for offset in [-8, 1] {
+    await store.selectReviewDay(mobileReviewYmdAddingDays(mobileReviewToday, offset), forEditing: true)
+    #expect(store.selectedReviewDate == oldest)
+  }
+  await store.returnReviewToToday()
+  #expect(try await core.loadDailyReview(date: oldest)?.summary == "Last Saturday.")
+}

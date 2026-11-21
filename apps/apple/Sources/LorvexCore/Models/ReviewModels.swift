@@ -1,4 +1,5 @@
 import Foundation
+import LorvexWorkflow
 
 public struct WeeklyReviewSnapshot: Equatable, Sendable {
   public var windowTitle: String
@@ -69,6 +70,21 @@ extension WeeklyReviewSnapshot {
 }
 
 public struct DailyReviewEntry: Equatable, Sendable {
+  public static func canEdit(on date: String, today: String) -> Bool {
+    guard date <= today,
+      case .success = DailyReviewDate.resolveDailyReviewWriteDate(requestedDate: date, today: today)
+    else { return false }
+    return true
+  }
+
+  /// Recent journal dates offered by the native editors, newest first.
+  /// The storage policy also allows tomorrow as clock drift compensation.
+  public static func recentDates(through today: String) -> [String] {
+    (0...DailyReviewDate.maxStalenessDays).compactMap {
+      LorvexDateFormatters.ymdUTCAddingDays(today, days: -$0)
+    }
+  }
+
   public var date: String
   public var summary: String
   public var mood: Int?

@@ -24,6 +24,7 @@ public final class MobileStore {
   var unscopedTaskMutationCount = 0
   public internal(set) var dailyReview: DailyReviewEntry?
   public internal(set) var selectedReviewDate: String
+  var editingPastReviewDate: String?
   public internal(set) var dayReviewEvidence: DayReviewSummary?
   public internal(set) var weekReviewDigest: [DailyReviewEntry] = []
   public internal(set) var weeklyReviewAnchor: String?

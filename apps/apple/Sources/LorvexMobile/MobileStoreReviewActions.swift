@@ -5,7 +5,7 @@ import SwiftUI
 extension MobileStore {
   func arrangeReviewTasks(_ tasks: [ReviewTaskSummary], reviewedOn day: String,
     destination: ReviewTaskDestination, tomorrow: String) async {
-    guard selectedReviewDayIsEditable, selectedReviewDate == day else { return }
+    guard day == logicalTodayString, selectedReviewDate == day else { return }
     _ = await mutateTaskReturningToday(affectedIDs: tasks.map(\.id)) {
       let changes = try await core.arrangeReviewTasks(tasks, reviewedOn: day, destination: destination)
       if !changes.isEmpty {
@@ -28,7 +28,10 @@ extension MobileStore {
 
   public var selectedReviewDayIsEditable: Bool {
     selectedReviewDate == logicalTodayString
+      || (editingPastReviewDate == selectedReviewDate && DailyReviewEntry.canEdit(on: selectedReviewDate, today: logicalTodayString))
   }
+
+  var recentReviewDates: [String] { DailyReviewEntry.recentDates(through: logicalTodayString) }
 
   /// Loads the selected day's review and evidence for the page. A day the page
   /// has nothing for yet shows the loading state until its read commits, and the
@@ -97,13 +100,15 @@ extension MobileStore {
     }
   }
 
-  public func selectReviewDay(_ date: String) async {
+  public func selectReviewDay(_ date: String, forEditing: Bool = false) async {
+    if forEditing, !DailyReviewEntry.canEdit(on: date, today: logicalTodayString) { return }
     // A body-only edit (mood / energy / wins / blockers / learnings with no
     // summary) is a valid, savable review, so it never holds the user on the
     // current day. A write that fails does: the review stays on its day with the
     // text intact and the error shown, instead of the next day's load replacing
     // text that was never saved.
     guard await finishDailyReviewEdits() else { return }
+    editingPastReviewDate = forEditing && date != logicalTodayString ? date : nil
     selectedReviewDate = date
     await loadDailyReviewDraft()
   }
@@ -143,7 +148,7 @@ extension MobileStore {
   @discardableResult
   public func saveDailyReviewDraft() async -> Bool {
     guard selectedReviewDayIsEditable, dailyReviewDraft.canSave, !isSavingReview,
-      !isLoadingDailyReviewDraft
+      reviewDraftDate == selectedReviewDate, !isLoadingDailyReviewDraft
     else {
       return false
     }
@@ -194,7 +199,7 @@ extension MobileStore {
       if selectedReviewDate == savingDate {
         dailyReview = saved
         if dailyReviewDraft == submitted { refreshDailyReviewDraft() }
-        dayReviewEvidence = try await core.loadDaySummary(date: savingDate)
+        adoptDayReviewEvidence(try await core.loadDaySummary(date: savingDate), readFor: savingDate)
       }
       // Week-scoped state is day-independent and always adopts the latest values.
       snapshot.weeklyReview = try await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
@@ -264,7 +269,7 @@ extension MobileStore {
       guard await pending.value else { return false }
     }
     guard selectedReviewDate == date, !dailyReviewDraftMatchesLoaded, selectedReviewDayIsEditable,
-      !isLoadingDailyReviewDraft
+      reviewDraftDate == date, !isLoadingDailyReviewDraft
     else { return true }
     return await commitDailyReviewDraft(playsFeedback: false)
   }
@@ -275,7 +280,7 @@ extension MobileStore {
     let day = selectedReviewDate
     repeat {
       guard await flushDailyReviewDraftIfNeeded() else { return false }
-    } while selectedReviewDate == day && selectedReviewDayIsEditable && !isLoadingDailyReviewDraft
+    } while selectedReviewDate == day && reviewDraftDate == day && selectedReviewDayIsEditable && !isLoadingDailyReviewDraft
       && !dailyReviewDraftMatchesLoaded
     return true
   }

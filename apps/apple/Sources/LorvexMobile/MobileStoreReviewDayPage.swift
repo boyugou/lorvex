@@ -6,7 +6,11 @@ struct MobileStoreReviewDayPage: View {
   @Bindable var store: MobileStore
   @FocusState private var focusedField: Field?
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-  @State private var showsMoreFields = false
+  @State private var expandedFields: Bool?
+  private var showsMoreFields: Bool {
+    expandedFields ?? (!isReviewingToday && [store.dailyReviewDraft.wins, store.dailyReviewDraft.blockers,
+      store.dailyReviewDraft.learnings].contains { !$0.isEmpty })
+  }
   /// The active habits as they stood on the reviewed day.
   @State private var dayHabits: (date: String, habits: [LorvexHabit])?
   /// Tomorrow's agenda, loaded only while the review is of today.
@@ -27,6 +31,9 @@ struct MobileStoreReviewDayPage: View {
         if store.isLoadingDailyReviewDraft {
           MobileSkeletonRows(count: 4)
             .accessibilityIdentifier("mobileReview.loadingDaily")
+        } else if store.reviewDraftDate != store.selectedReviewDate {
+          Button(String(localized: "mobileCommand.refresh", defaultValue: "Refresh", table: "Localizable",
+            bundle: MobileL10n.bundle)) { Task { await store.loadDailyReviewDraft() } }
         } else {
           dailyReviewFields
         }
@@ -51,7 +58,10 @@ struct MobileStoreReviewDayPage: View {
     .onChange(of: store.dailyReviewDraft.energy) { flush() }
     .onChange(of: focusedField) { old, _ in if old != nil { flush() } }
     .onDisappear { flush() }
-    .onChange(of: store.selectedReviewDate) { showsMoreFields = false }
+    .onChange(of: store.selectedReviewDate) {
+      expandedFields = nil
+      focusedField = nil
+    }
     .task(id: store.dayReviewReadKey) { await loadPageReads() }
     .accessibilityIdentifier("review.day")
   }
@@ -78,16 +88,56 @@ struct MobileStoreReviewDayPage: View {
 
   private var header: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-      Text(MobileTodayCalmCopy.dateLine(logicalDay: store.selectedReviewDate), serifVoice: .pageSentence)
-        .accessibilityAddTraits(.isHeader)
-        .accessibilityIdentifier("review.day.date")
-      if !store.selectedReviewDayIsEditable {
-        Button(Copy.returnToToday) { Task { await store.returnReviewToToday() } }
-          .font(LorvexDesign.Typography.secondaryText.weight(.medium))
-          .padding(.top, LorvexDesign.Spacing.xs)
-          .accessibilityIdentifier("review.day.returnToday")
+      Menu {
+        ForEach(store.recentReviewDates, id: \.self) { date in
+          Button {
+            Task { await store.selectReviewDay(date, forEditing: true) }
+          } label: {
+            let title = dayChoice(date)
+            if date == store.selectedReviewDate {
+              Label(title, systemImage: "checkmark")
+            } else {
+              Text(verbatim: title)
+            }
+          }
+          .accessibilityIdentifier("review.day.choice.\(date)")
+        }
+      } label: {
+        HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+          Text(MobileTodayCalmCopy.dateLine(logicalDay: store.selectedReviewDate), serifVoice: .pageSentence)
+          Image(systemName: "chevron.down").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
+        }
+        .frame(minHeight: 44, alignment: .leading)
+      }
+      .buttonStyle(.plain)
+      .menuOrder(.fixed)
+      .accessibilityAddTraits(.isHeader)
+      .accessibilityIdentifier("review.day.date")
+      if !isReviewingToday {
+        HStack(spacing: LorvexDesign.Spacing.l) {
+          if !store.selectedReviewDayIsEditable, store.recentReviewDates.contains(store.selectedReviewDate) {
+            Button(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: MobileL10n.bundle)) {
+              let date = store.selectedReviewDate
+              Task { await store.selectReviewDay(date, forEditing: true) }
+            }
+            .accessibilityIdentifier("review.day.edit")
+          }
+          Button(Copy.returnToToday) { Task { await store.returnReviewToToday() } }
+            .accessibilityIdentifier("review.day.returnToday")
+        }
+        .font(LorvexDesign.Typography.secondaryText.weight(.medium))
+        .controlSize(.large)
       }
     }
+  }
+
+  private func dayChoice(_ date: String) -> String {
+    let today = store.logicalTodayString
+    if date == today { return MobileTab.today.title }
+    if date == LorvexDateFormatters.ymdUTCAddingDays(today, days: -1) {
+      return LorvexDateFormatters.relativeDays(-1).localizedCapitalized
+    }
+    return Copy.dayLabel(date)
   }
 
   @ViewBuilder
@@ -124,10 +174,10 @@ struct MobileStoreReviewDayPage: View {
           return [deadline, Copy.plannedFact(planned, tomorrowKey: tomorrowKey)].compactMap { $0 }
             .joined(separator: " · ")
         },
-        completion: !editable ? nil : .init(label: MobileTaskActionCopy.completionToggle(isDone: false)) { id in
+        completion: !isReviewingToday ? nil : .init(label: MobileTaskActionCopy.completionToggle(isDone: false)) { id in
           await store.completeTask(id)
         },
-        deferral: !editable ? nil : tomorrowKey.map { key in
+        deferral: !isReviewingToday ? nil : tomorrowKey.map { key in
           .init(tomorrowKey: key, sectionLabel: Copy.moveSection, rowLabel: Copy.moveRow) { tasks, destination in
             await store.arrangeReviewTasks(tasks, reviewedOn: summary.date, destination: destination, tomorrow: key)
           }
@@ -140,7 +190,7 @@ struct MobileStoreReviewDayPage: View {
     if let dayHabits, dayHabits.date == store.selectedReviewDate, !dayHabits.habits.isEmpty {
       LorvexReviewHabitList(
         label: Copy.habitsLabel, habits: dayHabits.habits, checkInLabel: Copy.checkIn,
-        identifier: "review.day.habits", isEnabled: editable
+        identifier: "review.day.habits", isEnabled: isReviewingToday
       ) { habit in
         let date = store.selectedReviewDate
         await store.checkInHabit(habit, on: date)
@@ -196,7 +246,7 @@ struct MobileStoreReviewDayPage: View {
         }
       }
       Button {
-        lorvexAnimated(.snappy) { showsMoreFields.toggle() }
+        lorvexAnimated(.snappy) { expandedFields = !showsMoreFields }
       } label: {
         // The words are one line tall. The label's padding lifts the tap
         // target to about 44pt, and the negative padding outside the button

@@ -3738,14 +3738,16 @@ The **Review** workspace opens on today's review, one page per day:
 - A **Note** field. The rarer **Wins**, **Blockers**, and **Learnings** fields
   fold behind one line under it.
 
-On iPhone and iPad, pause while writing to see **Saved** beside **Note**.
-The keyboard can stay open while the entry saves. On macOS, step to
-an earlier day with the arrows or the date chip in the toolbar. On iPhone and
-iPad, the **Review** tab shows the same page; open an earlier day from the
-week page's day list. A past entry opens with all its written sections and
-the ratings you recorded. You can select the text to copy it. Use **Return
-to today** to write or rate today. Each day has
-one review record, shared by every device and by MCP tools.
+On iPhone and iPad, tap the date at the top of **Review → Day** to choose
+**Yesterday** or another of the previous seven dates. You can start an entry
+there even if that day was blank. Pause while writing to see **Saved** beside
+**Note**. **Return to Today** brings back today’s entry. Tasks and habits in an
+earlier mobile review show the day’s context while you write.
+
+Select a date in the weekly journal to read its writing and ratings. On mobile,
+choose **Edit** to amend a recent entry. On Mac, use the arrows or date chip
+in the toolbar to open another day. Each date has one review record shared by
+devices and MCP tools.
 
 ### Weekly Review
 

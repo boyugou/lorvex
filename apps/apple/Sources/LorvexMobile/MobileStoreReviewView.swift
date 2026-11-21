@@ -96,7 +96,7 @@ public struct MobileStoreReviewView: View {
         .frame(maxWidth: 280)
         .accessibilityIdentifier("review.mode.picker")
       }
-      if mode == .daily, let review = store.dailyReview {
+      if mode == .daily, let review = store.dailyReview, review.date == store.selectedReviewDate {
         ToolbarItem(placement: .automatic) {
           ShareLink(item: MobileShareText.dailyReview(review)) {
             Label(

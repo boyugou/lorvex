@@ -11,20 +11,8 @@ extension AppStore {
     selectedReviewDate
   }
 
-  /// Days back from today the editor may anchor — the interactive write
-  /// window enforced by the core (`DailyReviewDate.maxStalenessDays`).
-  static let dailyReviewEditableWindowDays = 7
-
-  /// True when `date` may be loaded into the editor for changes: today, or a
-  /// past day still inside the write window.
   func dailyReviewIsEditable(date: String) -> Bool {
-    let today = logicalTodayDateString
-    guard date <= today else { return false }
-    guard
-      let floor = LorvexDateFormatters.ymdUTCAddingDays(
-        today, days: -Self.dailyReviewEditableWindowDays)
-    else { return false }
-    return date >= floor
+    DailyReviewEntry.canEdit(on: date, today: logicalTodayDateString)
   }
 
   /// Anchor the daily editor to a past day inside the write window and load

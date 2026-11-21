@@ -9,11 +9,10 @@ import SwiftUI
 /// beside it), swiped by day, under a week strip that jumps to any day of the
 /// week. A phone on its side has the width of three days and the height of a
 /// few hours, so Day mode shows three days there, each named by its column
-/// header, without the week strip. Week mode shows the seven days of a week,
-/// swiped by week; tapping a day's header opens that day in Day mode. Above
-/// both sits one header row: the month (or the week's range) and a Today
-/// button that keeps its slot, hidden while today is in view, so nothing
-/// beside it moves when it appears.
+/// header, without the week strip. Week mode has a seven-day grid for
+/// comparing times and an agenda for reading appointments. Both share a
+/// week offset, focused weekday, event sheet and date range. The agenda is
+/// the default at accessibility text sizes.
 ///
 /// Reuses the hoisted pure `CalendarGridModel` lane packer for the visible
 /// day(s) and the mobile store's existing `loadCalendarTimeline` fetch path
@@ -26,6 +25,14 @@ public struct MobileCalendarDayView: View {
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   /// Compact on a phone on its side.
   @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+  @Environment(\.dynamicTypeSize) private var typeSize
+  @AppStorage("calendar.week.prefersAgenda") private var standardAgenda = false
+  @AppStorage("calendar.week.accessibilityPrefersAgenda") private var accessibilityAgenda = true
+
+  private var showsWeekAgenda: Bool {
+    typeSize.isAccessibilitySize ? accessibilityAgenda : standardAgenda
+  }
 
   /// When true, the grid shows the seven days of a week and pages by week.
   var weekMode: Bool = false
@@ -121,7 +128,20 @@ public struct MobileCalendarDayView: View {
   public var body: some View {
     Group {
       if weekMode {
-        dayGrid(dayCount: 7)
+        VStack(spacing: 0) {
+          MobileCalendarWeekHeader(
+            title: headerTitle, showsAgenda: showsWeekAgenda, offset: $dayOffset,
+            pageRange: pageRange, goToToday: { jump(to: today) },
+            toggleLayout: {
+              if typeSize.isAccessibilitySize { accessibilityAgenda.toggle() }
+              else { standardAgenda.toggle() }
+            })
+          if showsWeekAgenda {
+            weekAgenda
+          } else {
+            pager(dayCount: 7).dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+          }
+        }
       } else if horizontalSizeClass == .regular || verticalSizeClass == .compact {
         GeometryReader { geo in
           let dayCount = dayCount(for: geo.size.width)

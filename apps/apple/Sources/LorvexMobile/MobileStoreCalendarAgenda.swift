@@ -15,6 +15,7 @@ struct MobileStoreCalendarAgenda: View {
   /// ``MobileCalendarAgendaPanel/pinnedDayKey``).
   var pinnedDayKey: String? = nil
   var placement: MobileCalendarAgendaPanel.Placement = .beside
+  var selectDay: ((Date) -> Void)? = nil
   /// Opens `event` in the host's edit sheet.
   let editEvent: (CalendarTimelineEvent) -> Void
   @State private var blockedTaskIDs: Set<LorvexTask.ID> = []
@@ -25,6 +26,7 @@ struct MobileStoreCalendarAgenda: View {
       todayKey: store.logicalTodayString,
       pinnedDayKey: pinnedDayKey,
       placement: placement,
+      selectDay: selectDay,
       nowMinutes: store.nowMinutesInProductDay,
       calendar: calendar,
       isMutating: store.isMutatingCalendarEvent,

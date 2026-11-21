@@ -3503,6 +3503,13 @@ week preserves imported events already cached in other weeks; repeat rules do
 not create extra meetings outside the observations fetched from Calendar.
 Open or refresh the week you want to inspect to fetch its current events.
 
+On iPhone and iPad, open **Week** and use the list button beside the date range
+to read the week's agenda. At accessibility text sizes the agenda opens first.
+Each appointment shows its name and time, including appointments that overlap.
+Tap a row to open it. Use the arrows to change weeks or the calendar button to
+return to the time grid for the same week. Lorvex remembers your choice
+separately for standard and accessibility text sizes.
+
 **Copy or share an event** as plain text. On the Mac, right-click the event (on
 the calendar, in search results, or on Today's schedule) or open its inspector's
 **More** menu, and choose **Copy as Text** or **Share**. On iPhone and iPad, tap

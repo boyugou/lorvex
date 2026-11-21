@@ -31,6 +31,7 @@ struct MobileCalendarAgendaPanel: View {
   /// a month grid has chosen. Nil lists only today and the days with entries.
   var pinnedDayKey: String? = nil
   var placement: Placement = .beside
+  var selectDay: ((Date) -> Void)? = nil
   /// The current time in minutes since midnight, or `nil` when unknown.
   let nowMinutes: Int?
   let calendar: Calendar
@@ -92,18 +93,22 @@ struct MobileCalendarAgendaPanel: View {
             switch entry {
             case .event(let event):
               eventRow(
-                event, dayKey: day.key,
+                event, day: day,
                 isPast: day.hasPassed(event, todayKey: todayKey, nowMinutes: nowMinutes, now: Date()))
             case .task(let task):
               MobileCalendarAgendaTaskRow(
                 task: task, dayKey: day.key, isMutating: taskIsMutating(task.id),
                 isBlocked: taskIsBlocked(task.id), actions: taskActions(task),
-                open: { openTask(task) })
+                open: {
+                  selectDay?(day.date)
+                  openTask(task)
+                })
             }
           }
         } header: {
           header(for: day)
         }
+        .id(day.key)
       }
 
       if listedDays.isEmpty {
@@ -112,8 +117,10 @@ struct MobileCalendarAgendaPanel: View {
     }
   }
 
-  private func eventRow(_ event: CalendarTimelineEvent, dayKey: String, isPast: Bool) -> some View {
-    Button {
+  private func eventRow(_ event: CalendarTimelineEvent, day: MobileCalendarAgendaDay, isPast: Bool) -> some View {
+    let dayKey = day.key
+    return Button {
+      selectDay?(day.date)
       editEvent(event)
     } label: {
       MobileCalendarAgendaRow(event: event, dayKey: dayKey, isPast: isPast)
@@ -123,6 +130,7 @@ struct MobileCalendarAgendaPanel: View {
     .contextMenu {
       if event.editable {
         Button {
+          selectDay?(day.date)
           editEvent(event)
         } label: {
           Label(

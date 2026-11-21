@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Full-screen Calendar workspace for iPhone/iPad, in the mode the store
 /// holds: the phone-native time-axis grid (`MobileCalendarDayView`) with
-/// width-adaptive 1/2/3 days in Day mode and seven days in Week mode, or the
+/// width-adaptive 1/2/3 days in Day mode, the seven-day grid or agenda in Week mode, or the
 /// month grid over the chosen day's agenda (`MobileCalendarMonthView`). The
 /// segmented mode picker lives in each mode's toolbar, and every mode reads
 /// the same `store.calendarTimeline` fetch path. While the search field holds

@@ -1,47 +1,40 @@
 # Design Philosophy
 ---
 
-## The Core Problem With Every Existing Todo App
+## The day Lorvex helps with
 
-Nearly every productivity app shares the same fundamental assumption:
+A morning plan can become obsolete by lunch. Meetings run over, a task takes
+longer than expected, or a new deadline lands. Recording each change costs
+time, especially when the original plan lives in a chat and the calendar and
+task list live elsewhere.
 
-> **The human is the operator. The tool is the system.**
+Lorvex gives a person and their connected assistant one working plan. An
+assistant on the Mac can read the calendar and schedule a task. The person
+can start it from Today, write what happened in Daily Review, and move the
+unfinished work to another day. When the assistant next checks the schedule,
+it sees the new date.
 
-You open the app. You type tasks. You organize them. You set priorities. You schedule them. You review them. You decide what to do next. The human carries the full cognitive weight of the system.
+Three moments guide the product work. In the morning, can I see what fits
+around my meetings? When a meeting ends, can I find the task I meant to
+resume? When I close my day, can I trust that an unfinished plan will turn
+up where I put it? Use those questions to evaluate the native app and the
+assistant's actions together.
 
-This design made sense in 2005. It no longer does.
+## What the person and the assistant each do
 
-The result is what every productivity researcher identifies as the #1 failure mode: **the system requires more energy to maintain than it returns in clarity.** GTD's weekly review is 90 minutes. Time-blocking requires daily re-planning. Keeping lists current is a part-time job. People set up systems, maintain them for weeks, then abandon them when life gets busy — precisely when they need the system most.
+People can use the native apps on their own or connect an assistant through
+the Mac's Model Context Protocol server. Both paths edit the same tasks and
+plans. The person chooses how much organizing work to delegate.
 
----
+| Moment | What an assistant can prepare | What the person can decide in the app |
+|---|---|---|
+| Planning the day | Read the calendar and suggest slots for tasks with duration estimates. | Accept a time, change it, or leave a task untimed. |
+| Returning to work | Read the day's plan and identify an unfinished task. | Start it, resume a different task, or revise the plan. |
+| Closing the day | Read the day's task record and help draft a review when asked. | Write what mattered, move one task, or park it in Someday. |
 
-## The Paradigm Shift
-
-This app is built on a different assumption:
-
-> **The AI is the operator. The human is the executive.**
-
-AI assistant knows your projects, your deadlines, your patterns, your priorities. AI assistant creates tasks, organizes them, schedules them, and surfaces what matters. You review AI assistant's work, make judgment calls, and execute.
-
-This isn't "AI-assisted" productivity. It's an **inversion of the control model.**
-
-| Traditional | This App |
-|---|---|
-| Human creates tasks | AI captures and creates tasks |
-| Human sets priorities | AI computes priorities dynamically |
-| Human organizes into lists | AI infers projects from context |
-| Human does weekly review | AI pre-populates weekly review; human spends 15 min |
-| Human schedules the day | AI proposes the day's schedule |
-| Human decides what to do next | AI curates what to work on next |
-| **Human = operator + executor** | **Human = executive + executor** |
-
-The human's job becomes: provide intent and context, approve AI proposals, make judgment calls when AI is uncertain, and do the actual work. Everything else is automation.
-
-**Critical clarification:** The app itself contains no embedded model runtime. Lorvex is AI-native because assistants get first-class access to the system through MCP, while the app itself remains a strong standalone planning and execution environment. All "AI features" come from assistant operations against Lorvex's data model and tools, not from the app quietly calling an API behind the scenes.
-
-**Current mode:** these automations are triggered during active assistant sessions, not by an always-on background daemon.
-
-**Runtime clarification:** Lorvex should not be described as a desktop-first hierarchy with secondary mobile clients. Desktop and mobile are peer runtimes with different capability sets. Desktop gets the strongest operator affordances; mobile still needs to be a credible planning product in its own right.
+Assistant actions run during a connected session. The Mac hosts MCP, and
+Mac, iPhone and iPad each support direct planning and review. With iCloud sync
+enabled, an edit made on one device reaches the others.
 
 ---
 

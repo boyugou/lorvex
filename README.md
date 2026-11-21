@@ -4,7 +4,7 @@
 
 # Lorvex
 
-**The AI-native planner. Your assistant does the typing; you do the living.**
+**Plan your day on Mac or iPhone, on your own or with your AI assistant.**
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](apps/apple)
@@ -36,13 +36,15 @@
 
 ---
 
-Lorvex is a task, calendar, and habit planner built **MCP-first**: the primary
-write interface is a [Model Context Protocol](https://modelcontextprotocol.io)
-server, so any MCP-capable AI assistant (Claude, or anything else that speaks
-MCP) can manage your tasks, plan your days, schedule your calendar, and track
-your habits through 120 typed tools. The native apps are calm, fast read
-surfaces with the human actions that matter — complete, defer, review — not a
-form-filling UI.
+Ask your assistant to fit a writing session around your meetings. Open Today
+to see the task alongside your calendar. If the afternoon gets away from you,
+use Daily Review to pick another day. Your assistant sees the revised plan
+the next time it reads Lorvex.
+
+The Mac app gives a connected assistant 120 tools through the Model Context
+Protocol (MCP), covering tasks, calendars, habits and reviews. You can plan
+and edit directly on Mac, iPhone and iPad. With iCloud sync enabled, edits
+you make on your phone reach the Mac and its connected assistant.
 
 - **Local-first.** Everything lives in a SQLite database on your device. No
   accounts, no server of ours, fully usable offline.

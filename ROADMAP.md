@@ -114,10 +114,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       the title. Completed steps can be reopened and the next step carries
       back to Today. Verified alongside a deadline edit, an app relaunch, and
       Chinese at the largest text size. [Build 168](docs/releases/1.0.0-168.md).
-  22. Revisit how people retrieve their writing in Review. Weekly Review
-      can filter one week by wins, blockers and learnings. Walk through
-      finding a remembered phrase from several weeks ago without knowing its
-      date, opening the matching entry, and returning to the results.
+  22. Mac Review finds a phrase across journal entries and opens the day it
+      came from. Returning restores the phrase, loaded pages, and position.
+      [Build 169](docs/releases/1.0.0-169.md).
+  23. Make old journal entries retrievable on iPhone and iPad. Verify that
+      typing a phrase finds a day outside the current week, opening a result
+      preserves a pending daily edit, and Back keeps the results in place.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

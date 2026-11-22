@@ -449,10 +449,10 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 168 went up on
-  2026-11-21. Apple lists the iOS and macOS expiration date as 2027-02-19.
-  Upload a fresh build by 2027-02-05 while testers use TestFlight.
-  See the [build 168 TestFlight record](../../../docs/releases/1.0.0-168.md).
+- **TestFlight builds expire 90 days after upload.** Build 169 went up on
+  2026-11-22. Apple lists the iOS and macOS expiration date as 2027-02-20.
+  Upload a fresh build by 2027-02-06 while testers use TestFlight.
+  See the [build 169 TestFlight record](../../../docs/releases/1.0.0-169.md).
 - **Signing material.** The Apple Distribution and Mac installer certificates,
   and every iOS and Mac App Store profile that embeds them, expire on
   2027-07-23. The current Developer ID Application certificate expires on

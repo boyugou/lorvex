@@ -215,6 +215,17 @@ extension AppStore {
   /// No-op without an `undoManager`, which the menu-bar panel and the
   /// background paths do not have.
   func registerReopenUndo(id: LorvexTask.ID, undoManager: UndoManager?, actionName: String) {
+    if let (owner, history) = reviewUndoDestination {
+      history.register(named: actionName, sheet: undoManager) { [weak owner, weak self] in
+        Task { @MainActor in
+          guard let owner else { return }
+          await owner.reopenTaskForUndo(id)
+          if owner.selection != .reviews { await owner.loadDayReviewEvidence(date: owner.selectedReviewDate) }
+          await self?.reloadDetachedWindowEntity()
+        }
+      }
+      return
+    }
     guard let undoManager else { return }
     undoManager.registerUndo(withTarget: self) { store in
       Task { @MainActor in await store.reopenTaskForUndo(id) }

@@ -266,6 +266,9 @@ final class AppStore {
   /// them, since their edits are no longer in the draft.
   @ObservationIgnored var leftBehindDraftWrites: [UUID: Task<Void, Never>] = [:]
 
+  /// A task editor opened above Review shares its reversible task actions with the journal window.
+  @ObservationIgnored var reviewUndoDestination: (owner: AppStore, history: ReviewTaskUndo)?
+
   /// The habit inspector's name or encouragement while it is being typed
   /// (``noteHabitFieldDraft(_:)``), so Quit can save what the field holds.
   @ObservationIgnored var habitFieldDraft: HabitFieldDraft?

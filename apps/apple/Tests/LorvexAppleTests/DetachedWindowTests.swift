@@ -22,6 +22,65 @@ func detachedTaskWindowStateDoesNotRetargetMainSelection() async throws {
 }
 
 @MainActor
+@Test("A task opened over Review saves alongside a pending journal and another window's task")
+func closingReviewTaskPreservesBothEditsAndTheMainSelection() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let parent = AppStore(core: core)
+  await parent.refresh()
+  let mainTask = try #require(parent.today.tasks.first)
+  let reviewTask = try #require(parent.today.tasks.dropFirst().first)
+  parent.navigateToWorkspace(.tasks)
+  parent.selectTaskFromList(mainTask.id)
+  let date = parent.logicalTodayDateString
+  await parent.selectReviewDay(date)
+  parent.dailyReviewSummaryDraft = "Change the firing temperature next time."
+
+  let selection = ReviewTaskSheet.Selection(id: reviewTask.id, from: parent, undoManager: nil)
+  let editor = selection.store
+  await editor.loadDetachedTaskWindow(taskID: selection.id)
+  editor.taskDetailTitle = "Order a second set of samples"
+  editor.selectedTaskID = nil
+  await editor.waitForLeftBehindDraftWrites()
+  await parent.flushDailyReviewDraftIfNeeded()
+  await parent.loadDayReviewEvidence(date: date)
+
+  #expect(parent.selection == .tasks)
+  #expect(parent.selectedTaskID == mainTask.id)
+  #expect(parent.selectedReviewDate == date)
+  #expect(try await core.loadTask(id: reviewTask.id).title == "Order a second set of samples")
+  #expect(try await core.loadDailyReview(date: date)?.summary == "Change the firing temperature next time.")
+}
+
+@MainActor
+@Test("Undo from either side of a Review task sheet consumes the task action once", arguments: [false, true])
+func reviewTaskUndoLeavesJournalTypingAlone(fromSheet: Bool) {
+  let journal = UndoManager()
+  let sheet = UndoManager()
+  journal.groupsByEvent = false
+  sheet.groupsByEvent = false
+  var reverted = 0
+  let typing = NSObject()
+  journal.beginUndoGrouping()
+  journal.registerUndo(withTarget: typing) { _ in Issue.record("Task undo consumed the journal edit") }
+  journal.setActionName("Typing")
+  journal.endUndoGrouping()
+  let history = ReviewTaskUndo(journal: journal)
+  sheet.beginUndoGrouping()
+  history.register(named: "Complete", sheet: sheet) { reverted += 1 }
+  sheet.endUndoGrouping()
+  #expect(journal.undoActionName == "Typing")
+  if fromSheet { sheet.undo() }
+
+  history.finish()
+  if !fromSheet {
+    #expect(journal.undoActionName == "Complete")
+    journal.undo()
+  }
+  #expect(reverted == 1)
+  #expect(journal.undoActionName == "Typing")
+}
+
+@MainActor
 @Test
 func detachedWindowStorePreservesInjectedClock() async throws {
   let referenceNow = Date(timeIntervalSince1970: 1_779_649_200)

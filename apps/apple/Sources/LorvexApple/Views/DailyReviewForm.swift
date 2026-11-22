@@ -15,6 +15,7 @@ struct DailyReviewForm: View {
   @State private var habits: [LorvexHabit] = []
   @State private var calendar: CalendarTimelineSnapshot?
   @State private var tomorrow: LorvexAgendaDay?
+  @State private var inspectedTask: ReviewTaskSheet.Selection?
   @State private var planningTomorrow = false
   @State private var loadingTomorrow = true
   private typealias Copy = ReviewCalmCopy
@@ -62,6 +63,12 @@ struct DailyReviewForm: View {
         .frame(maxWidth: .infinity)
       }
     }
+    .sheet(item: $inspectedTask, onDismiss: {
+      Task {
+        await store.loadDayReviewEvidence(date: date)
+        if isReviewingToday { await loadTomorrow() }
+      }
+    }) { item in ReviewTaskSheet(selection: item) }
     .sheet(isPresented: $planningTomorrow) {
       if let key = tomorrowKey {
         ReviewTomorrowPlanSheet(dayKey: key,
@@ -158,7 +165,7 @@ struct DailyReviewForm: View {
   }
 
   /// The tasks due that day that are not done yet; each row's circle
-  /// completes the task, and its title opens it in All Tasks.
+  /// completes the task, and its title opens its details over this entry.
   @ViewBuilder
   private var stillOpen: some View {
     if let summary = evidence, !summary.unfinishedTasks.isEmpty {
@@ -181,10 +188,7 @@ struct DailyReviewForm: View {
             await store.arrangeReviewTasks(tasks, reviewedOn: date, destination: destination, undoManager: undoManager)
           }
         }
-      ) { id in
-        store.selection = .tasks
-        store.selectedTaskID = id
-      }
+      ) { inspectTask($0) }
     }
   }
 
@@ -218,10 +222,11 @@ struct DailyReviewForm: View {
   private func agenda(_ day: LorvexAgendaDay, label: String, identifier: String) -> some View {
     DailyReviewAgenda(day: day, title: label, identifier: identifier) { event in
       store.showEventInCalendar(event, onDayKey: day.key)
-    } openTask: { id in
-      store.selection = .tasks
-      store.selectedTaskID = id
-    }
+    } openTask: { inspectTask($0) }
+  }
+
+  private func inspectTask(_ id: LorvexTask.ID) {
+    inspectedTask = .init(id: id, from: store, undoManager: undoManager)
   }
 
   private var notes: some View {

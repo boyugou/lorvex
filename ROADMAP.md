@@ -117,9 +117,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   22. Mac Review finds a phrase across journal entries and opens the day it
       came from. Returning restores the phrase, loaded pages, and position.
       [Build 169](docs/releases/1.0.0-169.md).
-  23. Make old journal entries retrievable on iPhone and iPad. Verify that
-      typing a phrase finds a day outside the current week, opening a result
-      preserves a pending daily edit, and Back keeps the results in place.
+  23. Review on iPhone and iPad finds writing across dated entries. Reading
+      preserves the working day, query and scroll position. Edit opens the
+      correct recent day. [Build 170](docs/releases/1.0.0-170.md).
+  24. Keep the Mac journal open while inspecting a task. Currently a title in
+      Still open or Tomorrow switches the workspace to All Tasks. Someone
+      double-checking a deadline should be able to close the task and carry on
+      with the same entry. Verify a pending note and the reading position
+      after editing a task in both a wide and a narrow window.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),
@@ -134,7 +139,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   text size opens the agenda on the focused day. Overlapping appointments,
   an empty week, rotation with a draft and the handoff to Day were checked
   on iPad mini. Available in [build 154](docs/releases/1.0.0-154.md).
-  Validate outer and inner displays, folding, rotation, Split View, side-mounted
+  Journal search and recent-day editing passed on the outer display of the
+  iPhone Duo simulator in dark mode. [Build 170](docs/releases/1.0.0-170.md).
+  Validate continuity across displays, folding, rotation, Split View, side-mounted
   navigation and toolbars, and reserved regions. Keep the current navigation,
   selection, scroll position, and unsaved draft through layout changes. Cover
   Today, calendar grids, task details, Review, capture, and settings, with large

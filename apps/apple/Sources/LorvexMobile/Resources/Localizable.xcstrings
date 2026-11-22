@@ -16395,6 +16395,191 @@
         }
       }
     },
+    "common.clear_search": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسح البحث"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সার্চ মুছে ফেলুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche löschen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εκκαθάριση αναζήτησης"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Search"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar búsqueda"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پاک کردن جست‌وجو"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer la recherche"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ניקוי חיפוש"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "खोज साफ़ करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bersihkan Pencarian"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancella ricerca"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検索をクリア"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검색 지우기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सर्च क्लिअर करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosongkan Carian"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wis zoekopdracht"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyczyść wyszukiwanie"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpar busca"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ștergeți căutarea"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистить поиск"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தேடலை அழி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "శోధనను క్లియర్ చేయండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ล้างการค้นหา"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aramayı temizle"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очистити пошук"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تلاش صاف کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xóa tìm kiếm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除搜索"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除搜尋"
+          }
+        }
+      }
+    },
     "common.create": {
       "extractionState": "manual",
       "localizations": {
@@ -69275,6 +69460,191 @@
         }
       }
     },
+    "review.journal.search": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في اليوميات"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "জার্নালে খুঁজুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagebuch durchsuchen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αναζήτηση στο ημερολόγιο"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Journal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar en el diario"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جستجو در دفتر روزانه"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher dans le journal"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "חיפוש ביומן"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जर्नल में खोजें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cari di jurnal"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca nel diario"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日記を検索"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일기 검색"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "रोजनिशीत शोधा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cari dalam jurnal"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoek in dagboek"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przeszukaj dziennik"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar no diário"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caută în jurnal"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поиск по дневнику"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நாட்குறிப்பில் தேடுக"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "డైరీలో వెతకండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ค้นหาในบันทึกประจำวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlükte ara"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пошук у щоденнику"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ڈائری میں تلاش کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm trong nhật ký"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索日记"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜尋日記"
+          }
+        }
+      }
+    },
     "review.mode.daily": {
       "extractionState": "manual",
       "localizations": {
@@ -102520,6 +102890,191 @@
           "stringUnit": {
             "state": "translated",
             "value": "點一下 ＋ 將相關的任務整理成清單，也可以請助理代勞。"
+          }
+        }
+      }
+    },
+    "tasks.results.load_more": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحميل المزيد"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আরও লোড করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere laden"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Φόρτωση περισσότερων"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Load More"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargar más"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بارگیری بیشتر"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charger plus"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "טעינת עוד"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "और लोड करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muat Lainnya"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carica altro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "さらに読み込む"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "더 불러오기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आणखी लोड करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muatkan Lagi"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laad meer"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wczytaj więcej"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carregar mais"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încărcați mai multe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загрузить ещё"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மேலும் ஏற்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మరిన్ని లోడ్ చేయండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โหลดเพิ่มเติม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha fazla yükle"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завантажити ще"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مزید لوڈ کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tải thêm"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加载更多"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "載入更多"
           }
         }
       }

@@ -120,11 +120,14 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   23. Review on iPhone and iPad finds writing across dated entries. Reading
       preserves the working day, query and scroll position. Edit opens the
       correct recent day. [Build 170](docs/releases/1.0.0-170.md).
-  24. Keep the Mac journal open while inspecting a task. Currently a title in
-      Still open or Tomorrow switches the workspace to All Tasks. Someone
-      double-checking a deadline should be able to close the task and carry on
-      with the same entry. Verify a pending note and the reading position
-      after editing a task in both a wide and a narrow window.
+  24. Mac Daily Review opens tasks from Still open and Tomorrow over the
+      journal. Editing a deadline preserves the planned day. Closing the editor
+      restores the reading position and leaves another window's selection in
+      place. [Build 171](docs/releases/1.0.0-171.md).
+  25. Let people check the details of an appointment while writing a daily
+      entry. Today and tomorrow's event rows in Mac Review currently open the
+      Calendar workspace. Keep the journal available when checking a meeting's
+      time or location, with an explicit way to open the full calendar.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

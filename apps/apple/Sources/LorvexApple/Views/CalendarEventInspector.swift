@@ -2,15 +2,25 @@ import LorvexCore
 import SwiftUI
 
 /// An event's detail panel: the Calendar workspace's third pane, which opens
-/// when an event is clicked, and the main window's inspector for an event
-/// opened from Today's schedule. Imported (non-`editable`) events render read-only
-/// with a "managed by source" note; Lorvex-owned events also offer Edit and
-/// Delete. Resolving the event by id (via the caller) keeps it live across
-/// timeline refreshes.
+/// when an event is clicked, the main window's inspector for an event opened
+/// from Today's schedule, and the popover an event row opens in Daily Review.
+/// Imported (non-`editable`) events render read-only with a "managed by
+/// source" note. Resolving the event by id (via the caller) keeps it live
+/// across timeline refreshes.
 struct CalendarEventInspector: View {
+  /// What the panel offers below the event's facts.
+  enum Actions {
+    /// Edit and Delete for a Lorvex-owned event, and the link to Apple
+    /// Calendar for an imported one. The panel fills the height it is given.
+    case manage(edit: () -> Void, requestDelete: () -> Void)
+    /// One button that hands the displayed copy to the caller, which shows it
+    /// in the Calendar workspace. The panel is as tall as its facts, up to a
+    /// cap past which they scroll, so it suits a popover.
+    case preview(openCalendar: (CalendarTimelineEvent) -> Void)
+  }
+
   let event: CalendarTimelineEvent
-  let edit: () -> Void
-  let requestDelete: () -> Void
+  let actions: Actions
   let close: () -> Void
   /// Live origin fallback for a legacy observation without cached provenance.
   /// Defaults to no-op for previews/tests.
@@ -26,6 +36,7 @@ struct CalendarEventInspector: View {
     copies.first { $0.id == selectedCopyID } ?? event.displayCopies[0]
   }
 
+  @State private var previewFactsHeight: CGFloat = 340
   @State private var resolvedSource: EventKitEventSource?
 
   private var tint: Color { LorvexDesign.Palette.eventTint(displayedEvent.color) }
@@ -34,63 +45,30 @@ struct CalendarEventInspector: View {
     VStack(alignment: .leading, spacing: 0) {
       header
       Divider()
-      ScrollView {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
-          if copies.count > 1 {
-            CalendarEventCopyPicker(copies: copies, selectedID: Binding(
-              get: { displayedEvent.id }, set: { id in
-                selectedCopyID = id
-                if let copy = copies.first(where: { $0.id == id }) { selectCopy(copy) }
-              }))
-          }
-          scheduleRow
-          if let location = displayedEvent.location, !location.isEmpty {
-            detailRow(icon: "mappin.and.ellipse", title: locationTitle) { plainText(location) }
-          }
-          if displayedEvent.hasRecurrenceRow {
-            detailRow(icon: "repeat", title: recurrenceTitle) {
-              VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-                plainText(Self.recurrenceLabel(for: displayedEvent))
-                if let zoneNote = displayedEvent.recurrenceTimeZoneNote {
-                  Text(zoneNote)
-                    .font(LorvexDesign.Typography.secondaryText)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                }
-              }
-            }
-          }
-          if let notes = displayedEvent.notes, !notes.isEmpty {
-            detailRow(icon: "note.text", title: notesTitle) { plainText(notes) }
-          }
-          if let attendees = displayedEvent.attendees, !attendees.isEmpty {
-            detailRow(icon: "person.2", title: attendeesTitle) {
-              VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-                ForEach(attendees, id: \.email) { attendee in
-                  plainText(attendee.name ?? attendee.email)
-                }
-              }
-            }
-          }
-          if let url = displayedEvent.openableURL, let urlString = displayedEvent.url {
-            detailRow(icon: "link", title: urlTitle) {
-              Link(urlString, destination: url).font(LorvexDesign.Typography.primaryText)
-            }
-          }
-          sourceRow
-          if !displayedEvent.editable, let calendarURL = displayedEvent.appleCalendarURL {
-            Link(destination: calendarURL) {
-              Label(openInCalendarTitle, systemImage: "arrow.up.forward.app")
-            }
-            .font(LorvexDesign.Typography.secondaryText)
-            .accessibilityIdentifier("calendar.event.inspector.openInCalendar")
+      switch actions {
+      case .manage(let edit, let requestDelete):
+        ScrollView { facts }
+        if displayedEvent.editable {
+          Divider()
+          actionBar(edit: edit, requestDelete: requestDelete)
+        }
+      case .preview(let openCalendar):
+        ScrollView {
+          facts.onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+            previewFactsHeight = height
           }
         }
-        .padding(LorvexDesign.Spacing.l)
-      }
-      if displayedEvent.editable {
+        .frame(height: min(340, previewFactsHeight))
+        .scrollBounceBehavior(.basedOnSize)
         Divider()
-        actionBar
+        Button {
+          openCalendar(displayedEvent)
+        } label: {
+          Label(String(localized: "review.event.show_in_calendar", defaultValue: "Show in Lorvex Calendar",
+            table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "calendar")
+        }
+        .accessibilityIdentifier("reviews.daily.event.openCalendar")
+        .padding(LorvexDesign.Spacing.m)
       }
     }
     .frame(width: fixedWidth)
@@ -105,6 +83,61 @@ struct CalendarEventInspector: View {
       guard !Task.isCancelled else { return }
       resolvedSource = source
     }
+  }
+
+  private var facts: some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
+      if copies.count > 1 {
+        CalendarEventCopyPicker(copies: copies, selectedID: Binding(
+          get: { displayedEvent.id }, set: { id in
+            selectedCopyID = id
+            if let copy = copies.first(where: { $0.id == id }) { selectCopy(copy) }
+          }))
+      }
+      scheduleRow
+      if let location = displayedEvent.location, !location.isEmpty {
+        detailRow(icon: "mappin.and.ellipse", title: locationTitle) { plainText(location) }
+      }
+      if displayedEvent.hasRecurrenceRow {
+        detailRow(icon: "repeat", title: recurrenceTitle) {
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+            plainText(Self.recurrenceLabel(for: displayedEvent))
+            if let zoneNote = displayedEvent.recurrenceTimeZoneNote {
+              Text(zoneNote)
+                .font(LorvexDesign.Typography.secondaryText)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+          }
+        }
+      }
+      if let notes = displayedEvent.notes, !notes.isEmpty {
+        detailRow(icon: "note.text", title: notesTitle) { plainText(notes) }
+      }
+      if let attendees = displayedEvent.attendees, !attendees.isEmpty {
+        detailRow(icon: "person.2", title: attendeesTitle) {
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+            ForEach(attendees, id: \.email) { attendee in
+              plainText(attendee.name ?? attendee.email)
+            }
+          }
+        }
+      }
+      if let url = displayedEvent.openableURL, let urlString = displayedEvent.url {
+        detailRow(icon: "link", title: urlTitle) {
+          Link(urlString, destination: url).font(LorvexDesign.Typography.primaryText)
+        }
+      }
+      sourceRow
+      if case .manage = actions, !displayedEvent.editable, let calendarURL = displayedEvent.appleCalendarURL {
+        Link(destination: calendarURL) {
+          Label(openInCalendarTitle, systemImage: "arrow.up.forward.app")
+        }
+        .font(LorvexDesign.Typography.secondaryText)
+        .accessibilityIdentifier("calendar.event.inspector.openInCalendar")
+      }
+    }
+    .padding(LorvexDesign.Spacing.l)
   }
 
   private var header: some View {
@@ -193,7 +226,7 @@ struct CalendarEventInspector: View {
     )
   }
 
-  private var actionBar: some View {
+  private func actionBar(edit: @escaping () -> Void, requestDelete: @escaping () -> Void) -> some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       Button(action: edit) {
         Label(

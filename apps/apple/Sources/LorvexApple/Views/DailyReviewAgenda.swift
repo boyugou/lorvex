@@ -7,9 +7,11 @@ struct DailyReviewAgenda: View {
   let day: LorvexAgendaDay
   let title: String
   let identifier: String
-  var openEvent: (CalendarTimelineEvent) -> Void
+  let resolveSource: (CalendarTimelineEvent) async -> EventKitEventSource?
+  let openCalendar: (CalendarTimelineEvent) -> Void
   var openTask: (String) -> Void
   @State private var expanded = false
+  @State private var inspectedEventID: String?
   @State private var hoveredRow: String?
   private let previewCount = 3
 
@@ -22,10 +24,26 @@ struct DailyReviewAgenda: View {
         case .event(let event):
           row(id: "event.\(event.id)", title: event.title,
             time: event.listTimeLabel(on: day.key, range: TodayCalmCopy.timeRange(start:end:)) ?? TodayCalmCopy.allDay,
-            action: { openEvent(event) }
+            action: { inspectedEventID = event.id }
           ) {
             Capsule().fill(LorvexDesign.Palette.eventTint(event.color)).frame(width: 3)
           }
+          .popover(isPresented: Binding(
+            get: { inspectedEventID == event.id },
+            set: { if !$0 && inspectedEventID == event.id { inspectedEventID = nil } }
+          )) {
+            CalendarEventInspector(
+              event: event,
+              actions: .preview { copy in
+                inspectedEventID = nil
+                openCalendar(copy)
+              },
+              close: { inspectedEventID = nil },
+              resolveSource: resolveSource,
+              fixedWidth: 340)
+              .onExitCommand { inspectedEventID = nil }
+          }
+          .onDisappear { if inspectedEventID == event.id { inspectedEventID = nil } }
         case .task(let task):
           row(id: task.id, title: task.title,
             time: task.time(on: day.key).map { TodayCalmCopy.timeRange(start: $0.lowerBound, end: $0.upperBound) },

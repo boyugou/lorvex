@@ -124,10 +124,10 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       journal. Editing a deadline preserves the planned day. Closing the editor
       restores the reading position and leaves another window's selection in
       place. [Build 171](docs/releases/1.0.0-171.md).
-  25. Let people check the details of an appointment while writing a daily
-      entry. Today and tomorrow's event rows in Mac Review currently open the
-      Calendar workspace. Keep the journal available when checking a meeting's
-      time or location, with an explicit way to open the full calendar.
+  25. An event row in Mac Daily Review, for the reviewed day or for
+      tomorrow, opens the event's time, location and notes in a popover over
+      the journal. **Show in Lorvex Calendar** there opens the event on its
+      own day.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

@@ -116,7 +116,9 @@ day, works through Today's list, and drives keyboard-first workflows.
   The two optional ratings sit below the entry. The review shows the day's
   calendar occurrences, checkable habits and tomorrow's agenda alongside the
   entry in a wide window and below it in a narrow one. An occurrence opens
-  its own day in Calendar. Completed tasks and open work planned for or due that day follow the ratings.
+  its time, location and notes in a popover over the journal; a button there
+  shows it on its own day in Calendar. Completed tasks and open work planned
+  for or due that day follow the ratings.
   Older entries show their saved prose and recorded ratings. ✅
 - Weekly Review shows what moved forward, daily entries, overdue and deferred
   work, and the week ahead. Each daily entry opens its day. ✅

@@ -227,9 +227,9 @@
         title: "Late session", startDate: "2026-10-02", endDate: "2026-10-03",
         startTime: "21:00", endTime: "00:00", allDay: false, location: nil, notes: nil)
       let inspectors = HStack(alignment: .top, spacing: 16) {
-        CalendarEventInspector(event: shift, edit: {}, requestDelete: {}, close: {})
-        CalendarEventInspector(event: trip, edit: {}, requestDelete: {}, close: {})
-        CalendarEventInspector(event: late, edit: {}, requestDelete: {}, close: {})
+        CalendarEventInspector(event: shift, actions: .manage(edit: {}, requestDelete: {}), close: {})
+        CalendarEventInspector(event: trip, actions: .manage(edit: {}, requestDelete: {}), close: {})
+        CalendarEventInspector(event: late, actions: .manage(edit: {}, requestDelete: {}), close: {})
       }
       .frame(height: 420)
       try await render(inspectors, named: "event-inspectors")

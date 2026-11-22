@@ -55,8 +55,9 @@ struct CalendarWorkspaceView: View {
         Divider()
         CalendarEventInspector(
           event: event,
-          edit: { eventActions.beginEditing(event, store: store) },
-          requestDelete: { eventActions.requestDelete(event) },
+          actions: .manage(
+            edit: { eventActions.beginEditing(event, store: store) },
+            requestDelete: { eventActions.requestDelete(event) }),
           close: { store.clearSelectedCalendarEvent() },
           resolveSource: { await store.calendarEventSource(for: $0) },
           selectCopy: { store.selectCalendarEvent($0) }

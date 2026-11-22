@@ -8,6 +8,7 @@ struct DailyReviewForm: View {
   let date: String
   var isReadOnly = false
   var onEditorFocusChange: @MainActor @Sendable (Bool) -> Void = { _ in }
+  @Environment(\.openWindow) private var openWindow
   @Environment(\.undoManager) private var undoManager
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var focusedField: String?
@@ -220,8 +221,10 @@ struct DailyReviewForm: View {
   }
 
   private func agenda(_ day: LorvexAgendaDay, label: String, identifier: String) -> some View {
-    DailyReviewAgenda(day: day, title: label, identifier: identifier) { event in
+    DailyReviewAgenda(day: day, title: label, identifier: identifier,
+      resolveSource: { await store.calendarEventSource(for: $0) }) { event in
       store.showEventInCalendar(event, onDayKey: day.key)
+      openWindow(.main)
     } openTask: { inspectTask($0) }
   }
 

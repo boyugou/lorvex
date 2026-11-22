@@ -39,8 +39,9 @@ struct ContentView: View {
             } else if let event = store.todayInspectorEvent {
               CalendarEventInspector(
                 event: event,
-                edit: { todayEventActions.beginEditing(event, store: store) },
-                requestDelete: { todayEventActions.requestDelete(event) },
+                actions: .manage(
+                  edit: { todayEventActions.beginEditing(event, store: store) },
+                  requestDelete: { todayEventActions.requestDelete(event) }),
                 close: { store.clearSelectedCalendarEvent() },
                 resolveSource: { await store.calendarEventSource(for: $0) },
                 fixedWidth: nil,

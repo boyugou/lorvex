@@ -3713,7 +3713,9 @@ The AI client can also trigger ICS export via the `export_calendar_ics` MCP tool
 The **Review** workspace opens on today's review, one page per day:
 
 - The date and a writing area come first. On a wide Mac window, the day's
-  calendar events and habits sit beside the entry.
+  calendar events and habits sit beside the entry. On Mac, click an event to
+  check its time, location and notes without leaving the entry. **Show in
+  Lorvex Calendar** opens the event on its own day.
 - **What moved forward** shows the tasks you finished that day, up to five
   with a count of the rest.
 - **Still open** includes tasks planned for the day and tasks due on it. A task

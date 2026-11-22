@@ -82,7 +82,7 @@
         try await Task.sleep(for: .milliseconds(350))
         let find = try key("f", code: 3, modifiers: .command, in: window)
         guard NSApp.mainMenu?.performKeyEquivalent(with: find) == true else { throw Failure("Find command unavailable.") }
-        let target: SidebarSelection = page == .reviews ? .tasks : page
+        let target = page
         try await wait("Find did not focus \(target.rawValue).") {
           let fields = searchFields(in: window)
           guard let editor = fields.first?.currentEditor() else { return false }

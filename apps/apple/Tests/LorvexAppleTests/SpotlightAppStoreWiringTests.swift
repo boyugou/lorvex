@@ -116,10 +116,13 @@ func appStoreIndexesDailyReviewOnRefresh() async throws {
 @Test
 func appStoreIndexesCalendarEventsOnRefresh() async throws {
   let contentIndexer = RecordingContentSearchIndexer()
+  // Keep the fixed May 2026 event inside Spotlight's rolling calendar window.
+  let fixtureDay = try #require(LorvexDateFormatters.iso8601.date(from: "2026-05-22T16:00:00Z"))
   let store = AppStore(
-    core: try await makeSeededInMemoryCore(),
+    core: try await makeSeededInMemoryCore(wallClock: { fixtureDay }),
     contentSearchIndexer: contentIndexer,
-    widgetSnapshotPublisher: RecordingWidgetSnapshotPublisher()
+    widgetSnapshotPublisher: RecordingWidgetSnapshotPublisher(),
+    now: { fixtureDay }
   )
 
   await store.refresh()

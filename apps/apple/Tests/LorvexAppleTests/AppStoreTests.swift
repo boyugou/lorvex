@@ -11,10 +11,13 @@ import LorvexCloudSync
 func appStoreLoadsPreviewToday() async throws {
   let indexer = RecordingTaskSearchIndexer()
   let publisher = RecordingWidgetSnapshotPublisher()
+  // Keep the fixed May 2026 event inside Spotlight's rolling calendar window.
+  let fixtureDay = try #require(LorvexDateFormatters.iso8601.date(from: "2026-05-22T16:00:00Z"))
   let store = AppStore(
-    core: try await makeSeededInMemoryCore(),
+    core: try await makeSeededInMemoryCore(wallClock: { fixtureDay }),
     taskSearchIndexer: indexer,
-    widgetSnapshotPublisher: publisher
+    widgetSnapshotPublisher: publisher,
+    now: { fixtureDay }
   )
 
   await store.refresh()

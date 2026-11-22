@@ -10,6 +10,7 @@ enum ReviewMode: String, CaseIterable, Hashable {
 
 struct ReviewsWorkspaceView: View {
   @Bindable var store: AppStore
+  var windowQuery: String?
   @State private var mode: ReviewMode = ReviewsWorkspaceView.initialMode
   @State private var dailyReviewEditorFocused = false
 
@@ -29,36 +30,44 @@ struct ReviewsWorkspaceView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      switch mode {
-      case .daily:
-        DailyReviewForm(
-          store: store,
-          date: store.selectedReviewDate,
-          isReadOnly: !store.selectedReviewDayIsEditable,
-          onEditorFocusChange: { dailyReviewEditorFocused = $0 }
-        )
-        .id(store.selectedReviewDate)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      case .weekly:
-        ReviewsWorkspaceHeader()
-        Divider()
-        WeeklyReviewPage(store: store) { date in
-          Task {
-            await store.selectReviewDay(date)
-            mode = .daily
+      if query.isEmpty {
+        switch mode {
+        case .daily:
+          DailyReviewForm(
+            store: store,
+            date: store.selectedReviewDate,
+            isReadOnly: !store.selectedReviewDayIsEditable,
+            onEditorFocusChange: { dailyReviewEditorFocused = $0 }
+          )
+          .id(store.selectedReviewDate)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .weekly:
+          ReviewsWorkspaceHeader()
+          Divider()
+          WeeklyReviewPage(store: store) { date in
+            Task {
+              await store.selectReviewDay(date)
+              mode = .daily
+            }
           }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else {
+        ReviewJournalBrowser(store: store, query: query, opened: { mode = .daily },
+          editorFocus: { dailyReviewEditorFocused = $0 })
+          .id(query)
       }
     }
     .navigationTitle(String(localized: "sidebar.item.reviews", defaultValue: "Review", table: "Localizable", bundle: LorvexL10n.bundle))
     .toolbar {
-      ReviewsWorkspaceToolbar(
-        store: store,
-        state: ReviewsNavigationState(store: store, mode: mode),
-        mode: $mode,
-        dayStepShortcutsEnabled: !dailyReviewEditorFocused
-      )
+      if query.isEmpty {
+        ReviewsWorkspaceToolbar(
+          store: store,
+          state: ReviewsNavigationState(store: store, mode: mode),
+          mode: $mode,
+          dayStepShortcutsEnabled: !dailyReviewEditorFocused
+        )
+      }
     }
     .lorvexOpenDestinationActivity(selection: .reviews, isActive: store.selection == .reviews)
     // Load the viewed week's digest when entering Week scope; switching back to
@@ -96,6 +105,10 @@ struct ReviewsWorkspaceView: View {
       dailyReviewEditorFocused = false
       Task { await store.flushDailyReviewDraftIfNeeded() }
     }
+  }
+
+  private var query: String {
+    (windowQuery ?? store.searchText).split(whereSeparator: \.isWhitespace).joined(separator: " ")
   }
 
   /// One value that changes with any edit to the daily draft, driving the

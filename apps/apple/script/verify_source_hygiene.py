@@ -1147,7 +1147,7 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/HabitsWorkspaceView.swift'), '.searchable('),
     ('absent', ('file', 'Sources/LorvexApple/Views/ReviewsWorkspaceView.swift'), '.searchable('),
     # --- macOSSearchLivesInTasksMemoryAndCalendar ---
-    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSearchState.swift'), 'static let searchableSelections: Set<SidebarSelection> = [.tasks, .memory, .calendar]'),
+    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSearchState.swift'), 'static let searchableSelections: Set<SidebarSelection> = [.tasks, .memory, .calendar, .reviews]'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSearchState.swift'), 'func beginSearch()'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStore.swift'), 'if selection != oldValue {\n        // A query narrows only the workspace it was typed in.\n        searchText = ""'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreTaskWorkspaceActions.swift'), 'if scopeID != taskWorkspaceStorage.listScopeID {\n      // Picking another list shows that list, not the previous scope\'s search.\n      searchText = ""\n      clearTaskWorkspaceBuckets()'),

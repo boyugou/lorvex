@@ -6,6 +6,8 @@ struct LorvexAppCommands: Commands {
   @Environment(\.openWindow) private var openWindow
   @FocusedValue(\.lorvexTaskCommandContext) private var taskCommandContext
 
+  @FocusedValue(\.findInDetachedReview) private var findInDetachedReview
+
   let store: AppStore
 
   var body: some Commands {
@@ -90,8 +92,12 @@ struct LorvexAppCommands: Commands {
     // text-editing command set, so this group is otherwise empty.
     CommandGroup(replacing: .textEditing) {
       Button(String(localized: "app.commands.find", defaultValue: "Find…", table: "Localizable", bundle: LorvexL10n.bundle)) {
-        openWindow(.main)
-        store.beginSearch()
+        if let findInDetachedReview {
+          findInDetachedReview()
+        } else {
+          openWindow(.main)
+          store.beginSearch()
+        }
       }
       .keyboardShortcut("f", modifiers: [.command])
     }

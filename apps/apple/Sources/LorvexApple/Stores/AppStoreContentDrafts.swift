@@ -35,9 +35,11 @@ extension AppStore {
 
   /// Opens the entry and its evidence for the chosen date. Older entries use
   /// the same navigation and stay outside the interactive write window.
-  func selectReviewDay(_ date: String) async {
-    guard await openReviewEntry(date: date) else { return }
+  @discardableResult
+  func selectReviewDay(_ date: String) async -> Bool {
+    guard await openReviewEntry(date: date) else { return false }
     await loadDayReviewEvidence(date: date)
+    return selectedReviewDate == date
   }
 
   /// True when the Day scope is showing today, gating the nav's "Today" button.
@@ -149,13 +151,13 @@ extension AppStore {
     let entryBeforeRead = dailyReview
     do {
       let loaded = try await core.loadDailyReview(date: date)
-      guard dailyReviewStorage.selectionRequest == request, selectedReviewDate == sourceDay else { return false }
+      guard !Task.isCancelled, dailyReviewStorage.selectionRequest == request, selectedReviewDate == sourceDay else { return false }
       if date == sourceDay {
         // A peer update or an autosave may have advanced this entry during the read.
         if dailyReview == entryBeforeRead { adoptLoadedDailyReview(loaded, readFor: date) }
         return await settleDailyReviewDraftBeforeMoving()
       }
-      guard await settleDailyReviewDraftBeforeMoving(),
+      guard await settleDailyReviewDraftBeforeMoving(), !Task.isCancelled,
         dailyReviewStorage.selectionRequest == request, selectedReviewDate == sourceDay
       else { return false }
       dailyReviewEditingDate = dailyReviewIsEditable(date: date) && date != logicalTodayDateString ? date : nil
@@ -164,7 +166,7 @@ extension AppStore {
       syncDailyReviewDraft()
       return true
     } catch {
-      if dailyReviewStorage.selectionRequest == request { await presentUserFacingError(error) }
+      if !Task.isCancelled, dailyReviewStorage.selectionRequest == request { await presentUserFacingError(error) }
       return false
     }
   }

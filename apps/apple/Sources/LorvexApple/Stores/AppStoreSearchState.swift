@@ -2,11 +2,8 @@ import Foundation
 import LorvexCore
 
 extension AppStore {
-  /// The workspaces whose content a toolbar search field narrows or looks
-  /// through: the task backlog and the assistant's memory, the two collections
-  /// long enough to need filtering, and the calendar, whose search finds an
-  /// event on any date. Every other workspace shows its whole content.
-  static let searchableSelections: Set<SidebarSelection> = [.tasks, .memory, .calendar]
+  /// Workspaces with their own search field and Command-F destination.
+  static let searchableSelections: Set<SidebarSelection> = [.tasks, .memory, .calendar, .reviews]
 
   /// Find (⌘F): focus the current workspace's search field, or, from a
   /// workspace without one, open All Tasks across every list and focus its

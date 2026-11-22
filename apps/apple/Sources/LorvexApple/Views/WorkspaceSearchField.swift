@@ -36,7 +36,9 @@ extension AppStore {
       return String(
         localized: "calendar.search.prompt", defaultValue: "Search Events", table: "Localizable",
         bundle: LorvexL10n.bundle)
-    case .today, .lists, .habits, .reviews:
+    case .reviews:
+      return ReviewJournalBrowser.searchPrompt
+    case .today, .lists, .habits:
       return nil
     }
   }

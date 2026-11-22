@@ -45,7 +45,7 @@ struct LorvexWorkspaceWindowView: View {
     case .habits:
       HabitsWorkspaceView(store: store)
     case .reviews:
-      ReviewsWorkspaceView(store: store)
+      DetachedReviewWorkspace(store: store)
     case .taskDetail:
       TaskDetailView(store: store)
     case .main:

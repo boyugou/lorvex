@@ -431,12 +431,14 @@ func findInASearchableWorkspaceKeepsItsScope() async throws {
   #expect(store.taskWorkspaceListScopeID == LorvexPreviewSeedID.appleNativeList)
   #expect(store.isSearchFocusRequested)
 
-  store.isSearchFocusRequested = false
-  store.selection = .memory
-  store.beginSearch()
+  for selection in [SidebarSelection.memory, .reviews] {
+    store.isSearchFocusRequested = false
+    store.selection = selection
+    store.beginSearch()
 
-  #expect(store.selection == .memory)
-  #expect(store.isSearchFocusRequested)
+    #expect(store.selection == selection)
+    #expect(store.isSearchFocusRequested)
+  }
 }
 
 @MainActor

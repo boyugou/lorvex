@@ -142,7 +142,7 @@ extension MobileStore {
     defer { isReorderingLists = false }
     do {
       let reordered = try await core.reorderLists(orderedIDs: order)
-      lorvexAnimated(.snappy(duration: 0.25)) { lists = reordered }
+      lorvexAnimated(LorvexDesign.Motion.quick) { lists = reordered }
       return true
     } catch {
       await presentUserFacingError(error)

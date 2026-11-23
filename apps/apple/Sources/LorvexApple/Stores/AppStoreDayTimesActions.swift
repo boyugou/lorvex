@@ -19,12 +19,12 @@ extension AppStore {
       let timed = try await core.unfinishedTaskTimes(on: date)
       let proposal = try await core.proposeDayTimes(date: date)
       todayStorage.timesWhenDayTimesWereSuggested = timed
-      lorvexAnimated(.snappy(duration: 0.2)) { proposedDayTimes = proposal }
+      lorvexAnimated(LorvexDesign.Motion.quick) { proposedDayTimes = proposal }
     }
   }
 
   func dismissSuggestedDayTimes() {
-    lorvexAnimated(.snappy(duration: 0.2)) { proposedDayTimes = nil }
+    lorvexAnimated(LorvexDesign.Motion.quick) { proposedDayTimes = nil }
   }
 
   /// Defer the suggestion's tasks that did not fit to tomorrow, so a full
@@ -33,7 +33,7 @@ extension AppStore {
   func moveUnscheduledSuggestionToTomorrow() async {
     guard let proposal = proposedDayTimes, !proposal.unscheduled.isEmpty else { return }
     await moveTodayTasksToTomorrow(proposal.unscheduled.map(\.id))
-    lorvexAnimated(.snappy(duration: 0.2)) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       if proposal.placements.isEmpty {
         proposedDayTimes = nil
       } else {
@@ -89,7 +89,7 @@ extension AppStore {
         .compactMap { task in task.time(on: date).map { LorvexTaskTime(taskID: task.id, time: $0) } }
       _ = try await core.saveDayTimes(date: date, times: times)
       let updatedToday = try await core.loadToday()
-      lorvexAnimated(.snappy(duration: 0.2)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         proposedDayTimes = nil
         today = updatedToday
       }

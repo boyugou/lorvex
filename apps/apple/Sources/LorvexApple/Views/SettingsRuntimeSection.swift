@@ -100,7 +100,7 @@ struct AppearanceThumbnailPicker: View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
       ForEach(AppAppearance.allCases) { appearance in
         AppearanceSwatch(appearance: appearance, isSelected: selection == appearance) {
-          lorvexAnimated(.snappy(duration: 0.18)) { selection = appearance }
+          lorvexAnimated(LorvexDesign.Motion.quick) { selection = appearance }
         }
       }
     }
@@ -150,7 +150,7 @@ private struct AppearanceSwatch: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
-    .onHover { inside in lorvexAnimated(.easeOut(duration: 0.14)) { hovering = inside } }
+    .onHover { inside in lorvexAnimated(LorvexDesign.Motion.fade) { hovering = inside } }
     .accessibilityIdentifier("settings.appearance.swatch.\(appearance.rawValue)")
     .accessibilityLabel(appearance.localizedSettingsLabel)
     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)

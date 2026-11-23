@@ -28,17 +28,18 @@ public var lorvexReduceMotionEnabled: Bool {
 }
 
 /// `animation`, or `nil` (no animation) when Reduce Motion is on. For the APIs
-/// that take an optional animation, such as `Binding.animation(_:)`.
+/// that take an optional animation, such as `Binding.animation(_:)`. The
+/// animation is a `LorvexDesign.Motion` token, `standard` when none is named.
 @MainActor
-public func lorvexAnimation(_ animation: Animation = .default) -> Animation? {
+public func lorvexAnimation(_ animation: Animation = LorvexDesign.Motion.standard) -> Animation? {
   lorvexReduceMotionEnabled ? nil : animation
 }
 
-/// `withAnimation`, but with no animation when Reduce Motion is on. Same
-/// signature, so a call site only changes the name.
+/// `withAnimation`, but with no animation when Reduce Motion is on. The
+/// animation is a `LorvexDesign.Motion` token, `standard` when none is named.
 @MainActor
 public func lorvexAnimated<Result>(
-  _ animation: Animation = .default,
+  _ animation: Animation = LorvexDesign.Motion.standard,
   _ body: () throws -> Result
 ) rethrows -> Result {
   try withAnimation(lorvexAnimation(animation), body)
@@ -69,7 +70,9 @@ extension View {
 extension Binding {
   /// `Binding.animation(_:)` that applies no animation when Reduce Motion is on.
   @MainActor
-  public func reduceMotionAnimation(_ animation: Animation = .default) -> Binding<Value> {
+  public func reduceMotionAnimation(
+    _ animation: Animation = LorvexDesign.Motion.standard
+  ) -> Binding<Value> {
     self.animation(lorvexAnimation(animation))
   }
 }

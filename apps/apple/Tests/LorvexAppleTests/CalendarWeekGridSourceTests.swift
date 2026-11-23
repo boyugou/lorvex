@@ -16,7 +16,6 @@ func calendarWeekGridReanchorsOnWeekNavigationNotOnEdits() throws {
 
   #expect(source.contains("let scrollSignature = calendarWeekScrollAnchorSignature"))
   #expect(source.contains(".onChange(of: scrollSignature)"))
-  #expect(source.contains("lorvexAnimated(.snappy(duration: 0.18))"))
   // Block geometry (startMin/endMin) must NOT be in the scroll signature: moving
   // or resizing an event must not yank the scroll position back to the anchor.
   // Re-scroll fires only on week navigation (weekStart change).

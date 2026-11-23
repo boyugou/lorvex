@@ -36,7 +36,7 @@ struct TaskDropTarget<Key: Hashable>: ViewModifier {
               bottom: -outset.bottom, trailing: -outset.trailing))
         }
       }
-      .reduceMotionAnimation(.snappy(duration: 0.12), value: isTargeted)
+      .reduceMotionAnimation(LorvexDesign.Motion.quick, value: isTargeted)
       .dropDestination(for: LorvexTaskRef.self) { refs, _ in
         let ids = refs.droppedTaskIDs
         guard !ids.isEmpty else { return false }

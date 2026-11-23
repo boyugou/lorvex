@@ -190,6 +190,6 @@ private struct MobileMilestoneBar: View {
       }
     }
     .frame(height: height)
-    .reduceMotionAnimation(.easeInOut(duration: 0.28), value: fraction)
+    .reduceMotionAnimation(LorvexDesign.Motion.progress, value: fraction)
   }
 }

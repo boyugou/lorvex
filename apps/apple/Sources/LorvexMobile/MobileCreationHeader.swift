@@ -77,8 +77,8 @@ struct MobileCreationHeader<Name: View, Subtitle: View>: View {
       isChoosingAppearance = true
     } label: {
       MobileIconTile(icon: icon, fallback: fallbackIcon, tint: tint, size: Self.tileSize)
-        .reduceMotionAnimation(.snappy, value: icon)
-        .reduceMotionAnimation(.snappy, value: color)
+        .reduceMotionAnimation(LorvexDesign.Motion.quick, value: icon)
+        .reduceMotionAnimation(LorvexDesign.Motion.quick, value: color)
         .overlay(alignment: .bottomTrailing) { pencilBadge }
     }
     .buttonStyle(.plain)

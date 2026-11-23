@@ -44,7 +44,7 @@ extension MobileStore {
   /// replacing any change already on offer.
   func offerUndo(_ message: String, undo: @escaping @MainActor () async -> Void) {
     undoOfferAction = undo
-    lorvexAnimated(.snappy(duration: 0.25)) {
+    lorvexAnimated(LorvexDesign.Motion.standard) {
       undoOffer = MobileUndoOffer(message: message)
     }
   }
@@ -82,6 +82,6 @@ extension MobileStore {
   func dismissUndoOffer() {
     undoOfferAction = nil
     guard undoOffer != nil else { return }
-    lorvexAnimated(.snappy(duration: 0.2)) { undoOffer = nil }
+    lorvexAnimated(LorvexDesign.Motion.quick) { undoOffer = nil }
   }
 }

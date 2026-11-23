@@ -50,6 +50,63 @@ class DesignTokenVerifierTests(unittest.TestCase):
         )
         self.assertEqual(failures, [])
 
+    def test_literal_animation_curves_are_flagged(self) -> None:
+        failures = self.scan(
+            "\n".join(
+                [
+                    "lorvexAnimated(.snappy) { expanded.toggle() }",
+                    "lorvexAnimated(.snappy(duration: 0.2)) { x = y }",
+                    ".reduceMotionAnimation(.easeOut(duration: 0.12), value: hovering)",
+                    "$draft.mode.reduceMotionAnimation(.spring(response: 0.3, dampingFraction: 0.7))",
+                    "lorvexAnimated(.default) { step += 1 }",
+                    "static let animation = Animation.snappy(duration: 0.18)",
+                    "private let curve: Animation = .snappy(duration: 0.2)",
+                    "lorvexAnimated(isOpen ? LorvexDesign.Motion.quick : .easeOut) { x = y }",
+                    ".reduceMotionAnimation(Animation.interpolatingSpring(stiffness: 80, damping: 9), value: v)",
+                ]
+            )
+        )
+        self.assertEqual(len(failures), 9, failures)
+        self.assertTrue(all("literal animation curve" in f for f in failures))
+        self.assertTrue(all("LorvexDesign.Motion" in f for f in failures))
+
+    def test_animation_rule_ignores_the_color_exemptions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            picker = root / "Sources/LorvexMobile/MobileIconColorPicker.swift"
+            picker.parent.mkdir(parents=True)
+            picker.write_text(
+                "let hue: Color = .red\nlorvexAnimated(.snappy) { selected = hue }\n",
+                encoding="utf-8")
+            failures = vdt.token_failures(root)
+        self.assertEqual(len(failures), 1, failures)
+        self.assertIn("literal animation curve", failures[0])
+
+    def test_motion_token_definitions_are_exempt(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            design = root / "Sources/LorvexCore/Support/LorvexDesign.swift"
+            design.parent.mkdir(parents=True)
+            design.write_text(
+                "public static let quick: Animation = .snappy(duration: 0.18)\n", encoding="utf-8")
+            self.assertEqual(vdt.token_failures(root), [])
+
+    def test_motion_tokens_pass(self) -> None:
+        failures = self.scan(
+            "\n".join(
+                [
+                    "lorvexAnimated(LorvexDesign.Motion.quick) { expanded.toggle() }",
+                    "lorvexAnimated { timing.addEndTime() }",
+                    ".reduceMotionAnimation(LorvexDesign.Motion.fade, value: hovering)",
+                    "$draft.mode.reduceMotionAnimation(LorvexDesign.Motion.standard)",
+                    ".progressViewStyle(.linear)",
+                    ".reduceMotionAnimation(LorvexDesign.Motion.quick, value: isOn ? 1 : 0)",
+                    "lorvexAnimated(.snappy) { x = y }  // lorvex-design-token: allow",
+                ]
+            )
+        )
+        self.assertEqual(failures, [])
+
     def test_fixed_direction_glyphs_are_flagged(self) -> None:
         failures = self.scan(
             "\n".join(

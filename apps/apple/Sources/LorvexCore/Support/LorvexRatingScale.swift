@@ -49,7 +49,7 @@ public struct LorvexRatingScale: View {
 
   private func option(_ level: Int, stacked: Bool) -> some View {
     Button {
-      lorvexAnimated(.snappy) { value = value == level ? nil : level }
+      lorvexAnimated(LorvexDesign.Motion.quick) { value = value == level ? nil : level }
     } label: {
       Group {
         if compact {
@@ -89,7 +89,7 @@ public struct LorvexRatingScale: View {
     .disabled(!isEnabled)
     #if os(macOS) || os(iOS)
       .onHover { inside in
-        lorvexAnimated(.easeOut(duration: 0.12)) {
+        lorvexAnimated(LorvexDesign.Motion.fade) {
           if inside && isEnabled { hoveredLevel = level }
           else if hoveredLevel == level { hoveredLevel = nil }
         }

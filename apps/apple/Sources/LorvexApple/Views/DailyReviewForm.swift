@@ -205,7 +205,7 @@ struct DailyReviewForm: View {
         guard date == store.selectedReviewDate else { return }
         await store.checkInHabit(habit, on: date)
         if let loaded = await store.loadReviewHabits(date: date), date == store.selectedReviewDate {
-          lorvexAnimated(.snappy(duration: 0.18)) { habits = loaded }
+          lorvexAnimated(LorvexDesign.Motion.quick) { habits = loaded }
         }
       }
     }

@@ -122,7 +122,7 @@ public struct LorvexReviewTaskList: View {
       }
       if let previewLimit, tasks.count > previewLimit {
         Button {
-          lorvexAnimated(.snappy) { expanded.toggle() }
+          lorvexAnimated(LorvexDesign.Motion.quick) { expanded.toggle() }
         } label: {
           Label(expanded ? ReviewPlanCopy.less : moreLine(tasks.count - previewLimit),
             systemImage: expanded ? "chevron.up" : "chevron.down")
@@ -290,9 +290,9 @@ public struct LorvexReviewTaskList: View {
     let fresh = tasks.filter { !movingTaskIDs.contains($0.id) }
     guard !fresh.isEmpty else { return }
     let ids = fresh.map(\.id)
-    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.formUnion(ids) }
+    lorvexAnimated(LorvexDesign.Motion.quick) { movingTaskIDs.formUnion(ids) }
     await deferral.arrange(fresh, destination)
-    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.subtract(ids) }
+    lorvexAnimated(LorvexDesign.Motion.quick) { movingTaskIDs.subtract(ids) }
   }
 
   private func circle(_ task: ReviewTaskSummary, completion: Completion) -> some View {
@@ -319,11 +319,11 @@ public struct LorvexReviewTaskList: View {
 
   private func complete(_ task: ReviewTaskSummary, with completion: Completion) async {
     guard !completingTaskIDs.contains(task.id) else { return }
-    lorvexAnimated(.snappy(duration: 0.18)) { _ = completingTaskIDs.insert(task.id) }
+    lorvexAnimated(LorvexDesign.Motion.quick) { _ = completingTaskIDs.insert(task.id) }
     await completion.complete(task.id)
     // A saved completion has already reloaded the list without this row; a
     // failed one leaves the row, whose circle empties again.
-    lorvexAnimated(.snappy(duration: 0.18)) { _ = completingTaskIDs.remove(task.id) }
+    lorvexAnimated(LorvexDesign.Motion.quick) { _ = completingTaskIDs.remove(task.id) }
   }
 
   private func openButton(_ task: ReviewTaskSummary) -> some View {

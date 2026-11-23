@@ -35,7 +35,7 @@ struct MemoryEntryRow: View {
     .lorvexKeyboardActivation(edit)
     .lorvexDeleteKey(delete)
     .onHover { hovering in
-      lorvexAnimated(.easeOut(duration: 0.12)) { isHovering = hovering }
+      lorvexAnimated(LorvexDesign.Motion.fade) { isHovering = hovering }
       if hovering { NSCursor.pointingHand.push() } else { NSCursor.pop() }
     }
     .accessibilityElement(children: .combine)

@@ -538,9 +538,10 @@ that hides two items behind an extra hover.
   position, uses `.font(.system(size:` outside the documented exceptions,
   passes a numeric corner radius, names a fixed-direction glyph
   (`chevron.left`, `arrow.right.to.line`) where a mirroring `forward` /
-  `backward` form belongs, or trims a circle into a progress arc instead of
-  using `LorvexProgressArc` (§6). The exception list is in the script and is
-  the complete inventory of intentional literals.
+  `backward` form belongs, trims a circle into a progress arc instead of
+  using `LorvexProgressArc` (§6), or passes a literal animation curve where a
+  `LorvexDesign.Motion` token belongs (§9). The exception list is in the
+  script and is the complete inventory of intentional literals.
 - Visual verification is part of every UI change. iOS runs headlessly in the
   simulator (`-lorvexSeedSampleData -lorvexOpenURL lorvex://tab/<tab>` plus
   `simctl io screenshot`); macOS uses the DEBUG `--ui-preview` mode, which
@@ -691,3 +692,31 @@ sentence, a deadline on the planned day reads "due the same day" rather than
 naming the day twice; a standalone Due row always names its day. A deadline
 that passed before yesterday says how late it is ("Sep 20 · 9 days late").
 
+
+## 9. Motion
+
+Every animation takes its timing from `LorvexDesign.Motion`
+(`Sources/LorvexCore/Support/LorvexDesign.swift`), passed to the Reduce Motion
+helpers (`lorvexAnimated`, `reduceMotionAnimation`, `lorvexAnimation`), which
+apply no animation while Reduce Motion is on. A change of the same kind moves at
+the same speed on every surface, so the app has one feel instead of a dozen.
+
+| Token | Value | Use |
+|---|---|---|
+| `quick` | snappy spring, 0.18 s | a control answering a tap in place: a selection, a toggle, a section or "show more" the person opens or closes with its own header or button, a chip or badge appearing, a color or icon chosen, a dial following its stepper, a list taking the order a drag gave it |
+| `standard` | snappy spring, 0.25 s | content changing because of an action elsewhere: rows joining, leaving, or moving between a list's sections after a task is completed, deferred, reopened, started, or paused, a composer or field unfolding, a pane, rail, sidebar, inspector, or toast sliding in or out. The helpers' default |
+| `page` | snappy spring, 0.35 s | moving between whole pages of content: the iPhone calendar's day, week, and month, the setup steps |
+| `fade` | ease-out, 0.14 s | a hover or press highlight: opacity, and the slight scale that goes with it; actions revealed on hover |
+| `progress` | ease-in-out, 0.3 s | a ring, bar, or arc filling to a new value; it does not overshoot, so a full bar stays inside its track |
+| `pop` | spring, response 0.34, damping 0.55 | the acknowledgment of a completion: a check or ring scaling up |
+| `settle` | spring, response 0.3, damping 0.7 | the return from a `pop` |
+| `celebrate` | spring, response 0.45, damping 0.6 | a milestone badge arriving; it settles over about a second |
+| `shimmer` | linear, 1.4 s, repeating | a loading placeholder's sweep |
+
+A tap's own feedback is `quick` or `pop`; what the tap changes elsewhere on the
+screen is `standard`. Apart from the settle of `celebrate`, nothing a person
+waits on runs longer than `page`.
+`script/verify_design_tokens.py` rejects a literal curve (`.snappy`,
+`.spring(`, `.easeOut(`, …) passed to an animation helper or built with
+`Animation.`, so a new animation picks one of these tokens or adds a token
+here.

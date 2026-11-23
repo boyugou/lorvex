@@ -37,7 +37,7 @@ struct SetupWizardSheet: View {
       currentStepView
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .transition(.opacity)
-        .reduceMotionAnimation(.easeInOut, value: wizardState.currentStep)
+        .reduceMotionAnimation(LorvexDesign.Motion.page, value: wizardState.currentStep)
     }
     .frame(width: 540, height: wizardState.currentStep == .welcome ? 340 : 480)
   }
@@ -73,7 +73,7 @@ struct SetupWizardSheet: View {
         Circle()
           .fill(step.rawValue <= wizardState.currentStep.rawValue ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.secondary.opacity(0.3)))
           .frame(width: 8, height: 8)
-          .reduceMotionAnimation(.easeInOut, value: wizardState.currentStep)
+          .reduceMotionAnimation(LorvexDesign.Motion.page, value: wizardState.currentStep)
       }
     }
   }
@@ -84,6 +84,6 @@ struct SetupWizardSheet: View {
   }
 
   private func advance() {
-    lorvexAnimated(.default) { wizardState.advance() }
+    lorvexAnimated(LorvexDesign.Motion.page) { wizardState.advance() }
   }
 }

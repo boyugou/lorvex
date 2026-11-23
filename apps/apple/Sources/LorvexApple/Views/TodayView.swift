@@ -146,7 +146,7 @@ private struct TodayPage: View {
       .copySelectedTasksAsText(store, on: .today)
       .selectAllTasksOnCommand(store, on: .today)
     }
-    .reduceMotionAnimation(.snappy(duration: 0.18), value: layout.showsRail)
+    .reduceMotionAnimation(LorvexDesign.Motion.standard, value: layout.showsRail)
   }
 
   /// The day's column. Its date line is Today's title, so the column insets by

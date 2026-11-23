@@ -26,7 +26,7 @@ public struct LorvexMobileStoreRootView: View {
     // the whole shell, wherever the completion was logged (Today, the Habits
     // workspace, a habit's detail).
     .lorvexMobileMilestoneCelebration(store.milestoneCelebration) {
-      lorvexAnimated(.easeOut(duration: 0.2)) { store.milestoneCelebration = nil }
+      lorvexAnimated(LorvexDesign.Motion.standard) { store.milestoneCelebration = nil }
     }
     .lorvexMobileActionBanners(
       receipt: captureSheetVisible ? nil : store.captureReceipt, open: store.openCaptureReceipt,

@@ -180,7 +180,7 @@ struct ReviewTomorrowPlanSheet: View {
     func makeBody(configuration: Configuration) -> some View {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
         Button {
-          lorvexAnimated(.snappy) { configuration.isExpanded.toggle() }
+          lorvexAnimated(LorvexDesign.Motion.quick) { configuration.isExpanded.toggle() }
         } label: {
           HStack(spacing: LorvexDesign.Spacing.xs) {
             Image(systemName: configuration.isExpanded ? "chevron.down" : "chevron.forward")

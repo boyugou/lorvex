@@ -74,7 +74,7 @@ struct CalendarEventRepeatField: View {
         .accessibilityIdentifier("\(idPrefix).repeat.timeZone")
       }
     }
-    .reduceMotionAnimation(.snappy(duration: 0.18), value: recurrence)
+    .reduceMotionAnimation(LorvexDesign.Motion.quick, value: recurrence)
     .onChange(of: referenceTiming.startDate) { _, _ in
       guard var rule = recurrence, !Self.hasCustomPattern(rule) else { return }
       switch automaticallyDerivedAxis {

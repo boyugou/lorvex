@@ -139,7 +139,7 @@ struct MobileTodayPage: View {
     // Every row sizes to its content, so the ground section's edge rows take
     // no height. The list reads this for all its rows, not per row.
     .environment(\.defaultMinListRowHeight, 0)
-    .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
+    .reduceMotionAnimation(LorvexDesign.Motion.standard, value: page)
     .sensoryFeedback(.success, trigger: store.doneTodayCount)
     .sheet(isPresented: Binding(get: { planningDay != nil }, set: { if !$0 { planningDay = nil } })) {
       if let day = planningDay, let tomorrow = LorvexDateFormatters.ymdUTCAddingDays(day, days: 1),
@@ -212,7 +212,7 @@ struct MobileTodayPage: View {
           .accessibilityIdentifier("today.briefing")
         if briefingHidesText {
           Button {
-            lorvexAnimated(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
+            lorvexAnimated(LorvexDesign.Motion.quick) { showsFullBriefing.toggle() }
           } label: {
             // The words are one line tall. The label's padding lifts the tap
             // target to about 44pt, and the negative padding outside the
@@ -548,7 +548,7 @@ struct MobileTodayPage: View {
       }
     } header: {
       Button {
-        lorvexAnimated(.snappy(duration: 0.2)) { doneCollapsed.toggle() }
+        lorvexAnimated(LorvexDesign.Motion.quick) { doneCollapsed.toggle() }
       } label: {
         HStack(spacing: LorvexDesign.Spacing.s) {
           Text(MobileTodayCalmCopy.doneTitle)

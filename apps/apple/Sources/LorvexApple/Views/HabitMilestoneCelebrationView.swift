@@ -60,7 +60,7 @@ struct HabitMilestoneCelebrationCard: View {
     .scaleEffect(reduceMotion ? 1 : (appeared ? 1 : 0.92))
     .task {
       guard !reduceMotion else { return }
-      lorvexAnimated(.spring(response: 0.5, dampingFraction: 0.55)) { appeared = true }
+      lorvexAnimated(LorvexDesign.Motion.celebrate) { appeared = true }
     }
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("habit.milestone.celebration")

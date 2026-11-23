@@ -36,7 +36,7 @@ struct LorvexToast: ViewModifier {
             .padding(.bottom, 20)
             // Scope animation to the toast-only branch so a `message` change
             // doesn't animate descendant changes in the host content tree.
-            .reduceMotionAnimation(.easeInOut(duration: 0.25), value: message)
+            .reduceMotionAnimation(LorvexDesign.Motion.standard, value: message)
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .onTapGesture { dismiss() }
             .task(id: message) {

@@ -135,7 +135,7 @@ struct LorvexTaskRow: View {
       if !isCancelled, !isSomeday { onToggleComplete?() }
     }
     .accessibilityIdentifier("task.row.\(task.id)")
-    .reduceMotionAnimation(.snappy(duration: 0.16), value: isSelected)
+    .reduceMotionAnimation(LorvexDesign.Motion.quick, value: isSelected)
   }
 
   @ViewBuilder

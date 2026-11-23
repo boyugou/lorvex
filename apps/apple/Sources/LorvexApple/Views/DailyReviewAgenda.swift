@@ -56,7 +56,7 @@ struct DailyReviewAgenda: View {
       }
       if items.count > previewCount {
         Button(expanded ? TodayCalmCopy.briefingLess : ReviewCalmCopy.moreCount(items.count - previewCount)) {
-          lorvexAnimated(.snappy) { expanded.toggle() }
+          lorvexAnimated(LorvexDesign.Motion.quick) { expanded.toggle() }
         }
         .buttonStyle(.link)
         .font(LorvexDesign.Typography.secondaryText)

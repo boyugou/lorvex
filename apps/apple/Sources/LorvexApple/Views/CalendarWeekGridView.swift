@@ -159,7 +159,7 @@ struct CalendarWeekGridView: View {
   private func scrollTimeAxis(_ request: CalendarTimeAxisTracker.Request?) {
     guard let request else { return }
     if request.isAnimated {
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         timeAxisPosition.scrollTo(y: request.offset)
       }
     } else {

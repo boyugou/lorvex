@@ -55,7 +55,7 @@ struct MobileDiagnosticLogRow: View {
     .contentShape(.rect)
     .onTapGesture {
       guard details?.isEmpty == false else { return }
-      lorvexAnimated(.snappy(duration: 0.2)) { isDetailExpanded.toggle() }
+      lorvexAnimated(LorvexDesign.Motion.quick) { isDetailExpanded.toggle() }
     }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(accessibilityLabel)

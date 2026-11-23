@@ -107,7 +107,7 @@ struct TaskDetailMonthCalendar: View {
   }
 
   private func page(by months: Int) {
-    lorvexAnimated(.snappy(duration: 0.2)) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       month = calendar.date(byAdding: .month, value: months, to: shownMonth)
     }
   }

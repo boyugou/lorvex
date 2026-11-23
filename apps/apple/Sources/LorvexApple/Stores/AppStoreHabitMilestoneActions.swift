@@ -34,7 +34,7 @@ extension AppStore {
     }
     guard let reached else { return }
     feedbackProvider.playFeedback(.habitMilestoneReached)
-    lorvexAnimated(.spring(response: 0.42, dampingFraction: 0.62)) {
+    lorvexAnimated(LorvexDesign.Motion.celebrate) {
       milestoneCelebration = HabitMilestoneCelebration(
         habitName: after.name,
         milestone: reached,

@@ -249,13 +249,13 @@ struct MobileTaskTimeRows: View {
       }
       .accessibilityIdentifier("task.field.time.end")
       Button(MobileTaskFieldCopy.removeTime, role: .destructive) {
-        lorvexAnimated(.snappy) { time = nil }
+        lorvexAnimated(LorvexDesign.Motion.standard) { time = nil }
       }
       .mobileDestructiveRowStyle()
       .accessibilityIdentifier("task.field.time.remove")
     } else {
       Button {
-        lorvexAnimated(.snappy) {
+        lorvexAnimated(LorvexDesign.Motion.standard) {
           time = LorvexTaskFieldChoices.newTime(
             length: length, plannedDay: PlannedDayBridge.storageDate(forLocalInstant: day),
             timeZone: productTimeZone)
@@ -321,7 +321,7 @@ struct MobileTaskLengthEditor: View {
             .padding(.horizontal, LorvexDesign.Spacing.m)
         }
         .frame(width: 112, height: 112)
-        .reduceMotionAnimation(.snappy(duration: 0.2), value: minutes)
+        .reduceMotionAnimation(LorvexDesign.Motion.quick, value: minutes)
         Button { set(Choices.length(minutes, steppedBy: Choices.lengthStep)) } label: { Image(systemName: "plus").frame(width: 32, height: 32) }
           .buttonStyle(.bordered).buttonBorderShape(.circle)
           .disabled(minutes >= Choices.lengthMax)

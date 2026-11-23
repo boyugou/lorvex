@@ -133,7 +133,7 @@ struct TodayScheduleSection: View {
 
   private func pastToggle(count: Int) -> some View {
     Button {
-      lorvexAnimated(.snappy(duration: 0.18)) { showsPast.toggle() }
+      lorvexAnimated(LorvexDesign.Motion.quick) { showsPast.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.m) {
         LorvexDisclosureChevron(isExpanded: showsPast)
@@ -221,7 +221,7 @@ struct TodayEventRow: View {
     .contentShape(Rectangle())
     .onTapGesture(perform: open)
     .lorvexKeyboardActivation(open)
-    .reduceMotionAnimation(.snappy(duration: 0.16), value: isSelected)
+    .reduceMotionAnimation(LorvexDesign.Motion.quick, value: isSelected)
     .accessibilityElement(children: .combine)
     .accessibilityLabel(Text(verbatim: calendarEventAccessibilityLabel(event)), isEnabled: !event.allDay)
     .accessibilityAddTraits(.isButton)

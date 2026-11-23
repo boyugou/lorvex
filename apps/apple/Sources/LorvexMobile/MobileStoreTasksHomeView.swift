@@ -404,7 +404,7 @@ public struct MobileStoreTasksHomeView: View {
     }
     let holds = smartCounts.values.contains { $0 > 0 } ? true : await store.holdsAnyTask()
     if holds != holdsTasks {
-      lorvexAnimated(.snappy(duration: 0.25)) { holdsTasks = holds }
+      lorvexAnimated(LorvexDesign.Motion.standard) { holdsTasks = holds }
     }
   }
 }

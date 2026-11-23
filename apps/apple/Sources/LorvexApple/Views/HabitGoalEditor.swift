@@ -117,7 +117,7 @@ struct HabitGoalEditor: View {
       }
     }
     .frame(width: 96, height: 96)
-    .reduceMotionAnimation(.snappy(duration: 0.2), value: target)
+    .reduceMotionAnimation(LorvexDesign.Motion.quick, value: target)
     .help(readingLabel)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(HabitDetailFieldCopy.goal)

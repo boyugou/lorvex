@@ -74,8 +74,8 @@ public struct LorvexTaskRing: View {
       }
     }
     .frame(width: diameter, height: diameter)
-    .reduceMotionAnimation(.spring(response: 0.35, dampingFraction: 0.8), value: isDone)
-    .reduceMotionAnimation(.easeInOut(duration: 0.4), value: progress)
+    .reduceMotionAnimation(LorvexDesign.Motion.quick, value: isDone)
+    .reduceMotionAnimation(LorvexDesign.Motion.progress, value: progress)
   }
 }
 

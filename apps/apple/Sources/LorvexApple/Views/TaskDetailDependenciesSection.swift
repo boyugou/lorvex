@@ -86,7 +86,7 @@ private struct TaskDetailDependenciesPanel: View {
 
   private func add(_ task: LorvexTask) {
     guard !dependencyIDs.contains(task.id) else { return }
-    lorvexAnimated(.snappy(duration: 0.2)) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       store.taskDetailDependencies.append(task.id)
     }
     if !resolved.contains(where: { $0.id == task.id }) {
@@ -95,7 +95,7 @@ private struct TaskDetailDependenciesPanel: View {
   }
 
   private func remove(_ id: LorvexTask.ID) {
-    lorvexAnimated(.snappy(duration: 0.2)) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       store.taskDetailDependencies.removeAll { $0 == id }
     }
   }

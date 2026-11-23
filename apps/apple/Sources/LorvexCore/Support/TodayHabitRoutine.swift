@@ -48,7 +48,7 @@
           VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
             HStack(spacing: LorvexDesign.Spacing.s) {
               Button {
-                lorvexAnimated(.snappy(duration: 0.18)) { expandedOverride = !expanded }
+                lorvexAnimated(LorvexDesign.Motion.quick) { expandedOverride = !expanded }
               } label: {
                 HStack(spacing: LorvexDesign.Spacing.s) {
                   Image(systemName: RoutineCopy.symbol(period)).foregroundStyle(.secondary)

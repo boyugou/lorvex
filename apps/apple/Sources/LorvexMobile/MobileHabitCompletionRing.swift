@@ -81,7 +81,7 @@ struct MobileHabitCompletionRing: View {
   private func trigger() {
     let action = checkIn
     guard !isMutating, action != .none else { return }
-    lorvexAnimated(.spring(response: 0.34, dampingFraction: 0.5)) {
+    lorvexAnimated(LorvexDesign.Motion.pop) {
       pulse = true
     }
     Task {
@@ -90,7 +90,7 @@ struct MobileHabitCompletionRing: View {
       } else {
         await complete()
       }
-      lorvexAnimated(.spring(response: 0.3, dampingFraction: 0.7)) {
+      lorvexAnimated(LorvexDesign.Motion.settle) {
         pulse = false
       }
     }

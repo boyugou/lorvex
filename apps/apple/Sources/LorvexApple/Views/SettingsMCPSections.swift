@@ -64,7 +64,7 @@ private struct SettingsAssistantConnectSection: View {
     }
     .task {
       let status = await Self.currentStatus()
-      lorvexAnimated(.snappy(duration: 0.18)) { helperStatus = status }
+      lorvexAnimated(LorvexDesign.Motion.quick) { helperStatus = status }
     }
   }
 

@@ -117,7 +117,7 @@ struct MenuBarStatusView: View {
             }
           }
           .padding(LorvexDesign.Spacing.m)
-          .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
+          .reduceMotionAnimation(LorvexDesign.Motion.standard, value: page)
         }
         .scrollBounceBehavior(.basedOnSize)
         .frame(maxHeight: Self.bodyMaxHeight)
@@ -271,7 +271,7 @@ struct MenuBarStatusView: View {
           .transition(.opacity)
       }
     }
-    .reduceMotionAnimation(.snappy(duration: 0.18), value: preview.words.isEmpty)
+    .reduceMotionAnimation(LorvexDesign.Motion.quick, value: preview.words.isEmpty)
   }
 
   /// Capture the typed line (like the command palette), then clear the field.

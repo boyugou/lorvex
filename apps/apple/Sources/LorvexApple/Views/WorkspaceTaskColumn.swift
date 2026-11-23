@@ -403,7 +403,7 @@ private struct WorkspaceTaskArrowKeyNavigationModifier: ViewModifier {
     } else {
       navigation.selectOnly(target)
     }
-    lorvexAnimated(.snappy(duration: 0.16)) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       proxy.scrollTo(target, anchor: nil)
     }
   }

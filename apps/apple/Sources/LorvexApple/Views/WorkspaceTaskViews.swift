@@ -72,7 +72,7 @@ struct WorkspaceTaskDisclosureHeader: View {
   let accessibilityIdentifier: String
 
   private func toggle() {
-    lorvexAnimated(.snappy(duration: 0.16)) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       isExpanded.toggle()
     }
   }

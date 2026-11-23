@@ -210,7 +210,7 @@ struct MobileStoreReviewDayPage: View {
         let date = store.selectedReviewDate
         await store.checkInHabit(habit, on: date)
         if let loaded = await store.loadReviewHabits(date: date), date == store.selectedReviewDate {
-          lorvexAnimated(.snappy(duration: 0.18)) { self.dayHabits = (date, loaded) }
+          lorvexAnimated(LorvexDesign.Motion.quick) { self.dayHabits = (date, loaded) }
         }
       }
     }
@@ -261,7 +261,7 @@ struct MobileStoreReviewDayPage: View {
         }
       }
       Button {
-        lorvexAnimated(.snappy) { expandedFields = !showsMoreFields }
+        lorvexAnimated(LorvexDesign.Motion.quick) { expandedFields = !showsMoreFields }
       } label: {
         // The words are one line tall. The label's padding lifts the tap
         // target to about 44pt, and the negative padding outside the button

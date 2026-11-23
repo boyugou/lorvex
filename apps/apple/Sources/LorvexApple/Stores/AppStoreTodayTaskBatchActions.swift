@@ -43,7 +43,7 @@ extension AppStore {
       let day = try storageDate(daysFromLogicalToday: 0)
       _ = try await core.batchUpdateTasks(ids.map { TaskUpdateDraft(id: $0, plannedDate: .set(day)) })
       let updatedToday = try await core.loadToday()
-      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      lorvexAnimated(LorvexDesign.Motion.quick) { today = updatedToday }
       try await afterSelectedTaskMutation()
     }
   }

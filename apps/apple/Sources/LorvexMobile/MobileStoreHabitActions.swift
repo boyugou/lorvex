@@ -380,7 +380,7 @@ extension MobileStore {
     return await mutateHabit {
       let reordered = try await core.reorderHabits(
         orderedIDs: order, date: logicalTodayString)
-      lorvexAnimated(.snappy(duration: 0.25)) { habits = reordered }
+      lorvexAnimated(LorvexDesign.Motion.quick) { habits = reordered }
     }
   }
 

@@ -130,7 +130,7 @@ struct MobileIconColorPicker: View {
   private func swatch(_ hex: String) -> some View {
     let isSelected = selectedColor == hex
     return Button {
-      lorvexAnimated(.snappy) { color = hex }
+      lorvexAnimated(LorvexDesign.Motion.quick) { color = hex }
     } label: {
       Circle()
         .fill(Color(lorvexHex: hex) ?? .accentColor)
@@ -234,7 +234,7 @@ struct MobileIconColorPicker: View {
   /// typed name picks without a tap; an empty search leaves the choice alone.
   private func chooseFirstMatch() {
     guard isSearching, let first = displayedIcons.first else { return }
-    lorvexAnimated(.snappy) { icon = MobileIconChoices.symbol(for: first) }
+    lorvexAnimated(LorvexDesign.Motion.quick) { icon = MobileIconChoices.symbol(for: first) }
   }
 
   private func iconButton(_ entry: String) -> some View {
@@ -242,7 +242,7 @@ struct MobileIconColorPicker: View {
     let isSelected =
       LorvexIconCatalog.outlineName(of: selectedSymbol) == LorvexIconCatalog.outlineName(of: entry)
     return Button {
-      lorvexAnimated(.snappy) { icon = symbol }
+      lorvexAnimated(LorvexDesign.Motion.quick) { icon = symbol }
     } label: {
       Image(systemName: symbol)
         .font(.title3)

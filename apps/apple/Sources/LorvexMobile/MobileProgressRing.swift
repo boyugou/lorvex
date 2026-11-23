@@ -62,6 +62,6 @@ struct MobileProgressRing: View {
       }
     }
     .frame(width: size, height: size)
-    .reduceMotionAnimation(.easeInOut(duration: 0.2), value: value)
+    .reduceMotionAnimation(LorvexDesign.Motion.progress, value: value)
   }
 }

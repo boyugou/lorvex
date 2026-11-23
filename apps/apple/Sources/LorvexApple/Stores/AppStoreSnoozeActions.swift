@@ -28,7 +28,7 @@ extension AppStore {
       feedbackProvider.playFeedback(.taskDeferred)
       // The task slides out of the day surfaces into the Scheduled lane, so
       // animate the today snapshot the same way a defer does.
-      lorvexAnimated(.snappy(duration: 0.18)) { today = refreshed }
+      lorvexAnimated(LorvexDesign.Motion.quick) { today = refreshed }
       try await afterSelectedTaskMutation()
       syncSelectedTaskDraft()
     }

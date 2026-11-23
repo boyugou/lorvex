@@ -115,7 +115,7 @@ struct MobileCalendarMonthDayCell: View, Equatable {
           Circle().fill(isToday ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))
         }
       }
-      .reduceMotionAnimation(.snappy(duration: 0.2), value: isSelected)
+      .reduceMotionAnimation(LorvexDesign.Motion.quick, value: isSelected)
   }
 
   private var numberStyle: AnyShapeStyle {

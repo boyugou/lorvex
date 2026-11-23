@@ -80,7 +80,7 @@ struct ContentView: View {
     // changes and reports the screen's width to the layout.
     .background(WindowMinWidthEnforcer(store: store, layout: layout))
     .onChange(of: store.isMainInspectorOpen) { _, isOpen in
-      lorvexAnimated(.snappy) { layout.inspectorDidChange(isOpen: isOpen) }
+      lorvexAnimated(LorvexDesign.Motion.standard) { layout.inspectorDidChange(isOpen: isOpen) }
     }
     .onChange(of: layout.columnVisibility) {
       if layout.sidebarVisibilityDidChange(inspectorOpen: store.isMainInspectorOpen) {
@@ -146,7 +146,7 @@ struct ContentView: View {
       store.toastMessage = nil
     }
     .lorvexMilestoneCelebration(store.milestoneCelebration) {
-      lorvexAnimated(.spring(response: 0.4, dampingFraction: 0.82)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         store.milestoneCelebration = nil
       }
     }

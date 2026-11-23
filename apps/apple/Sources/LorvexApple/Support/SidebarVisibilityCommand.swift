@@ -35,7 +35,7 @@ struct SidebarVisibilityCommandButton: View {
   var body: some View {
     Button(title) {
       guard let sidebarVisibility else { return }
-      lorvexAnimated(.snappy(duration: 0.2)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         sidebarVisibility.wrappedValue =
           sidebarVisibility.wrappedValue == .detailOnly ? .all : .detailOnly
       }

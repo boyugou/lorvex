@@ -166,6 +166,9 @@ device.
       `reduceMotionAnimation`, `reduceMotionBounce`, `reduceMotionPop`) so it
       honors Reduce Motion on every platform; `verify_source_hygiene.py`
       rejects a raw `withAnimation(`, `.animation(`, or `.symbolEffect(.bounce`.
+      Its timing is a `LorvexDesign.Motion` token, picked by the table in
+      `docs/design/DESIGN_SYSTEM.md` section 9; `verify_design_tokens.py`
+      rejects a literal curve.
     - **Always visually QA headlessly** before considering a UI change done; the
       screenshot is the proof. iOS: `script/ios_sim_build.sh`, then
       `script/ios_sim_screenshots.sh <outdir> light today tasks …` boots the

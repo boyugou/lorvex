@@ -343,7 +343,7 @@ struct MobileTaskCompletionCircle: View {
 
   private func triggerComplete() {
     guard !task.status.isResolved, !isMutating, !isCompleting else { return }
-    lorvexAnimated(.spring(response: 0.34, dampingFraction: 0.5)) {
+    lorvexAnimated(LorvexDesign.Motion.pop) {
       isCompleting = true
     }
     Task {

@@ -30,7 +30,7 @@ struct LorvexIconButton: View {
     }
     .buttonStyle(.plain)
     .onHover { isHovering = $0 }
-    .reduceMotionAnimation(.easeOut(duration: 0.12), value: isHovering)
+    .reduceMotionAnimation(LorvexDesign.Motion.fade, value: isHovering)
     .help(label)
     .accessibilityLabel(label)
     .accessibilityIdentifier(accessibilityIdentifier ?? "")
@@ -64,7 +64,7 @@ struct LorvexIconMenu<Content: View>: View {
     .menuIndicator(.hidden)
     .fixedSize()
     .onHover { isHovering = $0 }
-    .reduceMotionAnimation(.easeOut(duration: 0.12), value: isHovering)
+    .reduceMotionAnimation(LorvexDesign.Motion.fade, value: isHovering)
     .help(label)
     .accessibilityLabel(label)
     .accessibilityIdentifier(accessibilityIdentifier ?? "")

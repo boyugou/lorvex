@@ -89,6 +89,36 @@ public enum LorvexDesign {
     public static let xl: CGFloat = 32
   }
 
+  /// The timing every animation takes, so a change of the same kind moves at
+  /// the same speed on every surface. Pass a token to the Reduce Motion
+  /// helpers (`lorvexAnimated`, `reduceMotionAnimation`, `lorvexAnimation`),
+  /// which apply no animation while Reduce Motion is on.
+  public enum Motion {
+    /// A control answering a tap in place: a selection, a toggle, a chip or
+    /// badge appearing, a color or icon chosen, a short list reordering.
+    public static let quick = Animation.snappy(duration: 0.18)
+    /// Content changing shape: a section expanding or collapsing, a composer
+    /// or field unfolding, rows added to or removed from a list, a pane or a
+    /// toast appearing. The Reduce Motion helpers' default.
+    public static let standard = Animation.snappy(duration: 0.25)
+    /// Moving between whole pages of content: the calendar's day, week, and
+    /// month, the setup steps.
+    public static let page = Animation.snappy(duration: 0.35)
+    /// Opacity alone: a hover highlight, a pressed tile, actions revealed on
+    /// hover.
+    public static let fade = Animation.easeOut(duration: 0.14)
+    /// A ring, bar, or arc filling to a new value.
+    public static let progress = Animation.easeInOut(duration: 0.3)
+    /// The acknowledgment of a completion: a check or ring scaling up.
+    public static let pop = Animation.spring(response: 0.34, dampingFraction: 0.55)
+    /// The return from a `pop`.
+    public static let settle = Animation.spring(response: 0.3, dampingFraction: 0.7)
+    /// A milestone badge arriving.
+    public static let celebrate = Animation.spring(response: 0.45, dampingFraction: 0.6)
+    /// A loading placeholder's sweep, repeating until the content arrives.
+    public static let shimmer = Animation.linear(duration: 1.4).repeatForever(autoreverses: false)
+  }
+
   /// Corner radius scale for grouped containers.
   public enum Radius {
     public static let s: CGFloat = 6

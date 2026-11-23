@@ -9,7 +9,7 @@ extension MobileCalendarDayView {
   func jump(to day: Date) {
     let target = offset(showing: day)
     if MobileLivePages.slides(from: dayOffset, to: target) {
-      lorvexAnimated { dayOffset = target }
+      lorvexAnimated(LorvexDesign.Motion.page) { dayOffset = target }
     } else {
       dayOffset = target
     }

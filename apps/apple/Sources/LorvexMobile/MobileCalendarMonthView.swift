@@ -259,7 +259,7 @@ struct MobileCalendarMonthView: View {
     let target = offset(showing: day)
     guard target != monthOffset else { return }
     if MobileLivePages.slides(from: monthOffset, to: target) {
-      lorvexAnimated { monthOffset = target }
+      lorvexAnimated(LorvexDesign.Motion.page) { monthOffset = target }
     } else {
       monthOffset = target
     }

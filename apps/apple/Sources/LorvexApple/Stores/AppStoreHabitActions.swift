@@ -162,7 +162,7 @@ extension AppStore {
   func completeHabit(_ habit: LorvexHabit) async {
     do {
       let updatedHabits = try await core.completeHabit(id: habit.id, date: logicalTodayDateString)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         habits = updatedHabits
       }
       feedbackProvider.playFeedback(.habitCompleted)
@@ -178,7 +178,7 @@ extension AppStore {
   func uncompleteHabit(_ habit: LorvexHabit) async {
     do {
       let updatedHabits = try await core.uncompleteHabit(id: habit.id, date: logicalTodayDateString)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         habits = updatedHabits
       }
       feedbackProvider.playFeedback(.habitReset)
@@ -218,7 +218,7 @@ extension AppStore {
         skipped
         ? try await core.skipHabit(id: habit.id, date: logicalTodayDateString)
         : try await core.unskipHabit(id: habit.id, date: logicalTodayDateString)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         habits = updatedHabits
       }
       feedbackProvider.playFeedback(skipped ? .habitSkipped : .habitReset)
@@ -238,7 +238,7 @@ extension AppStore {
     do {
       let updatedHabits = try await core.adjustHabitCompletion(
         id: habit.id, date: logicalTodayDateString, delta: delta)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         habits = updatedHabits
       }
       // The card ring / stepper checks a habit in through the adjust path, which

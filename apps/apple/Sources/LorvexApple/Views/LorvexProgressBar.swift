@@ -26,7 +26,7 @@ struct LorvexProgressBar: View {
       }
     }
     .frame(height: height)
-    .reduceMotionAnimation(.snappy(duration: 0.28), value: fraction)
+    .reduceMotionAnimation(LorvexDesign.Motion.progress, value: fraction)
     .accessibilityElement()
     .accessibilityValue(Text(fraction, format: .percent.precision(.fractionLength(0))))
   }

@@ -100,7 +100,7 @@ extension AppStore {
         _ = try await core.upsertMemory(key: memoryKeyDraft, content: memoryContentDraft)
       }
       let reloaded = try await core.loadMemory()
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         memoryStorage.memory = reloaded
       }
       feedbackProvider.playFeedback(.contentSaved)
@@ -125,7 +125,7 @@ extension AppStore {
     do {
       _ = try await core.deleteMemory(key: entry.key)
       let reloaded = try await core.loadMemory()
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.quick) {
         memoryStorage.memory = reloaded
       }
       // The composer was editing the deleted entry: reset it, so a later Save

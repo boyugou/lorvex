@@ -150,7 +150,7 @@ private struct StickyTaskView: View {
     // reaches the top edge with no transparent gap above it.
     .ignoresSafeArea()
     .onHover { hovering in
-      lorvexAnimated(.easeInOut(duration: 0.14)) { self.hovering = hovering }
+      lorvexAnimated(LorvexDesign.Motion.fade) { self.hovering = hovering }
     }
   }
 

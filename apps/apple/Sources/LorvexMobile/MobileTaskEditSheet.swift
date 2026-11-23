@@ -227,7 +227,7 @@ struct MobileTaskEditSheet: View {
     date: Binding<Date>,
     idElement: String
   ) -> some View {
-    Toggle(isOn: isOn.reduceMotionAnimation(.snappy)) {
+    Toggle(isOn: isOn.reduceMotionAnimation(LorvexDesign.Motion.standard)) {
       Label(title, systemImage: systemImage)
     }
     .accessibilityIdentifier("task.edit.\(idElement).toggle")

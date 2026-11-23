@@ -321,8 +321,10 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
 - Every animation goes through `Sources/LorvexCore/Support/LorvexReduceMotion.swift`
   (`lorvexAnimated`, `.reduceMotionAnimation`, `.reduceMotionBounce`,
   `.reduceMotionPop`); SwiftUI does not gate `withAnimation` or `.animation` on
-  Reduce Motion. A pop-and-return scale must be skipped under Reduce Motion,
-  not only un-animated. Any new fold header applies
+  Reduce Motion. Its timing is a `LorvexDesign.Motion` token, chosen by the
+  table in `docs/design/DESIGN_SYSTEM.md` section 9 (`verify_design_tokens.py`
+  rejects a literal curve). A pop-and-return scale must be skipped under
+  Reduce Motion, not only un-animated. Any new fold header applies
   `.lorvexFoldState(isExpanded:)` so VoiceOver reads whether it is open.
 - Mac window shortcuts are Option-Command 1 to 5; Shift-Command 3, 4, and 5
   belong to the system screenshot tools. Check the menus for a conflict before

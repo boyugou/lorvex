@@ -245,7 +245,7 @@ struct SettingsAdvancedDisclosureButton: View {
 
   var body: some View {
     Button {
-      lorvexAnimated(.snappy(duration: 0.2)) { isExpanded.toggle() }
+      lorvexAnimated(LorvexDesign.Motion.quick) { isExpanded.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.s) {
         Text(title)

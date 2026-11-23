@@ -168,7 +168,7 @@ struct MobileCalendarDayColumn: View {
         .onChange(of: dayCount) { _, _ in userHasScrolledTimeAxis = false }
         .onChange(of: scrollSignature) { _, _ in
           if !userHasScrolledTimeAxis {
-            lorvexAnimated(.snappy(duration: 0.18)) {
+            lorvexAnimated(LorvexDesign.Motion.quick) {
               proxy.scrollTo(MobileDayScrollAnchor.hour(anchorHour), anchor: .top)
             }
           }

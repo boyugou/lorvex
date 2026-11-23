@@ -73,8 +73,8 @@ struct HabitProgressRing: View {
       .scaleEffect(hovering ? 1.06 : 1)
     }
     .buttonStyle(.plain)
-    .onHover { h in lorvexAnimated(.snappy(duration: 0.14)) { hovering = h } }
-    .reduceMotionAnimation(.snappy(duration: 0.2), value: fraction)
+    .onHover { h in lorvexAnimated(LorvexDesign.Motion.quick) { hovering = h } }
+    .reduceMotionAnimation(LorvexDesign.Motion.progress, value: fraction)
   }
 }
 
@@ -166,7 +166,7 @@ struct HabitMomentumCard: View {
     .shadow(color: .black.opacity(hovering ? 0.10 : 0), radius: 8, y: 3)
     .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
     .onTapGesture { select() }
-    .onHover { h in lorvexAnimated(.easeOut(duration: 0.14)) { hovering = h } }
+    .onHover { h in lorvexAnimated(LorvexDesign.Motion.fade) { hovering = h } }
     .lorvexKeyboardActivation(select)
     .lorvexDeleteKey { isShowingDeleteConfirmation = true }
     .accessibilityElement(children: .contain)

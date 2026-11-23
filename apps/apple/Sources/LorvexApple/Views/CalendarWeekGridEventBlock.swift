@@ -250,7 +250,7 @@ extension CalendarWeekGridView {
           .clipShape(Capsule())
           .padding(alignment == .top ? .top : .bottom, 1)
           .opacity(visible ? 1 : 0)
-          .reduceMotionAnimation(.easeInOut(duration: 0.12), value: visible)
+          .reduceMotionAnimation(LorvexDesign.Motion.fade, value: visible)
           .allowsHitTesting(false)
       }
       .accessibilityHidden(true)

@@ -394,7 +394,6 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/WorkspaceTaskViews.swift'), '.stroke(.quaternary'),
     ('absent', ('file', 'Sources/LorvexApple/Views/WorkspaceTaskViews.swift'), '.font(LorvexDesign.Typography.sectionHeader)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/WorkspaceTaskViews.swift'), '.background(.quaternary.opacity(0.72), in: Capsule())'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceTaskViews.swift'), 'lorvexAnimated(.snappy(duration: 0.16))'),
     ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceTaskViews.swift'), '.accessibilityIdentifier(accessibilityIdentifier)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceTaskViews.swift'), '.accessibilityAddTraits(.isHeader)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TasksWorkspaceComponents.swift'), 'Section {'),
@@ -570,7 +569,6 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), '.padding(.horizontal, isOverdue ? 6 : 0)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'AnyShapeStyle(.red)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), '.accessibilityAddTraits(isSelected ? .isSelected : [])'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), '.reduceMotionAnimation(.snappy(duration: 0.16), value: isSelected)'),
     # --- macOSListsWorkspaceUsesScopedPlanHeader ---
     ('contains', ('file', 'Sources/LorvexApple/Views/ListsWorkspaceView.swift'), 'ToolbarSpacer(.flexible)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/ListsWorkspaceView.swift'), 'ListsWorkspaceHeader('),
@@ -1624,8 +1622,7 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.quaternary.opacity(isShowingActions ? 0.45 : 0.18)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.background(.quaternary.opacity(list.openCount == 0 ? 0.55 : 1), in: Capsule())'),
     ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '"list_row.open_scope.help"'),
-    # --- macOSTaskStatusMutationsAnimateListMembership ---
-    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'lorvexAnimated(.snappy(duration: 0.18))'),
+    # --- macOSTaskStatusMutationsAdoptTheReturnedToday ---
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'let updatedToday = try await core.completeTask'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'let updatedToday = try await core.deferTask'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'let updatedToday = try await core.startTask(id: id)'),
@@ -2038,16 +2035,14 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/ReviewsWorkspaceView.swift'), 'await store.saveDailyReviewDraft()'),
     ('contains', ('file', 'Sources/LorvexApple/Views/ReviewsWorkspaceView.swift'), 'Task { await store.flushDailyReviewDraftIfNeeded() }'),
     ('absent', ('file', 'Sources/LorvexApple/Views/DailyReviewForm.swift'), 'reviews.save'),
-    # --- macOSReopenAndRowToggleRouteThroughMotionAndFeedback ---
+    # --- macOSReopenPlaysItsFeedback ---
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'updatedToday = try await core.reopenTask(id: task.id)\n        feedbackProvider.playFeedback(.taskReopened)'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'func reopenSelectedTask() async'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'let updatedToday = try await core.reopenTask(id: id)\n      feedbackProvider.playFeedback(.taskReopened)'),
-    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSelectedTaskActions.swift'), 'lorvexAnimated(.snappy(duration: 0.18)) {\n        today = updatedToday\n      }'),
-    # --- macOSSettingsAdvancedDisclosureIsSharedAndReduceMotionAware ---
+    # --- macOSSettingsAdvancedDisclosureIsShared ---
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsChrome.swift'), 'struct SettingsAdvancedDisclosureButton: View'),
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsChrome.swift'), '@Binding var isExpanded: Bool'),
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsChrome.swift'), 'let accessibilityIdentifier: String'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/SettingsChrome.swift'), 'lorvexAnimated(.snappy(duration: 0.2)) { isExpanded.toggle() }'),
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsChrome.swift'), '.accessibilityIdentifier(accessibilityIdentifier)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsChrome.swift'), '.accessibilityAddTraits(.isHeader)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/SettingsCloudSyncCyclePanel.swift'), 'SettingsAdvancedDisclosureButton('),

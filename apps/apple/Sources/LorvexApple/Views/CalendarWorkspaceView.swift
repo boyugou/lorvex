@@ -65,8 +65,8 @@ struct CalendarWorkspaceView: View {
         .transition(.move(edge: .trailing).combined(with: .opacity))
       }
     }
-    .reduceMotionAnimation(.snappy(duration: 0.18), value: store.selectedCalendarEventID)
-    .reduceMotionAnimation(.snappy(duration: 0.18), value: showsPlanRail)
+    .reduceMotionAnimation(LorvexDesign.Motion.standard, value: store.selectedCalendarEventID)
+    .reduceMotionAnimation(LorvexDesign.Motion.standard, value: showsPlanRail)
     // The rail's tasks load when it is shown and stop reloading with every task
     // change once it is hidden or the calendar leaves the screen.
     .task(id: showsPlanRail) {

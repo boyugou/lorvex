@@ -115,7 +115,7 @@ struct InspectorProperties<Editor: View, MenuItems: View>: View {
     }
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("\(idPrefix).properties")
-    .reduceMotionAnimation(.snappy(duration: 0.25), value: rows.map(\.id))
+    .reduceMotionAnimation(LorvexDesign.Motion.standard, value: rows.map(\.id))
   }
 
   /// The control behind a row or an addition: a menu for the menu fields, a

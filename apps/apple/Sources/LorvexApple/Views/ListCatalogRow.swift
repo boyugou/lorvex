@@ -64,7 +64,7 @@ struct ListCatalogRow: View {
           .transition(.opacity)
       }
     }
-    .reduceMotionAnimation(.easeInOut(duration: 0.12), value: isShowingActions)
+    .reduceMotionAnimation(LorvexDesign.Motion.fade, value: isShowingActions)
     .onHover { isShowingActions = $0 }
     .help(String(localized: "list_row.open_scope.help", defaultValue: "Open Tasks in This List", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityElement(children: .contain)

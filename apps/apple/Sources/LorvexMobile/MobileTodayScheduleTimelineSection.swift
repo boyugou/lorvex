@@ -170,7 +170,7 @@ struct MobileTodayScheduleTimelineSection: View {
 
   private func pastToggle(count: Int) -> some View {
     Button {
-      lorvexAnimated(.snappy(duration: 0.18)) { showsPast.toggle() }
+      lorvexAnimated(LorvexDesign.Motion.quick) { showsPast.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.xs) {
         LorvexDisclosureChevron(isExpanded: showsPast)

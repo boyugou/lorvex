@@ -28,7 +28,7 @@ struct MobileHabitArchivedSection: View {
         }
       } header: {
         Button {
-          lorvexAnimated(.snappy(duration: 0.2)) { isCollapsed.toggle() }
+          lorvexAnimated(LorvexDesign.Motion.quick) { isCollapsed.toggle() }
         } label: {
           HStack(spacing: LorvexDesign.Spacing.s) {
             Text(MobileHabitArchiveCopy.sectionTitle)

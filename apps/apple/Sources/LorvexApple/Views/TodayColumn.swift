@@ -103,7 +103,7 @@ struct TodayColumn: View {
       }
     }
     .frame(maxWidth: TodayPageMetrics.columnMaxWidth, alignment: .leading)
-    .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
+    .reduceMotionAnimation(LorvexDesign.Motion.standard, value: page)
     .sheet(isPresented: Binding(get: { planningDay != nil }, set: { if !$0 { planningDay = nil } })) {
       if let day = planningDay, let tomorrow = LorvexDateFormatters.ymdUTCAddingDays(day, days: 1),
         let load = page.overbooked {
@@ -181,7 +181,7 @@ struct TodayColumn: View {
           .textSelection(.enabled)
         if briefingHidesText {
           Button(showsFullBriefing ? TodayCalmCopy.briefingLess : TodayCalmCopy.briefingMore) {
-            lorvexAnimated(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
+            lorvexAnimated(LorvexDesign.Motion.quick) { showsFullBriefing.toggle() }
           }
           .buttonStyle(.link)
           .font(LorvexDesign.Typography.secondaryText)
@@ -277,7 +277,7 @@ struct TodayColumn: View {
   private var doneSection: some View {
     VStack(alignment: .leading, spacing: 0) {
       Button {
-        lorvexAnimated(.snappy(duration: 0.2)) { store.isTodayDoneCollapsed.toggle() }
+        lorvexAnimated(LorvexDesign.Motion.quick) { store.isTodayDoneCollapsed.toggle() }
       } label: {
         // A record rather than work, so a quiet line, not a section title.
         HStack(spacing: LorvexDesign.Spacing.xs) {

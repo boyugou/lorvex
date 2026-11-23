@@ -29,7 +29,7 @@ extension AppStore {
     let anchor = weeklyReviewAnchor
     let day = try? await core.loadDaySummary(date: date)
     let week = try? await core.getWeeklyReviewSnapshot(weekOf: anchor)
-    lorvexAnimated(.snappy(duration: 0.18)) {
+    lorvexAnimated(LorvexDesign.Motion.standard) {
       if let day, selectedReviewDate == date { dayReviewEvidence = day }
       if let week, weeklyReviewAnchor == anchor { weeklyReview = week }
     }
@@ -124,7 +124,7 @@ extension AppStore {
     do {
       let updatedToday = try await core.completeTask(id: id)
       feedbackProvider.playFeedback(.taskCompleted)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         today = updatedToday
       }
       try await afterSelectedTaskMutation()
@@ -152,7 +152,7 @@ extension AppStore {
         feedbackProvider.playFeedback(.taskCompleted)
         registerReopenUndo(id: task.id, undoManager: undoManager, actionName: TaskCommand.complete.title)
       }
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         today = updatedToday
       }
       try await afterSelectedTaskMutation()
@@ -183,7 +183,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.deferTask(id: task.id, until: date)
       feedbackProvider.playFeedback(.taskDeferred)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         today = updatedToday
       }
       try await afterSelectedTaskMutation()
@@ -336,7 +336,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.reopenTask(id: id)
       feedbackProvider.playFeedback(.taskReopened)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         today = updatedToday
       }
       try await refreshListSurfaces()
@@ -363,7 +363,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.startTask(id: id)
       feedbackProvider.playFeedback(.taskReopened)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         today = updatedToday
       }
       try await refreshListSurfaces()
@@ -389,7 +389,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.pauseTask(id: id)
       feedbackProvider.playFeedback(.taskReopened)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         today = updatedToday
       }
       try await refreshListSurfaces()
@@ -423,7 +423,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.startTask(id: task.id)
       feedbackProvider.playFeedback(.taskReopened)
-      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      lorvexAnimated(LorvexDesign.Motion.standard) { today = updatedToday }
       try await afterSelectedTaskMutation()
     }
   }
@@ -435,7 +435,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.pauseTask(id: task.id)
       feedbackProvider.playFeedback(.taskReopened)
-      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      lorvexAnimated(LorvexDesign.Motion.standard) { today = updatedToday }
       try await afterSelectedTaskMutation()
     }
   }
@@ -453,7 +453,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.deferTask(id: id, until: date)
       feedbackProvider.playFeedback(.taskDeferred)
-      lorvexAnimated(.snappy(duration: 0.18)) {
+      lorvexAnimated(LorvexDesign.Motion.standard) {
         today = updatedToday
       }
       try await afterSelectedTaskMutation()

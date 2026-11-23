@@ -20,11 +20,20 @@ UI targets and fails when a view
   (``arrow.left.and.right``) are symmetric and pass;
 - trims a circle into a progress arc (``.trim(from:``) instead of drawing it
   with ``LorvexProgressArc``, which starts at twelve o'clock and fills with
-  the reading direction.
+  the reading direction;
+- passes a literal animation curve (``.snappy``, ``.spring(``,
+  ``.easeOut(``, ``.default``, …) to ``lorvexAnimated``,
+  ``reduceMotionAnimation``, or ``lorvexAnimation``, directly or as a branch
+  of a ``?:``, declares an ``Animation`` with one, or builds one with
+  ``Animation.``, instead of naming a ``LorvexDesign.Motion`` token. The check
+  reads one line at a time, so a curve on the line after the helper's ``(``
+  passes it.
 
-``ALLOWED`` lists whole files that legitimately hold literals: the token
-definitions themselves, the hex-color helpers, the user-facing color picker, and
-the DEBUG snapshot renderers and debug seeds. A single line may opt out with the
+``ALLOWED`` lists whole files that legitimately hold color, size, glyph, or arc
+literals: the token definitions themselves, the hex-color helpers, the
+user-facing color picker, and the DEBUG snapshot renderers and debug seeds. The
+animation rule has its own list, ``MOTION_ALLOWED``, holding only the file that
+defines the motion tokens. A single line may opt out with the
 trailing comment ``// lorvex-design-token: allow`` when a glyph scales with its
 container or a hue is purely decorative; both lists are the complete inventory
 of intentional literals.
@@ -104,8 +113,32 @@ RULES = [
     ("hand-drawn progress arc", re.compile(r"\.trim\(\s*from\s*:")),
 ]
 
+# The animation rule applies to every scanned file except where the motion
+# tokens are defined; the color and glyph exemptions above do not carry over.
+MOTION_ALLOWED = {"Sources/LorvexCore/Support/LorvexDesign.swift"}
 
-def scan_file(path: Path, root: Path = ROOT) -> list[str]:
+CURVES = (
+    "snappy|smooth|bouncy|spring|interactiveSpring|interpolatingSpring"
+    "|easeIn|easeOut|easeInOut|linear|default|timingCurve"
+)
+HELPERS = "lorvexAnimated|reduceMotionAnimation|lorvexAnimation"
+
+MOTION_RULE = (
+    "literal animation curve (name a LorvexDesign.Motion token, DESIGN_SYSTEM.md section 9)",
+    re.compile(
+        rf"\b(?:{HELPERS})\(\s*\."
+        rf"|\b(?:{HELPERS})\([^{{]*[?:]\s*\.(?:{CURVES})\b"
+        rf"|:\s*Animation\??\s*=\s*\."
+        rf"|\bAnimation\s*\.\s*(?:{CURVES})\b"
+    ),
+)
+
+
+def scan_file(path: Path, root: Path = ROOT, rules: list | None = None) -> list[str]:
+    """Returns a failure line for each line of `path` that a rule matches;
+    `rules` defaults to every rule."""
+    if rules is None:
+        rules = RULES + [MOTION_RULE]
     failures: list[str] = []
     rel = path.relative_to(root).as_posix()
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -114,7 +147,7 @@ def scan_file(path: Path, root: Path = ROOT) -> list[str]:
             continue
         if ALLOW_MARKER in line:
             continue
-        for name, rule in RULES:
+        for name, rule in rules:
             if rule.search(line):
                 failures.append(f"{rel}:{number}: {name}: {stripped}")
     return failures
@@ -127,9 +160,11 @@ def token_failures(root: Path = ROOT) -> list[str]:
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*.swift")):
-            if path.relative_to(root).as_posix() in ALLOWED:
-                continue
-            failures.extend(scan_file(path, root))
+            rel = path.relative_to(root).as_posix()
+            rules = ([] if rel in ALLOWED else RULES) + (
+                [] if rel in MOTION_ALLOWED else [MOTION_RULE])
+            if rules:
+                failures.extend(scan_file(path, root, rules))
     return failures
 
 

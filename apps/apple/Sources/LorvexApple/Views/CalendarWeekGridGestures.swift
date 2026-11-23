@@ -194,7 +194,7 @@ extension CalendarWeekGridView {
   /// rather than an abrupt disappearance, matching the rest of the app's
   /// motion bar for every other cleared draft state.
   func clearRescheduleDraft() {
-    lorvexAnimated(.snappy(duration: 0.18)) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       rescheduleDraft = nil
     }
   }

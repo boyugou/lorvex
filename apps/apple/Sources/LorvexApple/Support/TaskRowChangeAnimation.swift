@@ -13,7 +13,7 @@ enum TaskRowChangeAnimation {
   static let rowLimit = 20
 
   /// The animation a change of a few rows uses.
-  static let animation = Animation.snappy(duration: 0.18)
+  static let animation = LorvexDesign.Motion.quick
 
   /// Whether going from `old` to `new`, two lists of sections in the same
   /// order, adds or removes few enough rows to animate. A row that only moves

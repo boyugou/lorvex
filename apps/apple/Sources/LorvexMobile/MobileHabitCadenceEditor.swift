@@ -14,7 +14,7 @@ struct MobileHabitCadenceSection: View {
     Section(String(localized: "habits.detail.frequency", defaultValue: "Frequency", table: "Localizable", bundle: MobileL10n.bundle)) {
       Picker(
         String(localized: "habits.detail.frequency", defaultValue: "Frequency", table: "Localizable", bundle: MobileL10n.bundle),
-        selection: $draft.cadenceMode.reduceMotionAnimation(.snappy)
+        selection: $draft.cadenceMode.reduceMotionAnimation(LorvexDesign.Motion.standard)
       ) {
         Text(String(localized: "habits.frequency.daily", defaultValue: "Daily", table: "Localizable", bundle: MobileL10n.bundle)).tag(MobileHabitCadenceMode.daily)
         Text(String(localized: "habits.frequency.weekly", defaultValue: "Weekly", table: "Localizable", bundle: MobileL10n.bundle)).tag(MobileHabitCadenceMode.weekly)
@@ -45,7 +45,7 @@ struct MobileHabitCadenceSection: View {
   private var weeklyControls: some View {
     Picker(
       String(localized: "habits.cadence.repeat_by", defaultValue: "Repeat by", table: "Localizable", bundle: MobileL10n.bundle),
-      selection: $draft.weeklyStyle.reduceMotionAnimation(.snappy)
+      selection: $draft.weeklyStyle.reduceMotionAnimation(LorvexDesign.Motion.standard)
     ) {
       Text(String(localized: "habits.cadence.specific_days", defaultValue: "Specific days", table: "Localizable", bundle: MobileL10n.bundle))
         .tag(MobileHabitWeeklyStyle.specificDays)
@@ -114,7 +114,7 @@ struct MobileWeekdayPicker: View {
   }
 
   private func toggle(_ day: Int) {
-    lorvexAnimated(.snappy) {
+    lorvexAnimated(LorvexDesign.Motion.quick) {
       if selection.contains(day) {
         if allowsEmpty || selection.count > 1 { selection.remove(day) }
       } else {

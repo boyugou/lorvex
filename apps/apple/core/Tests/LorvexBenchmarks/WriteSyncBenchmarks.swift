@@ -150,25 +150,33 @@ final class WriteSyncBenchmarks: XCTestCase {
     defer { try? FileManager.default.removeItem(at: dir) }
     let registry = EntityApplierRegistry(appliers: EntityApplierRegistry.defaultEntityAppliers())
     let batch = 1_000
+    // A seeded task's full outbound payload is the template, so every
+    // envelope carries the fields the sync payload contract requires today.
+    let template: [String: JSONValue] = try store.writer.read { db in
+      let seededID = try XCTUnwrap(
+        try String.fetchOne(db, sql: "SELECT id FROM tasks ORDER BY id LIMIT 1"))
+      guard
+        case .object(let object) = try OutboxEnqueue.readEntityPayloadSnapshot(
+          db, entityType: EntityName.task, entityId: seededID)
+      else { throw XCTSkip("the seeded task has no object payload") }
+      return object
+    }
     var trials: [Double] = []
     for t in 0..<3 {
       // Pre-build envelopes so envelope construction isn't timed.
       let envelopes: [SyncEnvelope] = (0..<batch).map { i in
         let id = uuid(t * batch + i)
-        let payload =
-          (try? SyncCanonicalize.canonicalizeJSON(
-            .object([
-              "title": .string("inbound \(t)-\(i)"),
-              "status": .string("open"),
-              "list_id": .string(inboxListId),
-              "created_at": .string(BenchmarkSeeder.todayStartUtc),
-              "updated_at": .string(BenchmarkSeeder.todayStartUtc),
-            ]))) ?? "{}"
+        let version = try! Hlc(
+          physicalMs: UInt64(1_716_768_000_000 + t * batch + i), counter: 0,
+          deviceSuffix: "fedcba9876543210")
+        var object = template
+        object["id"] = .string(id)
+        object["title"] = .string("inbound \(t)-\(i)")
+        object["list_id"] = .string(inboxListId)
+        object["version"] = .string(version.description)
+        let payload = (try? SyncCanonicalize.canonicalizeJSON(.object(object))) ?? "{}"
         return SyncEnvelope(
-          entityType: .task, entityId: id, operation: .upsert,
-          version: try! Hlc(
-            physicalMs: UInt64(1_716_768_000_000 + t * batch + i), counter: 0,
-            deviceSuffix: "fedcba9876543210"),
+          entityType: .task, entityId: id, operation: .upsert, version: version,
           payloadSchemaVersion: LorvexVersion.payloadSchemaVersion, payload: payload,
           deviceId: "remote-device")
       }

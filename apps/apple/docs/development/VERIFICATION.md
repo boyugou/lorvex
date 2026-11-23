@@ -89,7 +89,6 @@ throwaway probe `ZZ<Topic>Tests.swift` and delete it afterward; never overwrite
 | `ZZImportMutationFuzzProbeTests` | the backup importer, from the golden v1 fixture with fields deleted, retyped, hostile, or truncated; an import may refuse or restore in part but must not trap or take over 5 s, and nothing it restores may hold text the write boundary would strip | `IMPORTFUZZ_RUN=1` (required), `IMPORTFUZZ_SEED`, `IMPORTFUZZ_ROUNDS` |
 | `ZZUndoRoundTripProbeTests` | `undo_ai_change` after random assistant updates to tasks and one-off events, with a person's edit in between half the time: what the update moved comes back, what the person changed stays, a second undo writes nothing, and an undo only succeeds or refuses in plain words | `UNDOFUZZ_RUN=1` (required), `UNDOFUZZ_SEED`, `UNDOFUZZ_ROUNDS` |
 | `ZZTwoWritersContentionProbeTests` | two services on one on-disk database, as the app and the MCP host are two processes on one file, writing and reading at the same time (updates, long batch creates, preferences, exports): no write may fail with a busy error, none may be lost, and `integrity_check` must stay `ok` | `CONTENTION_RUN=1` (required), `CONTENTION_ROUNDS`, `CONTENTION_SHARED=1` (one service, as a baseline) |
-| `ZZMutationLatencyProbeTests` | the awaited time of a Mac task completion with N tasks in the store | `PERF_N=<task count>` (required) |
 | `ZZMCPToolFuzzProbeTests` | every MCP tool with schema-generated hostile arguments | `MCPFUZZ_RUN=1` (required), `MCPFUZZ_SEED`, `MCPFUZZ_ROUNDS`, `MCPFUZZ_ONLY=a,b`, `MCPFUZZ_SHOW` with `MCPFUZZ_SHOW_FILE`; modes `MCPFUZZ_HOSTS=1`, `MCPFUZZ_RECUR=1`, `MCPFUZZ_PARITY=1`, `MCPFUZZ_HABITS=1` |
 | `ZZMarkdownDepthProbeTests` | deeply nested markdown | `PROBE_KIND=quote\|dash\|ordered\|emph\|quotedash\|spawn`, `PROBE_N` |
 | `ZZReviewDraftProbeTests`, `ZZStaleSelectedProbeTests` | review drafts; stale selected task | `REVIEW_PROBE`; `STALE_PROBE`, `REOPEN_PROBE` |
@@ -109,6 +108,18 @@ Notes:
 - The drop probes need a Launch Services record for the app's drag types; a
   built `dist/Lorvex.app` provides one. A synthetic drop drives SwiftUI's drop
   view with a fake `NSDraggingInfo` and a private `NSPasteboard`.
+
+## Benchmarks
+
+The wall-clock benchmarks are skipped unless `LORVEX_BENCH=1` is set, so an
+ordinary run, which runs suites in parallel, never fails on a slow median. Run
+them on an otherwise idle Mac; the numbers are from a debug build.
+
+| Suite | Measures | Command |
+|---|---|---|
+| `StoreLatencyBenchmarks` | the Mac `AppStore` and iOS `MobileStore` over an on-disk store of two sizes (about 130 tasks, and 4,400 tasks with a year of habit history and 1,000 events): first and warm refresh, a task completion, and the longest main-actor stall during each; `macRefreshSteps` times each step of the Mac refresh alone. Prints `[BENCH]` lines and asserts nothing | `LORVEX_BENCH=1 script/verify_swift.sh --filter StoreLatencyBenchmarks` |
+| `PerformanceBenchmarks.swift` | guardrails with a threshold each: `AppStore.refresh` over a seeded in-memory store, the widget projector, export, MCP dispatch, Spotlight documents | `LORVEX_BENCH=1 script/verify_swift.sh --filter benchmark` |
+| core `LorvexBenchmarks` | the core's reads, writes, search, and sync apply at 1,000 and 10,000 tasks | `cd core && LORVEX_BENCH=1 swift test -j 4 --filter LorvexBenchmarks` |
 
 ## Oracles and committed checks
 

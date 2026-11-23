@@ -68,6 +68,22 @@ person living with the app, and then a decision.
   one data point already: a 3.3 s launch against 0.7 to 1.2 s on other days
   (see "Disk writes and launch time" below). Then fix the slowest and the
   most visible first, and keep the measurements as a repeatable script.
+
+  The data layer is measured (2026-11-23, this repository's Mac, debug
+  build; `LORVEX_BENCH=1` runs `StoreLatencyBenchmarks` and the core
+  package's benchmarks). The core completes a task in about 1 ms and loads
+  Today in 1 to 2 ms at 10,000 tasks. Over the stores, on a store like the
+  owner's (about 130 tasks) a Mac refresh takes 63 ms and a completion
+  17 ms; on a heavy store (4,400 tasks, a year of history for 20 habits,
+  1,000 events) a Mac refresh takes 876 ms and a completion 199 ms, and the
+  iPhone 389 ms and 356 ms. The screen changes within about 10 ms of the
+  write either way, and the longest the stores hold the main actor is a
+  median 2 to 4 ms. The rest of the heavy refresh is system surfaces built
+  off the main actor on every refresh: the Spotlight content index (278
+  ms), the widget snapshot (178 ms), the Spotlight task index (155 ms), and
+  the badge (142 ms, the same stats read the widget makes). That is CPU and
+  battery, not a wait. Next: what the views cost to draw and scroll, and
+  launch, measured in the simulator.
 - Platform adaptation sprint (owner, 2026-11-16): iPhone Duo and useful
   capabilities in macOS 27 and iOS 27. The deployment floor stays at 26, so
   every 27 API sits behind an availability check. The system integration

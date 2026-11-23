@@ -295,6 +295,10 @@ struct UserFacingErrorTests {
       (.reopenBlockedByLaterOccurrence(taskId: id), .reopeningAdvancedRepeat),
       (.completeBlockedByAdvancedSuccessor(taskId: id, successorId: id), .completingAdvancedRepeat),
       (.cancelBlockedByAdvancedSuccessor(taskId: id, successorId: id), .cancelingAdvancedRepeat),
+      (
+        .seriesEndBlockedByCompletedOccurrence(taskId: id, successorId: id),
+        .endingRepeatWithCompletedOccurrence
+      ),
     ]
     for (error, reason) in cases {
       let classification = UserFacingError.classify(error)
@@ -332,6 +336,16 @@ struct UserFacingErrorTests {
     #expect(
       TaskLifecycleError.cancelBlockedByAdvancedSuccessor(taskId: id, successorId: "next")
         .description == "Cannot cancel task \(id): recurrence successor next has already advanced")
+    #expect(
+      TaskLifecycleError.seriesEndBlockedByCompletedOccurrence(taskId: id, successorId: "next")
+        .description
+        == "Cannot end the repeat on task \(id): a later occurrence next is already completed. "
+        + "End the repeat on the series' latest occurrence instead.")
+    #expect(
+      TaskLifecycleError.seriesEndBlockedByCompletedOccurrence(taskId: id, successorId: "")
+        .description
+        == "Cannot end the repeat on task \(id): a later occurrence is already completed. "
+        + "End the repeat on the series' latest occurrence instead.")
     #expect(
       UserFacingError.Reason.cancelingAdvancedRepeat.localizedMessage
         != UserFacingError.Reason.completingAdvancedRepeat.localizedMessage)
@@ -415,6 +429,7 @@ struct UserFacingErrorTests {
       "error.reason.pausing_unstarted_task", "error.reason.record_too_long_to_sync",
       "error.reason.reopening_advanced_repeat", "error.reason.completing_advanced_repeat",
       "error.reason.canceling_advanced_repeat", "error.reason.repeat_day_taken",
+      "error.reason.ending_completed_repeat",
     ]
     #expect(keys.count == reasons.count, "a reason is missing from this key list")
     let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))

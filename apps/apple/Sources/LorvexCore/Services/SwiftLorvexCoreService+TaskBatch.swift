@@ -508,9 +508,10 @@ extension SwiftLorvexCoreService {
           continue
         }
 
-        // A repeat whose next occurrence already moved on refuses after its
-        // status is written; the savepoint rolls back that one task and the
-        // batch goes on.
+        // A repeat whose next occurrence already moved on, or whose series
+        // holds a completed later occurrence, refuses after its status is
+        // written; the savepoint rolls back that one task and the batch goes
+        // on.
         var cancelled: CancelLifecycleTransitionResult?
         try db.inSavepoint {
           let result: CancelLifecycleTransitionResult
@@ -520,7 +521,9 @@ extension SwiftLorvexCoreService {
               reminderVersion: hlc.nextVersionString(),
               cancelSeries: cancelSeries,
               seriesClearVersion: cancelSeries ? hlc.nextVersionString() : nil)
-          } catch TaskLifecycleError.cancelBlockedByAdvancedSuccessor {
+          } catch TaskLifecycleError.cancelBlockedByAdvancedSuccessor,
+            TaskLifecycleError.seriesEndBlockedByCompletedOccurrence
+          {
             return .rollback
           }
           guard result.updated else { return .rollback }

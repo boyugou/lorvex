@@ -26,7 +26,8 @@ enum TaskRecurrenceToolCatalog {
   static let removeRecurrenceTool = Tool(
     name: "remove_task_recurrence",
     title: "Remove Task Recurrence",
-    description: "Remove the recurrence rule and skip dates from a task. Returns the updated task.",
+    description:
+      "Remove the recurrence rule and skip dates from a task. On a completed or cancelled occurrence this also cancels every later occurrence that is not completed. Refused when a later occurrence is already completed: call it on the series' latest occurrence instead. Returns the updated task.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

@@ -54705,6 +54705,192 @@
         }
       }
     },
+    "error.reason.ending_completed_repeat": {
+      "comment": "Alert shown when a person turns off the repeat on an occurrence of a repeating task, or cancels it with its series, after a later occurrence was completed.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تكرار لاحق لهذه المهمة المتكررة مكتمل بالفعل. أوقف التكرار من أحدث تكرار بدلًا من ذلك."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই পুনরাবৃত্ত টাস্কের পরের একটি বার ইতিমধ্যেই সম্পূর্ণ হয়েছে। এর বদলে সবচেয়ে সাম্প্রতিক বারটিতে পুনরাবৃত্তি বন্ধ করুন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine spätere Wiederholung dieser sich wiederholenden Aufgabe ist bereits erledigt. Schalte das Wiederholen stattdessen bei der neuesten Wiederholung aus."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μια μεταγενέστερη επανάληψη αυτής της επαναλαμβανόμενης εργασίας έχει ήδη ολοκληρωθεί. Απενεργοποιήστε την επανάληψη στην πιο πρόσφατη επανάληψή της."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A later occurrence of this repeating task is already completed. Turn off the repeat on the latest occurrence instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una repetición posterior de esta tarea recurrente ya está completada. Desactiva la repetición en la repetición más reciente."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک تکرار بعدیِ این کار تکرارشونده از قبل تکمیل شده است. به‌جای آن، تکرار را در آخرین تکرار خاموش کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une occurrence ultérieure de cette tâche récurrente est déjà terminée. Désactivez plutôt la répétition sur l’occurrence la plus récente."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מופע מאוחר יותר של המשימה החוזרת הזו כבר הושלם. יש לכבות את החזרה במופע האחרון במקום זאת."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस दोहराए जाने वाले कार्य की बाद की एक बार पहले ही पूर्ण हो चुकी है। इसके बजाय सबसे हाल की बार पर दोहराना बंद करें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kejadian setelahnya dari tugas berulang ini sudah selesai. Sebagai gantinya, matikan pengulangan pada kejadian terbaru."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un’occorrenza successiva di questa attività ricorrente è già completata. Disattiva invece la ripetizione sull’occorrenza più recente."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この繰り返しタスクの後の回がすでに完了しています。繰り返しは最新の回でオフにしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 반복 할 일의 이후 반복이 이미 완료되었습니다. 대신 가장 최근 반복에서 반복을 끄세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "या पुनरावृत्ती होणाऱ्या कार्याची नंतरची एक वेळ आधीच पूर्ण झाली आहे. त्याऐवजी सर्वात अलीकडच्या वेळेवर पुनरावृत्ती बंद करा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kejadian kemudian bagi tugas berulang ini sudah selesai. Sebaliknya, matikan ulangan pada kejadian terkini."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een latere herhaling van deze terugkerende taak is al voltooid. Zet het herhalen in plaats daarvan uit bij de laatste herhaling."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Późniejsze wystąpienie tego zadania cyklicznego jest już ukończone. Wyłącz powtarzanie w najnowszym wystąpieniu."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma ocorrência posterior desta tarefa recorrente já foi concluída. Desative a repetição na ocorrência mais recente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O apariție ulterioară a acestei sarcini repetitive este deja finalizată. Dezactivați repetarea la cea mai recentă apariție."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Более позднее повторение этой повторяющейся задачи уже выполнено. Отключите повтор в самом последнем повторении."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் நிகழும் இந்தப் பணியின் பிந்தைய நேர்வு ஏற்கெனவே நிறைவடைந்தது. அதற்குப் பதிலாக, மிகச் சமீபத்திய நேர்வில் தொடர் நிகழ்வை முடக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృతమయ్యే ఈ టాస్క్‌కు చెందిన తర్వాతి సందర్భం ఇప్పటికే పూర్తయింది. బదులుగా అత్యంత ఇటీవలి సందర్భంలో రిపీట్‌ను ఆఫ్ చేయండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานทำประจำนี้มีครั้งหลังจากนี้ที่เสร็จแล้ว ให้ปิดการทำประจำที่ครั้งล่าสุดแทน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yinelenen görevin daha sonraki bir yinelemesi zaten tamamlandı. Bunun yerine yinelemeyi en son yinelemede kapatın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пізніше повторення цього повторюваного завдання вже виконано. Натомість вимкніть повторення в найновішому повторенні."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس دہرائے جانے والے کام کی بعد کی ایک تکرار پہلے ہی مکمل ہو چکی ہے۔ اس کے بجائے تازہ ترین تکرار پر دہرانا بند کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một lần lặp sau của nhiệm vụ lặp lại này đã hoàn thành. Thay vào đó, hãy tắt lặp lại ở lần lặp mới nhất."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个重复任务后面的一次已经完成。请改为在最新的一次上关闭重复。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個重複任務後面的一次已經完成。請改為在最新的一次上關閉重複。"
+          }
+        }
+      }
+    },
     "error.reason.habit_reminder_time_taken": {
       "comment": "Alert shown when a habit reminder is set to a time the habit already has a reminder at.",
       "extractionState": "manual",

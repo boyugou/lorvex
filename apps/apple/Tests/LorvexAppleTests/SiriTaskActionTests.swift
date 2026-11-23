@@ -417,6 +417,36 @@ func siriDeleteOfACompletedTaskFailsAndLeavesItCompleted() async throws {
   #expect(gone.cancelled.isEmpty)
 }
 
+@Test
+func siriDeleteLeavesATaskWhoseLaterOccurrenceIsCompleted() async throws {
+  let core = try makeInMemoryCore()
+  // A repeating task that is open again while the occurrence it generated is
+  // completed: complete it, reopen it (which withdraws the next occurrence),
+  // reopen that occurrence by hand, and complete it.
+  let first = try await core.createTask(
+    TaskCreateDraft(
+      title: "Weekly errand", dueDate: siriStoredDay("2026-12-07"),
+      recurrence: TaskRecurrenceRule(freq: .weekly)))
+  _ = try await core.completeTaskReturningTask(id: first.id)
+  let all = try await core.listTasks(
+    status: "all", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let second = try #require(all.tasks.first { $0.id != first.id })
+  _ = try await core.reopenTaskReturningTask(id: first.id)
+  _ = try await core.reopenTaskReturningTask(id: second.id)
+  _ = try await core.completeTaskReturningTask(id: second.id)
+
+  // Ending the series would cancel the completed occurrence, so the delete
+  // fails with that reason and changes neither task.
+  do {
+    _ = try await LorvexSystemIntentRunner.cancelSiriTasks(ids: [first.id], core: core)
+    Issue.record("the delete did not fail")
+  } catch {
+    #expect(UserFacingError.classify(error).reason == .endingRepeatWithCompletedOccurrence)
+  }
+  #expect(try await core.loadTask(id: first.id).status == .open)
+  #expect(try await core.loadTask(id: second.id).status == .completed)
+}
+
 // MARK: - Entities and actions (macOS 27 and iOS 27)
 
 @Test

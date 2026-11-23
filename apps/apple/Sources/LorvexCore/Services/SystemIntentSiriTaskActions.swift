@@ -185,8 +185,8 @@ extension LorvexSystemIntentRunner {
   /// A task that is already cancelled or gone needs nothing and is reported
   /// as skipped. A task that cannot be cancelled fails the request with its
   /// reason after the others are cancelled: a completed task, which stays
-  /// completed, and an occurrence of a repeating task whose next occurrence
-  /// is already finished.
+  /// completed, and an occurrence of a repeating task with a later occurrence
+  /// that is already completed, which ending the series would cancel.
   public static func cancelSiriTasks(
     ids: [LorvexTask.ID],
     core: any LorvexCoreServicing
@@ -211,9 +211,10 @@ extension LorvexSystemIntentRunner {
         throw TaskLifecycleError.finishedTaskTransition(
           taskId: id, from: .completed, to: .cancelled)
       default:
-        // The batch leaves an active task alone for one reason, and does not
-        // say which occurrence stood in the way.
-        throw TaskLifecycleError.cancelBlockedByAdvancedSuccessor(taskId: id, successorId: "")
+        // A batch that ends each series leaves an active task alone for one
+        // reason, and does not say which occurrence stood in the way.
+        throw TaskLifecycleError.seriesEndBlockedByCompletedOccurrence(
+          taskId: id, successorId: "")
       }
     }
     return result

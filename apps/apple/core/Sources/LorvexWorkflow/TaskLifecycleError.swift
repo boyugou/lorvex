@@ -46,6 +46,13 @@ public enum TaskLifecycleError: Error, Equatable, Sendable, CustomStringConverti
   /// reserve has already been finished, and cancelling `taskId` would fork the
   /// series.
   case cancelBlockedByAdvancedSuccessor(taskId: String, successorId: String)
+  /// Taking `taskId` out of its series (its repeat turned off, or its series
+  /// cancelled) was refused because that withdraws the occurrences generated
+  /// after it, and one of them, `successorId`, is already completed: the
+  /// write would turn a completed task into a cancelled one. `successorId` is
+  /// empty when the caller does not know which occurrence it was. Ending the
+  /// series from its latest occurrence withdraws nothing and is accepted.
+  case seriesEndBlockedByCompletedOccurrence(taskId: String, successorId: String)
 
   public var description: String {
     switch self {
@@ -68,6 +75,10 @@ public enum TaskLifecycleError: Error, Equatable, Sendable, CustomStringConverti
       return "Cannot re-complete task \(taskId): successor \(successorId) has already advanced"
     case let .cancelBlockedByAdvancedSuccessor(taskId, successorId):
       return "Cannot cancel task \(taskId): recurrence successor \(successorId) has already advanced"
+    case let .seriesEndBlockedByCompletedOccurrence(taskId, successorId):
+      let occurrence = successorId.isEmpty ? "occurrence" : "occurrence \(successorId)"
+      return "Cannot end the repeat on task \(taskId): a later \(occurrence) is already "
+        + "completed. End the repeat on the series' latest occurrence instead."
     }
   }
 

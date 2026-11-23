@@ -74,6 +74,9 @@ extension UserFacingError {
     /// Cancelling an occurrence of a repeating task after its next occurrence
     /// has already moved on.
     case cancelingAdvancedRepeat
+    /// Turning off the repeat on an occurrence of a repeating task, or
+    /// cancelling its series, after a later occurrence was completed.
+    case endingRepeatWithCompletedOccurrence
     /// Moving an occurrence of a repeating task to a day another occurrence of
     /// the same series already holds.
     case repeatDayTaken
@@ -132,6 +135,8 @@ extension UserFacingError {
           self = .reopeningAdvancedRepeat
         case .completeBlockedByAdvancedSuccessor: self = .completingAdvancedRepeat
         case .cancelBlockedByAdvancedSuccessor: self = .cancelingAdvancedRepeat
+        case .seriesEndBlockedByCompletedOccurrence:
+          self = .endingRepeatWithCompletedOccurrence
         }
         return
       }
@@ -246,6 +251,12 @@ extension UserFacingError {
           localized: "error.reason.canceling_advanced_repeat",
           defaultValue:
             "This repeating task has already moved on to its next occurrence, so it can’t be cancelled.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .endingRepeatWithCompletedOccurrence:
+        String(
+          localized: "error.reason.ending_completed_repeat",
+          defaultValue:
+            "A later occurrence of this repeating task is already completed. Turn off the repeat on the latest occurrence instead.",
           table: "Localizable", bundle: CoreL10n.bundle)
       case .repeatDayTaken:
         String(

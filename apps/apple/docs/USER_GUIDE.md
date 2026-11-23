@@ -3477,6 +3477,12 @@ repeats) — matching the macOS detail editor.
 Advanced recurrence fields such as end-by date or occurrence count remain
 available through MCP recurrence tools.
 
+Turning the repeat off on the occurrence you have not done yet keeps that task
+as a one-off. Turning it off on an occurrence you already completed or
+cancelled ends the series from there: every later occurrence that is not completed is
+cancelled. Lorvex refuses when a later occurrence is already completed, because
+that would cancel it too. Turn the repeat off on the latest occurrence instead.
+
 ### Tags
 
 Tags are free-form labels you attach to tasks. On the Mac, the task detail's

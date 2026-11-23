@@ -74,7 +74,7 @@ enum RecurrenceDisableReconciliation {
     }
     for successorId in candidates.sorted() {
       try reconcileSuccessor(
-        db, parentId: taskId, successorId: successorId,
+        db, rootTaskId: taskId, parentId: taskId, successorId: successorId,
         decisionVersion: decisionVersion, now: now,
         visited: &visited, effects: &effects)
     }
@@ -121,8 +121,18 @@ enum RecurrenceDisableReconciliation {
     return db.changesCount == 1
   }
 
+  /// Settle `successorId`, generated from `parentId`, now that `rootTaskId`
+  /// is leaving the series. A successor changed after the decision is released
+  /// from its parent and kept; any other is withdrawn: cancelled, released,
+  /// and its own successors settled the same way.
+  ///
+  /// Throws ``TaskLifecycleError/seriesEndBlockedByCompletedOccurrence(taskId:successorId:)``
+  /// when the successor to withdraw is completed. Withdrawing is for an
+  /// occurrence nobody finished; a completed one is a record of work done, and
+  /// the caller's transaction must not commit a write that erases it.
   private static func reconcileSuccessor(
     _ db: Database,
+    rootTaskId: String,
     parentId: String,
     successorId: String,
     decisionVersion: String,
@@ -139,7 +149,7 @@ enum RecurrenceDisableReconciliation {
         sql:
           "SELECT spawned_from, recurrence_group_id, content_version, schedule_version, "
           + "lifecycle_version, archive_version, version, "
-          + "recurrence_successor_id FROM tasks WHERE id = ?1",
+          + "recurrence_successor_id, status FROM tasks WHERE id = ?1",
         arguments: [successorId])
     else { return }
     let spawnedFrom: String? = row[0]
@@ -176,6 +186,11 @@ enum RecurrenceDisableReconciliation {
 
     case .cancelStableSuccessor:
       let descendantId: String? = row[7]
+      let status: String = row[8]
+      guard status != StatusName.completed else {
+        throw TaskLifecycleError.seriesEndBlockedByCompletedOccurrence(
+          taskId: rootTaskId, successorId: successorId)
+      }
       // The parent stops recording this row in this transaction, so the row
       // drops its link with the cancel: a link is valid only while the parent
       // records it.
@@ -208,7 +223,7 @@ enum RecurrenceDisableReconciliation {
       }
       for childId in descendants.sorted() {
         try reconcileSuccessor(
-          db, parentId: successorId, successorId: childId,
+          db, rootTaskId: rootTaskId, parentId: successorId, successorId: childId,
           decisionVersion: decisionVersion, now: now,
           visited: &visited, effects: &effects)
       }

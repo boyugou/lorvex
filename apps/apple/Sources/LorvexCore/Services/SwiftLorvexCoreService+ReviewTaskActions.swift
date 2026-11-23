@@ -139,18 +139,36 @@ extension SwiftLorvexCoreService {
         _ = try self.applyLifecycleTransition(db, hlc: hlc, deviceId: deviceId, id: change.id,
           operation: undo ? "undo_review_plan" : "redo_review_plan") { db, hlc, deviceId in
           let now = SyncTimestampFormat.syncTimestampNow()
+          let stored = try OutboxEnqueue.readEntityPayloadSnapshot(
+            db, entityType: EntityName.task, entityId: change.id)
           if target.status != expected.status {
-            let result = try LifecycleTransitions.applyLifecycleTransition(db, taskId: id,
-              oldStatus: expected.status, newStatus: target.status, now: now,
-              reminderVersion: hlc.nextVersionString())
-            try self.flushLifecyclePlan(db, hlc: hlc, deviceId: deviceId,
-              plan: LifecycleSyncPlan.from(transition: result))
+            do {
+              let result = try LifecycleTransitions.applyLifecycleTransition(db, taskId: id,
+                oldStatus: expected.status, newStatus: target.status, now: now,
+                reminderVersion: hlc.nextVersionString())
+              try self.flushLifecyclePlan(db, hlc: hlc, deviceId: deviceId,
+                plan: LifecycleSyncPlan.from(transition: result))
+            } catch TaskLifecycleError.startBlockedByDependencies {
+              // The task gained an unfinished blocker after the move, so it
+              // cannot be started again. Its plan is restored and it stays
+              // open; the other tasks in the batch are restored in full.
+            }
           }
           // Returning from Someday to Open resets the plan in the normal lifecycle.
           // Undo restores the original day, time and deferral history in this same transaction.
           _ = try TaskDeferral.restoreTaskDeferral(db, taskId: id, snapshot: target.plan,
             version: hlc.nextVersionString(), now: now)
-          try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: change.id)
+          // The status and the plan are stamped with separate clocks and the
+          // row's stamp shows only the later one, so the queued upsert names
+          // the registers that changed between the two snapshots.
+          let registers = try TaskRegisterIntent.authoredRegisters(
+            between: stored,
+            and: try OutboxEnqueue.readEntityPayloadSnapshot(
+              db, entityType: EntityName.task, entityId: change.id))
+          if !registers.isEmpty {
+            try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: change.id,
+              registerIntent: .task(registers))
+          }
           for reminder in change.reminders {
             let version = hlc.nextVersionString()
             try db.execute(sql: """

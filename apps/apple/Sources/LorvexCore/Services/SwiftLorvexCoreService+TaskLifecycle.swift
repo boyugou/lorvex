@@ -282,20 +282,52 @@ extension SwiftLorvexCoreService {
       plannedDay: planned, reason: reason).updated
   }
 
+  /// Defer one task to `plannedDay` inside the caller's write transaction; the
+  /// single entry every defer (one task, a batch, a review move) goes through.
+  ///
+  /// A started task moved to a day after today is paused by the same write. A
+  /// started task is on Today whatever its day, so moving its day alone would
+  /// leave it there; pausing it makes a deferral to a later day take every
+  /// task off Today until that day. A started task moved to today or to an
+  /// earlier day stays started, because it is on Today either way. The pause
+  /// is the ordinary `in_progress → open` transition.
   func deferTaskInTransaction(_ db: Database, hlc: HlcSession, deviceId: String,
     id: String, plannedDay: String, reason: String?) throws -> TaskDeferral.DeferralResult {
-    let version = hlc.nextVersionString()
+    let started = try String.fetchOne(
+      db, sql: "SELECT status FROM tasks WHERE id = ?", arguments: [id]) == StatusName.inProgress
+    let pauses = try started && plannedDay > WorkflowTimezone.todayYmdForConn(db)
+    // `JSONValue` has a nil literal of its own, so the optional is spelled out.
+    let before: JSONValue? = pauses
+      ? .some(try OutboxEnqueue.readEntityPayloadSnapshot(
+        db, entityType: EntityName.task, entityId: id))
+      : .none
+    let now = SyncTimestampFormat.syncTimestampNow()
     let result = try TaskDeferral.deferTask(
       db, taskId: TaskId(trusted: id),
       patch: TaskDeferral.DeferralPatch(plannedDate: plannedDay, lastDeferReason: reason),
-      version: version, now: SyncTimestampFormat.syncTimestampNow(),
+      version: hlc.nextVersionString(), now: now,
       nextReminderVersion: { hlc.nextVersionString() })
-    if result.updated {
-      try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
-      try self.enqueueUpserts(
-        db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
-        entityIds: result.shiftedReminderIds)
+    guard result.updated else { return result }
+    // A deferral alone stamps one clock, which the queued upsert infers from
+    // the row. With the pause, the schedule and the lifecycle register carry
+    // separate clocks and the row's stamp shows only the later one, so the
+    // upsert names the registers that changed between the two snapshots.
+    var registers: EntityRegisterIntent?
+    if let before {
+      let transition = try LifecycleTransitions.applyLifecycleTransition(
+        db, taskId: TaskId(trusted: id), oldStatus: .inProgress, newStatus: .open,
+        now: now, reminderVersion: hlc.nextVersionString())
+      try self.flushLifecyclePlan(
+        db, hlc: hlc, deviceId: deviceId, plan: LifecycleSyncPlan.from(transition: transition))
+      let after = try OutboxEnqueue.readEntityPayloadSnapshot(
+        db, entityType: EntityName.task, entityId: id)
+      registers = .task(try TaskRegisterIntent.authoredRegisters(between: before, and: after))
     }
+    try self.enqueueUpsert(
+      db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id, registerIntent: registers)
+    try self.enqueueUpserts(
+      db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
+      entityIds: result.shiftedReminderIds)
     return result
   }
 

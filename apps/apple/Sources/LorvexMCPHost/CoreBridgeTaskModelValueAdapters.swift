@@ -13,9 +13,18 @@ struct TaskValueOptions: Sendable, Equatable {
   var includeNulls: Bool
   var fields: Set<String>?
   var include: Set<String>
+  /// Leave out every field without a value: null, an empty string, or an
+  /// empty array. A row then carries what the task has and nothing else.
+  var omitsEmptyValues = false
 
   static let full = TaskValueOptions(shape: .full, includeNulls: true)
   static let compact = TaskValueOptions(shape: .compact, includeNulls: false)
+  /// Every field of the task that has a value.
+  static let filled: TaskValueOptions = {
+    var options = TaskValueOptions(shape: .full, includeNulls: false)
+    options.omitsEmptyValues = true
+    return options
+  }()
 
   init(
     shape: Shape = .compact,
@@ -72,6 +81,14 @@ struct TaskValueOptions: Sendable, Equatable {
   }
 
   private func shouldDrop(_ value: Value, key: String) -> Bool {
+    if omitsEmptyValues {
+      switch value {
+      case .null: return true
+      case .string(let text): return text.isEmpty
+      case .array(let values): return values.isEmpty
+      default: return false
+      }
+    }
     switch value {
     case .null:
       if fields?.contains(key) == true { return false }

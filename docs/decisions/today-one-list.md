@@ -52,12 +52,12 @@ day.
 
 | Concept | Meaning | Set by |
 |---|---|---|
-| **Today** | Unfinished tasks planned for today or earlier, due today or overdue, or started. | The task's dates and status |
+| **Today** | Unfinished tasks whose day is today or earlier, and started tasks. A task's day is its planned date when it has one, else its due date. | The task's dates and status |
 | **Briefing** | The assistant's short note on one day: what matters and why, what is at risk, what it moved. The app shows it and never edits it. | The assistant |
 | **Priority** | The one importance property. It orders Today. | The assistant; the user corrects it |
 | **Started** | A task the user has begun. Several can be started at once. | The user or the assistant |
 | **Time** | An optional start and end for a task on the day it is planned for: an appointment with oneself. | The user or the assistant |
-| **Defer** | Moving a task to a later day, or to no day. It is how a task leaves Today. | The user or the assistant |
+| **Defer** | Moving a task to a later day, or to no day. It is how a task leaves Today: the task returns on the day it moved to, a passed deadline does not hold it on Today, and a started task is paused. | The user or the assistant |
 | **Capacity** | Today's estimated work compared with the free working time left. | Derived |
 
 These leave the product: Focus (its list, its order, its section, and its
@@ -249,6 +249,16 @@ builds does not carry over:
 - **Unfinished work carries over.** A task planned for today and not done is
   still on Today tomorrow. The assistant's morning pass, or the user, defers
   what will not happen.
+- **A planned day outranks a passed deadline.** A task that is past due and
+  has no planned day is on Today, with its due date in red. Once it is planned
+  for a later day it is on that day instead, still marked past due there, so
+  the user can decide when to do late work without it filling every day in
+  between. The deadline itself changes only when the user edits it.
+- **A started task is on Today whatever its dates,** because it is what the
+  user is in the middle of. Deferring one to a day after today therefore
+  pauses it. Two moves leave it started, because it is on Today either way:
+  editing its planned date alone, and a review moving it from an earlier day
+  to today.
 - **A long Today is a signal.** The capacity decision exists for that case.
 - **Glances lose the ring by default.** It returns only for a timed task whose
   time is running, the one case where it measures something real.

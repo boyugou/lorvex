@@ -126,13 +126,14 @@ person living with the app, and then a decision.
   request can be set only through the assistant, since the apps have no field
   for it; and the two sample replies in the preview data are English in every
   language.
-- Undo an assistant's change. The tool shipped (`undo_ai_change`,
-  2026-10-13): an assistant takes back its own update to a task or a one-off
-  calendar event from the `ai_changelog` snapshots, restoring only the fields
-  that still hold what that change set. Still open: an in-app Undo on a
-  Settings > Activity row (a new control needs strings in every shipped
-  language), rows of a batch (each batch row records the batch, not one
-  task's snapshot), repeating events and series edits (their occurrence
+- Undo an assistant's change. The tool shipped (`undo_ai_change`, 2026-10-13):
+  an assistant takes back its own update to a task or a one-off calendar event
+  from the `ai_changelog` snapshots, restoring only the fields that still hold
+  what that change set. Still open: an in-app Undo on a Settings > Activity
+  row (a new control needs strings in every shipped language), a deferral (the
+  tool restores `update` rows only, and deferring a started task to a later
+  day also pauses it), rows of a batch (each batch row records the batch, not
+  one task's snapshot), repeating events and series edits (their occurrence
   bookkeeping is not a field restore), and habits and lists. A record whose
   snapshot exceeds the 4000-byte log cap (long notes) cannot be undone from
   the log alone.

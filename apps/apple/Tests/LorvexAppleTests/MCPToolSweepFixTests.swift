@@ -20,7 +20,7 @@ struct MCPToolSweepFixTests {
     let deferred = try await mcpRegistryCall(
       fixture.registry, tool: "defer_task",
       arguments: [
-        "id": .string(id), "until_date": .string("2026-07-01"),
+        "id": .string(id), "until_date": .string("2099-07-01"),
         "structured_reason": .string("needs_info"),
       ])
     #expect(deferred.isError != true)
@@ -28,13 +28,13 @@ struct MCPToolSweepFixTests {
     // The reason lands in the dedicated column, not an ai_notes side-channel.
     #expect(deferredTask["last_defer_reason"]?.stringValue == "needs_info")
     #expect(deferredTask["defer_count"]?.intValue == 1)
-    #expect(deferredTask["planned_date"]?.stringValue == "2026-07-01")
+    #expect(deferredTask["planned_date"]?.stringValue == "2099-07-01")
 
     // An unrecognized category is rejected.
     let bad = try await mcpRegistryCall(
       fixture.registry, tool: "defer_task",
       arguments: [
-        "id": .string(id), "until_date": .string("2026-07-02"),
+        "id": .string(id), "until_date": .string("2099-07-02"),
         "structured_reason": .string("procrastination"),
       ])
     #expect(bad.isError == true)
@@ -50,7 +50,7 @@ struct MCPToolSweepFixTests {
     let deferred = try await mcpRegistryCall(
       registry, tool: "defer_task",
       arguments: [
-        "id": .string(id), "until_date": .string("2026-07-01"),
+        "id": .string(id), "until_date": .string("2099-07-01"),
         "reason": .string("Waiting for the design review"),
       ])
     #expect(deferred.isError != true)
@@ -73,13 +73,13 @@ struct MCPToolSweepFixTests {
     _ = try await mcpRegistryCall(
       fixture.registry, tool: "defer_task",
       arguments: [
-        "id": .string(id), "until_date": .string("2026-07-01"),
+        "id": .string(id), "until_date": .string("2099-07-01"),
         "reason": .string("Waiting for finance"), "structured_reason": .string("needs_info"),
       ])
     _ = try await mcpRegistryCall(
       fixture.registry, tool: "defer_task",
       arguments: [
-        "id": .string(id), "until_date": .string("2026-07-08"),
+        "id": .string(id), "until_date": .string("2099-07-08"),
         "reason": .string("Still blocked"), "structured_reason": .string("blocked"),
       ])
 
@@ -112,7 +112,7 @@ struct MCPToolSweepFixTests {
     _ = try await mcpRegistryCall(
       fixture.registry, tool: "defer_task",
       arguments: [
-        "id": .string(id), "until_date": .string("2026-07-01"),
+        "id": .string(id), "until_date": .string("2099-07-01"),
         "reason": .string(rawNote), "structured_reason": .string("needs_info"),
       ])
 
@@ -151,7 +151,7 @@ struct MCPToolSweepFixTests {
 
     _ = try await mcpRegistryCall(
       fixture.registry, tool: "defer_task",
-      arguments: ["id": .string(id), "until_date": .string("2026-07-01")])
+      arguments: ["id": .string(id), "until_date": .string("2099-07-01")])
 
     let task = try await mcpRegistryCall(fixture.registry, tool: "get_task", arguments: ["id": .string(id)])
     let entry = try #require(task.structuredContent?.objectValue?["defer_history"]?.arrayValue?.first?.objectValue)
@@ -171,7 +171,7 @@ struct MCPToolSweepFixTests {
     let deferred = try await mcpRegistryCall(
       fixture.registry, tool: "defer_task",
       arguments: [
-        "id": .string(id), "until_date": .string("2026-07-01"),
+        "id": .string(id), "until_date": .string("2099-07-01"),
         "reason": .string("Waiting for finance"),
         "structured_reason": .string("needs_info"),
       ])
@@ -320,7 +320,7 @@ struct MCPToolSweepFixTests {
       tool: "batch_defer_tasks",
       arguments: [
         "task_ids": .array([.string(id)]),
-        "until_date": .string("2026-07-01"),
+        "until_date": .string("2099-07-01"),
         "reason": .string("Waiting for the design review"),
       ])
 
@@ -350,7 +350,7 @@ struct MCPToolSweepFixTests {
       tool: "batch_defer_tasks",
       arguments: [
         "task_ids": .array([.string(id)]),
-        "until_date": .string("2026-07-01"),
+        "until_date": .string("2099-07-01"),
         "reason": .string("Waiting for finance"),
         "structured_reason": .string("needs_info"),
       ])

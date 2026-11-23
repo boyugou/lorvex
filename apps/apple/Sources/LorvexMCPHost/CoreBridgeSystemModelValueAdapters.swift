@@ -51,10 +51,8 @@ extension CoreBridgeClient {
       "date": .string(snapshot.date),
       "weekday": .string(snapshot.weekday),
       "local_time": .string(snapshot.localTime),
-      "device_id": snapshot.deviceID.map(Value.string) ?? .null,
-      "sync_backend": .string(snapshot.syncBackend),
       "timezone": .string(snapshot.timezone),
-      "working_hours": snapshot.workingHours.map(Value.string) ?? .null,
+      "working_hours": snapshot.workingHours.map(jsonStringValue(_:)) ?? .null,
     ])
   }
 

@@ -20,15 +20,14 @@ public struct PreferencesSnapshot: Equatable, Sendable {
 /// the workspace, the day's list, and the day's briefing, paired with the day
 /// and local change sequence they were read at.
 ///
-/// ``tasks`` and ``todayTasks`` answer different questions and stay separate.
-/// ``tasks`` answers "what matters most overall", so it is capped and admits
-/// undated and future-dated work; ``todayTasks`` answers "what does today
-/// hold", so it is date-bounded and uncapped. A single field serving both would
-/// silently narrow whichever consumer did not ask for the change.
+/// ``tasks`` and ``todayTasks`` answer different questions and share no row.
+/// ``todayTasks`` answers "what does today hold", so it is date-bounded and
+/// uncapped. ``tasks`` answers "what else matters most", so it is capped,
+/// leaves out the day's rows, and admits undated and future-dated work.
 public struct OverviewTaskListSnapshot: Equatable, Sendable {
   public var logicalDay: String
   public var localChangeSequence: Int
-  /// The most important open tasks across the workspace, capped.
+  /// The most important open tasks that are not in ``todayTasks``, at most ten.
   public var tasks: [LorvexTask]
   /// The day's list in Today's order: started tasks first, then canonical
   /// order. Uncapped.
@@ -123,12 +122,12 @@ public struct OverviewCompactSnapshot: Equatable, Sendable {
 
 /// Session-start context returned by `session.context`.
 ///
-/// Lightweight envelope summarising the current moment, device identity, sync
-/// backend, configured timezone, and working hours so an assistant client can
-/// ground its first turn without separate calls. `date`, `weekday`, and
-/// `localTime` all describe the same instant in `timezone`. It carries the
-/// device/locale frame only; tasks, the day's schedule and briefing, calendar,
-/// changelog, and memory are loaded with their own tools.
+/// Lightweight envelope summarising the current moment, the configured
+/// timezone, and working hours so an assistant client can ground its first
+/// turn without separate calls. `date`, `weekday`, and `localTime` all
+/// describe the same instant in `timezone`. It carries the clock frame only;
+/// tasks, the day's schedule and briefing, calendar, changelog, and memory
+/// are loaded with their own tools.
 public struct SessionContextSnapshot: Equatable, Sendable {
   /// Today as `YYYY-MM-DD`.
   public var date: String
@@ -136,8 +135,6 @@ public struct SessionContextSnapshot: Equatable, Sendable {
   public var weekday: String
   /// The current wall-clock time as 24-hour `HH:MM`.
   public var localTime: String
-  public var deviceID: String?
-  public var syncBackend: String
   public var timezone: String
   public var workingHours: String?
 
@@ -145,16 +142,12 @@ public struct SessionContextSnapshot: Equatable, Sendable {
     date: String,
     weekday: String,
     localTime: String,
-    deviceID: String?,
-    syncBackend: String,
     timezone: String,
     workingHours: String?
   ) {
     self.date = date
     self.weekday = weekday
     self.localTime = localTime
-    self.deviceID = deviceID
-    self.syncBackend = syncBackend
     self.timezone = timezone
     self.workingHours = workingHours
   }

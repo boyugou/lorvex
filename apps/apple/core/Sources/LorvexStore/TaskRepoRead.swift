@@ -115,13 +115,17 @@ extension TaskRepo {
     /// The day surface's actionable pool: every task today holds, uncapped and
     /// in Today's order — started tasks first, then the rest, each group in
     /// canonical ``TaskRepo/taskOrderBy`` order. Membership is
-    /// `overdue ∪ (today_pool ∧ visible) ∪ in_progress`.
+    /// `overdue ∪ (today_pool ∧ visible) ∪ in_progress`: every task whose day
+    /// (`planned_date`, else `due_date`) is `today` or earlier, and every
+    /// started task.
     ///
     /// The first two arms reuse the canonical bucket predicates, so the list can
     /// never disagree with ``Overview/Stats/attentionCount``, which is derived
     /// from the same buckets. Overdue is folded in rather than split out — a
     /// missed day still belongs to today — and, like the OVERDUE bucket, skips the
-    /// visibility conjunct so a defer-until cannot suppress a blown deadline.
+    /// visibility conjunct so a defer-until cannot suppress a blown deadline. A
+    /// task planned for a later day is in neither arm, whatever its deadline:
+    /// it is on the day it was planned for.
     ///
     /// The `in_progress` arm is date-independent on purpose: a task stays started
     /// across days, so started work never falls off the day just because no date

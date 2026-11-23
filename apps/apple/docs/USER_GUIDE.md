@@ -3171,6 +3171,13 @@ day's schedule beside it where the window has room:
   would
 - **Done** — what you finished today; click or tap its header to fold it
 
+A task is on Today once its day has come: the day it is planned for, or its
+due date when it has no planned day. An unfinished task stays on Today the
+following days, and a started task stays whatever its dates. **Defer** moves a
+task to a later day: it leaves Today and comes back on that day. Deferring a
+started task pauses it. The due date does not change, so a task that is past
+due still shows its date in red when it returns.
+
 On iPhone or in a narrow iPad window, Today shows the current meeting or the
 next one with its time. Tap it to open the event, or tap **Schedule** for the
 full day. When only all-day events remain, Today shows the first one. A wide

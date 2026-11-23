@@ -69,7 +69,7 @@ extension CoreBridgeClient {
         "setup_completed": .bool(setup.setupCompleted),
       ]),
       "existing_preferences": .object([
-        "working_hours": setup.workingHours.map(Value.string) ?? .null,
+        "working_hours": setup.workingHours.map(Self.jsonStringValue(_:)) ?? .null,
         "default_list_id": setup.defaultListID.map(Value.string) ?? .null,
       ]),
       "list_count": .int(setup.listCount),

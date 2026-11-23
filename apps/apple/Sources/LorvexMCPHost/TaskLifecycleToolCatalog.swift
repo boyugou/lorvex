@@ -73,7 +73,7 @@ extension TaskMutationToolCatalog {
   static let startTaskTool = Tool(
     name: "start_task",
     title: "Start Task",
-    description: "Mark a task as in progress (status=in_progress) — the 'started' marker that marks it as started, so Today lists it ahead of the day's other untimed tasks, with a Started badge. Use it when the user resumes or begins active work; pause_task removes the marker. Only an open task can be started (reopen a completed/cancelled/someday task first); calling it on an already-started task is a no-op. Starting a task whose dependencies are unfinished is rejected, naming the blockers. in_progress surfaces everywhere open does; it does not stop reminders or advance recurrence. There is no started_at column — to answer \"how long has this been in progress\", read the timestamp of the most recent 'start' transition in get_ai_changelog, which holds only assistant writes, so a start made in the app does not appear there. Returns the full updated task object.",
+    description: "Mark a task as in progress (status=in_progress) — the 'started' marker that marks it as started, so Today lists it ahead of the day's other untimed tasks, with a Started badge. A started task is on today's list whatever its dates, until it is paused, deferred, or finished. Use it when the user resumes or begins active work; pause_task removes the marker. Only an open task can be started (reopen a completed/cancelled/someday task first); calling it on an already-started task is a no-op. Starting a task whose dependencies are unfinished is rejected, naming the blockers. in_progress surfaces everywhere open does; it does not stop reminders or advance recurrence. There is no started_at column — to answer \"how long has this been in progress\", read the timestamp of the most recent 'start' transition in get_ai_changelog, which holds only assistant writes, so a start made in the app does not appear there. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -96,7 +96,7 @@ extension TaskMutationToolCatalog {
   static let pauseTaskTool = Tool(
     name: "pause_task",
     title: "Pause Task",
-    description: "Remove the in-progress marker (status in_progress → open), the un-start / mis-click recovery. It leaves no residue — planned_date and defer_count are preserved, so start then pause is a metadata no-op. Only an in-progress task can be paused; calling it on an already-open task is a no-op. Pausing does not cancel or defer the task; it stays actionable. Returns the full updated task object.",
+    description: "Remove the in-progress marker (status in_progress → open), the un-start / mis-click recovery. It leaves no residue — planned_date and defer_count are preserved, so start then pause is a metadata no-op. Only an in-progress task can be paused; calling it on an already-open task is a no-op. Pausing does not cancel or defer the task; it stays actionable, and it stays on today's list only when its day (planned_date, else due_date) is today or earlier. To move a started task to a later day, call defer_task, which pauses it too. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -119,7 +119,7 @@ extension TaskMutationToolCatalog {
   static let deferTaskTool = Tool(
     name: "defer_task",
     title: "Defer Task",
-    description: "Push a task's planned work day to a future date (until_date), leaving status open. Sets the planned work day to until_date, clears the planned time, moves pending reminders by the same number of days, and records the push; to merely hide a task until a date without rescheduling, set available_from instead (that does not count as a deferral). Increments defer_count and, when structured_reason is supplied, records it in the task's last_defer_reason field for pattern tracking. Any free-text reason is persisted onto this defer's changelog entry (read it back via get_task's read-only defer_history), not into ai_notes. Returns the full updated task object, including defer_count, last_defer_reason, and a defer_note echoing the free-text reason.",
+    description: "Move a task to a later day (until_date): it leaves today's list and is back on until_date. Sets planned_date to until_date, pauses the task when it was started, clears the planned time, moves pending reminders by the same number of days, and records the push. due_date is unchanged, so a task whose deadline has passed still reads as late on the day it moved to. To merely hide a task until a date without rescheduling, set available_from instead (that does not count as a deferral). Increments defer_count and, when structured_reason is supplied, records it in the task's last_defer_reason field for pattern tracking. Any free-text reason is persisted onto this defer's changelog entry (read it back via get_task's read-only defer_history), not into ai_notes. Returns the full updated task object, including defer_count, last_defer_reason, and a defer_note echoing the free-text reason.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -129,7 +129,7 @@ extension TaskMutationToolCatalog {
         ]),
         "until_date": .object([
           "type": .string("string"),
-          "description": .string("YYYY-MM-DD date to defer the task to"),
+          "description": .string("The day to move the task to, YYYY-MM-DD. It must be after today."),
         ]),
         "reason": .object([
           "type": .string("string"),

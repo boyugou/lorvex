@@ -9,21 +9,37 @@ import Testing
 @Suite("MCP Tool Registry — system area")
 struct SystemToolTests {
 
-  @Test("get_session_context returns the flat production session-context shape")
+  @Test("get_session_context returns the moment in the user's time zone and nothing else")
   func sessionContext() async throws {
     let registry = try mcpInMemoryRegistry()
     let result = try await mcpRegistryCall(registry, tool: "get_session_context")
     #expect(result.isError != true)
     #expect(!mcpSummaryText(result).isEmpty)
-    // Flat envelope matching the on-disk core adapter.
     let object = try #require(result.structuredContent?.objectValue)
-    #expect(object["date"]?.stringValue != nil)
+    #expect(Set(object.keys) == ["date", "weekday", "local_time", "timezone", "working_hours"])
+    #expect(object["date"]?.stringValue?.wholeMatch(of: #/\d{4}-\d{2}-\d{2}/#) != nil)
     #expect(object["weekday"]?.stringValue != nil)
     #expect(object["local_time"]?.stringValue?.wholeMatch(of: #/\d{2}:\d{2}/#) != nil)
-    #expect(object["sync_backend"]?.stringValue == "unknown")
-    #expect(object.keys.contains("device_id"))
-    #expect(object.keys.contains("timezone"))
-    #expect(object.keys.contains("working_hours"))
+    #expect(object["timezone"]?.stringValue != nil)
+    #expect(object["working_hours"] == .null)
+  }
+
+  @Test("get_session_context returns working hours as an object, not as JSON text")
+  func sessionContextWorkingHours() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let setup = try await mcpRegistryCall(
+      registry, tool: "complete_setup",
+      arguments: [
+        "working_hours": .string("09:00-17:30"), "timezone": .string("America/Los_Angeles"),
+      ])
+    #expect(setup.isError != true)
+
+    let result = try await mcpRegistryCall(registry, tool: "get_session_context")
+    let object = try #require(result.structuredContent?.objectValue)
+    #expect(object["timezone"]?.stringValue == "America/Los_Angeles")
+    let hours = try #require(object["working_hours"]?.objectValue)
+    #expect(hours["start"]?.stringValue == "09:00")
+    #expect(hours["end"]?.stringValue == "17:30")
   }
 
   @Test("get_overview compact top_tasks are the slim projection, not full tasks")

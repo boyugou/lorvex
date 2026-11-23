@@ -152,11 +152,15 @@ MCP calls (after the user confirms both):
 
 ```
 Reads:
-1. get_overview()                  →  counts, today's actionable pool (overdue,
-                                      due today, planned today), top tasks
-2. get_upcoming_tasks({ days: 3 }) →  what is coming up
+1. get_overview({ shape: "full" }) →  today's list (every unfinished task whose
+                                      day is today or earlier, and every started
+                                      task), its briefing, and the most
+                                      important tasks that are not on today
+2. get_upcoming_tasks({ days: 3 }) →  what is coming up from tomorrow on
 3. get_daily_schedule()            →  whether today already has saved times
 4. get_calendar_timeline({ from: <today>, to: <today> })  →  today's meetings
+5. propose_daily_schedule()        →  available_minutes: the working time the
+                                      day's events leave free; saves nothing
 
 Reasoning:
 - Seven tasks in today's pool, two of them overdue.
@@ -164,18 +168,17 @@ Reasoning:
 - It is Wednesday: two working days remain before Friday.
 
 Writes:
-5. batch_update_tasks({ updates: [{ id: intro, planned_date: <today> },
+6. batch_update_tasks({ updates: [{ id: intro, planned_date: <today> },
      { id: hotel, planned_date: <today> }, { id: pr_review, planned_date:
      <today> }, { id: expense, planned_date: <today> }, { id: sync_prep,
      planned_date: <today> }] })
      →  puts the day's tasks on today; batch_defer_tasks moves what does not fit
-6. set_daily_briefing({ briefing: "The intro comes first: it blocks Friday's
+7. set_daily_briefing({ briefing: "The intro comes first: it blocks Friday's
      submission. Then the hotel call (15 minutes, time-sensitive). The rest
      fits the afternoon." })
-7. propose_daily_schedule({ include_calendar_events: true })
-     →  time blocks around today's meetings, starting no earlier than now
 8. save_daily_schedule({ date: <today>, times: [...] })
-     →  only after the user agrees with the times
+     →  the proposed times, only when the user wants a timetable and agrees
+        with them
 ```
 
 **Key behaviors:**
@@ -183,18 +186,23 @@ Writes:
   the user started it, so it is the natural thing to resume.
 - It considers dependencies (the intro blocks the submission).
 - It puts as much on today as the free time holds: summed estimates against
-  the hours left after meetings, with a missing estimate treated as unknown.
-  The count follows from the time, not from a target number, and the order
-  follows leverage rather than urgency alone.
+  `available_minutes` from `propose_daily_schedule`, with a missing estimate
+  treated as unknown. The count follows from the time, not from a target
+  number, and the order follows leverage rather than urgency alone.
 - The briefing explains why each task matters, not just what it is.
 - Mid-day additions just set the task's `planned_date` to today (`update_task`
   or `batch_update_tasks`); Today already lists every task that qualifies, so
   there is no separate list to append to or replace.
 - Work that no longer fits moves with `defer_task` or `batch_defer_tasks`,
   with a `structured_reason` (`not_today`, `low_energy`, `blocked`,
-  `needs_info`, `needs_breakdown`) when one applies. Deferrals are counted and
-  feed the weekly review. Setting `available_from` only hides a task until a
-  date; it is not a deferral.
+  `needs_info`, `needs_breakdown`) when one applies. Both take a day after
+  today and refuse any other, so a call cannot report a task as moved while
+  it stays on Today; `update_task` puts a task on today. A deferred task leaves
+  Today until the day it moved to: a passed `due_date` does not hold it there
+  (the date is unchanged, so the task still reads as late on its new day), and
+  a started task is paused. Deferrals are counted and feed the weekly review.
+  Setting `available_from` only hides a task until a date; it is not a
+  deferral.
 - `start_task` marks a task in progress when the user begins it, and
   `pause_task` undoes a mistaken start; both go through the same lifecycle
   funnel as complete, cancel, and reopen. There is no `started_at` column: the
@@ -422,15 +430,17 @@ compare with reality.
 
 Load context in proportion to the request:
 
-1. **`get_session_context`** returns the environment frame only: today's date
-   and weekday, the current local time, the time zone, working hours, device,
-   and sync backend. It is cheap; call it whenever dates, times, or working
+1. **`get_session_context`** returns the current moment only: today's date
+   and weekday, the current local time, the time zone, and working hours as
+   `{start, end}`. It is cheap; call it whenever dates, times, or working
    hours matter instead of inferring them.
-2. **`get_overview`** returns counts, today's actionable pool, and top tasks
-   (`shape=compact`, the default). The counts include the tasks the user
-   handed over that wait for the assistant (`delegated_to_assistant_count`),
-   which [Pattern 7](#pattern-7-work-the-user-handed-over) works through.
-   `shape=full` adds task objects and the day's briefing.
+2. **`get_overview`** returns counts and the top tasks (`shape=compact`, the
+   default). The counts include the tasks the user handed over that wait for
+   the assistant (`delegated_to_assistant_count`), which
+   [Pattern 7](#pattern-7-work-the-user-handed-over) works through.
+   `shape=full` returns the day itself: today's whole list, the day's
+   briefing, and the most important tasks that are not on today. A task row
+   there carries the fields that have a value.
 3. **`read_memory`** returns what earlier sessions recorded (see
    [Memory sections](#memory-sections)). Pass `key` or `keys` for specific
    sections.

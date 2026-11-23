@@ -36,12 +36,6 @@ public enum Overview {
     public static func mcpCompact() -> Limits {
       Limits(lists: 0, topTasks: 5, recentlyCompleted: 0)
     }
-    /// MCP full tool response: no lists, 10 top tasks, no recently completed.
-    /// The full shape returns only the task list, so the sections it does not
-    /// serialize are not queried.
-    public static func mcpFull() -> Limits {
-      Limits(lists: 0, topTasks: 10, recentlyCompleted: 0)
-    }
   }
 
   /// Hero-strip counts. `completionStreak` / `streakActiveToday` are filled in
@@ -150,7 +144,7 @@ public enum Overview {
 
   /// The daily briefing stored for `date`, trimmed, or nil when the day has
   /// none.
-  static func loadBriefing(_ db: Database, date: String) throws -> String? {
+  public static func loadBriefing(_ db: Database, date: String) throws -> String? {
     let stored = try DailyBriefingRepo.briefing(db, date: date)
     guard let text = stored?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty
     else { return nil }

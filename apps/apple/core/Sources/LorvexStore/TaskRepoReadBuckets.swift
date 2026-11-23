@@ -76,7 +76,7 @@ extension TaskRepo.Read {
   // MARK: - Upcoming
 
   /// Open tasks whose effective action date falls in `(from, from+days]`,
-  /// excluding overdue / today-pool members. Ordered by
+  /// which excludes every overdue and today-pool member. Ordered by
   /// `COALESCE(planned_date, due_date) ASC, priority_effective ASC,
   /// created_at DESC, id ASC`.
   public static func getUpcomingTasks(
@@ -146,9 +146,10 @@ extension TaskRepo.Read {
     let upcoming = TaskReadBuckets.upcomingBucketPredicate(
       taskAlias: "tasks", fromPlaceholder: "?1", toPlaceholder: "?2")
     // Overdue-wins: the OVERDUE column never applies the visibility filter, so a
-    // hidden-but-overdue task is counted as overdue. Today-pool and upcoming
-    // rows are non-overdue by construction, so hidden ones drop out of those
-    // counts.
+    // hidden-but-overdue task is counted as overdue. Today-pool rows are
+    // non-overdue by construction, so hidden ones drop out of that count. An
+    // upcoming row whose deadline has passed is counted even when hidden: the
+    // visibility filter itself lets a passed deadline through.
     let visible = TaskReadBuckets.availableVisibilityPredicate(
       taskAlias: "tasks", datePlaceholder: "?1")
     let sql = """

@@ -84,15 +84,15 @@ extension CoreBridgeClient {
     -> Value
   {
     // `tasks` is the flat page every other task-list read returns; `by_date`
-    // groups those same rows for the week view. The envelope's paging fields
-    // describe the flat array.
+    // names the ids of each day's rows, in the page's order, so a week view
+    // costs no second copy of the rows. The envelope's paging fields describe
+    // the flat array.
     var byDate: [String: [Value]] = [:]
     var flat: [Value] = []
     for task in page.tasks {
-      let value = taskValue(from: task, options: outputOptions)
       let key = (task.plannedDate ?? task.dueDate).map { plannedDateFormatter.string(from: $0) } ?? ""
-      byDate[key, default: []].append(value)
-      flat.append(value)
+      byDate[key, default: []].append(.string(task.id))
+      flat.append(taskValue(from: task, options: outputOptions))
     }
     let window = upcomingTaskWindow(logicalDay: logicalDay, days: days)
     return MCPPagination.object(
@@ -111,12 +111,12 @@ extension CoreBridgeClient {
     logicalDay: String,
     days: Int
   ) -> (from: String, to: String) {
-    let end = LorvexDateFormatters.ymdUTCAddingDays(logicalDay, days: max(days, 0))
+    // The window is the days after today: today's and overdue tasks belong
+    // to the Today list, which other reads return.
+    let start = LorvexDateFormatters.ymdUTCAddingDays(logicalDay, days: 1) ?? logicalDay
+    let end = LorvexDateFormatters.ymdUTCAddingDays(logicalDay, days: max(days, 1))
       ?? logicalDay
-    return (
-      logicalDay,
-      end
-    )
+    return (start, end)
   }
 
   /// Render a reminder page inside the shared pagination envelope. The caller

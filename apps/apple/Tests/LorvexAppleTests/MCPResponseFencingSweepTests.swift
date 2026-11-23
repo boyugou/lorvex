@@ -280,7 +280,7 @@ struct MCPResponseFencingSweepTests {
         ["title": Self.text("blockedTitle"), "depends_on": .array([.string(data.task)])]))
     _ = try await call(
       "defer_task",
-      ["id": .string(data.blocked), "until_date": "2026-06-02", "reason": Self.text("deferNote")])
+      ["id": .string(data.blocked), "until_date": "2099-06-02", "reason": Self.text("deferNote")])
 
     data.habit = id(
       of: try await call(
@@ -400,7 +400,7 @@ struct MCPResponseFencingSweepTests {
     _ = try await call(
       "batch_defer_tasks",
       [
-        "task_ids": .array([.string(data.task)]), "until_date": "2026-06-03",
+        "task_ids": .array([.string(data.task)]), "until_date": "2099-06-03",
         "reason": Self.text("batchDeferNote"),
       ])
     _ = try await call("move_task_to_list", ["id": .string(data.task), "list_id": "inbox"])

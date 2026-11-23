@@ -137,6 +137,75 @@ final class TaskRepoReadBucketsTests: XCTestCase {
     XCTAssertTrue(rows.isEmpty)
   }
 
+  /// A task whose deadline has passed and that is planned for a later day is
+  /// upcoming on the day it was planned for.
+  func testUpcomingIncludesAnOverdueTaskPlannedInRange() throws {
+    let store = try TestSupport.freshStore()
+    let rows = try store.writer.write { db -> [TaskRow] in
+      try self.insertTask(
+        db, "replanned", "Overdue, planned Wednesday", "open", dueDate: "2026-03-20",
+        plannedDate: "2026-03-25", priority: 1)
+      try self.insertTask(db, "late", "Overdue, no plan", "open", dueDate: "2026-03-20", priority: 1)
+      return try TaskRepo.Read.getUpcomingTasks(
+        db, predicate: UpcomingPredicate(fromDate: self.ymd(2026, 3, 23), days: 7),
+        page: .default)
+    }
+    XCTAssertEqual(ids(rows), ["replanned"])
+  }
+
+  // MARK: - Today's list
+
+  /// Today holds every task whose day (planned date, else due date) is today
+  /// or earlier, and every started task.
+  func testTodaysListHoldsEveryTaskWhoseDayHasComeAndEveryStartedTask() throws {
+    let store = try TestSupport.freshStore()
+    let rows = try store.writer.write { db -> [TaskRow] in
+      try self.insertTask(db, "late", "Overdue", "open", dueDate: "2026-03-20", priority: 2)
+      try self.insertTask(db, "due-today", "Due today", "open", dueDate: "2026-03-23", priority: 2)
+      try self.insertTask(
+        db, "planned-earlier", "Planned last week", "open", dueDate: "2026-03-28",
+        plannedDate: "2026-03-18", priority: 2)
+      try self.insertTask(
+        db, "started", "Started, no dates", "in_progress", priority: 3)
+      try self.insertTask(db, "due-tomorrow", "Due tomorrow", "open", dueDate: "2026-03-24")
+      try self.insertTask(db, "undated", "No dates", "open", priority: 1)
+      try self.insertTask(db, "done", "Done", "completed", dueDate: "2026-03-23")
+      return try TaskRepo.Read.getTodayPoolTasks(db, today: "2026-03-23")
+    }
+    XCTAssertEqual(ids(rows), ["started", "late", "due-today", "planned-earlier"])
+  }
+
+  /// Planning a task for a later day takes it off Today even when its deadline
+  /// has passed, and it is back on the day it was planned for.
+  func testAnOverdueTaskPlannedForALaterDayLeavesTodayUntilThatDay() throws {
+    let store = try TestSupport.freshStore()
+    let (monday, wednesday) = try store.writer.write { db -> ([TaskRow], [TaskRow]) in
+      try self.insertTask(
+        db, "replanned", "Overdue, planned Wednesday", "open", dueDate: "2026-03-20",
+        plannedDate: "2026-03-25", priority: 1)
+      try self.insertTask(db, "late", "Overdue, no plan", "open", dueDate: "2026-03-20", priority: 1)
+      return (
+        try TaskRepo.Read.getTodayPoolTasks(db, today: "2026-03-23"),
+        try TaskRepo.Read.getTodayPoolTasks(db, today: "2026-03-25")
+      )
+    }
+    XCTAssertEqual(ids(monday), ["late"])
+    XCTAssertEqual(Set(ids(wednesday)), ["late", "replanned"])
+  }
+
+  /// A started task stays on Today whatever its dates: a deferral takes it off
+  /// by pausing it, not by moving its day.
+  func testAStartedTaskPlannedForALaterDayIsOnToday() throws {
+    let store = try TestSupport.freshStore()
+    let rows = try store.writer.write { db -> [TaskRow] in
+      try self.insertTask(
+        db, "started-early", "Planned Friday, started", "in_progress",
+        plannedDate: "2026-03-27")
+      return try TaskRepo.Read.getTodayPoolTasks(db, today: "2026-03-23")
+    }
+    XCTAssertEqual(ids(rows), ["started-early"])
+  }
+
   // MARK: - Open task day buckets
 
   func testCountOpenTaskDayBucketsMatchesCanonicalBucketQueries() throws {
@@ -148,12 +217,15 @@ final class TaskRepoReadBucketsTests: XCTestCase {
         plannedDate: "2026-03-20", priority: 2)
       try self.insertTask(db, "due-today", "Due today", "open", dueDate: "2026-03-23", priority: 3)
       try self.insertTask(db, "upcoming", "Upcoming", "open", dueDate: "2026-03-27", priority: 1)
+      try self.insertTask(
+        db, "replanned", "Overdue, planned Wednesday", "open", dueDate: "2026-03-20",
+        plannedDate: "2026-03-25", priority: 1)
       return try TaskRepo.Read.countOpenTaskDayBuckets(
         db, asOfDate: self.ymd(2026, 3, 23), upcomingDays: 7)
     }
     XCTAssertEqual(
       counts,
-      TaskRepo.Read.OpenTaskDayBucketCounts(overdue: 1, todayPool: 2, upcoming: 1))
+      TaskRepo.Read.OpenTaskDayBucketCounts(overdue: 1, todayPool: 2, upcoming: 2))
   }
 
   // MARK: - Deferred

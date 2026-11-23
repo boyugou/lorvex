@@ -5,7 +5,7 @@ extension TaskMutationToolCatalog {
     name: "batch_defer_tasks",
     title: "Batch Defer Tasks",
     description:
-      "Set planned_date on multiple tasks to the same future day. Use during morning planning or weekly review when pushing several tasks to a later date. Reschedules the planned work day and records the push; to merely hide a task until a date without rescheduling, set available_from instead (that does not count as a deferral). Increments defer_count per task. Returns {results, count, skipped, defer_note} — results holds the updated tasks, skipped is [{id, reason}] for ids that could not be deferred.",
+      "Move several tasks to the same later day (until_date): each leaves today's list and is back on until_date. Sets planned_date per task, pauses a task that was started, and leaves due_date unchanged, so a task whose deadline has passed still reads as late on the day it moved to. Use during morning planning or weekly review when pushing several tasks to a later date. To merely hide a task until a date without rescheduling, set available_from instead (that does not count as a deferral). Increments defer_count per task. Returns {results, count, skipped, defer_note} — results holds the updated tasks, skipped is [{id, reason}] for ids that could not be deferred.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -15,7 +15,7 @@ extension TaskMutationToolCatalog {
         ]),
         "until_date": .object([
           "type": .string("string"),
-          "description": .string("Absolute planned date target in YYYY-MM-DD"),
+          "description": .string("The day to move the tasks to, YYYY-MM-DD. It must be after today."),
         ]),
         "reason": .object([
           "type": .string("string"),

@@ -46,6 +46,58 @@ final class TaskRegisterIntentProvenanceTests: XCTestCase {
     }
   }
 
+  /// The product day `offset` days from the one the service calls today.
+  private func day(_ service: SwiftLorvexCoreService, offset: Int) throws -> (key: String, date: Date) {
+    let today = try service.read { db in try WorkflowTimezone.todayYmdForConn(db) }
+    let key = try XCTUnwrap(LorvexDateFormatters.ymdUTCAddingDays(today, days: offset))
+    return (key, try XCTUnwrap(LorvexDateFormatters.ymdUTC.date(from: key)))
+  }
+
+  func testDeferQueuesEveryRegisterItStamped() async throws {
+    let service = try makeService()
+    let tomorrow = try day(service, offset: 1).date
+
+    let open = try await service.createTask(title: "Open", notes: "")
+    try clearTaskOutbox(service, taskID: open.id)
+    _ = try await service.deferTask(id: open.id, until: tomorrow)
+    XCTAssertEqual(
+      try pendingTaskIntent(service, taskID: open.id), TaskRegisterIntent.schedule.rawValue)
+
+    // A started task is also paused, with a second clock: the queued upsert
+    // names both registers, not only the one that stamped the row last.
+    let started = try await service.createTask(title: "Started", notes: "")
+    _ = try await service.startTask(id: started.id)
+    try clearTaskOutbox(service, taskID: started.id)
+    _ = try await service.deferTask(id: started.id, until: tomorrow)
+    XCTAssertEqual(
+      try pendingTaskIntent(service, taskID: started.id),
+      TaskRegisterIntent.schedule.rawValue | TaskRegisterIntent.lifecycle.rawValue)
+  }
+
+  func testUndoingAReviewMoveOfAStartedTaskQueuesBothRegisters() async throws {
+    let service = try makeService()
+    let today = try day(service, offset: 0)
+    let created = try await service.createTask(title: "Draft the plan", notes: "")
+    let task = try await service.updateTask(
+      TaskUpdateDraft(id: created.id, plannedDate: .set(today.date)))
+    _ = try await service.startTask(id: task.id)
+    let changes = try await service.arrangeReviewTasks(
+      [
+        ReviewTaskSummary(
+          id: task.id, title: task.title, status: "in_progress", deferCount: 0,
+          plannedDate: today.key)
+      ],
+      reviewedOn: today.key, destination: .day(try day(service, offset: 1).key))
+    XCTAssertEqual(changes.count, 1)
+    try clearTaskOutbox(service, taskID: task.id)
+
+    try await service.restoreReviewTasks(changes, undo: true)
+
+    XCTAssertEqual(
+      try pendingTaskIntent(service, taskID: task.id),
+      TaskRegisterIntent.schedule.rawValue | TaskRegisterIntent.lifecycle.rawValue)
+  }
+
   func testCreateAndMultiRegisterUpdatePersistExactProvenance() async throws {
     let service = try makeService()
     let task = try await service.createTask(title: "Grouped task", notes: "")

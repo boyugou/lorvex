@@ -1,4 +1,5 @@
 import Foundation
+import LorvexCore
 import MCP
 import Testing
 
@@ -78,14 +79,13 @@ struct MCPDependencyUpcomingExtendedToolsTests {
     #expect(flat.count == object["returned"]?.intValue)
     #expect(flat.first?.objectValue?["id"]?.stringValue == taskID)
 
-    let groups = object["by_date"]?.objectValue ?? [:]
-    let firstTask = groups.values
-      .compactMap { $0.arrayValue?.first?.objectValue }
-      .first
-    let task = try #require(firstTask)
-    #expect(task["id"]?.stringValue == taskID)
+    let task = try #require(flat.first?.objectValue)
     #expect(task["priority"]?.intValue == 1)
     #expect(task["priority_label"]?.stringValue == "P1")
+
+    // `by_date` names the day's rows by id, so no row is sent twice.
+    let groups = object["by_date"]?.objectValue ?? [:]
+    #expect(groups[plannedDate]?.arrayValue == [.string(taskID)])
   }
 
   @Test("get_upcoming_tasks on the core bridge emits a flat tasks array aligned with by_date")
@@ -112,12 +112,169 @@ struct MCPDependencyUpcomingExtendedToolsTests {
     let flat = try #require(object["tasks"]?.arrayValue)
     #expect(flat.contains { $0.objectValue?["id"]?.stringValue == taskID })
     #expect(flat.count == object["returned"]?.intValue)
-    // by_date groups the very same rows; the flat array is the ungrouped page.
+    // by_date groups the ids of the very same rows; the flat array is the page.
     let grouped = try #require(object["by_date"]?.objectValue)
-    let groupedIDs = grouped.values.flatMap { $0.arrayValue ?? [] }
-      .compactMap { $0.objectValue?["id"]?.stringValue }
+    let groupedIDs = grouped.values.flatMap { $0.arrayValue ?? [] }.compactMap(\.stringValue)
     #expect(groupedIDs.contains(taskID))
     #expect(groupedIDs.count == flat.count)
+  }
+
+  /// The product day `offset` days from the one the server calls today.
+  private func day(_ offset: Int, in registry: ToolRegistry) async throws -> String {
+    let context = try await mcpRegistryCall(registry, tool: "get_session_context")
+    let today = try #require(context.structuredContent?.objectValue?["date"]?.stringValue)
+    return try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: offset))
+  }
+
+  /// The ids of the task rows under `key` in a result's structured payload.
+  private func ids(_ result: CallTool.Result, _ key: String) -> [String] {
+    (result.structuredContent?.objectValue?[key]?.arrayValue ?? [])
+      .compactMap { $0.objectValue?["id"]?.stringValue }
+  }
+
+  @Test("the upcoming window starts tomorrow and ends N days after today")
+  func upcomingWindowStartsTomorrow() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let result = try await mcpRegistryCall(
+      registry, tool: "get_upcoming_tasks", arguments: ["days": .int(7)])
+    let object = try #require(result.structuredContent?.objectValue)
+    #expect(object["from"]?.stringValue == (try await day(1, in: registry)))
+    #expect(object["to"]?.stringValue == (try await day(7, in: registry)))
+  }
+
+  @Test("a deferred overdue task leaves today's list and is upcoming on the day it moved to")
+  func deferredOverdueTaskLeavesToday() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_task",
+      arguments: [
+        "title": .string("Reply to legal"), "due_date": .string(try await day(-3, in: registry)),
+      ])
+    let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+    let before = try await mcpRegistryCall(
+      registry, tool: "get_overview", arguments: ["shape": .string("full")])
+    #expect(ids(before, "today") == [taskID])
+
+    let moved = try await day(2, in: registry)
+    let deferred = try await mcpRegistryCall(
+      registry, tool: "defer_task",
+      arguments: ["id": .string(taskID), "until_date": .string(moved)])
+    #expect(deferred.isError != true)
+
+    let after = try await mcpRegistryCall(
+      registry, tool: "get_overview", arguments: ["shape": .string("full")])
+    #expect(ids(after, "today").isEmpty)
+    let stats = try await mcpRegistryCall(registry, tool: "get_overview")
+    let counts = try #require(stats.structuredContent?.objectValue?["stats"]?.objectValue)
+    #expect(counts["overdue_count"]?.intValue == 0)
+    #expect(counts["attention_count"]?.intValue == 0)
+    #expect(counts["upcoming_week_count"]?.intValue == 1)
+    let upcoming = try await mcpRegistryCall(registry, tool: "get_upcoming_tasks")
+    let window = try #require(upcoming.structuredContent?.objectValue)
+    #expect(window["by_date"]?.objectValue?[moved]?.arrayValue == [.string(taskID)])
+  }
+
+  @Test("deferring a started task pauses it")
+  func deferringAStartedTaskPausesIt() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_task", arguments: ["title": .string("Analyze churn numbers")])
+    let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+    _ = try await mcpRegistryCall(registry, tool: "start_task", arguments: ["id": .string(taskID)])
+
+    let deferred = try await mcpRegistryCall(
+      registry, tool: "defer_task",
+      arguments: ["id": .string(taskID), "until_date": .string(try await day(1, in: registry))])
+
+    #expect(deferred.structuredContent?.objectValue?["status"]?.stringValue == "open")
+    let overview = try await mcpRegistryCall(
+      registry, tool: "get_overview", arguments: ["shape": .string("full")])
+    #expect(ids(overview, "today").isEmpty)
+  }
+
+  @Test("defer_task and batch_defer_tasks refuse a day that is not after today")
+  func deferRefusesTodayAndEarlier() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_task",
+      arguments: [
+        "title": .string("Reply to legal"), "due_date": .string(try await day(-3, in: registry)),
+      ])
+    let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+
+    for offset in [0, -1] {
+      let single = try await mcpRegistryCall(
+        registry, tool: "defer_task",
+        arguments: ["id": .string(taskID), "until_date": .string(try await day(offset, in: registry))])
+      #expect(single.isError == true)
+      #expect(single.structuredContent?.objectValue?["code"]?.stringValue == "validation")
+      let batch = try await mcpRegistryCall(
+        registry, tool: "batch_defer_tasks",
+        arguments: [
+          "task_ids": .array([.string(taskID)]),
+          "until_date": .string(try await day(offset, in: registry)),
+        ])
+      #expect(batch.isError == true)
+      #expect(batch.structuredContent?.objectValue?["code"]?.stringValue == "validation")
+    }
+    let malformed = try await mcpRegistryCall(
+      registry, tool: "batch_defer_tasks",
+      arguments: ["task_ids": .array([.string(taskID)]), "until_date": .string("tomorrow")])
+    #expect(malformed.structuredContent?.objectValue?["code"]?.stringValue == "validation")
+
+    let task = try await mcpRegistryCall(registry, tool: "get_task", arguments: ["id": .string(taskID)])
+    let row = try #require(task.structuredContent?.objectValue)
+    #expect(row["planned_date"] == .null)
+    #expect(row["defer_count"]?.intValue == 0)
+  }
+
+  @Test("the full overview's other tasks are chosen after the day's rows are left out")
+  func fullOverviewOtherTasksAreNotCrowdedOutByToday() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let today = try await day(0, in: registry)
+    // Eleven priority-1 tasks due today outrank every other task in the workspace.
+    let dayTasks = (1...11).map { index in
+      Value.object([
+        "title": .string("Today \(index)"), "priority": .int(1), "due_date": .string(today),
+      ])
+    }
+    let others = (1...3).map { index in
+      Value.object(["title": .string("Later \(index)"), "priority": .int(3)])
+    }
+    let created = try await mcpRegistryCall(
+      registry, tool: "batch_create_tasks", arguments: ["tasks": .array(dayTasks + others)])
+    #expect(created.isError != true)
+
+    let result = try await mcpRegistryCall(
+      registry, tool: "get_overview", arguments: ["shape": .string("full")])
+    #expect(ids(result, "today").count == 11)
+    #expect(ids(result, "tasks").count == 3)
+  }
+
+  @Test("the full overview lists a task once and leaves out its empty fields")
+  func fullOverviewListsEachTaskOnce() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let onToday = try await mcpRegistryCall(
+      registry, tool: "create_task",
+      arguments: [
+        "title": .string("Send the roadmap"), "priority": .int(1),
+        "due_date": .string(try await day(0, in: registry)),
+      ])
+    let todayID = try #require(onToday.structuredContent?.objectValue?["id"]?.stringValue)
+    let elsewhere = try await mcpRegistryCall(
+      registry, tool: "create_task",
+      arguments: ["title": .string("Book the venue"), "priority": .int(1)])
+    let otherID = try #require(elsewhere.structuredContent?.objectValue?["id"]?.stringValue)
+
+    let result = try await mcpRegistryCall(
+      registry, tool: "get_overview", arguments: ["shape": .string("full")])
+    let object = try #require(result.structuredContent?.objectValue)
+    #expect(ids(result, "today") == [todayID])
+    #expect(ids(result, "tasks") == [otherID])
+    let row = try #require(object["today"]?.arrayValue?.first?.objectValue)
+    #expect(row["due_date"]?.stringValue == (try await day(0, in: registry)))
+    #expect(!row.values.contains(.null))
+    #expect(row["notes"] == nil)
   }
 
   @Test("get_due_task_reminders returns reminders array")

@@ -88,7 +88,7 @@ extension CoreBridgeClient {
         ])
     case "task_management":
       return (
-        "Tasks carry priority, planned_date with an optional time on that day (planned_start_time, planned_end_time), tags, dependencies, a checklist, reminders, and recurrence. Status transitions go through complete/cancel/reopen/defer and start/pause — never update_task. start_task marks work in_progress (an actionable state that surfaces wherever open does); pause_task clears it.",
+        "Tasks carry priority, planned_date with an optional time on that day (planned_start_time, planned_end_time), tags, dependencies, a checklist, reminders, and recurrence. Status transitions go through complete/cancel/reopen/defer and start/pause — never update_task. start_task marks work in_progress (an actionable state that surfaces wherever open does, and that keeps the task on Today whatever its dates); pause_task clears it, and so does defer_task.",
         [
           "Capture with create_task / batch_create_tasks; enrich fields with update_task.",
           "Break work down with add_task_checklist_item; set deadlines with update_task (due_date); add_task_reminder schedules a notification.",
@@ -98,11 +98,13 @@ extension CoreBridgeClient {
         ])
     case "planning":
       let day =
-        "Today lists every task that is overdue (its due date is before today), due or planned today or earlier, or started, started tasks first; "
-        + "planned_date, when set, decides a task's day, otherwise due_date does."
+        "A task's day is its planned_date when it has one, else its due_date. Today lists every "
+        + "unfinished task whose day is today or earlier, and every started task, started tasks first."
       let arrange =
         "Put work on a day with update_task or batch_update_tasks (planned_date); move what no "
-        + "longer fits with defer_task or batch_defer_tasks, which count the deferral."
+        + "longer fits to a day after today with defer_task or batch_defer_tasks, which count the "
+        + "deferral: a deferred task leaves Today until the day it moved to, keeps its due_date, "
+        + "and is paused when it was started."
       let times =
         "Offer times only when the user wants a timetable: propose_daily_schedule, then "
         + "save_daily_schedule; read the day's times with get_daily_schedule, and time one task "

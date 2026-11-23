@@ -17,8 +17,11 @@ extension DayPlanningToolCatalog {
       + "available_minutes, placements: [{task, start_time, end_time}], events: [{start_time, "
       + "end_time, title, event_id, source}], unscheduled}; a placement's start_time/end_time is "
       + "the suggested time, and an event's title is null when the calendar setting shares only "
-      + "busy time. Most people never time their day; offer this when the user asks for a "
-      + "timetable, then call save_daily_schedule with the times they accept.",
+      + "busy time. available_minutes is the working time the day's events leave free, counted "
+      + "from the current time for today: compare it with the day's estimated work to judge "
+      + "whether the day is realistic, whether or not the user wants times. Most people never "
+      + "time their day; offer the times when the user asks for a timetable, then call "
+      + "save_daily_schedule with the ones they accept.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

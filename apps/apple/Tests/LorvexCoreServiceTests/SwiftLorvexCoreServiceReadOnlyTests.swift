@@ -29,9 +29,8 @@ final class SwiftLorvexCoreServiceReadOnlyTests: XCTestCase {
     let service = try makeService()
     XCTAssertNil(try deviceID(service))
 
-    let context = try await service.getSessionContext()
+    _ = try await service.getSessionContext()
 
-    XCTAssertNil(context.deviceID)
     XCTAssertNil(try deviceID(service))
   }
 

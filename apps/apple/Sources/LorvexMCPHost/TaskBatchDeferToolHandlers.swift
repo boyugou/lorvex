@@ -20,6 +20,9 @@ extension ToolRegistry {
         code: "validation", message: "An until_date value is required.",
         toolName: "batch_defer_tasks")
     }
+    if let rejection = try await deferDayRejection(untilDate, toolName: "batch_defer_tasks") {
+      return rejection
+    }
 
     let value = try await coreBridge.batchDeferTasks(
       taskIDs: taskIDs,

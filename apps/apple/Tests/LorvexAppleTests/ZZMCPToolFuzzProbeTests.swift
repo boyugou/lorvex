@@ -1894,7 +1894,7 @@ struct ZZMCPToolFuzzProbe {
       ("delete_list", ["id": .string("NEAR(")]),
       ("delete_habit", ["id": .string("26029c6e-6bff-449c-a275-9bea0ffd545a")]),
       ("get_task", ["id": .string(LorvexPreviewSeedID.offsiteDatesTask)]),
-      ("defer_task", ["id": .string(LorvexPreviewSeedID.offsiteDatesTask), "until_date": .string("2026-11-22")]),
+      ("defer_task", ["id": .string(LorvexPreviewSeedID.offsiteDatesTask), "until_date": .string("2099-11-22")]),
       ("get_task", ["id": .string(LorvexPreviewSeedID.offsiteDatesTask)]),
       ("set_task_someday", ["id": .string(LorvexPreviewSeedID.offsiteDatesTask)]),
       ("get_task", ["id": .string(LorvexPreviewSeedID.offsiteDatesTask)]),

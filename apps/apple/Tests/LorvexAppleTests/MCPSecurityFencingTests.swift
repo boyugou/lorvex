@@ -253,7 +253,7 @@ struct MCPSecurityFencingTests {
     let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
     _ = try await mcpRegistryCall(
       registry, tool: "defer_task",
-      arguments: ["id": .string(taskID), "until_date": .string("2026-06-03")])
+      arguments: ["id": .string(taskID), "until_date": .string("2099-06-03")])
     let result = try await mcpRegistryCall(registry, tool: "get_deferred_tasks")
     #expect(result.isError != true)
     let tasks = result.structuredContent?.objectValue?["tasks"]?.arrayValue ?? []
@@ -617,7 +617,7 @@ struct MCPSecurityFencingTests {
       tool: "defer_task",
       arguments: [
         "id": .string(taskID),
-        "until_date": .string("2026-07-01"),
+        "until_date": .string("2099-07-01"),
         "structured_reason": .string(attack),
       ])
 

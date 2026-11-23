@@ -3,24 +3,34 @@ import Foundation
 /// SQL predicate builders for the canonical open-task day buckets:
 /// `overdue`, `today_pool`, and `upcoming`.
 ///
-/// All three predicates operate over a `tasks` row scoped by the caller's
-/// outer `WHERE status = 'open' AND archived_at IS NULL`. The `taskAlias`
-/// argument is the table alias used in the surrounding SQL (typically
-/// `"tasks"` or `"t"`); the `*Placeholder` arguments are the SQL parameter
-/// placeholders the caller binds (`"?"`, `"?1"`, `":today"`, etc.).
+/// A task's day is its action date: `planned_date` when it has one, else
+/// `due_date`. The three buckets partition the dated tasks by that day:
+/// `overdue` and `today_pool` together hold every task whose day is `<date>`
+/// or earlier (split by whether the deadline has passed), and `upcoming` holds
+/// the tasks whose day is later. A task planned for a later day is therefore
+/// in `upcoming` even when its deadline has passed: planning it is how it
+/// leaves the day, and it returns on the day it was planned for.
 ///
-/// The `today_pool` and `upcoming` shapes use `COALESCE(planned_date,
-/// due_date)` rather than a column-split OR so they can hit the
+/// All three predicates operate over a `tasks` row scoped by the caller's
+/// outer `WHERE status IN ('open', 'in_progress') AND archived_at IS NULL`.
+/// The `taskAlias` argument is the table alias used in the surrounding SQL
+/// (typically `"tasks"` or `"t"`); the `*Placeholder` arguments are the SQL
+/// parameter placeholders the caller binds (`"?"`, `"?1"`, `":today"`, etc.).
+///
+/// Every shape reads the action date as `COALESCE(planned_date, due_date)`
+/// rather than a column-split OR so it can hit the
 /// `idx_tasks_action_date_actionable` expression index, whose partial
 /// predicate is byte-aligned with the callers' exact
 /// `status IN ('open', 'in_progress') AND archived_at IS NULL` guards.
-/// The transformation is algebraically equivalent under that status guard.
 public enum TaskReadBuckets {
-  /// `<alias>.due_date < <date>`. Rows whose due date has already passed.
+  /// Overdue predicate: the deadline (`due_date`) has passed, and the action
+  /// date is on or before `<date>`. A passed deadline with no planned date
+  /// qualifies by itself, since the deadline is then the action date.
   public static func overdueBucketPredicate(
     taskAlias: String, datePlaceholder: String
   ) -> String {
-    "\(taskAlias).due_date < \(datePlaceholder)"
+    "(\(taskAlias).due_date < \(datePlaceholder)"
+      + " AND COALESCE(\(taskAlias).planned_date, \(taskAlias).due_date) <= \(datePlaceholder))"
   }
 
   /// Today-pool predicate: action date (planned else due) is on or before
@@ -33,14 +43,14 @@ public enum TaskReadBuckets {
       + " AND (\(taskAlias).due_date IS NULL OR \(taskAlias).due_date >= \(datePlaceholder)))"
   }
 
-  /// Upcoming predicate: action date falls inside `(from, to]` and the
-  /// deadline is either absent or `>= from`. `fromPlaceholder` is exclusive
-  /// (`> from`); `toPlaceholder` is inclusive (`<= to`).
+  /// Upcoming predicate: action date falls inside `(from, to]`.
+  /// `fromPlaceholder` is exclusive (`> from`); `toPlaceholder` is inclusive
+  /// (`<= to`). The deadline plays no part, so a task whose deadline has
+  /// passed and that is planned for a later day is upcoming on that day.
   public static func upcomingBucketPredicate(
     taskAlias: String, fromPlaceholder: String, toPlaceholder: String
   ) -> String {
-    "((\(taskAlias).due_date IS NULL OR \(taskAlias).due_date >= \(fromPlaceholder))"
-      + " AND COALESCE(\(taskAlias).planned_date, \(taskAlias).due_date) > \(fromPlaceholder)"
+    "(COALESCE(\(taskAlias).planned_date, \(taskAlias).due_date) > \(fromPlaceholder)"
       + " AND COALESCE(\(taskAlias).planned_date, \(taskAlias).due_date) <= \(toPlaceholder))"
   }
 

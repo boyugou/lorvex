@@ -9,24 +9,33 @@ import LorvexWorkflow
 extension SwiftLorvexCoreService {
   // MARK: - Overview / session context
 
-  /// See ``LorvexSystemServicing/loadOverviewTaskList()``. Reads the overview's
-  /// top-by-priority slice, not the day pool: `get_overview` orients an assistant
-  /// across the whole workspace, so undated and future-dated work belongs in the
-  /// answer and a cap is appropriate.
+  /// See ``LorvexSystemServicing/loadOverviewTaskList()``. ``OverviewTaskListSnapshot/tasks``
+  /// is the top of the workspace's priority order with the day's rows taken
+  /// out: `get_overview` orients an assistant across the whole workspace, so
+  /// undated and future-dated work belongs in the answer and a cap is
+  /// appropriate.
   public func loadOverviewTaskList() async throws -> OverviewTaskListSnapshot {
     try read { db in
       let logicalDay = try WorkflowTimezone.todayYmdForConn(db)
-      let overview = try Overview.loadOverviewSnapshot(
-        db, limits: Overview.Limits.mcpFull(), logicalDay: logicalDay)
+      let today = try TaskRepo.Read.getTodayPoolTasks(db, today: logicalDay)
+      let onToday = Set(today.map(\.core.id))
+      // Every row of the day may precede the others in priority order, so
+      // reading that many more rows leaves the full count of others whenever
+      // the workspace holds them.
+      let others = try TaskRepo.Read.getOpenTasksByPriority(
+        db, today: logicalDay, limit: Int64(Self.overviewOtherTaskLimit + today.count)
+      ).filter { !onToday.contains($0.core.id) }.prefix(Self.overviewOtherTaskLimit)
       return OverviewTaskListSnapshot(
         logicalDay: logicalDay,
         localChangeSequence: Int(try LocalChangeSeq.read(db)),
-        tasks: try Self.enrich(db, rows: overview.topByPriority),
-        todayTasks: try Self.enrich(
-          db, rows: TaskRepo.Read.getTodayPoolTasks(db, today: logicalDay)),
-        briefing: overview.briefing)
+        tasks: try Self.enrich(db, rows: Array(others)),
+        todayTasks: try Self.enrich(db, rows: today),
+        briefing: try Overview.loadBriefing(db, date: logicalDay))
     }
   }
+
+  /// How many tasks outside the day's list the overview task list carries.
+  static let overviewOtherTaskLimit = 10
 
   public func getOverviewCompact() async throws -> OverviewCompactSnapshot {
     try read { db in
@@ -62,18 +71,11 @@ extension SwiftLorvexCoreService {
     let now = wallClock()
     return try read { db in
       let preferences = try Self.readPreferences(db)
-      let deviceID = try SyncCheckpoints.get(db, key: SyncCheckpoints.keyDeviceId)
       let timezone = try WorkflowTimezone.anchoredTimezoneName(db)
       return SessionContextSnapshot(
         date: try WorkflowTimezone.todayYmdForConn(db, now: now),
         weekday: Self.localWeekdayName(now: now, timezoneName: timezone),
         localTime: Self.localTimeOfDay(now: now, timezoneName: timezone).asString,
-        deviceID: deviceID,
-        // Fixed `"unknown"` placeholder: this DB-only call (which also runs in
-        // the separate MCP-host process) can't observe the live Cloud Sync
-        // transport, so it reports `"unknown"` rather than asserting a mode. The
-        // app layer, which knows the mode, derives the user-facing label.
-        syncBackend: "unknown",
         timezone: timezone,
         workingHours: preferences["working_hours"]
       )

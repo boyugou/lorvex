@@ -11,8 +11,10 @@ a realistic set of tasks on the day, move the rest, explain the choice in a
 short briefing, and time the day around the calendar only when the user wants
 a timetable.
 
-Today in Lorvex is one list: every task that is overdue, planned for today, or
-started. Planning the day means deciding what belongs on that list.
+Today in Lorvex is one list: every unfinished task whose day is today or
+earlier, and every started task. A task's day is its `planned_date` when it has
+one, else its `due_date`. Planning the day means deciding what belongs on that
+list.
 
 Extra context from the user, if any: $ARGUMENTS
 
@@ -22,32 +24,36 @@ Call these Lorvex tools, in parallel where possible:
 
 - `get_session_context`: today's date and weekday, the current local time,
   the time zone, and working hours.
-- `get_overview` with `shape: "full"`: today's list and the day's briefing.
-  A briefing means the day was planned before, so this is a re-plan: keep
-  what still makes sense.
+- `get_overview` with `shape: "full"`: today's list (`today`), the day's
+  briefing, and the most important tasks that are not on today (`tasks`),
+  which are the candidates to add. A briefing means the day was planned
+  before, so this is a re-plan: keep what still makes sense.
 - `get_daily_schedule`: the times already set today. Do not overwrite times
   the user chose.
-- `get_upcoming_tasks` with `days: 3`: deadlines just ahead that need work
-  today.
+- `get_upcoming_tasks` with `days: 3`: the tasks of the next three days,
+  starting tomorrow, for deadlines that need work today.
 - `get_calendar_timeline` with `from` and `to` set to today: the meetings the
   day has to fit around.
-- `read_memory` with `keys: ["user_profile", "behavioral_patterns",
-  "pending_followups"]`: energy patterns, estimation habits, and promises from
-  earlier sessions.
+- `propose_daily_schedule`: its `available_minutes` is the working time
+  today's meetings leave free, counted from now. It saves nothing.
+- `read_memory` with `keys: ["user_profile", "routines",
+  "behavioral_patterns", "pending_followups"]`: energy patterns, the rules the
+  user plans by, estimation habits, and promises from earlier sessions.
 
 ## 2. Choose
 
 1. Keep tasks already `in_progress`; the user started them.
 2. Then work that unblocks other tasks or protects a near deadline.
 3. Then quick, time-sensitive items.
-4. Stop at a realistic load. Compare the summed `estimated_minutes` with the
-   free time between the current local time and the end of today's working
-   hours, after meetings, and treat a missing estimate as unknown, not zero.
+4. Stop at a realistic load. Compare the summed `estimated_minutes` with
+   `available_minutes`, and treat a missing estimate as unknown, not zero.
    The number of tasks follows from that time, not from a target count: a
    meeting-heavy day holds fewer, a day of short tasks holds more.
 
-Overdue work that will not happen today should move to a later day rather than
-stay overdue.
+Late work that will not happen today should move to a later day rather than
+sit on today. Deferring it takes it off today until that day; its `due_date`
+is unchanged, so it still reads as late there. A started task leaves today
+only when it is deferred, which pauses it, or finished.
 
 ## 3. Propose, then write
 
@@ -62,8 +68,8 @@ it:
    Deferrals are counted, and the weekly review uses them.
 3. `set_daily_briefing` with two or three sentences on the shape of the day:
    what matters and why, and what you moved.
-4. Only when the user wants a timetable: `propose_daily_schedule` with
-   `include_calendar_events: true`. For today it starts no earlier than now
+4. Only when the user wants a timetable: call `propose_daily_schedule` again
+   now that the day's list is settled. For today it starts no earlier than now
    and returns tasks that no longer fit as unscheduled; name them. Save with
    `save_daily_schedule` only after the user accepts the times. To time a
    single task, use `update_task` with `planned_start_time` and

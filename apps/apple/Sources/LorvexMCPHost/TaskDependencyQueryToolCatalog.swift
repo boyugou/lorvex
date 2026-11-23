@@ -32,7 +32,7 @@ extension TaskToolCatalog {
     name: "get_upcoming_tasks",
     title: "Get Upcoming Tasks",
     description:
-      "Return open tasks planned or due within the next N days. Returns a flat `tasks` array (the paginated page, same shape as list_tasks) plus a `by_date` grouping of those same rows for a week view. Use when the user asks about their week, when checking for deadline clusters, or during weekly review to identify upcoming load. Default task rows are compact; use shape=full, fields, or include to request heavier detail.",
+      "Return the unfinished tasks whose day falls in the N days after today (tomorrow through today+N). A task's day is its planned_date when it has one, else its due_date, so a task whose due_date has passed is here once it is planned for a later day. Tasks on today or earlier are not here: they are today's list (get_overview with shape=full). Returns {from, to, days_requested, tasks, by_date} with the paging fields: from and to are the first and last day of the window, tasks is the page in day order (same row shape as list_tasks), and by_date maps each day to the ids of its tasks in that order. Use when the user asks about their week, when checking for deadline clusters, or during weekly review to identify upcoming load. Default task rows are compact; use shape=full, fields, or include to request heavier detail.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

@@ -11,6 +11,9 @@ extension ToolRegistry {
       return Self.errorResult(
         code: "validation", message: "An until_date value is required.", toolName: "defer_task")
     }
+    if let rejection = try await deferDayRejection(untilDate, toolName: "defer_task") {
+      return rejection
+    }
 
     let value: Value
     do {
@@ -25,5 +28,26 @@ extension ToolRegistry {
 
     let title = value.objectValue?["title"]?.stringValue ?? id
     return successResult(text: "Deferred task: \(title)", value: value)
+  }
+
+  /// The error result for an `until_date` a deferral cannot use, or nil when
+  /// it is a day after today. A deferral moves a task to a later day; a call
+  /// naming today or an earlier day would leave the task on today's list
+  /// while reporting it as moved.
+  func deferDayRejection(_ untilDate: String, toolName: String) async throws -> CallTool.Result? {
+    guard let date = CoreBridgeClient.plannedDateFormatter.date(from: untilDate) else {
+      return Self.errorResult(
+        code: "validation", message: "until_date must be a valid YYYY-MM-DD date.",
+        toolName: toolName)
+    }
+    let today = try await coreBridge.service.getSessionContext().date
+    guard CoreBridgeClient.plannedDateFormatter.string(from: date) > today else {
+      return Self.errorResult(
+        code: "validation",
+        message: "until_date must be after today (\(today)): a deferral moves a task to a later "
+          + "day. To put a task on today or an earlier day, set planned_date with update_task.",
+        toolName: toolName)
+    }
+    return nil
   }
 }

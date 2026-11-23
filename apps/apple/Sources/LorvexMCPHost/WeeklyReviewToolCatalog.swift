@@ -4,7 +4,7 @@ extension ReviewToolCatalog {
   static let weeklyReviewBriefTool = Tool(
     name: "get_weekly_brief",
     title: "Get Weekly Brief",
-    description: "Read a pre-populated weekly review brief. Use at the start of a weekly review session to orient the assistant before engaging the user. Each list section is bounded by its limit parameter. Returns {window {label, days}, completed_this_week, stalled_lists (active lists with open tasks, none of them updated in the window), frequently_deferred, overdue_count, someday_items, created_this_week, estimate_summary, section_meta} where section_meta carries per-section limit/total_matching/returned/truncated counts.",
+    description: "Read a pre-populated weekly review brief of the week that just ended. Use at the start of a weekly review session to orient the assistant before engaging the user. It looks back only: for the days ahead, read get_upcoming_tasks and get_calendar_timeline. Each list section is bounded by its limit parameter. Returns {window {label, days}, completed_this_week, stalled_lists (active lists with open tasks, none of them updated in the window), frequently_deferred (unfinished tasks deferred three or more times), overdue_count (unfinished tasks whose due_date has passed, wherever they are planned), someday_items, created_this_week, estimate_summary, section_meta} where section_meta carries per-section limit/total_matching/returned/truncated counts.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

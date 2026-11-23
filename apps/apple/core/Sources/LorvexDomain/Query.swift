@@ -12,8 +12,9 @@ public struct TodayPredicate: Sendable, Equatable {
 }
 
 /// Effective action date (`planned_date` when present, otherwise `due_date`)
-/// falls strictly after `from_date` and on or before `from_date + days`,
-/// while the task is not already deadline-overdue.
+/// falls strictly after `from_date` and on or before `from_date + days`. The
+/// deadline plays no part: a task whose deadline has passed and that is
+/// planned for a later day matches on that day.
 public struct UpcomingPredicate: Sendable, Equatable {
   public var fromDate: IsoDate.YMD
   public var days: UInt32

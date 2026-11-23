@@ -228,7 +228,7 @@ struct MCPOnDiskCoreBridgeTests {
     _ = try await mcpRegistryCall(
       reopened.registry,
       tool: "defer_task",
-      arguments: ["id": .string(taskID), "until_date": .string("2026-06-01")])
+      arguments: ["id": .string(taskID), "until_date": .string("2099-06-01")])
     // Deferral keeps the task open (it pushes planned_date), so it stays in the
     // open list and is surfaced by the defer_count-based get_deferred_tasks.
     let deferredTasksPage = try await mcpRegistryCall(

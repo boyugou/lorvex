@@ -94,14 +94,10 @@ struct PreferencesPreviewTests {
   }
 
   @Test
-  func getSessionContextReportsStoreDevice() async throws {
+  func getSessionContextReportsTheStoreTimezoneAndWorkingHours() async throws {
     let core = try await makeSeededInMemoryCore()
     let context = try await core.getSessionContext()
-    // The store mints its own device identity (a UUID), and the session
-    // context reports the decoded timezone identifier, not the raw JSON.
-    let deviceID = try #require(context.deviceID)
-    #expect(UUID(uuidString: deviceID) != nil)
-    #expect(context.syncBackend == "unknown")
+    // The session context reports the decoded timezone identifier, not the raw JSON.
     #expect(context.timezone == "America/Los_Angeles")
     #expect(context.workingHours != nil)
   }

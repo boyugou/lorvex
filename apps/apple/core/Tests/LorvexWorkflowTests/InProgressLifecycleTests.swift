@@ -210,8 +210,9 @@ final class InProgressLifecycleTests: XCTestCase {
     XCTAssertThrowsError(try transition(store, "t1", .open, .inProgress))
   }
 
-  /// Deferring an in_progress task leaves the status untouched (defer only moves
-  /// planned_date and bumps defer_count).
+  /// The deferral step itself leaves an in_progress task's status untouched: it
+  /// only moves planned_date and bumps defer_count. The service's defer entry
+  /// adds the pause when the task moves to a day after today.
   func testDeferKeepsInProgressStatus() throws {
     let store = try WorkflowTestSupport.freshStore()
     try insertTask(store.writer, id: "t1", status: "in_progress")

@@ -497,7 +497,11 @@ struct WidgetSnapshotEngineTests {
     // database revision. Both gates wait up to thirty minutes: in a full run
     // the test's tasks queue behind thousands of others (about ten minutes on a
     // three-core hosted runner), and a gate that expired early would let the
-    // old projection finish unpaused and hide the race.
+    // old projection finish unpaused and hide the race. The paused projection
+    // blocks its thread, since the projector is synchronous; the test body
+    // waits for it without blocking one, because the old task needs a
+    // cooperative-pool thread to reach the pause, and on a three-core runner a
+    // second blocked thread can leave it none.
     let oldProjectionPaused = EngineGate()
     let releaseOldProjection = EngineGate()
     let oldPublisher = WidgetSnapshotPublisher(
@@ -508,7 +512,7 @@ struct WidgetSnapshotEngineTests {
         return Date(timeIntervalSince1970: 1_779_465_600)
       }))
     let oldTask = Task { try await oldPublisher.publish(source: source) }
-    #expect(oldProjectionPaused.wait(timeout: 1800))
+    #expect(await oldProjectionPaused.waitWithoutBlocking(timeout: 1800))
 
     let active = try await store.save(FocusFilterConfiguration(listIDs: ["list-work"]))
     #expect(active.revision == 1)
@@ -557,9 +561,10 @@ final class EngineLockedBox<Value>: @unchecked Sendable {
   }
 }
 
-/// Synchronous test gate wrapped behind a Sendable type so Swift 6 async tests
-/// do not call `DispatchSemaphore.wait` (explicitly unavailable from async
-/// contexts) directly. The projector callback itself is synchronous.
+/// Test gate wrapped behind a Sendable type so Swift 6 async tests do not call
+/// `DispatchSemaphore.wait` (explicitly unavailable from async contexts)
+/// directly. ``wait(timeout:)`` blocks its thread, for the synchronous
+/// projector callback; an async test body uses ``waitWithoutBlocking(timeout:)``.
 final class EngineGate: @unchecked Sendable {
   private let semaphore = DispatchSemaphore(value: 0)
 
@@ -569,5 +574,16 @@ final class EngineGate: @unchecked Sendable {
 
   func wait(timeout: TimeInterval) -> Bool {
     semaphore.wait(timeout: .now() + timeout) == .success
+  }
+
+  /// Waits for a signal by checking every 10 ms between sleeps, so the
+  /// waiting task gives its cooperative-pool thread back while it waits.
+  func waitWithoutBlocking(timeout: TimeInterval) async -> Bool {
+    let deadline = ContinuousClock.now + .seconds(timeout)
+    while ContinuousClock.now < deadline {
+      if wait(timeout: 0) { return true }
+      try? await Task.sleep(for: .milliseconds(10))
+    }
+    return wait(timeout: 0)
   }
 }

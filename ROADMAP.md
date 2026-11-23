@@ -223,7 +223,14 @@ noticed.
   many calls a request takes, where an assistant picks the wrong tool or
   misreads a result, and what the responses cost in tokens. First step: a
   set of realistic requests run by an assistant against a seeded store, the
-  transcripts reviewed as critically as captures are.
+  transcripts reviewed as critically as captures are. Two facts from the
+  first look (2026-11-23). Clients hand the model different parts of a
+  result: a headless Claude Code 2.1.330 run gave its model the serialized
+  `structuredContent` and none of the text blocks, and several other clients
+  are reported to forward text only, so every result now carries its data in
+  both. The tool list is 120 tools and 165,697 bytes of JSON; Claude Code
+  loads it on demand, and a client that loads all of it pays that size in
+  every conversation. Whether to offer a smaller default set is open.
 - Connecting an assistant. Setup is a path into the app bundle, typed into a
   client's configuration. When the helper moved into `LorvexMCPHost.app`, an
   entry with the earlier path stopped working with no message from either
@@ -258,6 +265,23 @@ noticed.
 Found by read-only audits (2026-11-09) and by the convergence simulation.
 Each is traced to the code; none is reproduced on devices.
 
+- Day-valued task fields are plain `Date`s. A due, planned or available-from
+  day is a UTC midnight (`PlannedDayBridge`), and nothing in the type stops a
+  caller from passing a local instant instead; about fifty tests and the
+  iPhone edit sheet's default day did so until 2026-11-23, and each was
+  wrong only in some time zones. A day type of its own (year, month, day)
+  would make the mistake a compile error. The change touches every surface's
+  model and draft types, so it is a planned refactor, not a fix.
+- The product time zone on a device whose zone has no canonical name. A
+  device reporting another name of a listed zone (`Asia/Kolkata`,
+  `US/Pacific`) is handled: local input resolves to a canonical identifier.
+  A device set to a fixed offset (`Etc/GMT+12`) with no stored preference
+  still fails every read that needs today, by design, with a validation
+  error. Not decided: whether setup should ask such a person to pick a city.
+  Separately, devices on different system versions can hold different
+  canonical lists, so a name one device writes may be refused by an older
+  one; inbound sync keeps the strict rule and does not rewrite a peer's
+  value.
 - CloudKit live sync on devices: the container `iCloud.com.lorvex.apple` is
   provisioned and its schema is deployed to Production. The `.live` mode runs
   `CloudSyncController`, an actor wrapping `CKSyncEngine` over one `Lorvex`

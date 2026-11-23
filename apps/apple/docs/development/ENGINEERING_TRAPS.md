@@ -451,7 +451,24 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   runs the suite as a machine in that zone. `Asia/Shanghai` covers east of
   UTC, `Pacific/Kiritimati` puts the device a day ahead of the seeded store
   for most of the day, and `Pacific/Honolulu` a day behind in the first two
-  hours after midnight in Los Angeles.
+  hours after midnight in Los Angeles. `Asia/Kolkata` and `US/Pacific` are
+  names a device reports that Apple's canonical list leaves out.
+- **`TimeZone.current.identifier` is not always a canonical identifier.**
+  `TimeZone.knownTimeZoneIdentifiers` keeps `Asia/Calcutta` and has no
+  `Asia/Kolkata`, and a device has been seen reporting `US/Pacific` for
+  Los Angeles. The synced `timezone` preference stores canonical identifiers
+  only, so pass a name through `Timezone.normalizeProductTimezoneName`, which
+  turns another name of a canonical zone into that zone's identifier
+  (`TimezoneAliases`) and refuses abbreviations and fixed offsets. Read the
+  device's zone as `WorkflowTimezone.deviceTimezoneName` in the core and
+  `LorvexTimeZoneChoice.deviceIdentifier` in the apps, and never compare the
+  system's identifier with a stored one as strings. Sync apply keeps the
+  strict rule (`Timezone.canonicalProductTimezoneName`): a peer writes
+  canonical identifiers only, and rewriting its value would leave two devices
+  holding different bytes under one version. A zone with no canonical name,
+  such as `Etc/GMT+12`, has no product day: with no `timezone` preference
+  stored, the reads that need today (Today, task reads, the widget snapshot,
+  setup) fail on such a device.
 - A time-zone picker closes only after the saved zone reaches the Today
   snapshot. The Mac's ordinary `refresh()` returns early when coalesced;
   `setLogicalTimeZone` uses `refreshAndWaitForLatest()` so the picker cannot
@@ -660,7 +677,12 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
 - **MCP responses are fenced by key name.** A new user-text field needs a
   marker in `storedMarkers` of `MCPResponseFencingSweepTests`; a new tool needs
   a `readCalls` entry or a successful call in the sweep's dataset.
-  `ToolRegistry.call` appends a fenced notice listing undeclared arguments.
+- **An MCP result reaches the model through one of two fields.** Some clients
+  hand the model only `structuredContent`, others only the text in `content`.
+  `ToolRegistry.delivering(_:for:)` is the one exit that fills both: it puts
+  the note about undeclared arguments in the payload's `warnings` and ends
+  `content` with the payload as JSON. Anything the model must read goes in
+  the structured payload, never in a text block alone.
 - **The watch is a replica.** The phone sends the watch replica through
   `updateApplicationContext` plus a pull message; a change to the wire format
   needs `WatchReplicaRoundTripTests`, because watch captures bypass the wire.

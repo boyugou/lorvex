@@ -103,6 +103,10 @@ func calendarEventEntityRoutesWholeSeriesMutationsThroughStableID() async throws
   let rehydrated = try await LorvexCalendarEventEntityQuery.entities(
     for: [series.id], core: core)
   #expect(rehydrated.map(\.id) == [series.id])
+  let deduplicated = try await LorvexCalendarEventEntityQuery.entities(
+    for: [replacementOnlySeries.id, "missing-event", series.id, replacementOnlySeries.id],
+    core: core)
+  #expect(deduplicated.map(\.id) == [replacementOnlySeries.id, series.id])
 
   let updated = try await LorvexTaskIntentRunner.updateCalendarEvent(
     id: try #require(rehydrated.first).eventID,

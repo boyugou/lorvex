@@ -36,16 +36,13 @@ struct LorvexCalendarEventEntityQuery: EntityQuery, EntityStringQuery {
     for identifiers: [LorvexCalendarEventEntity.ID],
     core: any LorvexCoreServicing
   ) async throws -> [LorvexCalendarEventEntity] {
-    var entities: [LorvexCalendarEventEntity] = []
     var seen = Set<LorvexCalendarEventEntity.ID>()
-    entities.reserveCapacity(identifiers.count)
-    for identifier in identifiers where seen.insert(identifier).inserted {
-      guard let event = try await core.getCalendarEvent(id: identifier), event.editable else {
-        continue
-      }
-      entities.append(LorvexCalendarEventEntity(event: event))
+    let unique = identifiers.filter { seen.insert($0).inserted }
+    let events = try await core.getCalendarEvents(ids: unique)
+    return unique.compactMap { identifier in
+      guard let event = events[identifier], event.editable else { return nil }
+      return LorvexCalendarEventEntity(event: event)
     }
-    return entities
   }
 
   static func entities(

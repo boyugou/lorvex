@@ -483,19 +483,17 @@ extension AppStore {
       // The Apple system surfaces run in parallel, each from its own read, so a
       // failed read leaves only that surface as it was: the content index
       // (lists, habits, review, calendar), the task index (every searchable
-      // task), the badge (every actionable task the day surfaces show), and the
-      // reminder re-plan (the delivery-aware reminder query). Task and habit
-      // reminders share that one budgeted re-plan so they compete for the OS
-      // notification cap by earliest-due instead of racing two passes.
+      // task), the reminder re-plan (the delivery-aware reminder query), and
+      // the widget snapshot, whose uncapped source also gives the badge its
+      // actionable tasks. Task and habit reminders share that one budgeted
+      // re-plan so they compete for the OS notification cap by earliest-due
+      // instead of racing two passes. The widget is best-effort: a failed
+      // publish never wipes the freshly loaded primary UI or raises a modal.
       async let contentIndex: Void = reindexContentForSpotlight()
       async let taskIndex: Void = reindexTasksForSpotlight()
       async let reminderSchedule: Void = rescheduleReminders()
-      async let badge: Void = updateBadge()
-      _ = await (contentIndex, taskIndex, reminderSchedule, badge)
-      // The widget snapshot is a derived, best-effort surface: a missing or
-      // corrupt App-Group sidecar or a transient file-lock failure must never
-      // wipe the freshly loaded primary UI or raise a modal on launch.
-      try? await publishWidgetSnapshot()
+      async let widgetAndBadge: Void = publishWidgetSnapshotAndUpdateBadge()
+      _ = await (contentIndex, taskIndex, reminderSchedule, widgetAndBadge)
       // Re-evaluate after the indexing/scheduling awaits: the user may have
       // started typing after the earlier reconciliation. A clean inspector must
       // force-adopt peer changes even when its draft is already bound to the same

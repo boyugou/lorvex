@@ -92,27 +92,6 @@ private func makeTodaySnapshotWith1000Tasks() -> TodaySnapshot {
 
 // MARK: - Benchmarks
 
-@Test("AppStore.refresh runs the Apple system surfaces in parallel, each from its own read")
-func appStoreRefreshRunsAppleSystemSurfacesInParallel() throws {
-  let root = URL(fileURLWithPath: #filePath)
-    .deletingLastPathComponent()
-    .deletingLastPathComponent()
-    .deletingLastPathComponent()
-  let source = try String(
-    contentsOf: root.appending(path: "Sources/LorvexApple/Stores/AppStoreRuntimeLifecycle.swift"),
-    encoding: .utf8
-  )
-
-  // Each surface reads its own source (a capped shared page would hide every
-  // task ranked past the cap), so they run concurrently and a failed read
-  // leaves only its own surface as it was.
-  #expect(source.contains("async let contentIndex: Void = reindexContentForSpotlight()"))
-  #expect(source.contains("async let taskIndex: Void = reindexTasksForSpotlight()"))
-  #expect(source.contains("async let reminderSchedule: Void = rescheduleReminders()"))
-  #expect(source.contains("async let badge: Void = updateBadge()"))
-  #expect(source.contains("_ = await (contentIndex, taskIndex, reminderSchedule, badge)"))
-}
-
 @Test("AppStore.refresh parallelizes independent core loads")
 func appStoreRefreshParallelizesIndependentCoreLoads() throws {
   let root = URL(fileURLWithPath: #filePath)

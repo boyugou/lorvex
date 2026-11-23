@@ -62,6 +62,15 @@ public protocol LorvexCalendarServicing: Sendable {
   /// an id-existence probe for the import path.
   func getCalendarEvent(id: CalendarTimelineEvent.ID) async throws -> CalendarTimelineEvent?
 
+  /// The canonical Lorvex events with these ids, keyed by the id asked for,
+  /// each read as ``getCalendarEvent(id:)`` reads it; an id with no event has
+  /// no key. The default implementation reads them one at a time;
+  /// `SwiftLorvexCoreService` looks each one up inside a single read
+  /// transaction.
+  func getCalendarEvents(
+    ids: [CalendarTimelineEvent.ID]
+  ) async throws -> [CalendarTimelineEvent.ID: CalendarTimelineEvent]
+
   /// The canonical event projected for an external calendar adapter. For a
   /// recurring segment this clips recurrence at the next durable series
   /// cutover without mutating the raw recurrence stored in Lorvex.
@@ -233,6 +242,16 @@ extension LorvexCalendarServicing {
     limit: Int?
   ) async throws -> [CalendarTimelineEvent] {
     try await searchCalendarEvents(query: query, from: from, to: to, limit: limit, offset: 0)
+  }
+
+  public func getCalendarEvents(
+    ids: [CalendarTimelineEvent.ID]
+  ) async throws -> [CalendarTimelineEvent.ID: CalendarTimelineEvent] {
+    var events: [CalendarTimelineEvent.ID: CalendarTimelineEvent] = [:]
+    for id in ids where events[id] == nil {
+      if let event = try await getCalendarEvent(id: id) { events[id] = event }
+    }
+    return events
   }
 }
 

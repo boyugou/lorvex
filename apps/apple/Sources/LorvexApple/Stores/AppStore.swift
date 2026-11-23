@@ -225,6 +225,11 @@ final class AppStore {
   /// an unrelated future activation.
   @ObservationIgnored let cloudSyncCycleFlight = RefreshSingleFlight<Void>()
 
+  /// Counts the starts of ``publishWidgetSnapshotAndUpdateBadge()``, so a
+  /// publish that a newer one overtook leaves the badge to it rather than
+  /// setting it from the older read.
+  @ObservationIgnored var widgetBadgePublishCount = 0
+
   var isCloudSyncCycleRunning: Bool { cloudSyncCycleFlight.isRunning }
 
   /// True while a full `refresh()` fan-out is in flight. Read by the tail sync

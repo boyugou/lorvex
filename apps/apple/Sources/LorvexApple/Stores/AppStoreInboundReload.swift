@@ -15,8 +15,8 @@ extension AppStore {
   ///   `performLocalRefresh`, whose full reload owns the clear-on-failure
   ///   semantics.
   /// - **No re-entrant cycle.** It runs INSIDE `runCloudSyncCycle`, so it must
-  ///   not itself run or await one (it republishes the widget via
-  ///   `publishWidgetSnapshot` only).
+  ///   not itself run or await one; it republishes the widget, and the badge
+  ///   with it, without starting a sync pass.
   /// - **Single-flight task reload.** Task reloads route through
   ///   `reloadTaskWorkspaceIfLoaded()`, preserving the workspace's coalescing
   ///   guard so a concurrent local mutation's awaited reload still wins.
@@ -115,10 +115,11 @@ extension AppStore {
     if InboundReloadScope.recomputesReminders(domains) {
       await rescheduleReminders()
     }
+    // The badge's domains are a subset of the widget's, so a reload that
+    // recounts the badge also republishes the widget and shares its read.
     if InboundReloadScope.recomputesBadge(domains) {
-      await updateBadge()
-    }
-    if InboundReloadScope.republishesWidget(domains) {
+      await publishWidgetSnapshotAndUpdateBadge()
+    } else if InboundReloadScope.republishesWidget(domains) {
       try? await publishWidgetSnapshot()
     }
     // A clean inspector adopts changed peer fields. Re-evaluate dirtiness after

@@ -38,6 +38,21 @@ func macBadgeCountsEveryOverdueTaskPastOnePage() async throws {
 }
 
 @MainActor
+@Test("The Mac badge set from the widget snapshot's read counts every overdue task past one page")
+func macBadgeFromTheWidgetReadCountsEveryOverdueTask() async throws {
+  let core = try await makeCoreWithOverdueTasksPastOnePage()
+  let recorder = RecordingBadgeSetter()
+  let store = AppStore(
+    core: core, widgetSnapshotPublisher: RecordingWidgetSnapshotPublisher(),
+    setBadge: { await recorder.set($0) })
+
+  await store.publishWidgetSnapshotAndUpdateBadge()
+
+  #expect(store.menuBarAttentionCount == overdueTaskCount)
+  #expect(await recorder.lastCount() == overdueTaskCount)
+}
+
+@MainActor
 @Test("The iPhone badge counts every overdue task past one page")
 func phoneBadgeCountsEveryOverdueTaskPastOnePage() async throws {
   let core = try await makeCoreWithOverdueTasksPastOnePage()

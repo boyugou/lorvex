@@ -55,19 +55,13 @@ extension AppStore {
     let to = Self.dateString(days: Self.calendarSpotlightFutureHorizonDays, from: anchor)
     let events = try await core.loadCalendarTimeline(from: from, to: to).events
     let representatives = CalendarTimelineEvent.stableSourceRepresentatives(in: events)
-    var hydrated: [CalendarTimelineEvent] = []
-    hydrated.reserveCapacity(representatives.count)
-    for representative in representatives {
-      if representative.editable,
-        let event = try await core.getCalendarEvent(id: representative.eventID)
-      {
-        hydrated.append(event)
-      } else {
-        // Provider rows are device-local and have no canonical row lookup.
-        hydrated.append(representative)
-      }
+    let canonical = try await core.getCalendarEvents(
+      ids: representatives.filter(\.editable).map(\.eventID))
+    return representatives.compactMap { representative in
+      // Provider rows are device-local and have no canonical row lookup. An
+      // editable row whose canonical event is gone is left out.
+      representative.editable ? canonical[representative.eventID] : representative
     }
-    return hydrated
   }
 
   // The task and habit reminder schedulers share the OS 64-pending-notification
@@ -131,6 +125,29 @@ extension AppStore {
     _ = try await publishWidgetSnapshotReturningSource()
   }
 
+  /// Publishes the widget snapshot, then recounts the badge from the
+  /// snapshot's own source, which holds every actionable task uncapped, so one
+  /// read serves both. When the publish fails the badge reads for itself, so a
+  /// failed App-Group write never leaves the badge stale. The publish is
+  /// best-effort: a missing or corrupt sidecar or a transient file-lock
+  /// failure raises nothing.
+  ///
+  /// A call that another call started after it sets nothing: the later call
+  /// read newer data and sets the badge itself. Without this, a refresh that
+  /// read before a completion and finished publishing after it would put the
+  /// older count back.
+  func publishWidgetSnapshotAndUpdateBadge() async {
+    widgetBadgePublishCount &+= 1
+    let publish = widgetBadgePublishCount
+    let tasks = try? await publishWidgetSnapshotReturningSource().stats?.actionableTasks
+    guard publish == widgetBadgePublishCount else { return }
+    if let tasks {
+      await updateBadge(tasks: tasks)
+    } else {
+      await updateBadge()
+    }
+  }
+
   /// Publishes the widget snapshot and returns the source it was built from,
   /// so a caller that needs the same rows (the badge counts the source's
   /// uncapped actionable tasks) reuses the read instead of repeating it.
@@ -192,9 +209,10 @@ extension AppStore {
   /// notification stays armed (and can fire on this Mac while the app is still
   /// open) and the badge stays wrong until the next refresh. An inbound sync
   /// re-plans the same surfaces in its selective reload
-  /// (``performSelectiveInboundReload(_:)``). Each surface reads its own
-  /// source, so a failed read leaves only that surface as it was, and the sync
-  /// outbox drains regardless. The snapshot write is
+  /// (``performSelectiveInboundReload(_:)``). The widget snapshot and the
+  /// badge share one read and the reminders make their own, so a failed read
+  /// leaves only its own surfaces as they were, and the sync outbox drains
+  /// regardless. The snapshot write is
   /// best-effort so a transient App-Group write failure doesn't surface a modal
   /// on an otherwise-successful mutation.
   ///
@@ -207,14 +225,7 @@ extension AppStore {
     taskDataGeneration &+= 1
     await runLocalRetentionMaintenance()
     async let reminders: Void = rescheduleReminders()
-    // The snapshot's source already holds every actionable task the badge
-    // counts, so one read serves both; a failed publish leaves the badge to
-    // read for itself.
-    if let tasks = try? await publishWidgetSnapshotReturningSource().stats?.actionableTasks {
-      await updateBadge(tasks: tasks)
-    } else {
-      await updateBadge()
-    }
+    await publishWidgetSnapshotAndUpdateBadge()
     _ = await reminders
     Task { await self.runCloudSyncCycle() }
   }

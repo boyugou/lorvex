@@ -67,3 +67,31 @@ func appStoreCoalescesConcurrentRefreshTriggers() async throws {
 
   #expect(await indexer.indexCallCount() == 2)
 }
+
+@MainActor
+@Test("a refresh publishes the widget and the badge while the task index is still running")
+func appStoreRefreshPublishesTheWidgetBesideTheTaskIndex() async throws {
+  let indexer = GatingTaskSearchIndexer()
+  let publisher = RecordingWidgetSnapshotPublisher()
+  let badge = RecordingBadgeSetter()
+  let store = AppStore(
+    core: try await makeSeededInMemoryCore(),
+    taskSearchIndexer: indexer,
+    widgetSnapshotPublisher: publisher,
+    setBadge: { await badge.set($0) }
+  )
+
+  let refresh = Task { await store.refresh() }
+  await indexer.waitUntilFirstIndexReached()
+  for _ in 0..<500 where publisher.publishedSnapshots().isEmpty {
+    try await Task.sleep(for: .milliseconds(10))
+  }
+  for _ in 0..<500 where await badge.lastCount() == nil {
+    try await Task.sleep(for: .milliseconds(10))
+  }
+
+  #expect(!publisher.publishedSnapshots().isEmpty, "the widget waited for the task index")
+  #expect(await badge.lastCount() != nil, "the badge waited for the task index")
+  await indexer.release()
+  await refresh.value
+}

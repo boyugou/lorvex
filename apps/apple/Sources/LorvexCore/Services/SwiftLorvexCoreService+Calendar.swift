@@ -28,6 +28,21 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  public func getCalendarEvents(
+    ids: [CalendarTimelineEvent.ID]
+  ) async throws -> [CalendarTimelineEvent.ID: CalendarTimelineEvent] {
+    guard !ids.isEmpty else { return [:] }
+    return try read { db in
+      var events: [CalendarTimelineEvent.ID: CalendarTimelineEvent] = [:]
+      for id in ids where events[id] == nil {
+        if let row = try CalendarTimelineQueries.getCalendarEvent(db, id: id) {
+          events[id] = SwiftLorvexCalendarDeserializers.event(row)
+        }
+      }
+      return events
+    }
+  }
+
   public func createCalendarEvent(
     title: String,
     startDate: String,

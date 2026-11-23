@@ -394,6 +394,15 @@ and authority. In headless automation, unlock the keychain and grant
 `/usr/bin/codesign` access to the private key before running. The release path
 always uses secure timestamping and never accepts `SIGN_TIMESTAMP=none`.
 
+A submission that fails before Apple answers, such as a connection timeout
+while the app is sent to the notary service, ends the script and leaves
+`dist/release-evidence/<artifact>` holding only the files written before
+notarization. The next run refuses to overwrite that folder. When the folder
+holds no `*-notary-submit.json` and no DMG was written, nothing was produced:
+move the folder aside and run the script again. A folder that holds an
+accepted submission is a produced build and is never replaced; advance the
+build number instead.
+
 Publish only the final DMG after its `.sha256` matches and the evidence manifest
 contains accepted app and DMG notary logs. Do not upload this DMG to App Store
 Connect; use `archive_mas.sh` for that separate channel.
@@ -450,10 +459,10 @@ for every build would bury the ones people choose between.
 
 Check these at the start of a maintenance session. Dates are absolute.
 
-- **TestFlight builds expire 90 days after upload.** Build 172 went up on
+- **TestFlight builds expire 90 days after upload.** Build 173 went up on
   2026-11-22. Apple lists the iOS and macOS expiration date as 2027-02-20.
   Upload a fresh build by 2027-02-06 while testers use TestFlight.
-  See the [build 172 release record](../../../docs/releases/1.0.0-172.md).
+  See the [build 173 release record](../../../docs/releases/1.0.0-173.md).
 - **Signing material.** The Apple Distribution and Mac installer certificates,
   and every iOS and Mac App Store profile that embeds them, expire on
   2027-07-23. The current Developer ID Application certificate expires on

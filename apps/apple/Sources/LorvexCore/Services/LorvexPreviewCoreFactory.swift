@@ -290,9 +290,9 @@ public enum LorvexPreviewCoreFactory {
   }
 
   /// The timezone the seed configures, and therefore the calendar its dates are
-  /// anchored in. One constant so the stored preference and ``logicalDayAnchor()``
-  /// cannot drift apart.
-  private static let previewTimezone = "America/Los_Angeles"
+  /// anchored in. One constant so the stored preference, ``logicalDayAnchor()``
+  /// and the today-relative preview content cannot drift apart.
+  static let previewTimezone = "America/Los_Angeles"
 
   /// The preview environment's preferences. `setup_completed` is `"true"`:
   /// the dataset describes a store in active use, so previews render the

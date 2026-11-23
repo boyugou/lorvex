@@ -143,23 +143,25 @@ enum LorvexPreviewSeedData {
   )
 
   #if DEBUG
+    /// Today in the seed's timezone: the day the preview store counts as
+    /// today, whatever zone and date the machine running the preview is on.
+    static func previewTodayString() -> String {
+      LorvexPreviewCoreFactory.seedDay(
+        daysAgo: 0,
+        timeZone: TimeZone(identifier: LorvexPreviewCoreFactory.previewTimezone)
+          ?? .autoupdatingCurrent)
+    }
+
     /// Today-relative calendar events for `--ui-preview` so the Today schedule
     /// agenda populates with a realistic day. Two are `source: "provider"` to
     /// stand in for mirrored EventKit external-calendar events (the common
     /// real-world case), one is a Lorvex-owned canonical event. Computed from the
     /// current date, so it is preview-only — the fixed-date seed above stays the
-    /// deterministic source for tests.
-    static func previewTodayString() -> String {
-      let formatter = DateFormatter()
-      formatter.calendar = Calendar(identifier: .gregorian)
-      formatter.locale = Locale(identifier: "en_US_POSIX")
-      formatter.dateFormat = "yyyy-MM-dd"
-      return formatter.string(from: Date())
-    }
-
+    /// deterministic source for tests. Their clock times are in the seed's
+    /// timezone, the zone the preview's calendar draws them in.
     static func todayPreviewEvents() -> [CalendarTimelineEvent] {
       let today = previewTodayString()
-      let zone = TimeZone.current.identifier
+      let zone = LorvexPreviewCoreFactory.previewTimezone
       return [
         CalendarTimelineEvent(
           id: LorvexPreviewSeedID.previewStandupEvent, title: "Team standup", source: "provider", editable: false,

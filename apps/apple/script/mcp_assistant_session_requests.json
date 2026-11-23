@@ -1,0 +1,37 @@
+[
+  {
+    "id": "plan-day",
+    "message": "Plan my day.",
+    "look_for": "Reads the day's tasks, the calendar and the routines memory; moves what does not fit instead of listing everything; the moved tasks are off Today afterwards; writes a short briefing."
+  },
+  {
+    "id": "inbox",
+    "message": "My inbox is a mess. Go through it and sort it out.",
+    "look_for": "Files each quick capture into a list with a clear title; leaves the unclear ones and says so; does not invent due dates."
+  },
+  {
+    "id": "out-tomorrow",
+    "message": "I'm sick and will be out tomorrow. Move things around so nothing falls through the cracks.",
+    "look_for": "Moves tomorrow's tasks to days that have room, respects the holiday and the day off, names the meetings it cannot move."
+  },
+  {
+    "id": "week",
+    "message": "How is my week looking? What should I be worried about?",
+    "look_for": "Reads without writing; names the overdue work, the crowded days, the blocked task and the deadline that falls on a day off."
+  },
+  {
+    "id": "capture",
+    "message": "A few things to add. Remind me to call the landlord on Wednesday at 10am. I need to water the plants every 3 days, starting today. And put 'renew passport' on my home list, due mid-December, with the steps as a checklist.",
+    "look_for": "One task with a reminder at 10:00 on the person's clock, one recurring task, one task with a checklist on the Home list; no question it could have answered itself."
+  },
+  {
+    "id": "handed-over",
+    "message": "What have I handed over to you? Go ahead and do it.",
+    "look_for": "Finds the delegated task, does the work with its other tools, returns the task with the result and what is left for the person; does not complete it."
+  },
+  {
+    "id": "done-today",
+    "message": "I finished the churn analysis and filed the expense report. I also went for a run this morning and I've had 3 glasses of water so far. And push the hiring plan to next Monday, I won't get to it this week.",
+    "look_for": "Completes the two tasks, records the two habits with the right counts, defers the hiring plan to the coming Monday."
+  }
+]

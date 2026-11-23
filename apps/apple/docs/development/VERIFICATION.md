@@ -140,6 +140,22 @@ Notes:
   after a lookup, for both "take back" requests added to the 52. Re-run it after
   adding or rewording a tool; a doubt the assistant names is two descriptions to
   tell apart.
+- **MCP assistant sessions.** `script/mcp_assistant_session.py` has an
+  assistant carry out whole requests with the real server, which the tool
+  choice check cannot show: how many calls a request takes, how large each
+  result is, and where the assistant was unsure. `seed <dir>` writes one
+  fictional person's week into a new store through the MCP tools (the
+  SwiftPM-built host on a disposable database); `copy` gives each request its
+  own copy; `brief <dir> <request>` prints the instructions for a fresh
+  sub-agent that may use only the script's `instructions`, `tools`, `schema`
+  and `call` commands on that store, and must return its reply to the person
+  and a frank list of what got in its way; `summary <dir>` reads the store's
+  call log. The seven requests are in
+  `script/mcp_assistant_session_requests.json`, each with what a good result
+  includes. Read the reply against the store's final state, not only the
+  notes: the first run's largest finding was a reply that claimed four tasks
+  had left Today when they had not. Run it after changing the server
+  instructions, a tool's result, or a rule an assistant has to know.
 - **Committed sweeps.** `MCPResponseFencingSweepTests`,
   `MCPExtremeIntegerArgumentTests`, `BackupWholeStoreRoundTripTests` (every
   table is declared backed up or local, and a restore is lossless apart from

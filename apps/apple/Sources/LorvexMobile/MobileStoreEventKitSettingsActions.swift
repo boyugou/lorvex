@@ -122,11 +122,17 @@ extension MobileStore {
     await loadRuntimeDiagnostics()
   }
 
+  /// Import a window of the system calendar for a view that is loading it:
+  /// the calendar grids, Today, and planning. A failure becomes the import
+  /// banner and a diagnostics entry of its own, apart from the entry a change
+  /// made in Settings records. Does nothing while the store is closed in the
+  /// background; the refresh that runs as the app returns imports again.
   func ingestEventKitWindow(
     fromDay: String,
     throughDay: String,
     requestAccess: Bool = false
   ) async {
+    guard !DatabaseSuspension.isSuspended else { return }
     do {
       try await ingestEventKitWindowThrowing(
         fromDay: fromDay,
@@ -135,7 +141,7 @@ extension MobileStore {
       lastEventKitImportErrorMessage = nil
     } catch {
       lastEventKitImportErrorMessage = await userFacingBannerMessage(
-        for: error, source: "ios.settings.eventkit_import_failed")
+        for: error, source: "ios.calendar.eventkit_import_failed")
     }
   }
 

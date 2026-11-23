@@ -130,7 +130,10 @@ struct MobileDiagnosticLogRow: View {
 
   private var relativeTimestamp: String? {
     guard let timestamp = entry.timestamp, let date = Self.parse(timestamp) else { return nil }
-    return LorvexDateFormatters.relative(date, to: now, unitsStyle: .abbreviated, dateTimeStyle: .numeric)
+    // An entry is in the past. One stamped in the same second as `now`, or a
+    // moment ahead of it, would read "in 0s".
+    let past = min(date, now.addingTimeInterval(-1))
+    return LorvexDateFormatters.relative(past, to: now, unitsStyle: .abbreviated, dateTimeStyle: .numeric)
   }
 
   /// Parse the merged feed's ISO-8601 timestamps, tolerating both the core's

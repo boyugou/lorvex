@@ -287,7 +287,10 @@ extension MobileStore {
   #if canImport(EventKit)
     func observeEventKitChanges() async {
       let observer = MobileEventKitChangeObserver { [weak self] in
-        guard let self else { return }
+        // The system posts calendar changes whenever the process has time,
+        // the background included, where the store is closed. The refresh
+        // that runs as the app returns reads the calendar again.
+        guard let self, !DatabaseSuspension.isSuspended else { return }
         await self.refreshLoadedCalendarWindow(fallbackAnchor: self.now())
       }
       await observer.observe()

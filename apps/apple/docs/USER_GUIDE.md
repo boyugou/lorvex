@@ -4244,6 +4244,19 @@ installed or the database is unavailable, the link cannot resolve.
 
 ## Troubleshooting
 
+### Reporting a problem
+
+**Settings → Diagnostics** lists the failures Lorvex recorded on that device:
+crashes and hangs the system reports to the app, sync passes that failed, and
+actions that could not finish. Each device keeps its own list; the list does
+not sync.
+
+On iPhone and iPad, **Share** at the end of **Recent Diagnostics** sends the
+whole list as text: the app build, the system version and the device model on
+the first line, then each entry with its time and full detail. The detail
+lines are the same sanitized text the list shows. On the Mac, an assistant can
+read the same list with `get_recent_logs`.
+
 ### App won't launch
 
 If `Lorvex.app` quits immediately after opening:

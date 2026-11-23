@@ -67,3 +67,34 @@ func mobileDiagnosticLogRowSpeaksItsDetailAsTheValue() throws {
   #expect(source.contains(".accessibilityLabel(accessibilityLabel)"))
   #expect(source.contains(".accessibilityValue(details ?? \"\")"))
 }
+
+/// The shared report is how a failure leaves the phone, so it carries what a
+/// screenshot of the list cannot: the build and system it happened on, and
+/// each entry's exact time and whole detail line.
+@Test
+func mobileDiagnosticsReportNamesTheBuildAndCarriesEveryEntryInFull() {
+  let detail = String(repeating: "frame ", count: 80) + "end"
+  let report = MobileDiagnosticsReport.text(
+    entries: [
+      RecentLogEntry(
+        id: "2", timestamp: "2026-11-22T02:57:59.050Z", source: "error_log", level: .error,
+        summary: "Cloud sync failed.", details: "CKErrorDomain 2", origin: "ios.cloud_sync.cycle"),
+      RecentLogEntry(
+        id: "1", timestamp: "2026-11-15T10:00:00.000Z", source: "error_log", level: .error,
+        summary: "App crash", details: detail, origin: "metrickit.crash"),
+      RecentLogEntry(
+        id: "0", timestamp: nil, source: "error_log", level: .error, summary: "No detail"),
+    ],
+    appVersion: "1.0.0", build: "174", system: "Version 27.2", model: "iPhone18,1")
+
+  let lines = report.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+  #expect(lines[0] == "Lorvex 1.0.0 (174) · Version 27.2 · iPhone18,1")
+  #expect(lines[1] == "3 entries, newest first")
+  #expect(
+    Array(lines[2...5]) == [
+      "", "2026-11-22T02:57:59.050Z  error  ios.cloud_sync.cycle", "Cloud sync failed.",
+      "CKErrorDomain 2",
+    ])
+  #expect(lines.contains(detail), "a long detail line is not shortened")
+  #expect(Array(lines.suffix(3)) == ["", "error  error_log", "No detail"])
+}

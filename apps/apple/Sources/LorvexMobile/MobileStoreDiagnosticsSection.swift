@@ -118,6 +118,15 @@ struct MobileStoreDiagnosticsSection: View {
         ForEach(entries.prefix(recentDiagnosticsLimit)) { entry in
           MobileDiagnosticLogRow(entry: entry, now: store.now())
         }
+        // Every loaded entry with its full detail, not only the rows drawn
+        // above.
+        ShareLink(item: MobileDiagnosticsReport.text(entries: entries)) {
+          Label(
+            String(
+              localized: "common.share", defaultValue: "Share", table: "Localizable",
+              bundle: MobileL10n.bundle), systemImage: "square.and.arrow.up")
+        }
+        .accessibilityIdentifier("mobileDiagnostics.recent.share")
       }
     } header: {
       Text(

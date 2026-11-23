@@ -173,7 +173,7 @@ struct MobileHabitDetailPanel: View {
           systemImage: "checkmark")
       }
       .buttonStyle(.borderedProminent)
-      .tint(LorvexDesign.Palette.done)
+      .tint(LorvexDesign.Palette.doneFill)
       .controlSize(.large)
       .disabled(isMutating)
       .accessibilityIdentifier("mobileHabits.detail.complete")

@@ -229,17 +229,8 @@ elif [[ "$(xcrun simctl io "$UDID" enumerate 2>/dev/null | grep -c 'Display clas
   DISPLAY_ARG="--display=primary"
   echo "two built-in displays: capturing the outer one (set LORVEX_SIM_DISPLAY to choose)" >&2
 fi
-# Delete the seeded store before launching. `-lorvexSeedSampleData` only seeds a
-# store with no tasks in it, and the store lives in the shared App Group
-# container, which survives both a reinstall and `simctl uninstall` — so without
-# this the capture silently renders whatever a previous run seeded, however old.
-# Refuses to delete anything outside a simulator device directory.
-GROUP_CONTAINER="$(xcrun simctl get_app_container "$UDID" "$BUNDLE" groups 2>/dev/null | awk '$1 == "group.com.lorvex.apple" { print $2 }')"
-case "$GROUP_CONTAINER" in
-  */CoreSimulator/Devices/"$UDID"/*) rm -rf "${GROUP_CONTAINER:?}/Lorvex" ;;
-  "") echo "warning: no simulator App Group container; capture may show stale seed data" >&2 ;;
-  *) echo "refusing to clear unexpected container path: $GROUP_CONTAINER" >&2; exit 1 ;;
-esac
+# Start from today's sample day, not from whatever an earlier run seeded.
+clear_ios_sim_seeded_store "$UDID" "$BUNDLE" || exit 1
 SEED_ARG="-lorvexSeedSampleData"
 [[ "${LORVEX_SIM_FRESH:-}" == 1 ]] && SEED_ARG=""
 xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 >/dev/null 2>&1

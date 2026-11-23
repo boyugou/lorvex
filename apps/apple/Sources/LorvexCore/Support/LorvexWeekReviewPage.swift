@@ -280,6 +280,18 @@ public struct LorvexWeekReviewPage: View {
   }
 
   #if os(macOS) || os(iOS)
+  /// How far the filter menu's touch region reaches above and below its
+  /// label on iOS. The label is one text line high, under half the 44 pt a
+  /// finger needs; the menu takes the outset back from its layout, so the
+  /// heading keeps its height.
+  private static var scopeMenuTouchOutset: CGFloat {
+    #if os(iOS)
+      LorvexDesign.Spacing.m
+    #else
+      0
+    #endif
+  }
+
   private var scopeMenu: some View {
     Menu {
       Picker(words.daysLabel, selection: $scope) {
@@ -288,7 +300,10 @@ public struct LorvexWeekReviewPage: View {
     } label: {
       Label(activeScope.title, systemImage: "line.3.horizontal.decrease")
         .font(.subheadline)
+        .padding(.vertical, Self.scopeMenuTouchOutset)
+        .contentShape(Rectangle())
     }
+    .padding(.vertical, -Self.scopeMenuTouchOutset)
     .fixedSize(horizontal: false, vertical: true)
     .accessibilityIdentifier("review.week.filter")
   }

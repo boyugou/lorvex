@@ -72,8 +72,9 @@ write those rules into `CLAUDE.local.md` so agents keep away from it:
   there; `script/verify_static_gates.sh` is the safe static tier, and
   `script/package_dmg.sh` takes `--skip-runtime-verification`.
 - Do visual checks only through the headless channels (`ui_tour_macos.sh`,
-  `ios_sim_screenshots.sh`, `watch_sim_screenshots.sh`,
-  `widget_gallery_macos.sh`), and shut simulators down afterward.
+  `ios_sim_screenshots.sh`, `ios_sim_accessibility_audit.sh`,
+  `watch_sim_screenshots.sh`, `widget_gallery_macos.sh`), and shut simulators
+  down afterward.
 
 ## Releasing a TestFlight build
 

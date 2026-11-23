@@ -9,6 +9,7 @@ struct MobileStoreTaskDetailView: View {
   @State private var editingField: MobileTaskField?
   @Environment(\.mobileDetailPresentation) private var presentation
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.colorScheme) private var colorScheme
 
   @Bindable var store: MobileStore
   let task: LorvexTask
@@ -188,7 +189,7 @@ struct MobileStoreTaskDetailView: View {
       Text(action.title)
     }
     .mobileProminentToolbarButtonStyle()
-    .tint(action.tint)
+    .tint(action.tint(labelIsDark: colorScheme == .dark))
     .disabled(isMutating)
     .accessibilityIdentifier(action.accessibilityIdentifier)
   }
@@ -203,7 +204,7 @@ struct MobileStoreTaskDetailView: View {
       Text(action.title)
     }
     .buttonStyle(.borderedProminent)
-    .tint(action.tint)
+    .tint(action.tint(labelIsDark: false))
     .disabled(isMutating)
     .accessibilityIdentifier(action.accessibilityIdentifier)
   }

@@ -288,9 +288,23 @@ noticed.
   client installs in one step, and a line in Settings saying when an
   assistant last connected, so a broken entry shows.
 - An automated accessibility audit. XCTest's `performAccessibilityAudit`
-  checks contrast, hit regions, missing labels, clipped text and traits. It
-  has never been run; the iOS UI test target exists. First step: one audit
-  per main screen on the simulator, then decide which findings are real.
+  runs on seventeen iPhone screens through
+  `apps/apple/script/ios_sim_accessibility_audit.sh`; how to read its
+  findings is in `apps/apple/docs/development/VERIFICATION.md`. The first
+  run (2026-11-23, iPhone 17 Pro, the sample day, English) reported 313
+  findings in light and 211 in dark. Two were defects, both fixed: a white
+  label on the system green (2.2:1 on the task and habit Complete buttons)
+  and the weekly journal's filter menu, 18 pt high. No screen had a missing
+  label or a wrong trait, and at a large accessibility text size no text is
+  cut off on any of the seventeen. Not audited: iPad, the Watch, the Mac
+  (`mac_ax_report.py` reads its labels, but nothing measures its contrast or
+  control sizes), other languages, and screens the sample day's routes do
+  not reach (batch selection, onboarding, the editors other than the task
+  editor). Left as they are, to weigh for every surface at once: words drawn
+  in the system orange and green (a date due today, "Done this week", the
+  batch bar's Complete and Defer) are about 2.2:1 on white at the default
+  contrast setting (the green measured on a capture, the orange computed
+  from the system color) and darken only under Increase Contrast.
 - A safety net for a person's data. Export is by hand (Settings, a Shortcuts
   action, an MCP tool); nothing keeps a dated copy. An assistant can cancel
   a whole list in one call, undo covers one assistant update at a time, and

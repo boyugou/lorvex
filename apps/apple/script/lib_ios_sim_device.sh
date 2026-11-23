@@ -30,3 +30,21 @@ print(best[1])
 print("using simulator %s (%s, iOS %s)" % (name, best[1], ".".join(map(str, best[0]))), file=sys.stderr)
 ' "$name"
 }
+
+# clear_ios_sim_seeded_store <udid> <bundle id>
+#   Deletes the app's store from the booted simulator's App Group container,
+#   so the next launch with `-lorvexSeedSampleData` seeds today's sample day.
+#   The seed only fills a store with no tasks in it, and the container
+#   survives both a reinstall and `simctl uninstall`, so without this a run
+#   shows whatever an earlier one seeded, however old. Refuses to delete
+#   anything outside that simulator's device directory, and warns when the
+#   app has no container yet (it was never installed on the device).
+clear_ios_sim_seeded_store() {
+  local udid="$1" bundle="$2" container
+  container="$(xcrun simctl get_app_container "$udid" "$bundle" groups 2>/dev/null | awk '$1 == "group.com.lorvex.apple" { print $2 }')"
+  case "$container" in
+    */CoreSimulator/Devices/"$udid"/*) rm -rf "${container:?}/Lorvex" ;;
+    "") echo "warning: no simulator App Group container; the run may show stale seed data" >&2 ;;
+    *) echo "refusing to clear unexpected container path: $container" >&2; return 1 ;;
+  esac
+}

@@ -25,7 +25,7 @@ red flag never argue about what red means.
 | accent (the system accent) | selection, the lead task's row, primary actions, links, a reply the assistant handed back | `accent`, `selectionFill` |
 | red | overdue, high priority, errors, destructive actions, the calendar now-line | `overdue`, `priorityHigh`, `error`, `destructive`, `nowIndicator` |
 | orange | due today or soon, warnings | `dueSoon`, `warning` |
-| green | completed, success, a habit finished today | `done`, `success` |
+| green | completed, success, a habit finished today | `done`, `success`, `doneFill` |
 | secondary gray | neutral counts, cancelled, someday, blocked, normal and low priority, section leaders | `neutral`, `cancelled`, `someday`, `blocked`, `priorityNormal`, `priorityLow` |
 | pink | mood in reviews | `mood` |
 | yellow | energy in reviews | `energy` |
@@ -55,6 +55,19 @@ Rules that follow from the table:
   the deadline is today or tomorrow, red (`overdue`, with its own glyph) once
   the day has passed, secondary otherwise — the same rule as the inspector's
   Due row.
+- A text label on a fill the app chose reaches 4.5:1 against that fill, 3:1
+  when the text is large (18 pt, or 14 pt bold). The fill follows the label
+  its button style draws. A bordered prominent button draws a white label in
+  both appearances, and white on the system green measures 2.2:1 in light
+  and 2.0:1 in dark, so a filled button that completes something (a habit's
+  Complete Today, the task pane's Complete) takes `Palette.doneFill`, a
+  deeper green of the same hue: white on it measures 4.7:1 in both
+  appearances, and the fill stands 3.6:1 off a dark card. A glass prominent
+  toolbar button draws its label white in light and black in dark, so the
+  task detail's Complete takes `doneFill` in light and `done` in dark, where
+  black on the system green measures 10.4:1. `done` stays the color of glyphs,
+  rings, and progress marks. Swipe actions keep the platform's vivid fills,
+  as the system's own lists draw them.
 - The accent is the platform accent (`Color.accentColor`). There is no second
   brand blue; `Palette.accent` is an alias so call sites read semantically. On
   watchOS, where `Color.accentColor` renders as a light grey without an asset

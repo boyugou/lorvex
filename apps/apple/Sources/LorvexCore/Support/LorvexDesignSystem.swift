@@ -40,6 +40,12 @@ extension LorvexDesign {
     public static let someday: Color = .secondary
     /// Completed.
     public static let done: Color = .green
+    /// The fill of a filled button that completes something, under a white
+    /// label: a deeper green of `done`'s hue. White text on `done` measures
+    /// 2.2:1 in light and 2.0:1 in dark; on this fill it measures 4.7:1 in
+    /// both, and the fill itself stands 3.6:1 off a dark card. A button whose
+    /// style draws a black label keeps `done`.
+    public static let doneFill = Color(red: 0.133, green: 0.522, blue: 0.231)
     /// Cancelled — history, not an alarm.
     public static let cancelled: Color = .secondary
     /// Waiting on an open dependency.

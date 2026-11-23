@@ -41,10 +41,16 @@ enum MobileTaskPrimaryStatusAction: Equatable {
     }
   }
 
-  /// Completing is tinted with the done color so it reads as the finishing
-  /// step; both reopening actions keep the accent tint (`nil`).
-  var tint: Color? {
-    self == .complete ? LorvexDesign.Palette.done : nil
+  /// The fill under the action's label. Completing takes a green so it reads
+  /// as the finishing step; both reopening actions keep the accent (`nil`).
+  /// Which green follows the label the button's style draws, so the label
+  /// stays legible: the deeper `doneFill` under a white label, `done` under a
+  /// black one. A bordered prominent button's label is white in both
+  /// appearances; a glass prominent toolbar button's is white in light and
+  /// black in dark.
+  func tint(labelIsDark: Bool) -> Color? {
+    guard self == .complete else { return nil }
+    return labelIsDark ? LorvexDesign.Palette.done : LorvexDesign.Palette.doneFill
   }
 
   var accessibilityIdentifier: String {

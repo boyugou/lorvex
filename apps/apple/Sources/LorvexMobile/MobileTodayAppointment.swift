@@ -45,6 +45,18 @@ struct MobileTodayAppointment: Equatable {
         table: "Localizable", bundle: MobileL10n.bundle)
     }
   }
+
+  /// The time until an event starts, in hours and minutes: "In 45 min", "In 2
+  /// hr 40 min". `style` `.spoken` spells the units out for VoiceOver.
+  static func countdown(
+    minutesAway: Int, style: LorvexDurationFormat.Style = .compact,
+    locale: Locale = LorvexClockFormat.displayLocale
+  ) -> String {
+    let duration = LorvexDurationFormat.hoursAndMinutes(minutesAway, style: style, locale: locale)
+    return String(
+      localized: "today.appointment.in_duration", defaultValue: "In \(duration)",
+      table: "Localizable", bundle: MobileL10n.bundle)
+  }
 }
 
 struct MobileTodayAppointmentRow: View {
@@ -55,9 +67,7 @@ struct MobileTodayAppointmentRow: View {
 
   private var timingLabel: String {
     guard let minutesAway else { return appointment.label }
-    let formatter = RelativeDateTimeFormatter()
-    formatter.formattingContext = .beginningOfSentence
-    return formatter.localizedString(from: DateComponents(minute: minutesAway))
+    return MobileTodayAppointment.countdown(minutesAway: minutesAway)
   }
 
   var body: some View {
@@ -70,6 +80,9 @@ struct MobileTodayAppointmentRow: View {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
           Text(verbatim: timingLabel)
             .font(LorvexDesign.Typography.pageLabel).foregroundStyle(.secondary)
+            .accessibilityLabel(
+              minutesAway.map { MobileTodayAppointment.countdown(minutesAway: $0, style: .spoken) }
+                ?? timingLabel)
           Text(verbatim: appointment.event.title)
             .font(.headline)
           if let time = appointment.event.listTimeLabel(on: day, range: MobileTodayCalmCopy.timeRange)

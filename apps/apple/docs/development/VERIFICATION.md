@@ -324,6 +324,49 @@ for `AXDUMP done`, then remove both keys with `plutil -remove` on the shut-down
 device. The dump matches what VoiceOver reads; XCUITest trees list children of
 ignored elements that VoiceOver never reaches.
 
+### Accessibility audit
+
+`script/ios_sim_accessibility_audit.sh <outdir> [light|dark] [screen …]` runs
+XCTest's `performAccessibilityAudit` on the iPhone app's screens over the
+sample day, through the `AccessibilityAuditTests` UI test. It writes
+`findings-<appearance>.txt`, one line per finding, and a screenshot of each
+screen; the test's header lists the fields and the screen names. Seventeen
+screens take about five minutes. `LORVEX_AUDIT_TEXT_SIZE` launches the app at
+a text size, for example `UICTContentSizeCategoryAccessibilityXL`.
+
+The audit reports and never fails: each finding is judged beside the
+screenshot of its screen.
+`uv run script/ax_audit_contrast.py <findings file> <screenshot directory>`
+measures every contrast finding on its capture and prints the ratios, lowest
+first. Normal text needs 4.5:1; large text (18 pt, or 14 pt bold) needs 3:1.
+
+How the findings read on this app:
+
+- **Contrast.** Most findings are the platform's own styles: secondary text
+  (3.3–4.0:1 measured), accent-colored text on white (3.5:1) and inside a
+  tinted bordered button (2.6–3.0:1), placeholders, and disabled controls.
+  The app adopts those as the system draws them, and the system darkens them
+  when a person turns on Increase Contrast. A finding counts where the app
+  chose both colors, such as a label on a fill of its own
+  (`docs/design/DESIGN_SYSTEM.md` §1). The audit checks an element only
+  when it stands alone: a colored word inside a combined row is not measured.
+- **Dynamic Type.** At the default text size the audit reports "partially
+  unsupported" for nearly every text (128 findings on seventeen screens).
+  These are false: the text uses text styles and grows. The run that counts
+  is one at an accessibility size, read from its captures. What it still
+  reports there is navigation bar titles and bar buttons, which the system
+  caps and shows enlarged through the Large Content Viewer.
+- **Text clipped.** "May be clipped at larger Dynamic Type sizes" is a
+  prediction, not an observation. The large-size captures decide it.
+- **Hit region.** A control under 44 pt in either dimension. Controls whose
+  size is their meaning, such as a short event on a time grid, are exempt.
+- **Hidden controls.** XCUITest's tree includes children of elements hidden
+  from VoiceOver, so a control hidden with `.accessibilityHidden(true)` is
+  audited as if it showed. The calendar's Today button, while the day shown
+  is today, is one.
+- **Under the tab bar.** Text scrolled beneath the glass tab bar is measured
+  through the glass.
+
 ### Watch and widgets
 
 `script/watch_sim_build.sh`, then

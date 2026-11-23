@@ -59,3 +59,14 @@ private func glance(_ events: [CalendarTimelineEvent], at minute: Int, instant: 
   #expect(try glance([second, first], at: 110, instant: instant("08:50:00")) == .init(event: second, phase: .next))
   #expect(try glance([second, first], at: 90, instant: instant("09:30:00")) == .init(event: second, phase: .now))
 }
+
+@Test func todayAppointmentCountdownReadsInHoursAndMinutes() {
+  let english = Locale(identifier: "en_US")
+  func countdown(_ minutes: Int, _ style: LorvexDurationFormat.Style = .compact) -> String {
+    MobileTodayAppointment.countdown(minutesAway: minutes, style: style, locale: english)
+  }
+  #expect(countdown(45) == "In 45 min")
+  #expect(countdown(60) == "In 1 hr")
+  #expect(countdown(160) == "In 2 hr 40 min", "not a count of minutes past the hour")
+  #expect(countdown(160, .spoken) == "In 2 hours, 40 minutes")
+}

@@ -369,6 +369,11 @@ swift build -j 4 --product LorvexApple && script/ui_tour_macos.sh light /tmp/sho
 script/watch_sim_build.sh && script/watch_sim_screenshots.sh /tmp/shots today habits
 script/widget_gallery_macos.sh /tmp/widgets
 
+# XCTest's accessibility audit of the iPhone screens: findings to judge beside
+# each screenshot, then the measured contrast of the contrast findings
+script/ios_sim_accessibility_audit.sh /tmp/audit light
+uv run script/ax_audit_contrast.py /tmp/audit/findings-light.txt /tmp/audit/light
+
 # Every static gate, no build or launch (before each push and release build)
 script/verify_static_gates.sh
 

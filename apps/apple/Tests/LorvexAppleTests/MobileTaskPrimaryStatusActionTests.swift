@@ -15,11 +15,17 @@ struct MobileTaskPrimaryStatusActionTests {
     #expect(MobileTaskPrimaryStatusAction(status: .someday) == .moveToOpen)
   }
 
-  @Test("only completing is tinted done; both reopening actions drive the reopen transition")
+  @Test("only completing is tinted green, deeper under a white label; both reopening actions drive the reopen transition")
   func presentationFollowsTheAction() {
-    #expect(MobileTaskPrimaryStatusAction.complete.tint == LorvexDesign.Palette.done)
-    #expect(MobileTaskPrimaryStatusAction.reopen.tint == nil)
-    #expect(MobileTaskPrimaryStatusAction.moveToOpen.tint == nil)
+    #expect(
+      MobileTaskPrimaryStatusAction.complete.tint(labelIsDark: false)
+        == LorvexDesign.Palette.doneFill)
+    #expect(
+      MobileTaskPrimaryStatusAction.complete.tint(labelIsDark: true) == LorvexDesign.Palette.done)
+    for labelIsDark in [false, true] {
+      #expect(MobileTaskPrimaryStatusAction.reopen.tint(labelIsDark: labelIsDark) == nil)
+      #expect(MobileTaskPrimaryStatusAction.moveToOpen.tint(labelIsDark: labelIsDark) == nil)
+    }
     #expect(!MobileTaskPrimaryStatusAction.complete.performsReopen)
     #expect(MobileTaskPrimaryStatusAction.reopen.performsReopen)
     #expect(MobileTaskPrimaryStatusAction.moveToOpen.performsReopen)

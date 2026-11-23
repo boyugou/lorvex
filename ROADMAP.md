@@ -37,24 +37,71 @@ person living with the app, and then a decision.
 ## Product work
 
 - Platform adaptation sprint (owner, 2026-11-16): iPhone Duo and useful
-  capabilities in macOS 27.2 and newer iOS releases. Start from Apple's
-  [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),
-  [Duo design guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo),
-  and [macOS SDK release notes](https://developer.apple.com/documentation/macos-release-notes).
-  Done so far: Today's columns ([build 153](docs/releases/1.0.0-153.md)), the
-  mobile Week agenda ([build 154](docs/releases/1.0.0-154.md)), and journal
-  search on the Duo simulator's outer display
-  ([build 170](docs/releases/1.0.0-170.md)). Remaining:
-  validate continuity across displays, folding, rotation, Split View,
-  side-mounted navigation and toolbars, and reserved regions. Keep the current
-  navigation, selection, scroll position, and unsaved draft through layout
-  changes. Cover Today, calendar grids, task details, Review, capture, and
-  settings, with large text and light/dark appearances. Then evaluate system
-  integration changes against specific user benefits and the supported
-  deployment and SDK/compiler floors; existing integrations need a
-  compatibility pass before adopting new APIs. Record device/simulator
-  evidence and prioritize improvements that simplify an everyday action. Also
-  run the scene's database-resume callback on its initial active value,
+  capabilities in macOS 27 and iOS 27. The deployment floor stays at 26, so
+  every 27 API sits behind an availability check. The system integration
+  changes were evaluated on 2026-11-22 against the 27.2 SDK, Apple's
+  [SwiftUI](https://developer.apple.com/documentation/updates/swiftui) and
+  [App Intents](https://developer.apple.com/documentation/updates/appintents)
+  update lists, and the
+  [macOS 27 release notes](https://developer.apple.com/documentation/macos-release-notes/macos-27-release-notes).
+  The work, in priority order:
+  1. Siri for tasks and events. iOS 27 and macOS 27 add the `.reminders` and
+     `.calendar`
+     [app schema domains](https://developer.apple.com/documentation/appintents/app-schema-domains).
+     Siri matches an intent that conforms to one from ordinary speech ("mark
+     this as completed", "set the due date to tomorrow") with no phrase to
+     define, and none of Lorvex's intents conforms yet. Add schema-conforming
+     task, list and event entities with their create, update and delete
+     intents over the existing intent runner; index tasks and events as
+     `IndexedEntity` so Siri finds them through Spotlight's semantic search;
+     and mark task rows and detail views with `appEntityIdentifier` so "this
+     task" resolves to what is on screen. A probe package with a 26 floor
+     compiles a `.reminders` entity and its create and update intents marked
+     available from 27.0, without the schema's location, section and image
+     fields; the Xcode metadata step and Siri's behavior are untested. The
+     design has to settle how priority, the planned day and a timed task map
+     onto the schema's `isFlagged` and `dueDate`, and which list a task
+     without one reports. Limits as of 2026-11-22
+     ([Apple's requirements](https://support.apple.com/en-us/127893)): Siri
+     AI is in beta, supports six languages without Chinese, and does not
+     work for an Apple Account in mainland China or on iPhone and iPad in
+     the EU. Siri calling an intent outside a schema is a
+     [developer preview](https://developer.apple.com/documentation/appintents/siri-ai-developer-preview)
+     limited to internal TestFlight testers, so the other intents wait for
+     its release.
+  2. iPhone Duo. Start from Apple's
+     [preparation guide](https://developer.apple.com/iphone-duo/prepare/) and
+     [design guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo).
+     A build made with the 27.1 SDK or later already runs edge to edge on
+     both displays with toolbars and tab bars on the vertical axis, so every
+     current build does. Done so far: Today's columns
+     ([build 153](docs/releases/1.0.0-153.md)), the mobile Week agenda
+     ([build 154](docs/releases/1.0.0-154.md)), and journal search on the Duo
+     simulator's outer display ([build 170](docs/releases/1.0.0-170.md)).
+     Remaining: validate continuity across displays, folding, rotation, Split
+     View, the vertical bars, and reserved regions. Keep the current
+     navigation, selection, scroll position, and unsaved draft through layout
+     changes. Cover Today, calendar grids, task details, Review, capture, and
+     settings, with large text and light/dark appearances, and record
+     simulator evidence. The 27.1 APIs for this are unused so far:
+     `GeometryProxy.reservedRegions` for the hinge and camera,
+     `onHingeChange`, and `toolbarVerticalBehavior` with a toolbar item's
+     `axisBehavior`.
+  3. Behavior that changed by building with the 27 SDK. macOS 27 hides
+     symbol images in menus and context menus unless the label asks for
+     `.titleAndIcon`: review the context menus so an item that names an
+     object (a list, a priority) keeps its image. A `dropDestination` on a
+     Mac `List` row now performs the drop, and the sidebar's lists take
+     dropped tasks that way (`TaskDropTarget`): drag a task onto a sidebar
+     list by hand, which no automation covers.
+  4. Small adoptions: `TabsPickerStyle` on the segmented pickers that switch
+     a page's content, which VoiceOver then reads as tabs; toolbar
+     `visibilityPriority` and `ToolbarOverflowMenu`, so a narrow window and
+     Duo's vertical bar drop the less important items first; and
+     `SyncableEntity` on the entities, whose identifiers are already the same
+     on every device.
+
+  Also run the scene's database-resume callback on its initial active value,
   instead of requiring a later foreground transition.
 - Hand a task to the assistant (released in build 141). Not covered yet: the
   Mac's table mode, the menu bar panel and the Watch show no marker; the
@@ -361,6 +408,15 @@ Recorded so they are not reopened without new information.
   and medium widgets. The tile keeps every name at one size and tightens
   before truncating, two-line names do not fit two rows of tiles, and the
   habit's symbol and color name it too.
+- No language model inside the app, on the device or in Apple's cloud
+  (Foundation Models, Core AI, `SpotlightSearchTool`). Lorvex has no in-app
+  AI runtime (`apps/apple/CLAUDE.md`, "Tech Stack"); an assistant reaches it
+  through MCP or through App Intents.
+- Not adopted from the 27 SDKs, because the app has no use for them:
+  reordering and swipe actions outside `List` (the rows that reorder or swipe
+  are already in a `List`), the URL-based document protocols (no documents),
+  `AsyncImage` caching (no remote images), and AppKit's pull-to-refresh
+  controller (no manual refresh, rule 12 of `apps/apple/CLAUDE.md`).
 - No capture button on the Home Screen widgets. Capture is already one tap
   away in Control Center, on the Lock Screen, on the Action button, and in
   the app icon's quick action; a ＋ on a glance would repeat it (rule 12 of

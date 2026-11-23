@@ -43,6 +43,36 @@ final class MainWindowLayout {
   /// a screen.
   private(set) var screenWidth: CGFloat?
 
+  /// The window's content width and the sidebar column's width as laid out,
+  /// or nil before the first layout.
+  var windowWidth: CGFloat?
+  var sidebarWidth: CGFloat?
+
+  /// The width right of the sidebar: the workspace and, while it is open, the
+  /// inspector. Nil before the first layout. A workspace that divides its
+  /// space by how much room the window gives reads this rather than its own
+  /// width, which shrinks whenever the inspector opens.
+  ///
+  /// A sidebar the layout hid to make room for the inspector still counts,
+  /// because it returns when the inspector closes: the width a workspace is
+  /// told then is the one it keeps, not a wider one for the moment before the
+  /// sidebar is back.
+  var detailAreaWidth: CGFloat? {
+    guard let windowWidth else { return nil }
+    guard isSidebarVisible || sidebarHiddenForInspector else { return windowWidth }
+    return windowWidth - sidebarColumnWidth
+  }
+
+  /// The sidebar's width as laid out, or its ideal width before it is laid
+  /// out and while it is hidden or sliding in, when the width it reports is
+  /// less than the column allows.
+  private var sidebarColumnWidth: CGFloat {
+    guard let sidebarWidth, sidebarWidth >= SidebarMetrics.columnMinWidth else {
+      return SidebarMetrics.columnIdealWidth
+    }
+    return sidebarWidth
+  }
+
   /// Whether the layout hid the sidebar to make room for the inspector, so
   /// closing the inspector shows the sidebar again.
   private(set) var sidebarHiddenForInspector = false

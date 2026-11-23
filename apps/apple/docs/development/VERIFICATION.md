@@ -182,7 +182,12 @@ compare pixels only between tours from the same machine. Launch arguments go in
 - accessibility: `-lorvexDifferentiateWithoutColor`, `-uiPreviewDumpAX`
   (then `script/mac_ax_report.py` over the tour log; the shell must be trusted
   for Accessibility);
-- window: `-uiPreviewWindowSize 1000x600`.
+- window: `-uiPreviewWindowSize 1000x600`, the smallest the main window goes;
+  Today puts its schedule beside the column from about 1120 wide.
+
+`LORVEX_TOUR_LAST_STOP=<stop>` ends the tour once that stop is captured, for a
+quick look at the first few stops (`today`, `today-suggestion`, `today-event`
+open the tour).
 
 Popovers cannot be toured, and `ImageRenderer` draws a placeholder glyph for
 AppKit-backed views. `script/widget_gallery_macos.sh <outdir>` renders the Mac

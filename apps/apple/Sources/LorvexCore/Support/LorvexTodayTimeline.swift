@@ -3,9 +3,10 @@ import Foundation
 /// One row of a day on the clock: a calendar event, a task with a time that
 /// day, or the clock itself.
 ///
-/// The schedule beside Today (the macOS and iPad pane, the iPhone sheet and
-/// strip) reads these rows in order, so meetings and timed work interleave the
-/// way the day will run instead of the reader merging two lists by eye.
+/// A schedule drawn as rows (the iPad pane, the iPhone sheet and strip, and
+/// the schedule in the macOS Today column of a narrow window) reads these in
+/// order, so meetings and timed work interleave the way the day will run
+/// instead of the reader merging two lists by eye.
 public struct LorvexTodayTimelineItem: Identifiable, Equatable, Sendable {
   public enum Kind: Equatable, Sendable {
     /// A calendar event. Never completable: an event is not the user's to check

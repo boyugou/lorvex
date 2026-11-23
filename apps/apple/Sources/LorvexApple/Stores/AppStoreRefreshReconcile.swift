@@ -22,6 +22,14 @@ extension AppStore {
       if let selectedTaskID, visibleTasks.contains(where: { $0.id == selectedTaskID }) {
         return
       }
+      // The day rail draws a finished timed task as a block while the Done
+      // section that lists it is folded, so a task opened from its block is
+      // on the page without being a row.
+      if let selectedTaskID, todaySchedulePlacement == .besideColumn,
+        todayTimedTasks.contains(where: { $0.id == selectedTaskID })
+      {
+        return
+      }
       selectedTaskID = nil
     case .tasks:
       let visible = taskWorkspaceHasLoaded ? taskWorkspaceAllTasks : today.tasks

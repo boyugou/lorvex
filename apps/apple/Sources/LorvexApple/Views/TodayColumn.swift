@@ -1,17 +1,27 @@
 import LorvexCore
 import SwiftUI
 
-/// Today's main column: the whole day in one column, every task on it once.
+/// Today's main column, every task on it once.
 ///
 /// The date and one line of facts open it, then the assistant's briefing and,
 /// when the day holds more estimated work than free working time, one decision
-/// that offers to move the least urgent work to tomorrow. Then the day on the
-/// clock (``TodayScheduleSection``): calendar events and timed tasks in time
-/// order. Then the tasks without a time, started ones first, the rest in the
-/// canonical order; under a "Tasks" label only when a schedule stands above
-/// them. The quick-add field and what is already done close the column; Done
-/// folds on request, since it is a record rather than work, and leaves out
-/// finished timed tasks, which keep their place in the schedule.
+/// that offers to move the least urgent work to tomorrow. What follows
+/// depends on where the day's schedule stands
+/// (``TodayColumnContent/schedulePlacement``):
+///
+/// - In the column: the day on the clock (``TodayScheduleSection``), calendar
+///   events and timed tasks in time order, then the tasks without a time
+///   under a "Tasks" label that shows only when a schedule stands above them.
+///   Done leaves out finished timed tasks, which keep their place in the
+///   schedule.
+/// - Beside the column, in the day rail (``TodayDayRail``): one list of every
+///   task, a timed one with its time on its row, and no labels. Suggested
+///   times, while they wait for an answer, stand above the list. Done holds
+///   everything finished today.
+///
+/// Either list puts started tasks first and the rest in the canonical order.
+/// The quick-add field and what is already done close the column; Done folds
+/// on request, since it is a record rather than work.
 struct TodayColumn: View {
   @Bindable var store: AppStore
   /// The day as of this render, built once (``AppStore/todayColumnContent``).
@@ -53,8 +63,14 @@ struct TodayColumn: View {
           store: store, rows: content.schedule, nowMinutes: nowMinutes, workCue: content.workCue,
           items: Dictionary(page.items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }))
           .padding(.top, LorvexDesign.Spacing.l)
+      } else if content.schedulePlacement == .besideColumn, let proposal = store.proposedDayTimes {
+        TodaySuggestedTimesSection(
+          store: store, proposal: proposal, dayRows: content.schedule, undoManager: undoManager
+        )
+        .padding(.top, LorvexDesign.Spacing.l)
+        .transition(.opacity)
       }
-      if !untimedItems.isEmpty {
+      if !listItems.isEmpty {
         VStack(alignment: .leading, spacing: 0) {
           if showsSchedule {
             TodayColumnLabel(title: TodayCalmCopy.tasksTitle)
@@ -86,7 +102,7 @@ struct TodayColumn: View {
           .padding(.top, LorvexDesign.Spacing.l)
       }
     }
-    .frame(maxWidth: 720, alignment: .leading)
+    .frame(maxWidth: TodayPageMetrics.columnMaxWidth, alignment: .leading)
     .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
     .sheet(isPresented: Binding(get: { planningDay != nil }, set: { if !$0 { planningDay = nil } })) {
       if let day = planningDay, let tomorrow = LorvexDateFormatters.ymdUTCAddingDays(day, days: 1),
@@ -183,23 +199,33 @@ struct TodayColumn: View {
 
   // MARK: The list
 
-  /// The schedule stands when the day has anything on the clock (an event or
-  /// a timed task) or suggested times are waiting for an answer.
+  /// The schedule stands in the column when that is its place and the day
+  /// has anything on the clock (an event or a timed task) or suggested times
+  /// are waiting for an answer.
   private var showsSchedule: Bool {
-    store.proposedDayTimes != nil || content.schedule.contains { $0.kind != .now }
+    content.schedulePlacement == .inColumn
+      && (store.proposedDayTimes != nil || content.schedule.contains { $0.kind != .now })
   }
 
-  /// Today's tasks the schedule does not already show
-  /// (``TodayColumnContent/untimedItems``).
-  private var untimedItems: [LorvexCalmToday.Item] { content.untimedItems }
+  /// The column's task list (``TodayColumnContent/listItems``).
+  private var listItems: [LorvexCalmToday.Item] { content.listItems }
 
-  /// The tasks without a time, started tasks first.
+  /// The task list, started tasks first. Under an in-column schedule its
+  /// tasks have no time; beside the rail a timed task reads its time on its
+  /// row, "Until 12:30 PM" while that time runs.
   private var taskList: some View {
     VStack(alignment: .leading, spacing: 0) {
-      ForEach(untimedItems) { item in
+      ForEach(listItems) { item in
         TodayTaskRow(
           task: item.task, store: store, isBlocked: store.isBlocked(item.task),
+          timeLabel: item.time.map { time in
+            item.isRunning
+              ? TodayCalmCopy.untilLabel(end: time.upperBound)
+              : TodayCalmCopy.timeRange(start: time.lowerBound, end: time.upperBound)
+          },
+          timeIsRunning: item.isRunning,
           chips: Self.chips(for: item))
+        .id(item.id)
       }
     }
     .accessibilityIdentifier("today.list")

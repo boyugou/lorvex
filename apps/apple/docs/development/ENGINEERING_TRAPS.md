@@ -207,6 +207,30 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
 - Never nest a `NavigationStack` or `NavigationSplitView` inside a pushed view:
   the outer push silently does nothing. Attach `navigationDestination(item:)`
   to the enclosing stack.
+- **`.navigationSplitViewColumnWidth` must be the column's outermost
+  modifier.** Wrap it in another modifier, such as `.onGeometryChange`, and
+  the split view ignores it and gives the column its default width. Measure
+  inside it.
+- **A scroll asked for while a window opens is dropped.** macOS sizes a scroll
+  view more than once as its window opens (a first pass can report a container
+  a few dozen points tall), and `ScrollPosition.scrollTo` or
+  `ScrollViewReader.scrollTo` called on appear, or inside the layout pass that
+  reports a size, does nothing. Ask from `onScrollGeometryChange`, one turn of
+  the main actor later, and repeat until the reported offset is the target. A
+  size reported while the window opens may not be the one that holds, so ask
+  again when the size changes under a view the person has not scrolled
+  (`CalendarTimeAxisTracker`).
+- **A workspace can be open in two windows that share one store.** The main
+  window and a workspace's own window (⌥⌘1–⌥⌘5) draw from the same
+  `AppStore`. A value a window derives from its own size and writes to the
+  store when it changes, such as where Today places its schedule, is
+  overwritten by the other window; write it again when the window becomes key
+  (`TodayView`).
+- **An `NSViewRepresentable` that needs its window must wait for
+  `viewDidMoveToWindow`.** SwiftUI can build the view before the window holds
+  it, so `view.window` read once after `makeNSView` is sometimes nil, and
+  `updateNSView` does not run again while the inputs stay the same
+  (`WindowMinWidthEnforcer`).
 
 ## Lists, sheets, and dialogs
 

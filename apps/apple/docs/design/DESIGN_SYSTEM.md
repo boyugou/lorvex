@@ -611,8 +611,13 @@ assistant put on today is folded away; only Done (on request) and the
 assistant's change log (by default) fold, because they are records rather
 than work. A task pushed off three or more times carries a "Pushed N times"
 chip. The schedule beside the list (on iPhone, a sheet opened from the day
-strip) draws only what has a time: calendar holds and the day's timed tasks
-(`LorvexTodayTimeline.timedItems`).
+strip) draws what is on the clock: calendar holds and the day's timed tasks
+(`LorvexTodayTimeline.build`). On macOS it is a rail beside the column, the
+Calendar's day grid for today (`CalendarGridModel`), 320 to 460 pt wide, with
+an all-day strip on a day that has an all-day event; a window too narrow for
+a 480 pt column beside it, and Today in a window of its own, move the
+schedule into the column as rows above the tasks without a time
+(`TodayPageLayout`).
 
 On the Mac, after the briefing, the current task row offers Start or
 Continue while the calendar permits work. It shows the time until the next
@@ -630,11 +635,13 @@ states it, so the page names the figure once.
 
 Suggested times are a draft until the user answers them. On iPhone they wait
 in a well whose button opens the schedule sheet; on iPad they stand in the
-schedule pane; on macOS they stand at the top of the schedule section in
-Today's column. Either way the suggestion is headed "Suggested Times"
-above the saved one, which reads "Current Schedule" while the suggestion
-waits, and "Use These Times" is its prominent button; "Dismiss" discards it
-without changing the day. On every platform the two answers lead the
+schedule pane; on macOS they stand in Today's column above the task list,
+beside the rail that shows the saved times, or at the top of the schedule
+section when the schedule is in the column. Either way the suggestion is
+headed "Suggested Times" and "Use These Times" is its prominent button;
+"Dismiss" discards it without changing the day. A saved schedule that shares
+the suggestion's pane or column reads "Current Schedule" while the
+suggestion waits; the macOS rail, a pane of its own, keeps "Schedule". On every platform the two answers lead the
 suggestion (beside its title on macOS), where a long proposal cannot push
 them off screen. Tasks that did not fit get "Move to Tomorrow", so a full day
 never ends in a dead-end list; it follows the rows that say what did not fit.

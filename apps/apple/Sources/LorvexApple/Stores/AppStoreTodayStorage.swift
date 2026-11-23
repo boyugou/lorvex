@@ -21,6 +21,9 @@ struct AppStoreTodayStorage {
   /// preference loads.
   var workdayStartMinutes: Int?
   var workdayEndMinutes: Int?
+  /// Where the window showing Today draws the day's schedule. A fact about
+  /// the window's width rather than the day's data, so ``reset()`` keeps it.
+  var schedulePlacement: TodaySchedulePlacement = .inColumn
 
   mutating func reset() {
     today = .empty

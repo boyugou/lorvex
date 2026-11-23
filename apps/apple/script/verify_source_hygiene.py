@@ -731,9 +731,7 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/ListDetailPane.swift'), 'listTasksEmptyState(detail)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/ListDetailPane.swift'), 'selectListEmptyState'),
     ('absent', ('file', 'Sources/LorvexApple/Views/ListDetailPane.swift'), 'ContentUnavailableView'),
-    # --- macOSCalendarWeekGridTagsEveryHourRowAsScrollAnchor ---
-    ('contains', ('file', 'Sources/LorvexApple/Views/CalendarWeekGridBlocks.swift'), 'content.id(WeekGridScrollAnchor.hour(hour))'),
-    ('absent', ('file', 'Sources/LorvexApple/Views/CalendarWeekGridBlocks.swift'), 'if hour == anchorHour {'),
+    # --- macOSCalendarWeekGridOpensOnItsAnchorHourByOffset ---
     # --- macOSCalendarUsesToolbarNavigationAndCalmSignals ---
     ('absent', ('file', 'Sources/LorvexApple/Views/CalendarWorkspaceView.swift'), 'CalendarPrivacyHintBar'),
     ('absent', ('file', 'Sources/LorvexApple/Views/CalendarWorkspaceView.swift'), '.busyOnly'),
@@ -846,12 +844,11 @@ RULES = [
     # One render builds the day once and hands every part of it to the column.
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayView.swift'), 'let content = store.todayColumnContent'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayView.swift'), 'TodayColumn(store: store, content: content)'),
-    # Today is one column: the schedule (events and timed tasks as full task
-    # rows) above the untimed tasks, every task once, arrow keys in screen order.
-    ('contains', ('file', 'Sources/LorvexApple/Views/TodayView.swift'), '.workspaceTaskArrowKeyNavigation(\n            store.arrowKeyTaskNavigation(on: .today), proxy: scroll)'),
+    # Today's column shows every task once, with the schedule in the day rail
+    # or, in a narrow window, as rows above the tasks without a time; arrow
+    # keys follow the column's rows in screen order.
     ('absent', ('file', 'Sources/LorvexApple/Views/TodayView.swift'), 'splitMinimumWidth'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayColumn.swift'), 'TodayScheduleSection('),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TodayColumn.swift'), 'ForEach(untimedItems)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TodayScheduleSection.swift'), 'TodayTaskRow('),
     # TodaySelectionOrderTests exercises the actual visual and keyboard order for the featured task.
     # A running task still in the schedule shows its end time.

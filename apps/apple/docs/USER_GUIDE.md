@@ -3118,7 +3118,8 @@ no forwarder is wired, as in SwiftUI previews.
 
 ### Daily Routine
 
-The **Today** workspace is your day in one list, read top to bottom:
+The **Today** workspace is your day in one list, read top to bottom, with the
+day's schedule beside it where the window has room:
 
 - The date, one line of facts (tasks left, meetings, planned time, and what is
   done), and the assistant's briefing when it wrote one
@@ -3166,12 +3167,24 @@ occupies the current time, the task stays in the list. An overlapping
 upcoming task names the conflicting event and offers **Open Details**.
 Starting work or continuing it keeps its planned time and deadline.
 
-The Mac schedule combines your calendar events and the remaining timed tasks
-in time order, above the tasks without a time. An event that runs past midnight shows its start on the day it begins
-and "Until" its end at the top of the next day; a day it fills completely
-shows it as all day. Click an event to see its details in the inspector,
-where an event you made in Lorvex can also be edited or deleted; right-click
-it for **Open Details**, **Edit**, and **Delete** without opening it first. When the iPad window has room, the schedule stands beside the task list.
+On Mac, the day's **Schedule** stands beside the task list on a time grid:
+your calendar events and timed tasks drawn to scale, with a red line at the
+current time, so free time shows as the room between them. It opens around
+the current time. Drag a task from the list onto the grid to give it a time,
+drag a block to move it or its lower edge to change its length, and click or
+drag on free time to create an event. Click an event or a task on the grid to
+open it in the inspector. An event you made in Lorvex can be edited or deleted
+there, and right-clicking it offers **Open Details**, **Edit**, and **Delete**
+without opening it first; right-clicking a task opens the task menu. While
+the inspector is open it takes the schedule's place unless the window is wide
+enough for both, and the grid comes back where you left it when you close the
+inspector.
+
+In a narrow Mac window the schedule moves into the list instead: calendar
+events and timed tasks in time order, above the tasks without a time. There,
+an event that runs past midnight shows its start on the day it begins and
+"Until" its end at the top of the next day; a day it fills completely shows
+it as all day. Widen the window to bring the grid back. Today opened in its own window (⌥⌘1) always lists the schedule this way. When the iPad window has room, the schedule stands beside the task list.
 In narrower windows, on iPhone, or at accessibility text sizes, tap **Schedule**
 under the briefing to open it. At accessibility text sizes, tasks appear before
 the habit routine and the briefing opens on two lines. Tap **Show more** to read it all.
@@ -3197,9 +3210,8 @@ are listed as not scheduled, with **Move to Tomorrow** beside them. Day hours
 plans into. Tasks are placed in Today's order, each at the
 earliest free time long enough for it, so a short task can fill the gap before
 a meeting that a longer one did not fit, and a ten-minute break follows each
-task when there is room. The suggestion stands at the top of Today's
-schedule on Mac and beside Today on iPad, headed "Suggested Times" above the
-saved "Current Schedule", until you
+task when there is room. The suggestion stands above Today's task list on
+Mac and beside Today on iPad, headed "Suggested Times", until you
 accept it with **Use These Times** or dismiss it. On iPhone the schedule opens
 as a sheet from the day strip. **Clear Times** removes the day's times without
 taking any task off Today; on iPhone it asks you to confirm first.

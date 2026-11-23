@@ -118,4 +118,29 @@ struct MainWindowLayoutTests {
     #expect(layout.columnVisibility == .all)
     #expect(layout.minimumContentWidth(inspectorOpen: true) == 1320)
   }
+
+  @Test("The width right of the sidebar counts a sidebar hidden for the inspector, not one the person hid")
+  func detailAreaWidthCountsASidebarThatReturns() {
+    let layout = Self.layout(screenWidth: Self.narrow)
+    #expect(layout.detailAreaWidth == nil)
+    layout.windowWidth = 1100
+    // Before the sidebar is laid out it counts at its ideal width.
+    #expect(layout.detailAreaWidth == 1100 - SidebarMetrics.columnIdealWidth)
+    layout.sidebarWidth = 250
+    #expect(layout.detailAreaWidth == 850)
+
+    // The inspector takes the sidebar's place. The hidden sidebar reports no
+    // width and still counts, because it returns when the inspector closes.
+    layout.inspectorDidChange(isOpen: true)
+    #expect(layout.columnVisibility == .detailOnly)
+    layout.sidebarWidth = 0
+    #expect(layout.detailAreaWidth == 1100 - SidebarMetrics.columnIdealWidth)
+    layout.inspectorDidChange(isOpen: false)
+    #expect(layout.detailAreaWidth == 1100 - SidebarMetrics.columnIdealWidth)
+
+    // A sidebar the person hid gives its width to the workspace.
+    layout.columnVisibility = .detailOnly
+    #expect(!layout.sidebarVisibilityDidChange(inspectorOpen: false))
+    #expect(layout.detailAreaWidth == 1100)
+  }
 }

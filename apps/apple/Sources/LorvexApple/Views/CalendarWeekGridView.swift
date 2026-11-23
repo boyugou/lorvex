@@ -9,6 +9,10 @@ import SwiftUI
 /// The visible week (`weekStart`) drives the data fetch through the caller, so
 /// only the visible range is loaded. Tapping a block opens edit; tapping an
 /// empty slot prefills create-at-that-time.
+///
+/// Today's day rail is the same grid for one day (``TodayDayRail``): it
+/// leaves out the day header, drops the all-day strip while the day has no
+/// all-day event, and supplies today's own timed tasks.
 struct CalendarWeekGridView: View {
   @Bindable var store: AppStore
   let weekStart: Date
@@ -25,6 +29,15 @@ struct CalendarWeekGridView: View {
   /// Duration is in minutes; tap-to-create passes a default (60), drag-to-
   /// create on the empty slot passes the dragged duration (snapped to 15-min).
   let createAt: (Date, Int, Int) -> Void
+  /// Whether the row of day names and numbers stands above the grid. A host
+  /// that names the one day it shows itself leaves the row out.
+  var showsDayHeader = true
+  /// Whether the all-day strip is left out while no shown day has anything
+  /// in it.
+  var hidesEmptyAllDayStrip = false
+  /// The tasks the grid draws, when the host holds them itself; nil draws the
+  /// calendar's loaded range (``AppStore/scheduledTasks``).
+  var tasks: [LorvexTask]? = nil
 
   let hourHeight: CGFloat = CalendarWeekGridMetrics.hourHeight
   /// The one width the header, the all-day strip and the hour gutter keep for
@@ -69,6 +82,12 @@ struct CalendarWeekGridView: View {
   /// drag arm the moment the pointer reaches a block edge.
   @State var hoveredBlockID: String? = nil
   @State private var overflowPopoverDayID: CalendarGridDay.ID? = nil
+  /// Where the time axis is scrolled to. The person's scrolling moves it, and
+  /// so do the scrolls ``timeAxis`` asks for.
+  @State private var timeAxisPosition = ScrollPosition(edge: .top)
+  /// Decides when the grid puts the axis on its anchor hour
+  /// (``CalendarTimeAxisTracker``).
+  @State private var timeAxis = CalendarTimeAxisTracker()
   /// Day column whose all-day "+N more" popover is open. Internal (not private)
   /// so the all-day strip in `CalendarWeekGridChrome` can drive it.
   @State var allDayOverflowDayID: CalendarGridDay.ID? = nil
@@ -129,12 +148,26 @@ struct CalendarWeekGridView: View {
       dayCount: visibleDayCount,
       calendar: calendar,
       events: store.calendarTimeline?.events ?? [],
-      tasks: store.scheduledTasks,
+      tasks: tasks ?? store.scheduledTasks,
       dayKeyFor: { AppStore.ymdFormatter.string(from: $0) }
     )
   }
 
   private var totalHeight: CGFloat { hourHeight * 24 }
+
+  /// Carries out a scroll ``timeAxis`` asks for.
+  private func scrollTimeAxis(_ request: CalendarTimeAxisTracker.Request?) {
+    guard let request else { return }
+    if request.isAnimated {
+      lorvexAnimated(.snappy(duration: 0.18)) {
+        timeAxisPosition.scrollTo(y: request.offset)
+      }
+    } else {
+      // One turn of the main actor later: a scroll asked during the layout
+      // pass that reports the scroll view's size is dropped.
+      Task { @MainActor in timeAxisPosition.scrollTo(y: request.offset) }
+    }
+  }
 
   var productClock: LorvexProductDayClock {
     LorvexProductDayClock(logicalDay: store.logicalTodayDateString, timeZone: store.logicalTimeZone)
@@ -144,75 +177,87 @@ struct CalendarWeekGridView: View {
     let columns = days
     let anchorHour = CalendarGridModel.initialScrollAnchorHour(
       for: columns, todayKey: productClock.logicalDay, nowMinute: productClock.nowMinutes())
-    // Re-scroll fires only on week / event-content change, never when the wall
-    // clock crosses an hour or an unrelated store update re-evaluates `body`.
-    // The signature therefore keys off the CONTENT-only anchor; the now-aware
-    // `anchorHour` still drives the actual scroll target (initial appear + week
-    // navigation), so a live clock tick can't yank the user away from a
-    // position they scrolled to (the mobile day view guards this with
-    // `userHasScrolledTimeAxis`; the week grid has no such state).
+    // The axis stands on `anchorHour` until the person scrolls it. A change
+    // of the signature puts it there again wherever it stands; the signature
+    // keys off the anchor the days' content gives without the clock, so a
+    // clock tick cannot pull the person away from where they scrolled to.
     let scrollSignature = calendarWeekScrollAnchorSignature(
       columns: columns,
       anchorHour: CalendarGridModel.initialScrollAnchorHour(for: columns),
       weekStart: weekStart)
     VStack(spacing: 0) {
-      header(columns)
-      Divider()
-      allDayStrip(columns)
-      Divider()
-      ScrollViewReader { proxy in
-        ScrollView {
-          HStack(alignment: .top, spacing: 0) {
-            hourGutter()
-            ForEach(Array(columns.enumerated()), id: \.element.id) { index, day in
-              dayColumn(day, dayIndex: index, totalDays: columns.count)
-                // Draw the column separator as a trailing overlay rather than an
-                // interleaved `Divider()`: a layout-consuming divider made each
-                // grid column ~1pt narrower than the matching header / all-day
-                // column, so event blocks and the now-line drifted left of their
-                // day number. A zero-width overlay keeps all three rows on
-                // identical `maxWidth: .infinity` columns.
-                .overlay(alignment: .trailing) {
-                  Rectangle()
-                    .fill(Color(nsColor: .separatorColor))
-                    .frame(width: 1)
-                }
-            }
-          }
-          .frame(height: totalHeight)
-        }
-        // No scroller on the time axis. While one is shown the scroll view
-        // narrows its content, so the seven day columns shrink under a header
-        // and all-day strip that are laid out above the scroll view at full
-        // width: every day number drifts right of the column it names, by the
-        // scroller's width at the last day, and an all-day pill overhangs into
-        // the next day. Suppressing it keeps one column geometry at all times,
-        // and the grid loses nothing — the hour gutter already says where the
-        // view sits in the day, which is all a scroller would report.
-        .scrollIndicators(.never)
-        .onAppear {
-          proxy.scrollTo(WeekGridScrollAnchor.hour(anchorHour), anchor: .top)
-        }
-        .onChange(of: scrollSignature) { _, _ in
-          lorvexAnimated(.snappy(duration: 0.18)) {
-            proxy.scrollTo(WeekGridScrollAnchor.hour(anchorHour), anchor: .top)
+      if showsDayHeader {
+        header(columns)
+        Divider()
+      }
+      if !hidesEmptyAllDayStrip || columns.contains(where: { !$0.allDayEvents.isEmpty || !$0.scheduledTasks.isEmpty }) {
+        allDayStrip(columns)
+        Divider()
+      }
+      ScrollView {
+        HStack(alignment: .top, spacing: 0) {
+          hourGutter()
+          ForEach(Array(columns.enumerated()), id: \.element.id) { index, day in
+            dayColumn(day, dayIndex: index, totalDays: columns.count)
+              // Draw the column separator as a trailing overlay rather than an
+              // interleaved `Divider()`: a layout-consuming divider made each
+              // grid column ~1pt narrower than the matching header / all-day
+              // column, so event blocks and the now-line drifted left of their
+              // day number. A zero-width overlay keeps all three rows on
+              // identical `maxWidth: .infinity` columns.
+              .overlay(alignment: .trailing) {
+                Rectangle()
+                  .fill(Color(nsColor: .separatorColor))
+                  .frame(width: 1)
+              }
           }
         }
-        .onChange(of: weekStart) { _, _ in
-          // The grid identity is reused across week navigation, so an interrupted
-          // drag (resign-key, mid-drag refresh) would otherwise strand its
-          // translucent draft rectangle on the new week. Clear both drafts.
-          createDraft = nil
-          rescheduleDraft = nil
-          dropTargetedDay = nil
-          timeDropTarget = nil
-        }
-        .onDisappear {
-          createDraft = nil
-          rescheduleDraft = nil
-          dropTargetedDay = nil
-          timeDropTarget = nil
-        }
+        .frame(height: totalHeight)
+      }
+      // No scroller on the time axis. While one is shown the scroll view
+      // narrows its content, so the seven day columns shrink under a header
+      // and all-day strip that are laid out above the scroll view at full
+      // width: every day number drifts right of the column it names, by the
+      // scroller's width at the last day, and an all-day pill overhangs into
+      // the next day. Suppressing it keeps one column geometry at all times,
+      // and the grid loses nothing — the hour gutter already says where the
+      // view sits in the day, which is all a scroller would report.
+      .scrollIndicators(.never)
+      // The grid reports the axis's geometry, the person's scrolling, and each
+      // change of the anchor to `timeAxis`, and carries out the scrolls it
+      // asks for. Asking once on appear is not enough: the workspace a window
+      // opens on appears before the window lays it out, and a scroll asked of
+      // a scroll view without a settled size is dropped.
+      .scrollPosition($timeAxisPosition)
+      .onScrollGeometryChange(
+        for: CalendarTimeAxisGeometry.self, of: CalendarTimeAxisGeometry.init
+      ) { _, axis in
+        scrollTimeAxis(
+          timeAxis.geometryChanged(to: axis, anchorHour: anchorHour, hourHeight: hourHeight))
+      }
+      .onScrollPhaseChange { _, phase in
+        if phase == .interacting || phase == .tracking { timeAxis.personScrolled() }
+      }
+      .onChange(of: anchorHour) { _, hour in
+        scrollTimeAxis(timeAxis.anchorMoved(toHour: hour, hourHeight: hourHeight))
+      }
+      .onChange(of: scrollSignature) { _, _ in
+        scrollTimeAxis(timeAxis.rangeChanged(anchorHour: anchorHour, hourHeight: hourHeight))
+      }
+      .onChange(of: weekStart) { _, _ in
+        // The grid identity is reused across week navigation, so an interrupted
+        // drag (resign-key, mid-drag refresh) would otherwise strand its
+        // translucent draft rectangle on the new week. Clear both drafts.
+        createDraft = nil
+        rescheduleDraft = nil
+        dropTargetedDay = nil
+        timeDropTarget = nil
+      }
+      .onDisappear {
+        createDraft = nil
+        rescheduleDraft = nil
+        dropTargetedDay = nil
+        timeDropTarget = nil
       }
       .overlay(alignment: .top) {
         // An empty range stays a bare grid: the empty hours already say nothing

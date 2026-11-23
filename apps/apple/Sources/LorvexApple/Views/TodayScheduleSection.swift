@@ -1,9 +1,10 @@
 import LorvexCore
 import SwiftUI
 
-/// The top of Today's main column: the day on the clock, under a "Schedule"
-/// label. Calendar events and timed tasks share one time-ordered list with a
-/// line where the clock sits, so what comes next is answered by reading down.
+/// The day on the clock in Today's main column, under a "Schedule" label,
+/// in a window too narrow for the day rail (``TodayPageLayout``). Calendar
+/// events and timed tasks share one time-ordered list with a line where the
+/// clock sits, so what comes next is answered by reading down.
 ///
 /// A timed task is the same row it is everywhere (``TodayTaskRow``), with its
 /// time leading the metadata, so it keeps its circle, hover Start and Defer,
@@ -33,10 +34,7 @@ struct TodayScheduleSection: View {
     VStack(alignment: .leading, spacing: 0) {
       if let proposal = store.proposedDayTimes {
         TodaySuggestedTimesSection(
-          proposal: proposal, dayRows: rows,
-          accept: { Task { await store.acceptSuggestedDayTimes(undoManager: undoManager) } },
-          dismiss: { store.dismissSuggestedDayTimes() },
-          moveUnscheduledToTomorrow: { Task { await store.moveUnscheduledSuggestionToTomorrow() } }
+          store: store, proposal: proposal, dayRows: rows, undoManager: undoManager
         )
         .padding(.bottom, LorvexDesign.Spacing.m)
         .transition(.opacity)

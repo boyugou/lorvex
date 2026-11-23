@@ -1,11 +1,20 @@
 import Foundation
 import LorvexCore
 
+/// Where Today draws the day's schedule (``TodayPageLayout``).
+enum TodaySchedulePlacement: Sendable {
+  /// In the main column, above the tasks without a time.
+  case inColumn
+  /// On a time grid in a rail beside the column, which then lists every task.
+  case besideColumn
+}
+
 /// Today's main column for one moment, built from one read of the clock and
-/// the day: the page, the schedule, and what the lists around the schedule
-/// show, so every task appears once. A Today render builds it once and reads
+/// the day: the page, the schedule, and what the column lists as tasks, so
+/// the column shows every task once. A Today render builds it once and reads
 /// every part from it, rather than rebuilding the day for each part it draws.
 struct TodayColumnContent {
+  let schedulePlacement: TodaySchedulePlacement
   /// Minutes since midnight in the product day, or nil on a day that is not
   /// today (``AppStore/nowMinutesInProductDay``).
   let nowMinutes: Int?
@@ -13,23 +22,30 @@ struct TodayColumnContent {
   let featured: LorvexCalmToday.Item?
   /// The day's list with its lead, facts line, and overbooked decision.
   let page: LorvexCalmToday
-  /// Today on the clock, for the schedule at the top of the column: the day's
-  /// calendar events and its timed tasks in one reading order, with a "now"
-  /// row among them. Finished tasks keep their times, so the day reads as it
-  /// ran. Suggested times are left out: a suggestion is a draft the person is
-  /// still deciding on, so it keeps its own reviewable rows.
+  /// Today on the clock: the day's calendar events and its timed tasks in one
+  /// reading order, with a "now" row among them. With the schedule in the
+  /// column these are its rows; beside the column the rail draws the day on
+  /// its own grid, and these rows only tell a suggestion which calendar an
+  /// event belongs to. Finished tasks keep their times, so the day reads as
+  /// it ran. Suggested times are left out: a suggestion is a draft the person
+  /// is still deciding on, so it keeps its own reviewable rows.
   let schedule: [LorvexTodayTimelineItem]
-  /// Today's list entries the schedule does not show: the tasks without a
-  /// time today, started ones first as ``page`` orders them.
-  let untimedItems: [LorvexCalmToday.Item]
-  /// What the Done section lists: today's finished tasks without a time,
-  /// since a finished timed task keeps its place in the schedule.
+  /// The task list under the featured task, started tasks first as ``page``
+  /// orders them. With the schedule in the column it holds the tasks without
+  /// a time today, since the schedule shows the timed ones; beside the
+  /// column it holds every task.
+  let listItems: [LorvexCalmToday.Item]
+  /// What the Done section lists. With the schedule in the column it leaves
+  /// out a finished timed task, which keeps its place in the schedule; beside
+  /// the column it holds everything finished today.
   let doneListTasks: [LorvexTask]
 
   init(
     nowMinutes: Int?, page: LorvexCalmToday, schedule: [LorvexTodayTimelineItem],
-    doneToday: [LorvexTask], workCue: TodayWorkCue?
+    doneToday: [LorvexTask], workCue: TodayWorkCue?,
+    schedulePlacement: TodaySchedulePlacement = .inColumn
   ) {
+    self.schedulePlacement = schedulePlacement
     self.nowMinutes = nowMinutes
     self.page = page
     self.workCue = workCue
@@ -39,23 +55,51 @@ struct TodayColumnContent {
       if case .task(let task) = row.kind { return task.id != featuredID }
       return true
     }
-    let scheduled = Set(
-      schedule.compactMap { row -> LorvexTask.ID? in
-        if case .task(let task) = row.kind { return task.id }
-        return nil
-      })
-    untimedItems = page.items.filter { $0.id != featuredID && !scheduled.contains($0.id) }
+    // The tasks the in-column schedule already shows. Beside the column no
+    // task is drawn there, so the list and Done hold them all.
+    let scheduled: Set<LorvexTask.ID> =
+      schedulePlacement == .besideColumn
+      ? []
+      : Set(
+        schedule.compactMap { row -> LorvexTask.ID? in
+          if case .task(let task) = row.kind { return task.id }
+          return nil
+        })
+    listItems = page.items.filter { $0.id != featuredID && !scheduled.contains($0.id) }
     doneListTasks = doneToday.filter { !scheduled.contains($0.id) }
+  }
+
+  /// The unfinished timed tasks the in-column schedule draws as rows, in its
+  /// order; none while the schedule stands beside the column, where each is a
+  /// row of ``listItems`` instead.
+  var scheduleRowTasks: [LorvexTask] {
+    guard schedulePlacement == .inColumn else { return [] }
+    return schedule.compactMap { row in
+      guard case .task(let task) = row.kind, task.status.isActionable else { return nil }
+      return task
+    }
   }
 }
 
 extension AppStore {
+  /// Where the window showing Today draws the day's schedule. The page sets
+  /// it from the width it has (``TodayPageLayout``), so the arrow keys, range
+  /// selection, and Select All follow the rows the column draws.
+  var todaySchedulePlacement: TodaySchedulePlacement {
+    get { todayStorage.schedulePlacement }
+    set { if todayStorage.schedulePlacement != newValue { todayStorage.schedulePlacement = newValue } }
+  }
+
   /// ``TodayColumnContent`` for the current clock.
   var todayColumnContent: TodayColumnContent {
     todayColumnContent(at: Date())
   }
 
-  func todayColumnContent(at tick: Date) -> TodayColumnContent {
+  /// - Parameter placement: where the caller draws the schedule; nil reads
+  ///   ``todaySchedulePlacement``.
+  func todayColumnContent(
+    at tick: Date, placement: TodaySchedulePlacement? = nil
+  ) -> TodayColumnContent {
     let day = logicalTodayDateString
     let now = LorvexPreviewClock.now(in: LorvexDateFormatters.gregorianCalendar(timeZone: logicalTimeZone), tick: tick)
     let nowMinutes = LorvexProductDayClock.nowMinutes(on: day, in: logicalTimeZone, at: now)
@@ -75,7 +119,15 @@ extension AppStore {
         tasks: tasks,
         times: tasks.times(on: logicalTodayDateString),
         nowMinutes: nowMinutes, now: now),
-      doneToday: doneTodayTasks, workCue: cue)
+      doneToday: doneTodayTasks, workCue: cue,
+      schedulePlacement: placement ?? todaySchedulePlacement)
+  }
+
+  /// Today's tasks that have a time today, finished ones included: what a
+  /// time grid of today draws as task blocks.
+  var todayTimedTasks: [LorvexTask] {
+    let day = logicalTodayDateString
+    return (today.tasks.filter(\.status.isActionable) + doneTodayTasks).filter { $0.time(on: day) != nil }
   }
 
   /// Minutes since midnight in the product day's own timezone, or `nil` when the

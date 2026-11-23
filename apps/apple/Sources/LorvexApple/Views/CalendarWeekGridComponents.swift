@@ -60,10 +60,11 @@ enum CalendarWeekGridMetrics {
   static let eventCornerRadius: CGFloat = 4
 }
 
-/// Content-only re-scroll key for the week grid: the visible week plus every
-/// week and anchor hour only — block geometry is intentionally excluded so
-/// that moving or resizing an event doesn't yank the scroll position back to
-/// the anchor. Re-scroll fires only on week navigation.
+/// The key that puts the week grid's time axis on its anchor hour again
+/// wherever the person scrolled it: the first day the grid shows and the hour
+/// its days' content opens on. Nothing else about the blocks is in it, so
+/// moving or resizing one does not pull the axis back unless that changes the
+/// hour the grid opens on.
 func calendarWeekScrollAnchorSignature(
   columns: [CalendarGridDay],
   anchorHour: Int,

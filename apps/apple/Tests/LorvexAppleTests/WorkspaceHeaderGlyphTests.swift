@@ -116,9 +116,8 @@
 
     /// Today's date line is its title and has no glyph beside it, so Today's
     /// column insets by the title inset to start the date on the same edge.
-    @Test func todayInsetsItsColumnByTheTitleInset() throws {
-      let today = try Self.source("TodayView")
-      #expect(today.contains(".padding(.horizontal, WorkspaceHeaderTitleMetrics.titleInset)"))
+    @Test func todayInsetsItsColumnByTheTitleInset() {
+      #expect(TodayPageMetrics.columnLeadingInset == WorkspaceHeaderTitleMetrics.titleInset)
     }
   }
 #endif

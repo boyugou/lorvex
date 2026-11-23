@@ -1,9 +1,11 @@
 import LorvexCore
 import SwiftUI
 
-/// Suggested times the user is deciding on, in a panel above the day's
-/// timeline and drawn in its columns (``LorvexProposedScheduleRows``), so the
-/// two read against each other. The two answers stand beside the panel's
+/// Suggested times the user is deciding on, in a panel in Today's column:
+/// above the task list while the schedule stands in the day rail, and above
+/// the in-column schedule otherwise, where it is drawn in that schedule's
+/// columns (``LorvexProposedScheduleRows``) so the two read against each
+/// other. The two answers stand beside the panel's
 /// title, where a long proposal cannot push them out of view: use the times,
 /// which saves them and can be undone with ⌘Z, or dismiss them. Tasks that
 /// did not fit can be moved to tomorrow from a button under the panel.
@@ -28,8 +30,8 @@ struct TodaySuggestedTimesSection: View {
         )
         answers
       }
-      // Inset like the Current Schedule label below; the panel and its
-      // buttons share the briefing card's edges.
+      // Inset like the column's section labels; the panel and its buttons
+      // share the briefing card's edges.
       .padding(.horizontal, LorvexDesign.Spacing.s)
       .padding(.top, LorvexDesign.Spacing.s)
       .padding(.bottom, LorvexDesign.Spacing.xs)
@@ -85,5 +87,21 @@ struct TodaySuggestedTimesSection: View {
       }
     }
     .controlSize(.small)
+  }
+}
+
+extension TodaySuggestedTimesSection {
+  /// The suggestion with its answers wired to `store`: Use These Times saves
+  /// the times and registers the undo, Dismiss discards the suggestion, and
+  /// Move to Tomorrow defers what did not fit.
+  init(
+    store: AppStore, proposal: DayTimesProposal, dayRows: [LorvexTodayTimelineItem],
+    undoManager: UndoManager?
+  ) {
+    self.init(
+      proposal: proposal, dayRows: dayRows,
+      accept: { Task { await store.acceptSuggestedDayTimes(undoManager: undoManager) } },
+      dismiss: { store.dismissSuggestedDayTimes() },
+      moveUnscheduledToTomorrow: { Task { await store.moveUnscheduledSuggestionToTomorrow() } })
   }
 }

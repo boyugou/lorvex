@@ -127,7 +127,7 @@ func createCalendarDraftsTakeTheirEndFromCalendarEventTiming() throws {
     "Sources/LorvexApple/Stores/AppStoreCalendarActions.swift":
       "draftCalendarTiming = .nextHourBlock(",
     "Sources/LorvexApple/Views/CalendarWorkspaceCreateDraft.swift":
-      "store.draftCalendarTiming = .timed(",
+      "draftCalendarTiming = .timed(",
     "Sources/LorvexMobile/MobileStoreCalendarActions.swift":
       "MobileCalendarDraft(timing: .nextHourBlock(",
     "Sources/LorvexMobile/MobileCalendarDayActions.swift":

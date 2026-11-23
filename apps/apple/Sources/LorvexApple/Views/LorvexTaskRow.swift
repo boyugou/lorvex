@@ -296,6 +296,8 @@ struct LorvexTaskRow: View {
             Text(TaskDisplayText.hiddenUntil(hiddenLabel)).monospacedDigit()
           }
           .foregroundStyle(.secondary)
+          // Like the due date, it outranks the estimate and tags after it.
+          .layoutPriority(1)
         }
         if let due = dueLabel {
           if owningList != nil || hiddenLabel != nil { Text("·").foregroundStyle(.tertiary) }
@@ -308,6 +310,9 @@ struct LorvexTaskRow: View {
             isDueOverdue
               ? AnyShapeStyle(LorvexDesign.Palette.overdue)
               : isDueSoon ? AnyShapeStyle(LorvexDesign.Palette.dueSoon) : AnyShapeStyle(.secondary))
+          // The date outranks the estimate and tags after it, which drop
+          // whole when the row is short of room.
+          .layoutPriority(1)
         }
         if repeats {
           if owningList != nil || hiddenLabel != nil || dueLabel != nil {

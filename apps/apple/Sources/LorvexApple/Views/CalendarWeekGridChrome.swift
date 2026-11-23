@@ -411,7 +411,6 @@ extension CalendarWeekGridView {
           .frame(
             width: gutter - CalendarWeekGridMetrics.gutterLabelInset, height: hourHeight,
             alignment: .topTrailing)
-          .modifier(WeekGridAnchorModifier(hour: hour))
       }
     }
     .frame(width: gutter)

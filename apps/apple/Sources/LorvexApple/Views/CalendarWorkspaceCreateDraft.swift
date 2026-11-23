@@ -1,27 +1,40 @@
 import Foundation
 
-extension CalendarWorkspaceView {
-  /// Pre-fills the create-event draft for a click-or-drag on the week grid.
-  /// `minutes` is the start minute-of-day; `durationMinutes` is the requested
-  /// duration (callers pass 60 for tap, the dragged span for drag-to-create).
-  func prepareCreateDraft(date: Date, minutes: Int, durationMinutes: Int = 60) {
+extension AppStore {
+  /// Pre-fills the create-event draft for a click or a drag on a time grid:
+  /// the Calendar workspace's and Today's day rail. `minutes` is the start
+  /// minute of the day; `durationMinutes` is the requested length (60 for a
+  /// click, the dragged span for a drag). `dayCalendar` is the calendar the
+  /// grid lays its days out in.
+  func prepareCalendarCreateDraft(
+    date: Date, minutes: Int, durationMinutes: Int = 60, dayCalendar: Calendar
+  ) {
     // Stash the live draft first: a grid tap/drag to create shares the same draft
     // fields as an open inline edit, which is restored when the create sheet
     // dismisses (see `AppStore.stashCalendarDraftForCreate()`).
-    store.stashCalendarDraftForCreate()
-    store.draftCalendarTitle = ""
+    stashCalendarDraftForCreate()
+    draftCalendarTitle = ""
     // A drag to the bottom of the grid ends the event at midnight, the start
     // of the next day.
-    store.draftCalendarTiming = .timed(
+    draftCalendarTiming = .timed(
       on: date, atMinute: minutes, minutes: max(15, durationMinutes),
-      timeZone: store.logicalTimeZone, dayCalendar: calendar)
-    store.draftCalendarLocation = ""
-    store.draftCalendarNotes = ""
-    store.draftCalendarColor = nil
-    store.draftCalendarRecurrence = nil
-    store.calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
-    store.calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
-    store.calendarDraftStorage.draftCalendarEditBaseline = nil
-    store.draftCalendarTargetCalendarID = nil
+      timeZone: logicalTimeZone, dayCalendar: dayCalendar)
+    draftCalendarLocation = ""
+    draftCalendarNotes = ""
+    draftCalendarColor = nil
+    draftCalendarRecurrence = nil
+    calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
+    calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
+    calendarDraftStorage.draftCalendarEditBaseline = nil
+    draftCalendarTargetCalendarID = nil
+  }
+}
+
+extension CalendarWorkspaceView {
+  /// Pre-fills the create-event draft for a click-or-drag on the week grid
+  /// (``AppStore/prepareCalendarCreateDraft(date:minutes:durationMinutes:dayCalendar:)``).
+  func prepareCreateDraft(date: Date, minutes: Int, durationMinutes: Int = 60) {
+    store.prepareCalendarCreateDraft(
+      date: date, minutes: minutes, durationMinutes: durationMinutes, dayCalendar: calendar)
   }
 }

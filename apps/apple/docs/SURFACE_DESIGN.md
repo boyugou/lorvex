@@ -80,24 +80,45 @@ day, works through Today's list, and drives keyboard-first workflows.
   grid without a reload. ✅
 - The task inspector's "Do on" value reads the task's saved time when it has
   one ("Today at 9:45 AM"), so a timed task never shows a bare "+ When". ✅
-- Today is one column holding the whole day, every task on it once; the
-  window's trailing panel opens only for a selected task's detail. The column
-  opens with the date and a line of facts ("5 tasks left · about 3 hr 30 min
-  of work · 2 events"; the estimate drops out while the overbooked decision
-  below states it), then the day's briefing when the assistant wrote one
-  (`set_daily_briefing`), in the system face under the sparkles glyph — the
-  same line the widgets show under their title. When the day holds more
-  estimated work than the free working time left, one decision follows,
-  offering to move the least urgent work to tomorrow. Then the Schedule:
-  calendar events and timed tasks in time order, a red line where the clock
-  sits, and the finished rows that open the day folded behind "N earlier".
-  A timed task is a full task row with its time leading the metadata; an
-  event row puts a bar in its calendar's color where a task has its circle.
-  Suggested times, while one waits, stand above it. Then Tasks: the ones
-  without a time, started first, then the canonical order; the label shows
-  only under a schedule. Then the quick-add field, then Done, which folds on
-  request. A row reveals its Start (or Pause) button and its Defer button on
-  hover. Arrow keys follow the rows in that on-screen order. ✅
+- Today is a column of the day's tasks with the day's schedule on a time
+  grid in a rail beside it; every task is a row of the column once, and the
+  window's trailing panel opens only for a selected task's or event's detail.
+  The column opens with the date and a line of facts ("5 tasks left · about
+  3 hr 30 min of work · 2 events"; the estimate drops out while the
+  overbooked decision below states it), then the day's briefing when the
+  assistant wrote one (`set_daily_briefing`), in the system face under the
+  sparkles glyph — the same line the widgets show under their title. When the
+  day holds more estimated work than the free working time left, one decision
+  follows, offering to move the least urgent work to tomorrow. Suggested
+  times, while one waits, stand next. Then the tasks in one list with no
+  headers: started first, then the canonical order, a timed task with its
+  time leading the metadata. Then the quick-add field, then Done, which folds
+  on request. A row reveals its Start (or Pause) button and its Defer button
+  on hover. Arrow keys follow the column's rows in that on-screen order. ✅
+- The rail (`TodayDayRail`) is the Calendar's day grid for today: calendar
+  events and timed tasks drawn to scale under a "Schedule" label, a red line
+  where the clock sits, and free time as the room between blocks. It opens
+  one hour before the clock, or on the day's earliest block when that is
+  earlier, and follows that hour until the person scrolls it. A block moves
+  and resizes by dragging, a task dragged from the column takes the time it
+  is dropped on, a click or a drag on free time starts a new event, and a
+  click on a block opens it in the inspector. The rail takes what is left
+  once the column has its 720 pt of text and its insets, between 320 and
+  460 pt (`TodayPageLayout`). An all-day strip stands above the grid on a day
+  with an all-day event. While the inspector is open it takes the rail's place
+  unless the window fits all three panes, so the column keeps its rows; the
+  rail returns scrolled to where the person left it when the inspector
+  closes. ✅
+- In a window too narrow for a 480 pt column beside the rail, the schedule
+  stands in the column instead, under a "Schedule" label above the tasks
+  without a time: events and timed tasks as rows in time order, a red line
+  where the clock sits, and the finished rows that open the day folded behind
+  "N earlier". An event row puts a bar in its calendar's color where a task
+  has its circle, and the arrow keys stop on events too. Opening the
+  inspector never moves the schedule between the column and the rail; the
+  page decides again when the inspector closes. Today in a window of its own
+  (⌥⌘1) keeps the schedule in the column at any width: that window has no
+  inspector or event sheet for a block to open in. ✅
 - ⇧⌘S starts or pauses the selected task; ⇧⌘D defers it to tomorrow. Both also
   reach from the row's hover buttons, its context menu, and the task detail's
   action row. ✅
@@ -106,8 +127,9 @@ day, works through Today's list, and drives keyboard-first workflows.
   order, takes the earliest free time that holds it, so a short task can fill
   a gap a longer one did not fit; a timed task already under way keeps its
   place, a task without an estimate takes 30 minutes, and a task whose time
-  passed unfinished is placed again. The suggestion waits
-  above the schedule until accepted or dismissed. Once any task has a time,
+  passed unfinished is placed again. The suggestion waits in the column,
+  above the task list beside the rail or above the in-column schedule, until
+  accepted or dismissed. Once any task has a time,
   the control becomes a split button whose menu holds Clear Times, which
   removes the day's times without moving any task off the day (⌘Z undoes it). ✅
 - Workspace loading states for async panes. ✅

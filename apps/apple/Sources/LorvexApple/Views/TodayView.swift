@@ -1,38 +1,40 @@
 import LorvexCore
 import SwiftUI
 
+/// The Today workspace: the day's column and, in a main window wide enough,
+/// the day on a time grid in a rail beside it (``TodayPageLayout``).
+///
+/// This view resolves the layout and owns the window's title, toolbar and
+/// loading; ``TodayPage`` draws the page for the layout it is given.
 struct TodayView: View {
   @Bindable var store: AppStore
   @Environment(\.undoManager) private var undoManager
+  /// The main window's layout, which knows the width right of the sidebar
+  /// with the inspector's share included; nil in a Today window of its own.
+  @Environment(MainWindowLayout.self) private var windowLayout: MainWindowLayout?
+  @Environment(\.controlActiveState) private var controlActiveState
+  /// The placement the page last had, which it keeps while the inspector is
+  /// open (``TodayPageLayout``).
+  @State private var placementBeforeInspector: TodaySchedulePlacement?
 
   var body: some View {
-    VStack(spacing: 0) {
-      if store.todaySelectionCount > 1 {
-        todaySelectionBar
-        Divider()
-      }
-      TimelineView(.everyMinute) { tick in
-        let content = store.todayColumnContent(at: tick.date)
-        ScrollViewReader { scroll in
-          ScrollView {
-            mainColumn(content)
-          }
-          .workspaceTaskArrowKeyNavigation(
-            store.arrowKeyTaskNavigation(on: .today), proxy: scroll)
+    GeometryReader { geometry in
+      let resolved = pageLayout(viewWidth: geometry.size.width)
+      let layout = resolved ?? .columnOnly
+      TodayPage(store: store, layout: layout)
+        // The store orders the arrow keys and range selection by the rows the
+        // column draws, which depend on where the schedule stands.
+        .onChange(of: resolved?.schedulePlacement, initial: true) { _, placement in
+          guard let placement else { return }
+          placementBeforeInspector = placement
+          store.todaySchedulePlacement = placement
         }
-        .background(alignment: .top) { sky(content.nowMinutes) }
-      }
-      .cancelSelectedTaskOnDelete(store, on: .today)
-      .copySelectedTasksAsText(store, on: .today)
-      .selectAllTasksOnCommand(store, on: .today)
-      .dropDestination(for: LorvexTaskRef.self) { refs, _ in
-        let ids = refs.droppedTaskIDs
-        guard !ids.isEmpty else { return false }
-        // One batch write for the whole drop, so the dropped tasks land on
-        // today together.
-        Task { await store.planTasksForToday(ids: ids) }
-        return true
-      }
+        // Today can be open in the main window and in a window of its own,
+        // which place the schedule differently and share the store. The keys
+        // go to the key window, so its rows are the ones they follow.
+        .onChange(of: controlActiveState) { _, state in
+          if state == .key { store.todaySchedulePlacement = layout.schedulePlacement }
+        }
     }
     .navigationTitle(String(localized: store.selection.macOSLocalizedTitle))
     .toolbar {
@@ -63,38 +65,138 @@ struct TodayView: View {
     }
   }
 
+  /// The page's layout, or nil before the window has a width to divide.
+  ///
+  /// A Today window of its own keeps the schedule in the column at any width:
+  /// it has no inspector and no event sheet for a rail's blocks to open in.
+  private func pageLayout(viewWidth: CGFloat) -> TodayPageLayout? {
+    guard let windowLayout else { return .columnOnly }
+    let inspectorOpen = store.isMainInspectorOpen
+    let areaWidth: CGFloat
+    if let measured = windowLayout.detailAreaWidth {
+      areaWidth = measured
+    } else if viewWidth > 0 {
+      // Before the window reports its width, the page's own width stands in
+      // for it, with the share an open inspector has taken added back.
+      areaWidth = viewWidth + (inspectorOpen ? MainWindowLayoutMetrics.inspectorIdealWidth : 0)
+    } else {
+      return nil
+    }
+    return TodayPageLayout.resolve(
+      areaWidth: areaWidth, inspectorOpen: inspectorOpen,
+      placementBeforeInspector: placementBeforeInspector)
+  }
+
+  /// Today holds unfinished tasks, so there is something to suggest times for.
+  private var hasOpenTasks: Bool {
+    store.today.tasks.contains { $0.status.isActionable }
+  }
+
+  /// Some unfinished task on today has a time, so there are times to clear.
+  private var hasTimedTasks: Bool {
+    store.today.tasks.contains {
+      $0.status.isActionable && $0.time(on: store.logicalTodayDateString) != nil
+    }
+  }
+}
+
+/// Today's page drawn for one layout: the selection bar, the column, and the
+/// day rail.
+///
+/// It is a view of its own so that resizing the window, which changes the
+/// width ``TodayView`` reads on every frame, redraws the page only when the
+/// layout that width resolves to changes.
+private struct TodayPage: View {
+  @Bindable var store: AppStore
+  let layout: TodayPageLayout
+
+  var body: some View {
+    VStack(spacing: 0) {
+      if store.todaySelectionCount > 1 {
+        todaySelectionBar
+        Divider()
+      }
+      TimelineView(.everyMinute) { tick in
+        let content = store.todayColumnContent(at: tick.date, placement: layout.schedulePlacement)
+        HStack(spacing: 0) {
+          ScrollViewReader { scroll in
+            ScrollView {
+              mainColumn(content)
+            }
+            .workspaceTaskArrowKeyNavigation(
+              store.arrowKeyTaskNavigation(on: .today), proxy: scroll)
+          }
+          // On the column alone: a task dropped on the rail takes the time it
+          // lands on, which the rail's grid handles itself.
+          .dropDestination(for: LorvexTaskRef.self) { refs, _ in
+            let ids = refs.droppedTaskIDs
+            guard !ids.isEmpty else { return false }
+            // One batch write for the whole drop, so the dropped tasks land on
+            // today together.
+            Task { await store.planTasksForToday(ids: ids) }
+            return true
+          }
+          if let railWidth = layout.railWidth {
+            rail(width: railWidth)
+          }
+        }
+        .background(alignment: .top) { sky(content.nowMinutes) }
+      }
+      .cancelSelectedTaskOnDelete(store, on: .today)
+      .copySelectedTasksAsText(store, on: .today)
+      .selectAllTasksOnCommand(store, on: .today)
+    }
+    .reduceMotionAnimation(.snappy(duration: 0.18), value: layout.showsRail)
+  }
+
   /// The day's column. Its date line is Today's title, so the column insets by
   /// the amount every other workspace's title does
   /// (``WorkspaceHeaderTitleMetrics/titleInset``) and the title stays on one
-  /// edge when the user switches workspaces.
+  /// edge when the user switches workspaces. Beside the rail its trailing
+  /// inset is the smaller one a divider needs.
   private func mainColumn(_ content: TodayColumnContent) -> some View {
     TodayColumn(store: store, content: content)
-      .padding(.horizontal, WorkspaceHeaderTitleMetrics.titleInset)
+      .padding(.leading, TodayPageMetrics.columnLeadingInset)
+      .padding(
+        .trailing,
+        content.schedulePlacement == .besideColumn
+          ? TodayPageMetrics.columnTrailingInsetBesideRail : TodayPageMetrics.columnLeadingInset
+      )
       .padding(.top, LorvexDesign.Spacing.xl)
       .padding(.bottom, LorvexDesign.Spacing.xl)
       .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  /// The wash behind the main column. It runs up under the toolbar to the
-  /// window's top edge, so the column reads as part of the window rather than
-  /// a panel set below a blank band; the toolbar's controls float over it.
+  /// The day rail and the divider before it.
+  ///
+  /// While the inspector stands in the rail's place, the rail stays in the
+  /// page at its own width and is given none of the page's: it is not drawn
+  /// and takes no clicks, drops or keyboard focus, and its time axis is where
+  /// the person left it when the inspector closes.
+  @ViewBuilder
+  private func rail(width: CGFloat) -> some View {
+    let isShown = layout.showsRail
+    if isShown { Divider() }
+    TodayDayRail(store: store)
+      .frame(width: width)
+      .frame(width: isShown ? width : 0, alignment: .leading)
+      .clipped()
+      .opacity(isShown ? 1 : 0)
+      .allowsHitTesting(isShown)
+      .disabled(!isShown)
+      .accessibilityHidden(!isShown)
+      .transition(.opacity)
+  }
+
+  /// The wash behind the page, under the column and the rail alike. It runs
+  /// up under the toolbar to the window's top edge, so the column reads as
+  /// part of the window rather than a panel set below a blank band; the
+  /// toolbar's controls float over it.
   private func sky(_ nowMinutes: Int?) -> some View {
     LorvexSkyWash(nowMinutes: nowMinutes)
       .frame(height: 320)
       .ignoresSafeArea(edges: .top)
   }
-
-  /// Today holds unfinished tasks, so there is something to suggest times for.
-  private var hasOpenTasks: Bool {
-    today.tasks.contains { $0.status.isActionable }
-  }
-
-  /// Some unfinished task on today has a time, so there are times to clear.
-  private var hasTimedTasks: Bool {
-    today.tasks.contains { $0.status.isActionable && $0.time(on: store.logicalTodayDateString) != nil }
-  }
-
-  private var today: TodaySnapshot { store.today }
 
   /// Batch-action bar shown when more than one Today task is selected: the
   /// complete, defer, move, cancel, and reopen actions over the selection.
@@ -118,7 +220,6 @@ struct TodayView: View {
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .accessibilityIdentifier("today.selection.bar")
   }
-
 }
 
 /// A Today task row: the shared selectable row wired to Today's selection

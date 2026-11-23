@@ -73,6 +73,51 @@ func todaySelectableRowsFollowTheColumnOrder() async throws {
 
 @MainActor
 @Test
+func todayListsEveryTaskInTheColumnWhileTheScheduleStandsBesideIt() async throws {
+  let fixture = try await TodayFixture.make()
+  defer { fixture.tearDown() }
+  let (store, core) = (fixture.store, fixture.core)
+  let today = store.logicalTodayDateString
+  let planned = try #require(LorvexDateFormatters.ymdUTC.date(from: today))
+  let slot = (store.nowMinutesInProductDay ?? 0) < 720 ? 18 * 60 : 6 * 60
+  let untimed = try await core.createTask(
+    TaskCreateDraft(title: "Planned, no time", priority: .p1, plannedDate: planned))
+  let timed = try await core.createTask(
+    TaskCreateDraft(
+      title: "Timed", priority: .p3, plannedDate: planned, plannedTime: slot..<slot + 30))
+  let finishedTimed = try await core.createTask(
+    TaskCreateDraft(
+      title: "Finished, timed", plannedDate: planned, plannedTime: slot + 60..<slot + 90))
+  _ = try await core.completeTask(id: finishedTimed.id)
+  await store.refresh()
+  await store.loadDoneTodayCount()
+
+  // In the column, the schedule draws the timed tasks, so the list and Done
+  // leave them out.
+  let inColumn = store.todayColumnContent(at: Date(), placement: .inColumn)
+  #expect(inColumn.scheduleRowTasks.map(\.id) == [timed.id])
+  #expect(inColumn.listItems.map(\.id) == [untimed.id])
+  #expect(inColumn.doneListTasks.isEmpty)
+
+  // Beside the column, the rail draws the day and the column lists every task.
+  store.todaySchedulePlacement = .besideColumn
+  let beside = store.todayColumnContent
+  #expect(beside.schedulePlacement == .besideColumn)
+  #expect(beside.scheduleRowTasks.isEmpty)
+  #expect(Set(beside.listItems.map(\.id)) == [untimed.id, timed.id])
+  #expect(beside.doneListTasks.map(\.id) == [finishedTimed.id])
+  #expect(Set(store.todayTimedTasks.map(\.id)) == [timed.id, finishedTimed.id])
+
+  // The keyboard and range selection follow the column's rows.
+  let rows = beside.listItems.map(\.id) + [finishedTimed.id]
+  #expect(store.orderedTaskIDs(on: .today) == rows)
+  let stops = store.todayArrowKeyStops()
+  #expect(stops.ids == rows)
+  #expect(stops.eventIDs.isEmpty)
+}
+
+@MainActor
+@Test
 func todayKeepsTheInspectorOnADoneRowWhileTheFoldIsOpen() async throws {
   let fixture = try await TodayFixture.make()
   defer { fixture.tearDown() }
@@ -92,6 +137,41 @@ func todayKeepsTheInspectorOnADoneRowWhileTheFoldIsOpen() async throws {
 }
 
 @MainActor
+@Test
+func todayKeepsTheInspectorOnAFinishedBlockOfTheDayRailWhileDoneIsFolded() async throws {
+  let fixture = try await TodayFixture.make()
+  defer { fixture.tearDown() }
+  let (store, core) = (fixture.store, fixture.core)
+  let planned = try #require(LorvexDateFormatters.ymdUTC.date(from: store.logicalTodayDateString))
+  let finishedTimed = try await core.createTask(
+    TaskCreateDraft(title: "Finished, timed", plannedDate: planned, plannedTime: 9 * 60..<10 * 60))
+  let finishedUntimed = try await core.createTask(title: "Finished, no time", notes: "")
+  _ = try await core.completeTask(id: finishedTimed.id)
+  _ = try await core.completeTask(id: finishedUntimed.id)
+  await store.refresh()
+  await store.loadDoneTodayCount()
+  store.isTodayDoneCollapsed = true
+
+  // Beside the column the rail draws the finished timed task as a block, so
+  // a task opened from it is on the page though the fold hides its row.
+  store.todaySchedulePlacement = .besideColumn
+  store.selectOnlyTodayTask(finishedTimed.id)
+  store.reconcileSelectedTaskAfterRefresh()
+  #expect(store.selectedTaskID == finishedTimed.id)
+
+  // A finished task without a time has no block.
+  store.selectOnlyTodayTask(finishedUntimed.id)
+  store.reconcileSelectedTaskAfterRefresh()
+  #expect(store.selectedTaskID == nil)
+
+  // With the schedule in the column there is no rail to have opened it from.
+  store.todaySchedulePlacement = .inColumn
+  store.selectOnlyTodayTask(finishedTimed.id)
+  store.reconcileSelectedTaskAfterRefresh()
+  #expect(store.selectedTaskID == nil)
+}
+
+@MainActor
 @Test func todayContinueOpensTheOneFeaturedRowAndKeepsItsWorkStarted() async throws {
   let fixture = try await TodayFixture.make()
   defer { fixture.tearDown() }
@@ -105,7 +185,7 @@ func todayKeepsTheInspectorOnADoneRowWhileTheFoldIsOpen() async throws {
   let cue = try #require(content.workCue)
   #expect(cue.action == .resume)
   #expect(content.featured?.id == writing.id)
-  #expect(!content.untimedItems.contains { $0.id == writing.id })
+  #expect(!content.listItems.contains { $0.id == writing.id })
   #expect(store.todayArrowKeyStops().ids == [writing.id])
   #expect(store.orderedTaskIDs(on: .today) == [writing.id])
   await store.performTodayWorkAction(cue)

@@ -23,6 +23,10 @@ import SwiftUI
 /// screen to the layout, when the window first attaches, moves to another
 /// screen, or the screens change, since that width decides whether the
 /// inspector has to take the sidebar's place.
+///
+/// The coordinator attaches when its view enters a window. SwiftUI may build
+/// the view before the window holds it, so looking the window up once after
+/// creation can find none and leave the floor unenforced for good.
 struct WindowMinWidthEnforcer: NSViewRepresentable {
   let store: AppStore
   let layout: MainWindowLayout
@@ -30,9 +34,9 @@ struct WindowMinWidthEnforcer: NSViewRepresentable {
   func makeCoordinator() -> Coordinator { Coordinator(store: store, layout: layout) }
 
   func makeNSView(context: Context) -> NSView {
-    let view = NSView()
+    let view = WindowTrackingView()
     let coordinator = context.coordinator
-    DispatchQueue.main.async { [weak view] in coordinator.attach(to: view?.window) }
+    view.windowDidChange = { coordinator.attach(to: $0) }
     return view
   }
 
@@ -162,6 +166,21 @@ struct WindowMinWidthEnforcer: NSViewRepresentable {
       for observer in windowObservers {
         NotificationCenter.default.removeObserver(observer)
       }
+    }
+  }
+}
+
+/// An empty view that reports the window it enters, one turn of the main
+/// queue later so the report never lands inside a SwiftUI view update.
+private final class WindowTrackingView: NSView {
+  var windowDidChange: (@MainActor (NSWindow?) -> Void)?
+
+  override func viewDidMoveToWindow() {
+    super.viewDidMoveToWindow()
+    guard window != nil else { return }
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      self.windowDidChange?(self.window)
     }
   }
 }

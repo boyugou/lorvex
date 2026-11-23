@@ -128,6 +128,12 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
       tomorrow, opens the event's time, location and notes in a popover over
       the journal. **Show in Lorvex Calendar** there opens the event on its
       own day.
+  26. Mac Today shows the day on a time grid beside the task list: events and
+      timed tasks to scale, free time as the room between them, and a task
+      dragged from the list takes the time it is dropped on. The list holds
+      every task once. A narrow window keeps the schedule in the list.
+      Evaluate in daily use whether the grid replaces trips to Calendar, and
+      whether suggested times should be drawn on it as draft blocks.
 - Platform adaptation sprint (owner, 2026-11-16; queued after the current UX
   fixes): iPhone Duo and useful capabilities in macOS 27.2 and newer iOS
   releases. Begin with Apple's [Duo preparation guide](https://developer.apple.com/iphone-duo/prepare/),

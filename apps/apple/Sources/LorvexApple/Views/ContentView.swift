@@ -13,6 +13,9 @@ struct ContentView: View {
   var body: some View {
     NavigationSplitView(columnVisibility: $layout.columnVisibility) {
       SidebarView(store: store)
+        // Measured inside the column-width modifier, which the split view
+        // reads only as the column's outermost modifier.
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { layout.sidebarWidth = $0 }
         .navigationSplitViewColumnWidth(
           min: SidebarMetrics.columnMinWidth,
           ideal: SidebarMetrics.columnIdealWidth,
@@ -26,6 +29,8 @@ struct ContentView: View {
       // shows by default.
       WorkspaceView(store: store)
         .environment(settings)
+        // Today reads the width right of the sidebar from the layout.
+        .environment(layout)
         // Mounted here rather than in the inspector, so an edit sheet or a
         // delete confirmation outlives the inspector closing under it.
         .calendarEventActions(todayEventActions, store: store)
@@ -57,6 +62,7 @@ struct ContentView: View {
         }
     }
     .navigationSplitViewStyle(.balanced)
+    .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { layout.windowWidth = $0 }
     .lorvexWorkspaceSearchField(store: store, selection: store.selection)
     // Escape collapses the open task/habit inspector, matching its ✕ and the
     // re-click-to-close gesture. A focused text field consumes Escape first

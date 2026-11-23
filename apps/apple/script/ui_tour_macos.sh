@@ -36,9 +36,12 @@
 # each stop logs one `AXDUMP SKIPPED` line. `-uiPreviewWindowSize 1000x600`
 # sizes the main window in points (default 1440x900, never larger than the
 # roomiest display); 1000x600 is the smallest window a person can resize to.
+# LORVEX_TOUR_LAST_STOP=<stop> ends the tour once that stop is captured, for a
+# quick look at the first few stops while working on one surface: the tour
+# opens on today, today-suggestion and today-event.
 # Requires a debug build first: `swift build -j 4 --product LorvexApple`.
 # Output: <outdir>/<workspace>-<appearance>.png for today, today-suggestion
-# (Today with suggested times waiting in the schedule pane), today-event (a
+# (Today with suggested times waiting above its task list), today-event (a
 # timed event from Today's schedule open in the inspector), tasks,
 # tasks-inspector, tasks-inspector-waiting (a task that waits on an unfinished
 # one, so its Start is unavailable), tasks-inspector-assistant (a task the
@@ -168,7 +171,12 @@ while IFS= read -r -t 120 line <&3; do
       else
         echo "no window for $STOP"
       fi
-      : > "$ACK/$STOP.ack" ;;
+      : > "$ACK/$STOP.ack"
+      if [[ -n "${LORVEX_TOUR_LAST_STOP:-}" && "$STOP" == "$LORVEX_TOUR_LAST_STOP" ]]; then
+        tour_done=true
+        echo "stopped after $STOP"
+        break
+      fi ;;
     LORVEX_UI_PREVIEW_TOUR_DONE) tour_done=true; echo "tour done"; break ;;
   esac
 done

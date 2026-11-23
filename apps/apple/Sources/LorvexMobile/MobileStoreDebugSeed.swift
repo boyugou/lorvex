@@ -171,6 +171,11 @@
       func day(_ offset: Int) -> Date {
         calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: Date())) ?? Date()
       }
+      // The same day as a task's date field takes it: the UTC midnight of the
+      // day, not the device's midnight.
+      func taskDay(_ offset: Int) -> Date {
+        PlannedDayBridge.storageDate(forLocalInstant: day(offset))
+      }
       let ymd = DateFormatter()
       ymd.dateFormat = "yyyy-MM-dd"
       ymd.locale = Locale(identifier: "en_US_POSIX")
@@ -189,18 +194,18 @@
       let drafts: [TaskCreateDraft] = [
         .init(
           title: text("Reply to the investor update email"), priority: .p1,
-          dueDate: day(-1), plannedDate: day(-1), tags: text(["work", "urgent"])),
+          dueDate: taskDay(-1), plannedDate: taskDay(-1), tags: text(["work", "urgent"])),
         .init(
           title: text("Review the Q3 planning doc"), listID: work?.id, priority: .p1,
-          estimatedMinutes: 45, dueDate: day(0), plannedDate: day(0), tags: text(["work"])),
+          estimatedMinutes: 45, dueDate: taskDay(0), plannedDate: taskDay(0), tags: text(["work"])),
         .init(
           title: text("Refactor the sync layer"), listID: work?.id, priority: .p2,
-          estimatedMinutes: 90, plannedDate: day(0), tags: text(["engineering"])),
+          estimatedMinutes: 90, plannedDate: taskDay(0), tags: text(["engineering"])),
         .init(
           title: text("Buy groceries for the week"), listID: personal?.id, priority: .p2,
-          plannedDate: day(0), tags: text(["home"])),
-        .init(title: text("Read the GRPO paper"), priority: .p2, plannedDate: day(3), tags: text(["research"])),
-        .init(title: text("Renew passport"), priority: .p3, dueDate: day(7), plannedDate: day(5)),
+          plannedDate: taskDay(0), tags: text(["home"])),
+        .init(title: text("Read the GRPO paper"), priority: .p2, plannedDate: taskDay(3), tags: text(["research"])),
+        .init(title: text("Renew passport"), priority: .p3, dueDate: taskDay(7), plannedDate: taskDay(5)),
         .init(title: text("Plan the spring offsite"), priority: .p3, tags: text(["someday"])),
       ]
       var created: [LorvexTask] = []
@@ -227,7 +232,7 @@
               LorvexTaskTime(taskID: created[2].id, time: (11 * 60)..<(12 * 60 + 30)),
             ])
           _ = try? await core.deferTask(
-            id: created[3].id, until: day(1), reason: "not_today",
+            id: created[3].id, until: taskDay(1), reason: "not_today",
             note: text("Groceries can wait for the evening"))
         }
       }
@@ -257,7 +262,7 @@
       if let timesheet = try? await core.createTask(
         .init(
           title: text("Submit the weekly timesheet"), listID: work?.id, priority: .p3,
-          dueDate: day(4), tags: text(["work"])))
+          dueDate: taskDay(4), tags: text(["work"])))
       {
         _ = try? await core.setTaskRecurrence(taskID: timesheet.id, rule: TaskRecurrenceRule(freq: .weekly))
       }

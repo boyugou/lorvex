@@ -108,10 +108,10 @@ struct MobileStoreTaskDetailView: View {
     .sheet(item: $editingField) { field in
       MobileTaskFieldEditor(
         field: field,
-        draft: MobileTaskEditDraft(task: task),
+        draft: store.taskEditDraft(for: task),
         lists: store.lists?.lists ?? [],
         currentListID: task.listID,
-        today: PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayString) ?? .now,
+        today: store.logicalTodayPickerDate,
         tagSuggestions: tagSuggestions,
         searchDependencyCandidates: searchDependencyCandidates,
         resolveDependencyTasks: resolveDependencyTasks,
@@ -132,7 +132,7 @@ struct MobileStoreTaskDetailView: View {
         // one word's editor, and `lorvex://firsttask/edit` the full Edit sheet,
         // so they can be captured without a tap.
         if let field = MobileTaskDetailDebugState.takeInitialField() { edit(field) }
-        if MobileSheetDebugState.take(.editTask) { editDraft = MobileTaskEditDraft(task: task) }
+        if MobileSheetDebugState.take(.editTask) { editDraft = store.taskEditDraft(for: task) }
       }
     #endif
     .sheet(isPresented: $isEditingRecurrence) {
@@ -166,7 +166,7 @@ struct MobileStoreTaskDetailView: View {
 
   private var editButton: some View {
     Button {
-      editDraft = MobileTaskEditDraft(task: task)
+      editDraft = store.taskEditDraft(for: task)
     } label: {
       Label(
         String(

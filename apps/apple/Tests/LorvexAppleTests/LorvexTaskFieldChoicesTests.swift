@@ -48,7 +48,8 @@ struct LorvexTaskFieldChoicesTests {
     let mobile = try read("Sources/LorvexMobile/MobileTaskFieldEditor.swift")
     #expect(mobile.contains("LorvexTaskFieldChoices.quickDays(from: today, calendar: calendar)"))
     let mobileDetail = try read("Sources/LorvexMobile/MobileStoreTaskDetailView.swift")
-    #expect(mobileDetail.contains("today: PlannedDayBridge.displayDate(forLogicalDay: store.logicalTodayString)"))
+    // `logicalTodayPickerDate` is the planner's day; MobileTaskEditTests pins that.
+    #expect(mobileDetail.contains("today: store.logicalTodayPickerDate"))
   }
 
   @Test("Add Time on today starts at the next half hour, strictly after the clock")

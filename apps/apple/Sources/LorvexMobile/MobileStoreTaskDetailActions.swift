@@ -38,6 +38,17 @@ extension MobileStore {
     }
   }
 
+  /// Lorvex's today as the day a date picker shows: midnight of
+  /// ``logicalTodayString`` in the device's calendar.
+  public var logicalTodayPickerDate: Date {
+    PlannedDayBridge.displayDate(forLogicalDay: logicalTodayString) ?? Date()
+  }
+
+  /// An edit draft of `task` whose missing dates start on Lorvex's today.
+  public func taskEditDraft(for task: LorvexTask) -> MobileTaskEditDraft {
+    MobileTaskEditDraft(task: task, defaultDay: logicalTodayPickerDate)
+  }
+
   public func saveTaskEditDraft(_ draft: MobileTaskEditDraft) async -> Bool {
     guard draft.canSave else { return false }
     return await mutateTaskReturningTask(id: draft.id) {

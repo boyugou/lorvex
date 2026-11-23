@@ -355,3 +355,33 @@ func mobileTaskEditTurningTheDayOffDropsTheTime() async throws {
   #expect(cleared.plannedDate == nil)
   #expect(cleared.plannedTime == nil)
 }
+
+/// Turning on a date the task lacks offers Lorvex's today, the day the rest of
+/// the app calls today, not the device's. Pacific/Pago_Pago is 25 hours behind
+/// Pacific/Kiritimati, so the two are never on the same calendar day and at
+/// least one of them is not on the device's day.
+@MainActor
+@Test
+func mobileStoreEditDraftStartsAMissingDateOnTheProductDay() async throws {
+  let core = try makeInMemoryCore()
+  let store = MobileStore(core: core)
+  let deviceToday = LorvexDateFormatters.ymd.string(from: Date())
+  for zone in ["Pacific/Pago_Pago", "Pacific/Kiritimati"] {
+    _ = try await core.setPreference(key: "timezone", value: zone)
+    await store.refresh()
+    if store.logicalTodayString != deviceToday { break }
+  }
+  let productToday = store.logicalTodayString
+  try #require(productToday != deviceToday)
+  let task = try await core.createTask(title: "No dates yet", notes: "")
+
+  var draft = store.taskEditDraft(for: task)
+  draft.hasDueDate = true
+  draft.hasPlannedDate = true
+  draft.hasAvailableFrom = true
+
+  let expected = try #require(PlannedDayBridge.storageDate(forLogicalDay: productToday))
+  #expect(draft.dueDateForSave == expected)
+  #expect(draft.plannedDateForSave == expected)
+  #expect(draft.availableFromForSave == expected)
+}

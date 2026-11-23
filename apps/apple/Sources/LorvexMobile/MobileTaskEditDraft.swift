@@ -47,7 +47,11 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
   private let originalTags: [String]
   private let originalDependencies: [LorvexTask.ID]
 
-  public init(task: LorvexTask, defaultPlannedDate: Date = Date()) {
+  /// - Parameter defaultDay: the day a date the task lacks starts on, shown
+  ///   when its toggle is turned on. A screen passes Lorvex's today
+  ///   (``MobileStore/logicalTodayPickerDate``), which is not the device's
+  ///   today when the product time zone is another day.
+  public init(task: LorvexTask, defaultDay: Date = Date()) {
     id = task.id
     title = task.title
     notes = task.notes
@@ -56,14 +60,14 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
     // Each stored date is a UTC-midnight day anchor; the pickers are
     // local-calendar controls, so bridge every one through PlannedDayBridge.
     hasDueDate = task.dueDate != nil
-    dueDate = task.dueDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultPlannedDate
+    dueDate = task.dueDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultDay
     hasPlannedDate = task.plannedDate != nil
     plannedDate =
-      task.plannedDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultPlannedDate
+      task.plannedDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultDay
     plannedTime = task.plannedTime
     hasAvailableFrom = task.availableFrom != nil
     availableFrom =
-      task.availableFrom.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultPlannedDate
+      task.availableFrom.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultDay
     tagsText = task.tags.joined(separator: ", ")
     dependsOnText = task.dependsOn.joined(separator: ", ")
     originalTitle = task.title

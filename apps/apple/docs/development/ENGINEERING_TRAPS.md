@@ -10,6 +10,7 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
 [Layout](#layout) · [Lists, sheets, and dialogs](#lists-sheets-and-dialogs) ·
 [Gestures and hit targets](#gestures-and-hit-targets) ·
 [Text, type, and locale](#text-type-and-locale) · [Widgets](#widgets) ·
+[App Intents](#app-intents) ·
 [Data and time](#data-and-time) · [Data-flow facts](#data-flow-facts)
 
 ## Crashes and isolation
@@ -373,8 +374,46 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
 - Widget timelines bake localized strings in when they are built; a language
   change shows after the next reload.
 
+## App Intents
+
+- **Declare an intent's `authenticationPolicy` in the intent's own body, as a
+  `static let` with a literal value.** The build's App Intents metadata step
+  reads only what a type declares itself. A value a protocol extension supplies
+  is true at run time, so a test that reads `Intent.authenticationPolicy`
+  passes, and it is absent from `Metadata.appintents`, which then records the
+  intent as `.alwaysAllowed`, runnable on a locked device. The same holds for
+  `isDiscoverable`. `verify_system_entrypoints.py` checks every intent's
+  declaration against the tier protocol it names, and
+  `extract_app_intents_metadata.py` fails the Mac build on an action without a
+  declared policy.
+- **Read the built metadata when a static intent property matters.** In a
+  built app, `Frameworks/LorvexSystemIntents.framework/Metadata.appintents/extract.actionsdata`
+  (iOS) or `Contents/Resources/Metadata.appintents/extract.actionsdata` (Mac)
+  is JSON: each action has `authenticationPolicy` (0 always allowed, 1 requires
+  authentication, 2 requires local device authentication),
+  `isAuthPolExplicit`, `isDiscoverable`, and `visibilityMetadata`.
+- **`swift build` does not validate an intent or entity that adopts an app
+  schema.** The `@AppIntent(schema:)` and `@AppEntity(schema:)` macros accept
+  a type that leaves schema fields out. The Xcode build's metadata step
+  rejects it: every parameter and property of the schema must be declared,
+  with nil or empty for what the app has no place for, and every entity an
+  action takes must be one Siri can look up, which a default
+  `EntityStringQuery` satisfies. Run `script/ios_sim_build.sh` after touching
+  a schema type. The schemas' exact fields, result types and the
+  confirmation wording the system shows are in the toolchain's
+  `usr/lib/AppIntentSchemas.framework/Resources/AppIntentSchemas.sqlite`;
+  copy the file before opening it, since SQLite cannot open it in place.
+
 ## Data and time
 
+- **Foundation's `Calendar.RecurrenceRule` and a task's rule disagree in two
+  places.** Foundation decides which days of an every-other-week rule share a
+  week from its calendar's `firstWeekday`; a task rule uses `WKST`, Monday
+  when absent. Foundation's default `matchingPolicy` moves a day that does not
+  exist (the 31st in a 30-day month, 29 February) to the next day; a task rule
+  skips it. A conversion carries the week start and enumerates with
+  `.strict`, as `SiriTaskMapping` does. Its end-of-day arithmetic uses the
+  calendar, since a day is 23 or 25 hours long when the clocks change.
 - Stored and wire day keys never use the user's calendar.
   `LorvexDateFormatters.ymd`, `ymdUTC`, and `hourMinute` pin the Gregorian
   calendar and `en_US_POSIX`; hand-built date keys use a Gregorian calendar.

@@ -2,7 +2,7 @@
 
 Source: [AppIntent.authenticationPolicy](https://developer.apple.com/documentation/appintents/appintent/authenticationpolicy)
 
-Last verified: 2026-07-10
+Last verified: 2026-07-10 (Apple contract), 2026-11-22 (Lorvex mapping)
 
 ## Apple Contract
 
@@ -31,50 +31,45 @@ Related sources:
 
 ## Lorvex Mapping
 
-The current package links `LorvexSystemIntents` into macOS and iPhone/iPad
-executables. Its own shortcut-provider comment explicitly says every
-intent remains invokable from Shortcuts or an automation, not just the ten
-curated App Shortcuts.
+Checked against the built app on 2026-11-22.
 
-The source currently defines 93 `AppIntent` types in
-`LorvexSystemIntents` and six in `LorvexWidgetIntents`. None declares
-`authenticationPolicy`; none opts out through `isDiscoverable`; and no
-intent-level confirmation calls were found.
+Every App Intent type declares its `authenticationPolicy` in its own body as a
+`static let` with a literal value: 89 types across `LorvexSystemIntents`,
+`LorvexWidgetIntents`, `LorvexWidgetExtension`, and the Focus filter. The
+declaration has to be in the type because the build's App Intents metadata
+step reads only what a type declares itself; a value from a protocol extension
+never reaches `Metadata.appintents`, which then records the intent as
+`.alwaysAllowed`.
 
-The exposed operations include:
+The system intents name one of three tiers
+(`Sources/LorvexSystemIntents/LorvexIntentSecurity.swift`):
 
-- reading memory contents, daily reviews, task/calendar content, preferences,
-  diagnostics, and AI changelog data;
-- exporting the database and calendar data as files;
-- deleting memories, lists, habits, calendar events, preferences, reminders,
-  and checklist items;
-- batch create/complete/defer/move/reopen and arbitrary update operations.
+- `.alwaysAllowed`: opening the app and adding a task, by the capture action
+  or by Siri's create action.
+- `.requiresAuthentication`: every change to stored data and the reads that
+  return only names and counts.
+- `.requiresLocalDeviceAuthentication`: reads that return task, calendar,
+  memory, or review content, and the data exports.
 
-The runners open the real shared SQLite store through
-`LorvexCoreRuntimeFactory.makeForAppIntent()`. This is therefore a shipping
-authorization boundary, not merely unused declarations or test scaffolding.
+The two widget-tap intents are `.alwaysAllowed`, since a tap on a Lock Screen
+widget must still act, and declare `isDiscoverable = false`.
 
-## Required Design
+Three checks hold this in place. `script/verify_system_entrypoints.py` fails
+when an intent type lacks the declaration, names more than one tier, or
+declares a policy other than its tier's. `script/extract_app_intents_metadata.py`,
+which writes the Mac app's metadata, fails when an action reaches the metadata
+without a declared policy. `IntentSecurityClassificationTests` asserts the
+run-time values for a sample of intents in each tier.
 
-Classify every intent rather than inheriting the framework default:
+Not measured:
 
-1. Require local-device authentication for exports and access to sensitive
-   on-disk content where execution on a remotely authenticated companion would
-   still be inappropriate.
-2. Require authentication for destructive or broad write operations unless a
-   specific locked-device workflow has been deliberately approved.
-3. Keep only narrow, consciously selected actions always allowed (for example,
-   perhaps opening the app or capture-only/widget interactions), and test their
-   abuse and privacy consequences.
-4. Consider `isDiscoverable = false` for widget-only implementation intents
-   that are not meant to appear as general Shortcuts/Siri capabilities.
-5. Probe entity queries while locked. An intent policy must not be assumed to
-   prove that pre-execution parameter suggestions cannot disclose task/list/
-   habit/event names.
-
-This policy should be represented as a central classification/gate so a future
-intent cannot silently inherit `.alwaysAllowed` merely because its author
-omitted the property.
+- Whether the system decides lock-screen access from the built metadata or
+  from the running app. The metadata and the running value now agree, so the
+  answer no longer changes what a locked device allows.
+- Whether an entity query (the task, list, habit, or event names Siri and
+  Shortcuts offer for a parameter) runs while the device is locked. An
+  intent's policy governs running the intent and says nothing about the
+  suggestions shown before it runs.
 
 Authentication does not replace confirmation for destructive operations. See
 [APP_INTENT_CONFIRMATION.md](APP_INTENT_CONFIRMATION.md).

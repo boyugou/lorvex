@@ -33,6 +33,16 @@ person living with the app, and then a decision.
   blocks.
 - The Medium Today widget has no room for the day's calendar events beside
   its two rows: whether it should show the next event in place of a row.
+- Siri working with tasks ([build 173](docs/releases/1.0.0-173.md)), on a
+  device where Siri AI is available: whether Siri picks Lorvex for a request
+  that names it; whether a day given to Siri should be the planned day, as
+  built, or the deadline; whether deleting asks twice, once in Siri's words
+  and once in Lorvex's, and if so whether Lorvex's question should go; what
+  Siri says when asked for a location reminder or an hourly repeat, which
+  Lorvex does not have; and, for "every other week on Sunday and Monday" and
+  "every month on the 31st", whether the days Lorvex lands on are the days
+  Siri announced. Lorvex takes the week start from the rule Siri sends and
+  skips a month without the day.
 
 ## Product work
 
@@ -50,18 +60,15 @@ person living with the app, and then a decision.
      [app schema domains](https://developer.apple.com/documentation/appintents/app-schema-domains).
      Siri matches an intent that conforms to one from ordinary speech ("mark
      this as completed", "set the due date to tomorrow") with no phrase to
-     define, and none of Lorvex's intents conforms yet. Add schema-conforming
-     task, list and event entities with their create, update and delete
-     intents over the existing intent runner; index tasks and events as
-     `IndexedEntity` so Siri finds them through Spotlight's semantic search;
-     and mark task rows and detail views with `appEntityIdentifier` so "this
-     task" resolves to what is on screen. A probe package with a 26 floor
-     compiles a `.reminders` entity and its create and update intents marked
-     available from 27.0, without the schema's location, section and image
-     fields; the Xcode metadata step and Siri's behavior are untested. The
-     design has to settle how priority, the planned day and a timed task map
-     onto the schema's `isFlagged` and `dueDate`, and which list a task
-     without one reports. Limits as of 2026-11-22
+     define. Tasks and lists conform to the reminders domain since
+     [build 173](docs/releases/1.0.0-173.md). Remaining, in order: mark task
+     rows and detail views with `appEntityIdentifier` so "this task" resolves
+     to what is on screen, which needs the iOS interface module to depend on
+     the intents module; index tasks as `IndexedEntity` so Siri finds them
+     through Spotlight's semantic search (the Mac indexes tasks for Spotlight
+     already, iOS has no index); and give calendar events the `.calendar`
+     domain's entity with its create, update and delete intents. Limits as of
+     2026-11-22
      ([Apple's requirements](https://support.apple.com/en-us/127893)): Siri
      AI is in beta, supports six languages without Chinese, and does not
      work for an Apple Account in mainland China or on iPhone and iPad in
@@ -87,19 +94,10 @@ person living with the app, and then a decision.
      `GeometryProxy.reservedRegions` for the hinge and camera,
      `onHingeChange`, and `toolbarVerticalBehavior` with a toolbar item's
      `axisBehavior`.
-  3. Behavior that changed by building with the 27 SDK. macOS 27 hides
-     symbol images in menus and context menus unless the label asks for
-     `.titleAndIcon`: review the context menus so an item that names an
-     object (a list, a priority) keeps its image. A `dropDestination` on a
-     Mac `List` row now performs the drop, and the sidebar's lists take
-     dropped tasks that way (`TaskDropTarget`): drag a task onto a sidebar
-     list by hand, which no automation covers.
-  4. Small adoptions: `TabsPickerStyle` on the segmented pickers that switch
+  3. Small adoptions: `TabsPickerStyle` on the segmented pickers that switch
      a page's content, which VoiceOver then reads as tabs; toolbar
      `visibilityPriority` and `ToolbarOverflowMenu`, so a narrow window and
-     Duo's vertical bar drop the less important items first; and
-     `SyncableEntity` on the entities, whose identifiers are already the same
-     on every device.
+     Duo's vertical bar drop the less important items first.
 
   Also run the scene's database-resume callback on its initial active value,
   instead of requiring a later foreground transition.
@@ -340,9 +338,17 @@ Found by read-only audits (2026-11-09) and a read-through of the Watch app
   and Arabic, Mac widgets and watch complications in other languages, and
   the MCP fuzz families for checklist text, trash and restore, batch tools,
   and recurring `until` and `count` edits.
+- Whether the system decides an intent's lock-screen access from the built
+  metadata or from the running app is not measured. Until
+  [build 173](docs/releases/1.0.0-173.md) the metadata recorded every
+  Shortcuts action as allowed on a locked device; it now records each
+  action's declared policy. Check on a locked iPhone that Siri asks for an
+  unlock before **Read Task** and **Export Data**, and adds a task through
+  **Capture Task** without one.
 - Needs a device or a person: real drags and resizes (including the Tasks
-  table row drag and a task dragged from Mac Today's list onto its time
-  grid), undo, context menus, Full Keyboard Access, the Quick Capture
+  table row drag, a task dragged from Mac Today's list onto its time grid,
+  and a task dragged onto a list in the Mac sidebar, where a build made with
+  the 27 SDK lets the list row itself perform the drop), undo, context menus, Full Keyboard Access, the Quick Capture
   hotkey, Open at Login, the Control Center capture control, real-finger
   calendar swipes, watch checks on hardware, iPad hardware keyboard
   shortcuts, permanent delete on an iPhone, and a repeating task completed

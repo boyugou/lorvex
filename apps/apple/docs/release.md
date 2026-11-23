@@ -354,9 +354,10 @@ Failures and what they mean:
   const-value extraction is module-scoped. Extract the linked intent-owning
   modules and merge their static metadata, keeping the App Shortcuts provider
   in the primary pass. `extract_app_intents_metadata.py` handles this and
-  rejects missing output, stale output, and missing Shortcut phrases before
-  signing a package. The current Mac payload carries 80 app intents and 10
-  App Shortcuts; the widget carries its configuration plus four actions.
+  rejects missing output, stale output, missing Shortcut phrases, and an
+  action without a declared authentication policy before signing a package.
+  The current Mac payload carries 84 app intents and 10 App Shortcuts; the
+  widget carries its configuration plus four actions.
 - `altool --build-status` can hang for several minutes on its first call or
   report that `Defaults.properties` could not be opened. Neither is a
   credential failure; stop that process and poll again.

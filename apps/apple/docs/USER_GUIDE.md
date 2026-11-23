@@ -3112,6 +3112,45 @@ adding an inbox task from your wrist. The snapshot-backed watch forwards the new
 task to the paired iPhone over WatchConnectivity; capture is read-only only when
 no forwarder is wired, as in SwiftUI previews.
 
+### With Siri (iOS 27, iPadOS 27, macOS 27)
+
+On iOS 27, iPadOS 27, and macOS 27, Siri can work with Lorvex tasks the way it
+works with reminders. Ask in your own words and name Lorvex. Siri can:
+
+- add a task, with notes, tags, a list, a day and a time, a flag, and a repeat;
+- change any of those on a task, or mark a task done or not done;
+- delete tasks;
+- create a list.
+
+A reminder and a Lorvex task are not the same shape, so a few things land in a
+particular place:
+
+- The day and time you give Siri become the task's **planned day and time**,
+  the day you mean to work on it. They do not set a deadline. A time without a
+  length gets the task's estimate, or 30 minutes when it has none.
+- A flagged reminder is a **P1** task. Removing the flag makes a P1 task P2
+  and leaves other priorities alone.
+- A link you give is added to the task's notes.
+- A task can repeat by day, week, month, or year. A repeat by the hour is
+  refused, and nothing is changed. A repeat on a day that some months or years
+  lack, such as the 31st or 29 February, skips them, as every Lorvex repeat
+  does.
+- Lorvex has no location reminders, list sections, or task images. Siri cannot
+  set the first two, and a picture you include is not kept.
+- Deleting through Siri **cancels** the task. It stays in Lorvex, where you can
+  reopen it, and a repeating task stops repeating. Lorvex asks before it
+  cancels. A task you already completed cannot be cancelled: it stays
+  completed, and Siri says so.
+
+Adding a task works while the device is locked. Changing or deleting tasks and
+creating a list need the device unlocked.
+
+This uses the version of Siri that arrives with these systems, which Apple
+offers in some languages and regions; see
+[Apple's requirements](https://support.apple.com/en-us/127893). The actions
+appear only to Siri. The Shortcuts app keeps its own Lorvex actions, listed
+above.
+
 ---
 
 ## Today

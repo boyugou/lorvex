@@ -132,7 +132,10 @@ final class WidgetSnapshotSourceTests: XCTestCase {
 
     let afterTodayRead = expectation(description: "widget source read Today")
     let continueProjection = DispatchSemaphore(value: 0)
-    let sourceTask = Task {
+    // The paused projection blocks its thread, and this body blocks its own
+    // while it watches the peer write, so both tasks run on queues of their
+    // own rather than the cooperative pool.
+    let sourceTask = Task(executorPreference: SerialQueueTaskExecutor()) {
       try await SwiftLorvexCoreService.$afterWidgetTodayReadForTesting.withValue({
         afterTodayRead.fulfill()
         _ = continueProjection.wait(timeout: .now() + 5)
@@ -143,7 +146,7 @@ final class WidgetSnapshotSourceTests: XCTestCase {
 
     await fulfillment(of: [afterTodayRead], timeout: 5)
     let peerState = WidgetSourceOperationState()
-    let peerTask = Task.detached {
+    let peerTask = Task.detached(executorPreference: SerialQueueTaskExecutor()) {
       peerState.markStarted()
       defer { peerState.markCompleted() }
       return try await peer.createList(name: "Committed during projection", description: nil)

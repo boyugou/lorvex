@@ -208,7 +208,9 @@ final class SwiftLorvexCoreServiceWatchCommandTests: XCTestCase {
       description: "Watch pause reached the pre-transaction window")
     let releaseCommand = DispatchSemaphore(value: 0)
 
-    let commandTask = Task {
+    // The barrier blocks its thread until the peer below has written, so the
+    // command runs off the cooperative pool the peer's write needs.
+    let commandTask = Task(executorPreference: SerialQueueTaskExecutor()) {
       await SwiftLorvexCoreService.$afterWriteStateBarrierForTesting.withValue({
         enteredPreTransactionWindow.fulfill()
         releaseCommand.wait()
@@ -216,6 +218,8 @@ final class SwiftLorvexCoreServiceWatchCommandTests: XCTestCase {
         await service.applyWatchCommand(pause)
       }
     }
+    var released = false
+    defer { if !released { releaseCommand.signal() } }
 
     await fulfillment(of: [enteredPreTransactionWindow], timeout: 5)
 
@@ -224,6 +228,7 @@ final class SwiftLorvexCoreServiceWatchCommandTests: XCTestCase {
     // task before committing the applied receipt.
     _ = try await peer.startTask(id: task.id)
     releaseCommand.signal()
+    released = true
 
     let acknowledgement = await commandTask.value
     XCTAssertEqual(acknowledgement.outcome, .applied)

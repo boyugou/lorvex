@@ -83,6 +83,19 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   End the flag after the write and the reads that show its result, then run
   the fan-out (`publishAfterTaskCreate()` on macOS; a detached
   `publishMobileSyncSurfaces()` or `habitSurfacesFlight` on iOS).
+- **Never block a cooperative-pool thread on something only async work can
+  end.** Swift's cooperative thread pool has one thread per core (three on a
+  hosted CI runner) and does not add a thread when one blocks. A blocking read
+  of a child process's pipe, a semaphore or `NSCondition` wait, or a pause in
+  a test seam, run inside a `Task`, holds its thread until something else
+  ends it; when that something is a task too (a timeout that kills the child,
+  the test body that signals), a few such waits at once leave it no thread and
+  the whole process stops. Run blocking reads on a GCD queue and await the
+  result (`MCPHelperProbe.readToEnd`). A test that pauses synchronous code
+  starts that task with `Task(executorPreference: SerialQueueTaskExecutor())`
+  (in each test target), so the pause blocks a queue's thread instead. To find
+  such a wait, run a suite with `LIBDISPATCH_COOPERATIVE_POOL_STRICT=1`, which
+  gives the pool one thread, and `sample` the process when it goes quiet.
 - **Never await a single flight from inside its own work.** A refresh that
   awaits a sync cycle that awaits the same refresh flight deadlocks every later
   refresh and sync. Inside a flight, call the local reload directly

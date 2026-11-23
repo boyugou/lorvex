@@ -37,7 +37,8 @@ final class WholeDataExportSnapshotTests: XCTestCase {
       let list = try await source.createList(name: "Snapshot list", description: nil)
       let hookEntered = expectation(description: "active export partition read")
       let continueExport = DispatchSemaphore(value: 0)
-      let exportTask = Task {
+      // The hook blocks its thread until the body below releases it.
+      let exportTask = Task(executorPreference: SerialQueueTaskExecutor()) {
         try await SwiftLorvexCoreService.$afterActiveListsExportReadForTesting.withValue({
           hookEntered.fulfill()
           _ = continueExport.wait(timeout: .now() + 5)
@@ -77,7 +78,8 @@ final class WholeDataExportSnapshotTests: XCTestCase {
         TaskCreateDraft(title: "Snapshot child", listID: oldList.id))
       let hookEntered = expectation(description: "native task roots read")
       let continueExport = DispatchSemaphore(value: 0)
-      let exportTask = Task {
+      // The hook blocks its thread until the body below releases it.
+      let exportTask = Task(executorPreference: SerialQueueTaskExecutor()) {
         try await SwiftLorvexCoreService.$afterNativeTaskRowsExportReadForTesting.withValue({
           hookEntered.fulfill()
           _ = continueExport.wait(timeout: .now() + 5)

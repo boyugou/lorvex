@@ -508,7 +508,8 @@ final class CalendarSeriesCutoverServiceTests: XCTestCase {
 
     let hookEntered = expectation(description: "calendar export opened its read snapshot")
     let continueExport = DispatchSemaphore(value: 0)
-    let exportTask = Task {
+    // The hook blocks its thread until the body below releases it.
+    let exportTask = Task(executorPreference: SerialQueueTaskExecutor()) {
       try await SwiftLorvexCoreService.$afterCalendarCutoverExportReadForTesting.withValue({
         hookEntered.fulfill()
         _ = continueExport.wait(timeout: .now() + 5)

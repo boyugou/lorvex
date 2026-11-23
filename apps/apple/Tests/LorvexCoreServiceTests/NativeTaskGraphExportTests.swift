@@ -330,7 +330,8 @@ final class NativeTaskGraphExportTests: XCTestCase {
 
     let hookEntered = expectation(description: "native task export read its roots")
     let continueExport = DispatchSemaphore(value: 0)
-    let exportTask = Task {
+    // The hook blocks its thread until the body below releases it.
+    let exportTask = Task(executorPreference: SerialQueueTaskExecutor()) {
       try await SwiftLorvexCoreService.$afterNativeTaskRowsExportReadForTesting.withValue({
         hookEntered.fulfill()
         _ = continueExport.wait(timeout: .now() + 5)

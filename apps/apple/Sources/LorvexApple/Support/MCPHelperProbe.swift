@@ -110,12 +110,8 @@ enum MCPHelperProbe {
       return false
     }
 
-    async let drainOutput: Data = Task.detached {
-      output.fileHandleForReading.readDataToEndOfFile()
-    }.value
-    async let drainError: Data = Task.detached {
-      error.fileHandleForReading.readDataToEndOfFile()
-    }.value
+    async let drainOutput = readToEnd(output.fileHandleForReading)
+    async let drainError = readToEnd(error.fileHandleForReading)
 
     // Race the helper's exit against the timeout. `waitForExit` polls rather
     // than blocking on `Process.terminationHandler` so it is genuinely
@@ -141,6 +137,23 @@ enum MCPHelperProbe {
 
     _ = await (drainOutput, drainError)
     return exitedZero
+  }
+
+  /// Reads `handle` to its end on a GCD thread and returns what it read, or
+  /// nothing when the read fails.
+  ///
+  /// The read blocks its thread until the helper's end of the pipe closes,
+  /// which for a hung helper happens only when `runRuntimeProbe`'s timeout
+  /// kills it, and that timeout runs on Swift's cooperative thread pool. The
+  /// pool has one thread per core and does not add one when a thread blocks,
+  /// so reads blocking its threads could leave the timeout none, and the
+  /// helper would never be killed. GCD adds threads for blocked ones.
+  private static func readToEnd(_ handle: FileHandle) async -> Data {
+    await withCheckedContinuation { continuation in
+      DispatchQueue.global(qos: .utility).async {
+        continuation.resume(returning: (try? handle.readToEnd()) ?? Data())
+      }
+    }
   }
 
   /// Polls `process` until it exits, checking cooperative cancellation between

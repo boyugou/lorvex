@@ -18,10 +18,10 @@ import Testing
 /// data (split brain).
 ///
 /// The tests run one at a time. Several pause a database operation on a
-/// barrier while the test body waits for it synchronously, so each holds
-/// cooperative-pool threads; side by side under a parallel run they starve the
-/// shared pool, and an operation can take half a minute just to reach its
-/// barrier.
+/// barrier, on a queue of its own, while the test body waits for it
+/// synchronously and so holds a cooperative-pool thread for up to a minute;
+/// side by side under a parallel run those waits would take the shared pool's
+/// threads from everything else.
 @Suite(.serialized)
 struct StorageGenerationCutoverTests {
 
@@ -327,7 +327,7 @@ struct StorageGenerationCutoverTests {
       let preResetDeviceId = try #require(try deviceId(at: dbPath))
 
       let barrier = BlockingOperationBarrier()
-      let writeTask = Task {
+      let writeTask = Task(executorPreference: SerialQueueTaskExecutor()) {
         try await SwiftLorvexCoreService.$afterIdentityAssertBarrierForTesting.withValue(
           barrier.pause
         ) {
@@ -374,7 +374,7 @@ struct StorageGenerationCutoverTests {
       _ = try await service.setPreference(key: "theme", value: "system")
 
       let barrier = BlockingOperationBarrier()
-      let exportTask = Task {
+      let exportTask = Task(executorPreference: SerialQueueTaskExecutor()) {
         try await SwiftLorvexCoreService.$afterActiveListsExportReadForTesting.withValue(
           barrier.pause
         ) {
@@ -460,11 +460,17 @@ struct StorageGenerationCutoverTests {
       ) {
         // Both first-touches open concurrently. A read is enough to drive the
         // lazy open + recovery; each faults on the corrupt file, rendezvouses in
-        // the pre-exclusive window, then races for the exclusive lock.
-        async let a: String? = openerA.getPreference(key: "theme")
-        async let b: String? = openerB.getPreference(key: "theme")
-        _ = try await a
-        _ = try await b
+        // the pre-exclusive window, then races for the exclusive lock. The
+        // rendezvous blocks each opener's thread until the other arrives, so
+        // each runs on a queue of its own rather than the cooperative pool.
+        try await withThrowingTaskGroup(of: Void.self) { group in
+          for opener in [openerA, openerB] {
+            group.addTask(executorPreference: SerialQueueTaskExecutor()) {
+              _ = try await opener.getPreference(key: "theme")
+            }
+          }
+          try await group.waitForAll()
+        }
       }
 
       // BOTH openers reached the recovery window: both detected the fault (the
@@ -701,8 +707,8 @@ struct StorageGenerationCutoverTests {
     /// generous because it only bounds *scheduling*, not the behaviour asserted:
     /// the pause either happens or the test fails either way, so a tight bound
     /// only converts a loaded machine into a false failure. The full gate runs
-    /// this suite alongside packaging and archive steps, where a task can wait
-    /// well past ten seconds for a core.
+    /// this suite alongside packaging and archive steps, where a thread can
+    /// wait seconds for a core.
     func waitUntilPaused(timeout: TimeInterval = 60) -> Bool {
       condition.lock()
       defer { condition.unlock() }

@@ -497,11 +497,11 @@ struct WidgetSnapshotEngineTests {
     // database revision. Both gates wait up to thirty minutes: in a full run
     // the test's tasks queue behind thousands of others (about ten minutes on a
     // three-core hosted runner), and a gate that expired early would let the
-    // old projection finish unpaused and hide the race. The paused projection
-    // blocks its thread, since the projector is synchronous; the test body
-    // waits for it without blocking one, because the old task needs a
-    // cooperative-pool thread to reach the pause, and on a three-core runner a
-    // second blocked thread can leave it none.
+    // old projection finish unpaused and hide the race. The projector is
+    // synchronous, so the paused projection blocks its thread: the old publish
+    // runs on a serial queue of its own rather than the cooperative pool, which
+    // the test body needs to reach the release. The body waits for the pause
+    // without blocking a thread.
     let oldProjectionPaused = EngineGate()
     let releaseOldProjection = EngineGate()
     let oldPublisher = WidgetSnapshotPublisher(
@@ -511,7 +511,11 @@ struct WidgetSnapshotEngineTests {
         _ = releaseOldProjection.wait(timeout: 1800)
         return Date(timeIntervalSince1970: 1_779_465_600)
       }))
-    let oldTask = Task { try await oldPublisher.publish(source: source) }
+    let oldTask = Task(executorPreference: SerialQueueTaskExecutor()) {
+      try await oldPublisher.publish(source: source)
+    }
+    var released = false
+    defer { if !released { releaseOldProjection.signal() } }
     #expect(await oldProjectionPaused.waitWithoutBlocking(timeout: 1800))
 
     let active = try await store.save(FocusFilterConfiguration(listIDs: ["list-work"]))
@@ -526,6 +530,7 @@ struct WidgetSnapshotEngineTests {
     #expect(fresh.tasks.map(\.id) == ["work"])
 
     releaseOldProjection.signal()
+    released = true
     let oldCallWinner = try await oldTask.value
     #expect(oldCallWinner == fresh)
     guard case .snapshot(let diskWinner) = WidgetSnapshotLoader().loadSnapshot(at: url) else {

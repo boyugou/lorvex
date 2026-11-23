@@ -55,6 +55,15 @@ directory outside the repository.
   `AppStoreToastTests`, and `StorageGenerationCutoverTests` are the usual ones.
   Judge a failing run by its total duration and `uptime` before reading the
   failures, and do not start another build while it runs.
+- A run whose output stops for minutes is not slow: something has blocked
+  every thread of the cooperative pool, and the tests resume only when a
+  blocking wait times out. Raising time limits only lengthens the stall. Run
+  `sample <pid> 3` on the test process (`swiftpm-testing-helper` for Swift
+  Testing, `xctest` for XCTest) while it is quiet; the pool threads'
+  stacks name the wait. A hosted runner has three cores, so the pool has
+  three threads; `LIBDISPATCH_COOPERATIVE_POOL_STRICT=1` gives it one and
+  surfaces such a wait on this Mac. The rule is in `ENGINEERING_TRAPS.md`
+  under "Async work and state".
 - In-memory cores use a wall clock fixed at 08:00 today. A test that computes
   its expectation from the real `Date()` fails only between midnight and about
   04:00; pass the clock the core uses.

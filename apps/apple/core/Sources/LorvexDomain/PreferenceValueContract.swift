@@ -61,7 +61,8 @@ public enum PreferenceValueContract {
 
     case PreferenceKeys.prefSetupCompleted,
       PreferenceKeys.prefRecordRawInput,
-      PreferenceKeys.prefNotificationShowTaskNotes:
+      PreferenceKeys.prefNotificationShowTaskNotes,
+      PreferenceKeys.prefDailyBackups:
       guard case .bool = value else {
         return .failure(.message("\(key) preference must be a JSON boolean"))
       }

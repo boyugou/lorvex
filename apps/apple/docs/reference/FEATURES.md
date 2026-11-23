@@ -2,7 +2,7 @@
 
 Status tags: `[SHIPPED]` = present and functional, `[PARTIAL]` = code present but incomplete or has known gaps, `[PLANNED]` = not yet built.
 
-MCP tool count: 120. Scoped calendar edit/delete tools are Apple-specific. Apple Swift is the only Apple ecosystem shipping line for macOS App Store, iOS, iPadOS, watchOS, CloudKit/iCloud, WidgetKit, and App Intents.
+MCP tool count: 122. Scoped calendar edit/delete tools are Apple-specific. Apple Swift is the only Apple ecosystem shipping line for macOS App Store, iOS, iPadOS, watchOS, CloudKit/iCloud, WidgetKit, and App Intents.
 
 ---
 
@@ -40,6 +40,7 @@ MCP tool count: 120. Scoped calendar edit/delete tools are Apple-specific. Apple
 | iPhone — create sheets (task/list/habit/event) | [SHIPPED] | |
 | iPhone, iPad — task row actions | [SHIPPED] | Swipe a row for Start or Pause, Complete, and Defer; touch and hold (or right-click with a pointer) for those plus Move to List, a menu of every list but the task's own. A finished or cancelled task offers Reopen alone. Completing, cancelling, or moving tasks floats an Undo banner for a few seconds (Reopen for completion and cancellation, moved tasks back to their own lists); the latest change only |
 | iPhone — secondary workspace reach (Habits, Memory, Settings) | [SHIPPED] | Habits and Memory are rows at the bottom of the Tasks tab home and Settings a toolbar button on Today, all pushed as typed routes; Lists is merged into the Tasks tab home |
+| Daily backups (Mac, iPhone, iPad) | [SHIPPED] | The main app saves the complete export ZIP once per logical day beside the managed database (`DailyBackups/`), keeping the 7 newest plus the earliest of each of the 4 weeks before; it skips an empty store, is excluded from device backups, is never synced, and is erased with the device. A per-device switch the user alone controls (`daily_backups`, on by default) turns it off and deletes the copies. MCP `list_daily_backups` and `compare_with_daily_backup` let an assistant find what was deleted or overwritten and restore it with the normal write tools |
 | iPhone — Settings screen | [SHIPPED] | Settings, diagnostics (incl. a read-only recent crash/hang diagnostics feed), privacy and acknowledgments, data export/import, notification/reminder toggles |
 | iPhone — habit milestones | [SHIPPED] | Habit detail shows milestone progress and target editing; completion and batch completion surface milestone celebrations |
 | iPad — tab shell (regular width) | [SHIPPED] | The iPhone shell at full width: one tab bar with Today, Calendar, Tasks, and Review plus the round ＋ capture button, each tab with its own navigation stack. Habits and Memory open from the Tasks tab home and Settings from Today; Lists is merged into the Tasks home. There is no sidebar — wide layouts add a second pane inside a tab |
@@ -115,7 +116,7 @@ All tools are implemented in `LorvexMCPHost`. The host runs `SwiftLorvexCoreServ
 `get_preference`, `get_all_preferences`, `set_preference`, `delete_preference`
 
 ### Data Tools
-`export_data`
+`export_data`, `list_daily_backups`, `compare_with_daily_backup`
 
 ---
 

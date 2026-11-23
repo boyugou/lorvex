@@ -69501,6 +69501,2238 @@
         }
       }
     },
+    "settings.daily_backups.footer": {
+      "comment": "Footer under the daily backups switch.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحفظ Lorvex نسخة من بياناتك على هذا الجهاز مرة واحدة يوميًا. ويحتفظ بنسخ آخر 7 أيام ونسخة واحدة من كل أسبوع من الأسابيع الأربعة التي سبقتها. تبقى النسخ على هذا الجهاز ولا تتم مزامنتها. وتظل العناصر التي تحذفها موجودة فيها إلى أن تنتهي مدة الاحتفاظ بها. لاستعادة شيء ما، اطلب من مساعدك مقارنة بياناتك بنسخة احتياطية."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দিনে একবার Lorvex এই ডিভাইসে আপনার ডেটার একটি কপি সেভ করে। এটি শেষ 7 দিনের কপি এবং তার আগের 4 সপ্তাহের প্রতিটি থেকে একটি করে কপি রাখে। কপিগুলো এই ডিভাইসেই থাকে এবং সিঙ্ক হয় না। আপনার মুছে ফেলা আইটেম কপিগুলোতে থেকে যায়, যতক্ষণ না কপিগুলো পুরোনো হয়ে মুছে যায়। কিছু ফিরিয়ে আনতে আপনার অ্যাসিস্ট্যান্টকে আপনার ডেটা একটি ব্যাকআপের সঙ্গে তুলনা করতে বলুন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex speichert einmal am Tag eine Kopie deiner Daten auf diesem Gerät. Lorvex behält die Kopien der letzten 7 Tage und je eine Kopie aus jeder der 4 Wochen davor. Die Kopien bleiben auf diesem Gerät und werden nicht synchronisiert. Objekte, die du löschst, bleiben darin erhalten, bis die alten Kopien automatisch entfernt werden. Um etwas wiederherzustellen, bitte deinen Assistenten, deine Daten mit einem Backup zu vergleichen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μία φορά την ημέρα, το Lorvex αποθηκεύει σε αυτή τη συσκευή ένα αντίγραφο των δεδομένων. Διατηρεί τα αντίγραφα των τελευταίων 7 ημερών και ένα αντίγραφο από καθεμία από τις 4 προηγούμενες εβδομάδες. Τα αντίγραφα παραμένουν σε αυτή τη συσκευή και δεν συγχρονίζονται. Τα στοιχεία που διαγράφετε παραμένουν σε αυτά μέχρι να λήξουν τα αντίγραφα. Για να επαναφέρετε κάτι, ζητήστε από τον βοηθό να συγκρίνει τα δεδομένα με ένα αντίγραφο ασφαλείας."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Once a day, Lorvex saves a copy of your data on this device. It keeps the last 7 days and one copy from each of the 4 weeks before. The copies stay on this device and are not synced. Items you delete stay in them until they age out. To bring something back, ask your assistant to compare your data with a backup."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una vez al día, Lorvex guarda en este dispositivo una copia de tus datos. Conserva las copias de los últimos 7 días y una de cada una de las 4 semanas anteriores. Las copias se quedan en este dispositivo y no se sincronizan. Los elementos que eliminas permanecen en ellas hasta que las copias caducan. Para recuperar algo, pide a tu asistente que compare tus datos con una copia de seguridad."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex روزی یک بار یک نسخه از داده‌های شما را روی این دستگاه ذخیره می‌کند. نسخه‌های 7 روز اخیر و از هر یک از 4 هفته پیش از آن یک نسخه را نگه می‌دارد. نسخه‌ها روی این دستگاه می‌مانند و همگام‌سازی نمی‌شوند. مواردی که حذف می‌کنید تا زمانی که نسخه‌ها منقضی شوند در آن‌ها باقی می‌مانند. برای بازگرداندن چیزی، از دستیار خود بخواهید داده‌ها را با یک پشتیبان مقایسه کند."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une fois par jour, Lorvex enregistre sur cet appareil une copie de vos données. Il conserve les copies des 7 derniers jours et une copie de chacune des 4 semaines précédentes. Les copies restent sur cet appareil et ne sont pas synchronisées. Les éléments que vous supprimez y restent jusqu’à ce que les copies expirent. Pour récupérer quelque chose, demandez à votre assistant de comparer vos données avec une sauvegarde."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פעם ביום Lorvex שומר במכשיר הזה עותק של הנתונים. הוא שומר את העותקים של 7 הימים האחרונים ועותק אחד מכל אחד מ-4 השבועות שקדמו להם. העותקים נשארים במכשיר הזה ואינם מסונכרנים. פריטים שנמחקו נשארים בהם עד שהעותקים הישנים נמחקים אוטומטית. כדי להחזיר משהו, יש לבקש מהעוזר להשוות את הנתונים לגיבוי."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex दिन में एक बार इस डिवाइस पर आपके डेटा की एक कॉपी सेव करता है। यह पिछले 7 दिनों की कॉपियाँ और उससे पहले के 4 हफ़्तों में से हर हफ़्ते की एक कॉपी रखता है। कॉपियाँ इसी डिवाइस पर रहती हैं और सिंक नहीं होतीं। आपके हटाए गए आइटम इन कॉपियों में तब तक रहते हैं, जब तक ये पुरानी होकर हट नहीं जातीं। कुछ वापस पाने के लिए अपने असिस्टेंट से कहें कि वह आपके डेटा की तुलना किसी बैकअप से करे।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekali sehari, Lorvex menyimpan salinan data Anda di perangkat ini. Lorvex menyimpan salinan 7 hari terakhir dan satu salinan dari setiap minggu dalam 4 minggu sebelumnya. Salinan tetap berada di perangkat ini dan tidak diselaraskan. Item yang Anda hapus tetap ada di dalamnya sampai salinan itu kedaluwarsa. Untuk memulihkan sesuatu, minta asisten Anda membandingkan data dengan cadangan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una volta al giorno, Lorvex salva su questo dispositivo una copia dei tuoi dati. Conserva le copie degli ultimi 7 giorni e una copia per ciascuna delle 4 settimane precedenti. Le copie restano su questo dispositivo e non vengono sincronizzate. Gli elementi che elimini rimangono nelle copie finché non scadono. Per recuperare qualcosa, chiedi al tuo assistente di confrontare i tuoi dati con un backup."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexは1日に1回、このデバイスにデータのコピーを保存します。直近7日分のコピーと、その前の4週間それぞれ1つずつのコピーを保持します。コピーはこのデバイスに残り、同期されません。削除した項目は、コピーが自動的に削除されるまで、その中に残ります。何かを元に戻したいときは、アシスタントにデータとバックアップの比較を依頼してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex는 하루에 한 번 이 기기에 데이터 사본을 저장합니다. 최근 7일의 사본과 그 이전 4주 동안 각 주의 사본을 하나씩 보관합니다. 사본은 이 기기에만 남으며 동기화되지 않습니다. 삭제한 항목은 사본이 오래되어 지워질 때까지 사본에 남아 있습니다. 무언가를 복원하려면 어시스턴트에게 데이터를 백업과 비교해 달라고 요청하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex दिवसातून एकदा या डिव्हाइसवर तुमच्या डेटाची एक कॉपी सेव्ह करते. ते मागील 7 दिवसांच्या कॉपी आणि त्याआधीच्या 4 आठवड्यांपैकी प्रत्येक आठवड्याची एक कॉपी ठेवते. कॉपी या डिव्हाइसवरच राहतात आणि सिंक होत नाहीत. तुम्ही हटवलेले आयटम कॉपी जुन्या होऊन काढल्या जाईपर्यंत त्यांत राहतात. काही परत मिळवण्यासाठी तुमच्या सहाय्यकाला तुमच्या डेटाची बॅकअपशी तुलना करायला सांगा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekali sehari, Lorvex menyimpan salinan data anda pada peranti ini. Lorvex menyimpan salinan 7 hari terakhir dan satu salinan daripada setiap minggu dalam 4 minggu sebelumnya. Salinan kekal pada peranti ini dan tidak diselaraskan. Item yang anda padam kekal di dalamnya sehingga salinan itu luput. Untuk memulihkan sesuatu, minta pembantu AI anda membandingkan data anda dengan sandaran."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén keer per dag bewaart Lorvex een kopie van je gegevens op dit apparaat. Lorvex bewaart de kopieën van de afgelopen 7 dagen en één kopie van elk van de 4 weken daarvoor. De kopieën blijven op dit apparaat en worden niet gesynchroniseerd. Items die je verwijdert, blijven erin staan totdat de kopieën verlopen. Om iets terug te halen, vraag je assistent om je gegevens met een back-up te vergelijken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raz dziennie Lorvex zapisuje na tym urządzeniu kopię danych. Zachowuje kopie z ostatnich 7 dni oraz po jednej kopii z każdego z 4 poprzednich tygodni. Kopie pozostają na tym urządzeniu i nie są synchronizowane. Usunięte elementy pozostają w nich do czasu, aż kopie zostaną automatycznie usunięte jako zbyt stare. Aby coś przywrócić, poproś asystenta o porównanie danych z kopią zapasową."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma vez por dia, o Lorvex salva neste dispositivo uma cópia dos seus dados. Ele mantém as cópias dos últimos 7 dias e uma cópia de cada uma das 4 semanas anteriores. As cópias ficam neste dispositivo e não são sincronizadas. Os itens que você exclui permanecem nelas até as cópias expirarem. Para recuperar algo, peça ao seu assistente que compare seus dados com um backup."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O dată pe zi, Lorvex salvează pe acest dispozitiv o copie a datelor. Păstrează copiile din ultimele 7 zile și câte o copie din fiecare dintre cele 4 săptămâni anterioare. Copiile rămân pe acest dispozitiv și nu sunt sincronizate. Elementele șterse rămân în ele până când copiile expiră. Pentru a recupera ceva, cereți asistentului să compare datele cu o copie de rezervă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Раз в день Lorvex сохраняет на этом устройстве копию данных. Он хранит копии за последние 7 дней и по одной копии за каждую из 4 предыдущих недель. Копии остаются на этом устройстве и не синхронизируются. Удалённые элементы остаются в них, пока копии не устареют и не будут удалены. Чтобы что-то вернуть, попросите ассистента сравнить данные с резервной копией."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex ஒரு நாளில் ஒருமுறை இந்தச் சாதனத்தில் உங்கள் தரவின் ஒரு நகலைச் சேமிக்கிறது. கடந்த 7 நாட்களின் நகல்களையும், அதற்கு முந்தைய 4 வாரங்கள் ஒவ்வொன்றிலிருந்தும் ஒரு நகலையும் அது வைத்திருக்கும். நகல்கள் இந்தச் சாதனத்திலேயே இருக்கும்; அவை ஒத்திசைக்கப்படாது. நீங்கள் நீக்கும் ஐட்டங்கள், நகல்கள் பழையதாகி நீக்கப்படும் வரை அவற்றில் இருக்கும். ஏதேனும் ஒன்றை மீட்க, உங்கள் அசிஸ்டென்ட்டிடம் உங்கள் தரவை ஒரு பேக்-அப்புடன் ஒப்பிடச் சொல்லுங்கள்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex రోజుకు ఒకసారి ఈ డివైజ్‌లో మీ డేటా కాపీని సేవ్ చేస్తుంది. గత 7 రోజుల కాపీలను, అంతకుముందు 4 వారాల్లో ప్రతి వారం నుండి ఒక కాపీని ఉంచుతుంది. కాపీలు ఈ డివైజ్‌లోనే ఉంటాయి, సింక్ కావు. మీరు తొలగించిన ఐటెమ్‌లు కాపీలు పాతబడి తొలగించబడే వరకు వాటిలో ఉంటాయి. ఏదైనా తిరిగి పొందడానికి, మీ డేటాను బ్యాకప్‌తో పోల్చమని మీ అసిస్టెంట్‌ను అడగండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex จะบันทึกสำเนาข้อมูลของคุณไว้บนอุปกรณ์เครื่องนี้วันละครั้ง โดยเก็บสำเนาของ 7 วันล่าสุด และสำเนาหนึ่งชุดจากแต่ละสัปดาห์ในช่วง 4 สัปดาห์ก่อนหน้านั้น สำเนาจะอยู่บนอุปกรณ์เครื่องนี้และจะไม่เชื่อมข้อมูล รายการที่คุณลบจะยังอยู่ในสำเนาจนกว่าสำเนานั้นจะหมดอายุ หากต้องการกู้คืนบางอย่าง ให้ขอให้ผู้ช่วยเปรียบเทียบข้อมูลกับข้อมูลสำรอง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex, günde bir kez verilerinizin bir kopyasını bu aygıtta saklar. Son 7 günün kopyalarını ve bunlardan önceki 4 haftanın her birinden bir kopyayı tutar. Kopyalar bu aygıtta kalır ve eşzamanlanmaz. Sildiğiniz öğeler, kopyalar eskiyip silinene kadar bu kopyalarda kalır. Bir şeyi geri getirmek için asistanınızdan verilerinizi bir yedekle karşılaştırmasını isteyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Раз на день Lorvex зберігає на цьому пристрої копію даних. Він зберігає копії за останні 7 днів і по одній копії за кожен із 4 попередніх тижнів. Копії залишаються на цьому пристрої й не синхронізуються. Видалені елементи залишаються в них, доки копії не застаріють і не будуть видалені. Щоб щось повернути, попросіть асистента порівняти дані з резервною копією."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex دن میں ایک بار اس ڈیوائس پر آپ کے ڈیٹا کی ایک کاپی محفوظ کرتا ہے۔ یہ پچھلے 7 دنوں کی کاپیاں اور اس سے پہلے کے 4 ہفتوں میں سے ہر ہفتے کی ایک کاپی رکھتا ہے۔ کاپیاں اسی ڈیوائس پر رہتی ہیں اور سنک نہیں ہوتیں۔ آپ کے ہٹائے ہوئے آئٹمز ان میں اس وقت تک رہتے ہیں جب تک کاپیاں پرانی ہو کر ہٹ نہ جائیں۔ کچھ واپس لانے کے لیے اپنے اسسٹنٹ سے کہیں کہ وہ آپ کے ڈیٹا کا کسی بیک اپ سے موازنہ کرے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi ngày một lần, Lorvex lưu một bản sao dữ liệu của bạn trên thiết bị này. Lorvex giữ các bản sao của 7 ngày gần nhất và một bản sao cho mỗi tuần trong 4 tuần trước đó. Các bản sao nằm trên thiết bị này và không được đồng bộ hóa. Những mục bạn xóa vẫn còn trong các bản sao cho đến khi chúng hết hạn. Để khôi phục điều gì đó, hãy nhờ trợ lý so sánh dữ liệu với một bản sao lưu."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 每天会在此设备上保存一份你的数据副本。它会保留最近 7 天的副本，以及之前 4 周中每周的一份副本。这些副本只保存在此设备上，不会同步。你删除的内容会留在副本中，直到副本过期。如需恢复某些内容，请让助手将你的数据与某个备份进行比较。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 每天會在此裝置上儲存一份你的資料副本。它會保留最近 7 天的副本，以及之前 4 週中每週的一份副本。這些副本只會留在此裝置上，不會同步。你刪除的內容會留在副本中，直到副本到期。如要還原某些內容，請讓助理將你的資料與某個備份進行比較。"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.footer_mobile": {
+      "comment": "Footer under the daily backups switch on iPhone and iPad, where no assistant can read the backups.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحفظ Lorvex نسخة من بياناتك على هذا الجهاز مرة واحدة يوميًا. ويحتفظ بنسخ آخر 7 أيام ونسخة واحدة من كل أسبوع من الأسابيع الأربعة التي سبقتها. تبقى النسخ على هذا الجهاز ولا تتم مزامنتها. وتظل العناصر التي تحذفها موجودة فيها إلى أن تنتهي مدة الاحتفاظ بها."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দিনে একবার Lorvex এই ডিভাইসে আপনার ডেটার একটি কপি সেভ করে। এটি শেষ 7 দিনের কপি এবং তার আগের 4 সপ্তাহের প্রতিটি থেকে একটি করে কপি রাখে। কপিগুলো এই ডিভাইসেই থাকে এবং সিঙ্ক হয় না। আপনার মুছে ফেলা আইটেম কপিগুলোতে থেকে যায়, যতক্ষণ না কপিগুলো পুরোনো হয়ে মুছে যায়।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex speichert einmal am Tag eine Kopie deiner Daten auf diesem Gerät. Lorvex behält die Kopien der letzten 7 Tage und je eine Kopie aus jeder der 4 Wochen davor. Die Kopien bleiben auf diesem Gerät und werden nicht synchronisiert. Objekte, die du löschst, bleiben darin erhalten, bis die alten Kopien automatisch entfernt werden."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μία φορά την ημέρα, το Lorvex αποθηκεύει σε αυτή τη συσκευή ένα αντίγραφο των δεδομένων. Διατηρεί τα αντίγραφα των τελευταίων 7 ημερών και ένα αντίγραφο από καθεμία από τις 4 προηγούμενες εβδομάδες. Τα αντίγραφα παραμένουν σε αυτή τη συσκευή και δεν συγχρονίζονται. Τα στοιχεία που διαγράφετε παραμένουν σε αυτά μέχρι να λήξουν τα αντίγραφα."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Once a day, Lorvex saves a copy of your data on this device. It keeps the last 7 days and one copy from each of the 4 weeks before. The copies stay on this device and are not synced. Items you delete stay in them until they age out."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una vez al día, Lorvex guarda en este dispositivo una copia de tus datos. Conserva las copias de los últimos 7 días y una de cada una de las 4 semanas anteriores. Las copias se quedan en este dispositivo y no se sincronizan. Los elementos que eliminas permanecen en ellas hasta que las copias caducan."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex روزی یک بار یک نسخه از داده‌های شما را روی این دستگاه ذخیره می‌کند. نسخه‌های 7 روز اخیر و از هر یک از 4 هفته پیش از آن یک نسخه را نگه می‌دارد. نسخه‌ها روی این دستگاه می‌مانند و همگام‌سازی نمی‌شوند. مواردی که حذف می‌کنید تا زمانی که نسخه‌ها منقضی شوند در آن‌ها باقی می‌مانند."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une fois par jour, Lorvex enregistre sur cet appareil une copie de vos données. Il conserve les copies des 7 derniers jours et une copie de chacune des 4 semaines précédentes. Les copies restent sur cet appareil et ne sont pas synchronisées. Les éléments que vous supprimez y restent jusqu’à ce que les copies expirent."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פעם ביום Lorvex שומר במכשיר הזה עותק של הנתונים. הוא שומר את העותקים של 7 הימים האחרונים ועותק אחד מכל אחד מ-4 השבועות שקדמו להם. העותקים נשארים במכשיר הזה ואינם מסונכרנים. פריטים שנמחקו נשארים בהם עד שהעותקים הישנים נמחקים אוטומטית."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex दिन में एक बार इस डिवाइस पर आपके डेटा की एक कॉपी सेव करता है। यह पिछले 7 दिनों की कॉपियाँ और उससे पहले के 4 हफ़्तों में से हर हफ़्ते की एक कॉपी रखता है। कॉपियाँ इसी डिवाइस पर रहती हैं और सिंक नहीं होतीं। आपके हटाए गए आइटम इन कॉपियों में तब तक रहते हैं, जब तक ये पुरानी होकर हट नहीं जातीं।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekali sehari, Lorvex menyimpan salinan data Anda di perangkat ini. Lorvex menyimpan salinan 7 hari terakhir dan satu salinan dari setiap minggu dalam 4 minggu sebelumnya. Salinan tetap berada di perangkat ini dan tidak diselaraskan. Item yang Anda hapus tetap ada di dalamnya sampai salinan itu kedaluwarsa."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una volta al giorno, Lorvex salva su questo dispositivo una copia dei tuoi dati. Conserva le copie degli ultimi 7 giorni e una copia per ciascuna delle 4 settimane precedenti. Le copie restano su questo dispositivo e non vengono sincronizzate. Gli elementi che elimini rimangono nelle copie finché non scadono."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexは1日に1回、このデバイスにデータのコピーを保存します。直近7日分のコピーと、その前の4週間それぞれ1つずつのコピーを保持します。コピーはこのデバイスに残り、同期されません。削除した項目は、コピーが自動的に削除されるまで、その中に残ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex는 하루에 한 번 이 기기에 데이터 사본을 저장합니다. 최근 7일의 사본과 그 이전 4주 동안 각 주의 사본을 하나씩 보관합니다. 사본은 이 기기에만 남으며 동기화되지 않습니다. 삭제한 항목은 사본이 오래되어 지워질 때까지 사본에 남아 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex दिवसातून एकदा या डिव्हाइसवर तुमच्या डेटाची एक कॉपी सेव्ह करते. ते मागील 7 दिवसांच्या कॉपी आणि त्याआधीच्या 4 आठवड्यांपैकी प्रत्येक आठवड्याची एक कॉपी ठेवते. कॉपी या डिव्हाइसवरच राहतात आणि सिंक होत नाहीत. तुम्ही हटवलेले आयटम कॉपी जुन्या होऊन काढल्या जाईपर्यंत त्यांत राहतात."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekali sehari, Lorvex menyimpan salinan data anda pada peranti ini. Lorvex menyimpan salinan 7 hari terakhir dan satu salinan daripada setiap minggu dalam 4 minggu sebelumnya. Salinan kekal pada peranti ini dan tidak diselaraskan. Item yang anda padam kekal di dalamnya sehingga salinan itu luput."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eén keer per dag bewaart Lorvex een kopie van je gegevens op dit apparaat. Lorvex bewaart de kopieën van de afgelopen 7 dagen en één kopie van elk van de 4 weken daarvoor. De kopieën blijven op dit apparaat en worden niet gesynchroniseerd. Items die je verwijdert, blijven erin staan totdat de kopieën verlopen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raz dziennie Lorvex zapisuje na tym urządzeniu kopię danych. Zachowuje kopie z ostatnich 7 dni oraz po jednej kopii z każdego z 4 poprzednich tygodni. Kopie pozostają na tym urządzeniu i nie są synchronizowane. Usunięte elementy pozostają w nich do czasu, aż kopie zostaną automatycznie usunięte jako zbyt stare."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma vez por dia, o Lorvex salva neste dispositivo uma cópia dos seus dados. Ele mantém as cópias dos últimos 7 dias e uma cópia de cada uma das 4 semanas anteriores. As cópias ficam neste dispositivo e não são sincronizadas. Os itens que você exclui permanecem nelas até as cópias expirarem."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O dată pe zi, Lorvex salvează pe acest dispozitiv o copie a datelor. Păstrează copiile din ultimele 7 zile și câte o copie din fiecare dintre cele 4 săptămâni anterioare. Copiile rămân pe acest dispozitiv și nu sunt sincronizate. Elementele șterse rămân în ele până când copiile expiră."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Раз в день Lorvex сохраняет на этом устройстве копию данных. Он хранит копии за последние 7 дней и по одной копии за каждую из 4 предыдущих недель. Копии остаются на этом устройстве и не синхронизируются. Удалённые элементы остаются в них, пока копии не устареют и не будут удалены."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex ஒரு நாளில் ஒருமுறை இந்தச் சாதனத்தில் உங்கள் தரவின் ஒரு நகலைச் சேமிக்கிறது. கடந்த 7 நாட்களின் நகல்களையும், அதற்கு முந்தைய 4 வாரங்கள் ஒவ்வொன்றிலிருந்தும் ஒரு நகலையும் அது வைத்திருக்கும். நகல்கள் இந்தச் சாதனத்திலேயே இருக்கும்; அவை ஒத்திசைக்கப்படாது. நீங்கள் நீக்கும் ஐட்டங்கள், நகல்கள் பழையதாகி நீக்கப்படும் வரை அவற்றில் இருக்கும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex రోజుకు ఒకసారి ఈ డివైజ్‌లో మీ డేటా కాపీని సేవ్ చేస్తుంది. గత 7 రోజుల కాపీలను, అంతకుముందు 4 వారాల్లో ప్రతి వారం నుండి ఒక కాపీని ఉంచుతుంది. కాపీలు ఈ డివైజ్‌లోనే ఉంటాయి, సింక్ కావు. మీరు తొలగించిన ఐటెమ్‌లు కాపీలు పాతబడి తొలగించబడే వరకు వాటిలో ఉంటాయి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex จะบันทึกสำเนาข้อมูลของคุณไว้บนอุปกรณ์เครื่องนี้วันละครั้ง โดยเก็บสำเนาของ 7 วันล่าสุด และสำเนาหนึ่งชุดจากแต่ละสัปดาห์ในช่วง 4 สัปดาห์ก่อนหน้านั้น สำเนาจะอยู่บนอุปกรณ์เครื่องนี้และจะไม่เชื่อมข้อมูล รายการที่คุณลบจะยังอยู่ในสำเนาจนกว่าสำเนานั้นจะหมดอายุ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex, günde bir kez verilerinizin bir kopyasını bu aygıtta saklar. Son 7 günün kopyalarını ve bunlardan önceki 4 haftanın her birinden bir kopyayı tutar. Kopyalar bu aygıtta kalır ve eşzamanlanmaz. Sildiğiniz öğeler, kopyalar eskiyip silinene kadar bu kopyalarda kalır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Раз на день Lorvex зберігає на цьому пристрої копію даних. Він зберігає копії за останні 7 днів і по одній копії за кожен із 4 попередніх тижнів. Копії залишаються на цьому пристрої й не синхронізуються. Видалені елементи залишаються в них, доки копії не застаріють і не будуть видалені."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex دن میں ایک بار اس ڈیوائس پر آپ کے ڈیٹا کی ایک کاپی محفوظ کرتا ہے۔ یہ پچھلے 7 دنوں کی کاپیاں اور اس سے پہلے کے 4 ہفتوں میں سے ہر ہفتے کی ایک کاپی رکھتا ہے۔ کاپیاں اسی ڈیوائس پر رہتی ہیں اور سنک نہیں ہوتیں۔ آپ کے ہٹائے ہوئے آئٹمز ان میں اس وقت تک رہتے ہیں جب تک کاپیاں پرانی ہو کر ہٹ نہ جائیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi ngày một lần, Lorvex lưu một bản sao dữ liệu của bạn trên thiết bị này. Lorvex giữ các bản sao của 7 ngày gần nhất và một bản sao cho mỗi tuần trong 4 tuần trước đó. Các bản sao nằm trên thiết bị này và không được đồng bộ hóa. Những mục bạn xóa vẫn còn trong các bản sao cho đến khi chúng hết hạn."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 每天会在此设备上保存一份你的数据副本。它会保留最近 7 天的副本，以及之前 4 周中每周的一份副本。这些副本只保存在此设备上，不会同步。你删除的内容会留在副本中，直到副本过期。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 每天會在此裝置上儲存一份你的資料副本。它會保留最近 7 天的副本，以及之前 4 週中每週的一份副本。這些副本只會留在此裝置上，不會同步。你刪除的內容會留在副本中，直到副本到期。"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.latest": {
+      "comment": "Row label; its value is the date of the newest daily backup.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أحدث نسخة احتياطية"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সর্বশেষ ব্যাকআপ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letztes Backup"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Τελευταίο αντίγραφο ασφαλείας"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latest Backup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última copia de seguridad"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخرین پشتیبان"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière sauvegarde"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הגיבוי האחרון"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "नवीनतम बैकअप"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadangan Terbaru"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultimo backup"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新のバックアップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최신 백업"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "नवीनतम बॅकअप"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandaran Terkini"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laatste back-up"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najnowsza kopia zapasowa"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Último backup"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultima copie de rezervă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Последняя резервная копия"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சமீபத்திய பேக்-அப்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "తాజా బ్యాకప్"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้อมูลสำรองล่าสุด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son yedek"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Остання резервна копія"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تازہ ترین بیک اپ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu mới nhất"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新备份"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新備份"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.list_footer": {
+      "comment": "Footer under the list of daily backups on iPhone and iPad.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شارك نسخة احتياطية لتحتفظ بنسخة منها في مكان آخر. ويستطيع Lorvex استيرادها مثل أي ملف مُصدَّر."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অন্য কোথাও একটি কপি রাখতে একটি ব্যাকআপ শেয়ার করুন। যেকোনো এক্সপোর্ট করা ফাইলের মতোই Lorvex এটি ইম্পোর্ট করতে পারে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teile ein Backup, um eine Kopie an einem anderen Ort aufzubewahren. Lorvex kann es wie jeden Export importieren."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κάντε κοινή χρήση ενός αντιγράφου ασφαλείας για να κρατήσετε ένα αντίγραφο αλλού. Το Lorvex μπορεί να το εισαγάγει όπως κάθε εξαγωγή."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share a backup to keep a copy somewhere else. Lorvex can import it like any export."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparte una copia de seguridad para guardar una copia en otro lugar. Lorvex puede importarla como cualquier exportación."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای نگه داشتن یک نسخه در جایی دیگر، یک پشتیبان را هم‌رسانی کنید. Lorvex می‌تواند آن را مانند هر فایل صادرشده وارد کند."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partagez une sauvegarde pour en garder une copie ailleurs. Lorvex peut l’importer comme n’importe quel fichier exporté."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כדי לשמור עותק במקום אחר, יש לשתף גיבוי. Lorvex יכול לייבא אותו כמו כל קובץ שיוצא."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कहीं और कॉपी रखने के लिए कोई बैकअप शेयर करें। Lorvex उसे किसी भी एक्सपोर्ट की तरह इंपोर्ट कर सकता है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bagikan cadangan untuk menyimpan salinan di tempat lain. Lorvex dapat mengimpornya seperti ekspor lainnya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi un backup per conservarne una copia altrove. Lorvex può importarlo come qualsiasi file esportato."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別の場所にコピーを保管したいときは、バックアップを共有してください。Lorvexでは、ほかの書き出しファイルと同じように読み込めます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 곳에 사본을 보관하려면 백업을 공유하세요. Lorvex는 다른 내보내기 파일과 똑같이 가져올 수 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दुसरीकडे एक कॉपी ठेवण्यासाठी बॅकअप शेअर करा. कोणत्याही एक्सपोर्टप्रमाणे Lorvex तो इम्पोर्ट करू शकते."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kongsikan sandaran untuk menyimpan salinan di tempat lain. Lorvex boleh mengimportnya seperti mana-mana fail yang dieksport."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deel een back-up om ergens anders een kopie te bewaren. Lorvex kan die importeren zoals elk geëxporteerd bestand."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udostępnij kopię zapasową, aby zachować jej kopię w innym miejscu. Lorvex może ją zaimportować jak każdy wyeksportowany plik."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartilhe um backup para guardar uma cópia em outro lugar. O Lorvex pode importá-lo como qualquer arquivo exportado."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partajați o copie de rezervă pentru a păstra o copie în altă parte. Lorvex o poate importa ca orice fișier exportat."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поделитесь резервной копией, чтобы сохранить копию в другом месте. Lorvex импортирует её так же, как любой экспортированный файл."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வேறொரு இடத்தில் நகலை வைத்திருக்க, ஒரு பேக்-அப்பைப் பகிரவும். எந்த எக்ஸ்போர்ட்டையும் போலவே Lorvex இதை இம்போர்ட் செய்யும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కాపీని మరొక చోట ఉంచుకోవడానికి బ్యాకప్‌ను షేర్ చేయండి. ఇతర ఎక్స్‌పోర్ట్‌ల లాగానే Lorvex దీన్ని ఇంపోర్ట్ చేయగలదు."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แชร์ข้อมูลสำรองเพื่อเก็บสำเนาไว้ที่อื่น Lorvex นำเข้าได้เหมือนไฟล์ที่ส่งออกทั่วไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyayı başka bir yerde tutmak için bir yedeği paylaşın. Lorvex, bunu dışa aktarılmış herhangi bir dosya gibi içe aktarabilir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поділіться резервною копією, щоб зберегти копію в іншому місці. Lorvex імпортує її так само, як будь-який експортований файл."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کاپی کسی اور جگہ رکھنے کے لیے بیک اپ شیئر کریں۔ Lorvex اسے کسی بھی ایکسپورٹ کی طرح امپورٹ کر سکتا ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy chia sẻ một bản sao lưu để giữ một bản sao ở nơi khác. Lorvex có thể nhập nó như mọi tệp đã xuất."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共享备份即可在别处保留一份副本。Lorvex 可以像导入任何导出的文件一样导入它。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享備份即可在別處保留一份副本。Lorvex 可以像匯入任何匯出的檔案一樣匯入它。"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.none_yet": {
+      "comment": "Value of the Latest Backup row before the first daily backup is saved.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد بعد"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এখনও নেই"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keines"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κανένα ακόμη"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna todavía"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هنوز وجود ندارد"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune pour l’instant"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עדיין אין"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अभी तक कोई नहीं"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belum ada"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ancora nessuno"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まだありません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अजून नाही"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belum ada"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog geen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeszcze brak"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum ainda"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încă niciuna"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пока нет"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இதுவரை இல்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇంకా లేదు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยังไม่มี"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz yok"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ще немає"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابھی تک کوئی نہیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa có"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚無"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.share": {
+      "comment": "VoiceOver label of a backup's share button. %@ is the backup's date.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشاركة النسخة الاحتياطية بتاريخ %@"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ তারিখের ব্যাকআপ শেয়ার করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup vom %@ teilen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κοινή χρήση του αντιγράφου ασφαλείας από %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the backup from %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir la copia de seguridad del %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هم‌رسانی پشتیبان مورخ %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager la sauvegarde du %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שיתוף הגיבוי מתאריך %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ का बैकअप शेयर करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bagikan cadangan dari %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condividi il backup del giorno %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@のバックアップを共有"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 백업 공유"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ चा बॅकअप शेअर करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kongsi sandaran bertarikh %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deel de back-up van %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udostępnij kopię zapasową: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartilhar o backup de %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partajați copia de rezervă din %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поделиться резервной копией: %@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ தேதியின் பேக்-அப்பைப் பகிரவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ నాటి బ్యాకప్‌ను షేర్ చేయండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แชร์ข้อมูลสำรองของ %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tarihli yedeği paylaş"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поділитися резервною копією: %@"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ کا بیک اپ شیئر کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chia sẻ bản sao lưu ngày %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共享 %@ 的备份"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享 %@ 的備份"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.show_in_finder": {
+      "comment": "Mac button that opens Finder at the newest daily backup file.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار في Finder"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder-এ দেখান"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder anzeigen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εμφάνιση στο Finder"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en el Finder"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمایش در Finder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher dans le Finder"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הצג ב-Finder"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder में दिखाएँ"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan di Finder"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra nel Finder"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finderで表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder에서 보기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder मध्ये दाखवा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunjukkan dalam Finder"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toon in Finder"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokaż w Finderze"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar no Finder"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează în Finder"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать в Finder"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finderஇல் காட்டவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finderలో చూపండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แสดงใน Finder"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder’da göster"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показати у Finder"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder میں دکھائیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiển thị trong Finder"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中显示"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Finder 中顯示"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.title": {
+      "comment": "Settings › Data: title of the section about the automatic daily backups.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخ الاحتياطية اليومية"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দৈনিক ব্যাকআপ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tägliche Backups"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ημερήσια αντίγραφα ασφαλείας"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily Backups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copias de seguridad diarias"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان‌های روزانه"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sauvegardes quotidiennes"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "גיבויים יומיים"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक बैकअप"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadangan Harian"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup giornalieri"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "毎日のバックアップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일일 백업"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक बॅकअप"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandaran Harian"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagelijkse back-ups"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codzienne kopie zapasowe"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backups diários"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copii de rezervă zilnice"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ежедневные резервные копии"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினசரி பேக்-அப்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రోజువారీ బ్యాకప్‌లు"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้อมูลสำรองรายวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük yedekler"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щоденні резервні копії"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روزانہ بیک اپ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu hàng ngày"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每日备份"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每日備份"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.toggle": {
+      "comment": "Switch that turns the automatic daily backups on this device on or off.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاحتفاظ بنسخ احتياطية يومية"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দৈনিক ব্যাকআপ রাখুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tägliche Backups aufbewahren"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Διατήρηση ημερήσιων αντιγράφων ασφαλείας"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Daily Backups"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantener copias de seguridad diarias"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نگه داشتن پشتیبان‌های روزانه"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver les sauvegardes quotidiennes"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שמירת גיבויים יומיים"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक बैकअप रखें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simpan Cadangan Harian"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantieni i backup giornalieri"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "毎日のバックアップを保持"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일일 백업 보관"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक बॅकअप ठेवा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simpan Sandaran Harian"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagelijkse back-ups bewaren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przechowuj codzienne kopie zapasowe"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manter backups diários"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Păstrați copii de rezervă zilnice"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хранить ежедневные резервные копии"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினசரி பேக்-அப்களை வைத்திருக்கவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రోజువారీ బ్యాకప్‌లను ఉంచండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เก็บข้อมูลสำรองรายวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük yedekleri sakla"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зберігати щоденні резервні копії"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روزانہ بیک اپ رکھیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giữ bản sao lưu hàng ngày"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留每日备份"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留每日備份"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.turn_off.confirm": {
+      "comment": "Destructive button that turns daily backups off and deletes them.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধ করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausschalten"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Απενεργοποίηση"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn Off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاموش کردن"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כיבוי"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बंद करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matikan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattiva"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフにする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끄기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बंद करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matikan"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet uit"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyłącz"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivați"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключить"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "முடக்கு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఆఫ్ చేయండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapat"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимкнути"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بند کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.turn_off.message": {
+      "comment": "Message of the confirmation shown before daily backups are turned off.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحذف Lorvex النسخ الاحتياطية التي احتفظ بها على هذا الجهاز."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই ডিভাইসে রাখা ব্যাকআপগুলো Lorvex মুছে ফেলে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex löscht die Backups, die es auf diesem Gerät aufbewahrt hat."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Το Lorvex διαγράφει τα αντίγραφα ασφαλείας που έχει κρατήσει σε αυτή τη συσκευή."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex deletes the backups it has kept on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex elimina las copias de seguridad que ha guardado en este dispositivo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex پشتیبان‌هایی را که روی این دستگاه نگه داشته است حذف می‌کند."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex supprime les sauvegardes qu’il a conservées sur cet appareil."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex מוחק את הגיבויים ששמר במכשיר הזה."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex इस डिवाइस पर रखे गए बैकअप हटा देता है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex menghapus cadangan yang disimpannya di perangkat ini."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex elimina i backup che ha conservato su questo dispositivo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexは、このデバイスに保持しているバックアップを削除します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex가 이 기기에 보관한 백업을 삭제합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex या डिव्हाइसवर ठेवलेले बॅकअप हटवते."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex memadamkan sandaran yang disimpannya pada peranti ini."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex verwijdert de back-ups die het op dit apparaat heeft bewaard."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex usuwa kopie zapasowe, które zachował na tym urządzeniu."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Lorvex exclui os backups que guardou neste dispositivo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex șterge copiile de rezervă pe care le-a păstrat pe acest dispozitiv."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex удаляет резервные копии, сохранённые на этом устройстве."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் சாதனத்தில் Lorvex வைத்திருந்த பேக்-அப்களை நீக்குகிறது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ డివైజ్‌లో ఉంచిన బ్యాకప్‌లను Lorvex తొలగిస్తుంది."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex จะลบข้อมูลสำรองที่เก็บไว้บนอุปกรณ์เครื่องนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex, bu aygıtta sakladığı yedekleri siler."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex видаляє резервні копії, збережені на цьому пристрої."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex اس ڈیوائس پر رکھے گئے بیک اپ ہٹا دیتا ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex xóa các bản sao lưu mà nó đã giữ trên thiết bị này."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 会删除它在此设备上保留的备份。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 會刪除它在此裝置上保留的備份。"
+          }
+        }
+      }
+    },
+    "settings.daily_backups.turn_off.title": {
+      "comment": "Title of the confirmation shown before daily backups are turned off.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف النسخ الاحتياطية اليومية؟"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দৈনিক ব্যাকআপ বন্ধ করবেন?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tägliche Backups ausschalten?"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Απενεργοποίηση των ημερήσιων αντιγράφων ασφαλείας;"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off daily backups?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desactivar las copias de seguridad diarias?"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پشتیبان‌های روزانه خاموش شوند؟"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver les sauvegardes quotidiennes ?"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לכבות את הגיבויים היומיים?"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक बैकअप बंद करें?"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matikan cadangan harian?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattivare i backup giornalieri?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "毎日のバックアップをオフにしますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일일 백업을 끌까요?"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक बॅकअप बंद करायचे?"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matikan sandaran harian?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagelijkse back-ups uitzetten?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyłączyć codzienne kopie zapasowe?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativar os backups diários?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivați copiile de rezervă zilnice?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключить ежедневные резервные копии?"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினசரி பேக்-அப்களை முடக்கவா?"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రోజువారీ బ్యాకప్‌లను ఆఫ్ చేయాలా?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิดข้อมูลสำรองรายวันหรือไม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük yedekler kapatılsın mı?"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимкнути щоденні резервні копії?"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روزانہ بیک اپ بند کریں؟"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt bản sao lưu hàng ngày?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要关闭每日备份吗？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要關閉每日備份嗎？"
+          }
+        }
+      }
+    },
     "task.status.cancelled": {
       "comment": "Display name for a cancelled task",
       "extractionState": "manual",

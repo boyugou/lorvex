@@ -420,6 +420,18 @@
       CommandLine.arguments.contains("-lorvexScrollSettingsToDataExport")
     }
 
+    /// Dev/QA only: when `-lorvexScrollSettingsToDailyBackups` is passed, the
+    /// Settings screen scrolls its Daily Backups section to the top.
+    public static var debugScrollSettingsToDailyBackups: Bool {
+      CommandLine.arguments.contains("-lorvexScrollSettingsToDailyBackups")
+    }
+
+    /// Dev/QA only: when `-lorvexOpenDailyBackups` is passed, the Settings
+    /// screen opens the list of daily backups once the first one is written.
+    public static var debugOpenDailyBackups: Bool {
+      CommandLine.arguments.contains("-lorvexOpenDailyBackups")
+    }
+
     /// Dev/QA only: when `-lorvexScrollSettingsToEnd` is passed, the Settings
     /// screen scrolls to the end of its list so a screenshot shows the last
     /// diagnostics rows with their Share button, Reset and About.

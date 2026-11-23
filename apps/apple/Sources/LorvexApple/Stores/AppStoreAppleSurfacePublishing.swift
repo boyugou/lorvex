@@ -146,6 +146,29 @@ extension AppStore {
     return source
   }
 
+  /// Start today's daily backup off the main actor when one is due
+  /// (``LorvexDailyBackupScheduler``). Not awaited: a backup must not hold up
+  /// the refresh or the sync pass behind it. A no-op while the store is being
+  /// erased and for a core without an on-disk store (previews).
+  func startDailyBackupIfDue() {
+    guard !isLocalFactoryResetRunning else { return }
+    let core = self.core
+    let day = logicalTodayDateString
+    Task.detached(priority: .utility) {
+      await LorvexDailyBackupScheduler.shared.runIfDue(
+        core: core, day: day, appVersion: LorvexProductMetadata.marketingVersion)
+    }
+  }
+
+  /// Run today's daily backup pass and wait for it: Settings calls this right
+  /// after backups are turned on, so the latest backup row fills at once.
+  func runDailyBackupIfDue() async {
+    guard !isLocalFactoryResetRunning else { return }
+    await LorvexDailyBackupScheduler.shared.runIfDue(
+      core: core, day: logicalTodayDateString,
+      appVersion: LorvexProductMetadata.marketingVersion, ignoringBackoff: true)
+  }
+
   /// Run local retention off the main actor, best-effort. A no-op for a
   /// non-envelope backend (previews) and swallowed on failure — retention GC
   /// must never surface an error or block the refresh. Retention commits in

@@ -56,6 +56,18 @@ person living with the app, and then a decision.
 
 ## Product work
 
+- Responsiveness and motion sprint (owner, 2026-11-23): how fast every
+  surface answers a tap, how long and how smooth each animation is, and
+  where scrolling or a screen change stutters, on the Mac, iPhone, iPad and
+  Watch. Measure before changing anything: launch time, the time from a
+  tap to its result on screen for the common actions (complete, defer,
+  open a task, switch a tab or workspace), the hitch rate while scrolling
+  long lists and the calendar, and each animation's duration and curve
+  (the design system has no shared motion values yet; `lorvexAnimated`
+  only turns animation off under Reduce Motion). MetricKit on the owner's Mac has
+  one data point already: a 3.3 s launch against 0.7 to 1.2 s on other days
+  (see "Disk writes and launch time" below). Then fix the slowest and the
+  most visible first, and keep the measurements as a repeatable script.
 - Platform adaptation sprint (owner, 2026-11-16): iPhone Duo and useful
   capabilities in macOS 27 and iOS 27. The deployment floor stays at 26, so
   every 27 API sits behind an availability check. The system integration
@@ -272,7 +284,8 @@ noticed.
     instructions do not say when to pick one up.
   - Server-written text inside the user-data markers: error messages and
     memory keys come back wrapped in `⟦user⟧…⟦/user⟧`.
-  - The tool list is 120 tools and 165,697 bytes of JSON. Claude Code loads
+  - The tool list is 122 tools; the `tools/list` result is 165,447 bytes of
+    compact JSON (development host, 2026-11-23). Claude Code loads
     it on demand, and a client that loads all of it pays that size in every
     conversation. Whether to offer a smaller default set is open.
 
@@ -305,12 +318,15 @@ noticed.
   batch bar's Complete and Defer) are about 2.2:1 on white at the default
   contrast setting (the green measured on a capture, the orange computed
   from the system color) and darken only under Increase Contrast.
-- A safety net for a person's data. Export is by hand (Settings, a Shortcuts
-  action, an MCP tool); nothing keeps a dated copy. An assistant can cancel
-  a whole list in one call, undo covers one assistant update at a time, and
-  a sync defect can leave devices disagreeing for weeks (build 174). A local
-  snapshot kept for some days and restorable from Settings would bound the
-  loss from any of these.
+- Bringing an item back from a daily backup without an assistant. Each
+  device keeps daily backups (7 days plus 4 weeks), and on the Mac an
+  assistant can compare them with the current data
+  (`compare_with_daily_backup`) and recreate what is gone. Two gaps remain:
+  a person without an assistant has no way to restore one item, because
+  import skips existing records and never revives a deleted one; and the
+  iPhone's backups are reachable only by sharing the file, since the MCP
+  server runs on the Mac. A "Deleted since…" screen in Settings that lists a
+  backup's removed items and recreates the chosen ones would close both.
 - Disk writes and launch time on a real store. MetricKit on the owner's Mac,
   whose database is 2.5 MB, reported 28.5 MB written on 2026-11-22 and
   10.2 MB on 2026-11-14, against 1.2 to 4.1 MB on three other days, and one

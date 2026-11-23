@@ -44,5 +44,18 @@ enum SystemToolDefinitions {
     .write(116, SystemContextToolCatalog.undoAIChangeTool) {
       try await $0.undoAIChangeResult(arguments: $1)
     },
+    .read(120, DailyBackupToolCatalog.listDailyBackupsTool) { registry, _ in
+      try await registry.listDailyBackupsResult()
+    },
+    .read(
+      121, DailyBackupToolCatalog.compareWithDailyBackupTool,
+      responseFencing: ToolResponseFencing(
+        stringFields: SecurityFencing.userContentKeys
+          .union(DailyBackupComparison.extraUserContentKeys),
+        stringArrayFields: SecurityFencing.userContentArrayKeys,
+        fenceTextContent: true)
+    ) {
+      try await $0.compareWithDailyBackupResult(arguments: $1)
+    },
   ]
 }

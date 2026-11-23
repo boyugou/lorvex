@@ -381,6 +381,7 @@ extension AppStore {
   /// changes and sends the outbox. Errors land in the cycle's status fields;
   /// sync is invisible and best-effort.
   private func runRefreshSyncTail() async {
+    startDailyBackupIfDue()
     await runLocalRetentionMaintenance()
     await runCloudSyncCycle()
     await reportCloudSyncToAssistant()

@@ -260,6 +260,18 @@
       "id"
     ]
   },
+  "compare_with_daily_backup": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "day": "string",
+      "entities": "array<enum[calendar_events,daily_briefings,daily_reviews,habits,lists,memory,tags,task_calendar_event_links,tasks]>",
+      "ids": "array<string>",
+      "limit": "integer"
+    },
+    "required": [
+      "day"
+    ]
+  },
   "complete_habit": {
     "advertises_idempotency_key": true,
     "properties": {
@@ -822,6 +834,11 @@
     ]
   },
   "list_all_tags": {
+    "advertises_idempotency_key": false,
+    "properties": {},
+    "required": []
+  },
+  "list_daily_backups": {
     "advertises_idempotency_key": false,
     "properties": {},
     "required": []

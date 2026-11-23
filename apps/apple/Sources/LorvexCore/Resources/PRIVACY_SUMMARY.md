@@ -38,7 +38,19 @@ You may connect external AI assistant clients (for example Claude Desktop) to
 Lorvex over a local, on-device connection. Once you configure a client, it
 can read and modify your Lorvex data. Anything that client does with your
 data afterward is between you and that client — Lorvex itself never
-transmits your data to any third party.
+transmits your data to any third party. On the Mac, a connected client can
+also read the daily backups described below, including items you deleted
+that a backup still holds.
+
+## Daily backups
+
+Once a day, Lorvex saves a copy of your data on this device and keeps the
+copies from the last 7 days it ran plus one from each of the 4 weeks before.
+They stay on this device: they are never synced, and they are left out of
+iCloud Backup and Time Machine. One leaves the device only when you share it,
+or when an assistant you connected on the Mac reads it at your request. Turning off Keep Daily Backups in
+Settings deletes them, and resetting or erasing this device's data deletes
+them with everything else.
 
 ## Calendar and notifications
 

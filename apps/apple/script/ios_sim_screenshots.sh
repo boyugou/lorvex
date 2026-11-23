@@ -28,7 +28,8 @@
 # Routes: today today-suggestion tasks calendar calendar-week calendar-month
 #         habits review
 #         review-week setup-welcome setup-cloudSync setup-notifications setup-done
-#         settings settings-bottom settings-export settings-end memory lists task-detail
+#         settings settings-bottom settings-export settings-end settings-backups
+#         settings-backups-list memory lists task-detail
 #         habit-detail
 #         habit-detail-middle habit-detail-end habit-editor review-end review-week-end
 #         memory-detail task-detail-checklist task-detail-reminder capture
@@ -108,7 +109,9 @@
 #         (the DEBUG -lorvexScrollSettingsToDiagnostics hook), which puts the
 #         summary card and the newest failure rows on screen together;
 #         settings-export opens it scrolled to Data Export
-#         (-lorvexScrollSettingsToDataExport), and settings-end at the end
+#         (-lorvexScrollSettingsToDataExport), settings-backups to Daily
+#         Backups (-lorvexScrollSettingsToDailyBackups), settings-backups-list
+#         opens the list of backups (-lorvexOpenDailyBackups), and settings-end at the end
 #         of the list (-lorvexScrollSettingsToEnd): the last diagnostics
 #         rows and their Share button, Reset and About; the
 #         *-search-empty routes
@@ -160,7 +163,8 @@ url_for() {
     review-week|review-week-end) echo "lorvex://tab/review/week" ;;
     review-end) echo "lorvex://tab/review" ;;
     settings|memory|lists) echo "lorvex://dest/$1" ;;
-    settings-bottom|settings-export|settings-end) echo "lorvex://dest/settings" ;;
+    settings-bottom|settings-export|settings-end|settings-backups|settings-backups-list)
+      echo "lorvex://dest/settings" ;;
     today-suggestion) echo "lorvex://tab/today" ;;
     tasks-search-empty) echo "lorvex://tab/tasks/search/quokka" ;;
     habits-search-empty) echo "lorvex://tab/habits/search/quokka" ;;
@@ -202,6 +206,8 @@ extra_args_for() {
   case "$1" in
     settings-bottom) echo "-lorvexScrollSettingsToDiagnostics" ;;
     settings-export) echo "-lorvexScrollSettingsToDataExport" ;;
+    settings-backups) echo "-lorvexScrollSettingsToDailyBackups" ;;
+    settings-backups-list) echo "-lorvexOpenDailyBackups" ;;
     settings-end) echo "-lorvexScrollSettingsToEnd" ;;
     habit-detail-end) echo "-lorvexScrollHabitDetailToEnd" ;;
     habit-detail-middle) echo "-lorvexScrollHabitDetailToMiddle" ;;

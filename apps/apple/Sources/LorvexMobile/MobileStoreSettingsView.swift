@@ -29,6 +29,20 @@ public struct MobileStoreSettingsView: View {
         #endif
         MobileStoreDataExportSection(store: store)
         MobileStoreDataImportSection(store: store)
+        #if DEBUG
+          Color.clear
+            .frame(height: 1)
+            .listRowBackground(Color.clear)
+            .id(Self.debugDailyBackupsAnchor)
+        #endif
+        LorvexDailyBackupsSection(
+          core: store.core,
+          isDisabled: store.isDataImportRunning || store.isLocalDataResetRunning,
+          idPrefix: "mobileSettings.dailyBackups",
+          backUpNow: { await store.runDailyBackupIfDue() },
+          describeError: {
+            await store.userFacingBannerMessage(for: $0, source: "ios.ui.daily_backups_failed")
+          })
         MobileStoreSettingsChangelogRetentionSection(store: store)
         #if DEBUG
           // Invisible target immediately above Diagnostics so the screenshot
@@ -66,10 +80,19 @@ public struct MobileStoreSettingsView: View {
         #endif
       }
       .accessibilityIdentifier("mobileSettings.root")
+      #if DEBUG && !os(macOS)
+        .navigationDestination(isPresented: $debugShowsDailyBackups) {
+          LorvexDailyBackupsList(backups: debugDailyBackups)
+        }
+      #endif
     }
   }
 
   #if DEBUG
+    @State private var debugShowsDailyBackups = false
+    @State private var debugDailyBackups: [LorvexDailyBackup] = []
+
+    private static let debugDailyBackupsAnchor = "mobileSettings.dailyBackups.anchor"
     private static let debugDiagnosticsAnchor = "mobileSettings.diagnostics.anchor"
     private static let debugDataExportAnchor = "mobileSettings.dataExport.anchor"
     private static let debugEndAnchor = "mobileSettings.end.anchor"
@@ -89,6 +112,24 @@ public struct MobileStoreSettingsView: View {
     /// the list: the last rows of the failure feed with their Share button,
     /// Reset and About.
     private func revealDiagnosticsForScreenshotIfNeeded(_ proxy: ScrollViewProxy) async {
+      if MobileStore.debugOpenDailyBackups {
+        // The launch refresh writes today's backup off the main actor.
+        for _ in 0..<20 {
+          debugDailyBackups =
+            (try? (store.core as? any LorvexDailyBackupServicing)?.dailyBackups()) ?? []
+          if !debugDailyBackups.isEmpty { break }
+          try? await Task.sleep(for: .milliseconds(250))
+        }
+        debugShowsDailyBackups = true
+        return
+      }
+      if MobileStore.debugScrollSettingsToDailyBackups {
+        for _ in 0..<4 {
+          try? await Task.sleep(for: .milliseconds(400))
+          lorvexAnimated { proxy.scrollTo(Self.debugDailyBackupsAnchor, anchor: .top) }
+        }
+        return
+      }
       if MobileStore.debugScrollSettingsToEnd {
         await store.loadRuntimeDiagnostics()
         for _ in 0..<4 {

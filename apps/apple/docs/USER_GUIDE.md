@@ -3560,7 +3560,8 @@ they came from. The banner holds the latest change only.
 Cancel keeps the record. On iPhone and iPad, open the task and choose **More → Delete Permanently…**. On the Mac, choose the same
 command from the task's right-click menu or its detail. Either way a
 confirmation comes first, and the task with its checklist items, reminders,
-and links is removed. A deleted task cannot be brought back.
+and links is removed. Lorvex itself cannot bring it back; the daily backups
+keep a copy until they age out (see [Daily Backups](#daily-backups)).
 
 **Copy or share a task** as plain text to paste into a message or a note.
 On the Mac, right-click the task and choose **Copy as Text** to put it on the
@@ -3914,6 +3915,7 @@ The MCP host exposes tools across these domains:
 | **Tasks handed to the assistant** | `delegate_task`, `return_task`, `clear_task_delegation` |
 | **Dependencies** | `get_dependency_graph`, `get_upcoming_tasks` |
 | **Data export** | `export_data` |
+| **Daily backups** | `list_daily_backups`, `compare_with_daily_backup` |
 | **Preferences** | `get_all_preferences`, `get_preference`, `set_preference`, `delete_preference`, `complete_setup` |
 | **Audit / logs** | `get_ai_changelog`, `get_recent_logs`, `undo_ai_change` |
 | **Guidance** | `get_guide` |
@@ -4090,6 +4092,36 @@ some of their details, such as their reminders or repeat rule. A long list
 ends with a count of the rest.
 
 The AI client can request portable exports via the `export_data` MCP tool.
+
+### Daily Backups
+
+Once a day, the Lorvex app on the Mac, iPhone, and iPad saves a full copy of
+your data on that device: the same ZIP file **Export** writes with every
+category selected. It keeps the copies from the last 7 days it ran and, of the
+older ones, the first copy of each of the 4 weeks before. Nothing is saved
+while the device holds no tasks, habits, events, reviews, briefings, or
+memory, so an emptied device never pushes the good copies out.
+
+The copies stay on the device that made them. They are not synced, and they
+are left out of iCloud Backup and Time Machine. Items you delete stay in them
+until the copy that holds them ages out. **Reset This Device** and **Erase
+This Device's Data** delete them with everything else.
+
+The **Daily Backups** section of Settings (under **Data** on the Mac) shows
+the date of the latest copy. On the Mac, **Show in Finder** opens the folder
+at the newest copy. On iPhone and iPad, tap **Latest Backup** to see every
+copy with its size, and share one to keep it somewhere else. Turning **Keep
+Daily Backups** off asks first and then deletes every copy on that device. The
+switch belongs to that device alone: it is not synced, and erasing the device
+returns it to on with every other setting.
+
+To bring something back, ask your assistant. The `list_daily_backups` MCP tool
+lists the Mac's copies, and `compare_with_daily_backup` shows what a copy has
+that is gone now, what is new since, and what changed. The assistant then
+creates the missing items again, or restores the changed fields, with its usual
+tools. A copy can also be imported like any export, but import skips records
+that already exist and never brings back a record deleted since, so it suits a
+device with no data rather than undoing a change.
 
 ### Spotlight Indexing
 

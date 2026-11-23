@@ -41,7 +41,7 @@ after a meeting to pick up the next step on your checklist. If the afternoon
 gets away from you, use Daily Review to pick another day. Your assistant sees the revised plan
 the next time it reads Lorvex.
 
-The Mac app gives a connected assistant 120 tools through the Model Context
+The Mac app gives a connected assistant 122 tools through the Model Context
 Protocol (MCP), covering tasks, calendars, habits and reviews. You can plan
 and edit directly on Mac, iPhone and iPad. With iCloud sync enabled, edits
 you make on your phone reach the Mac and its connected assistant.
@@ -66,7 +66,7 @@ you make on your phone reach the Mac and its connected assistant.
 ```
 ┌──────────────┐   MCP (stdio)   ┌───────────────┐        ┌──────────────────┐
 │ AI assistant │ ◄─────────────► │ LorvexMCPHost │ ◄────► │  Pure-Swift core │
-│  (Claude, …) │    120 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
+│  (Claude, …) │    122 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
 └──────────────┘                 └───────────────┘        └────────┬─────────┘
                                                                    │ encrypted
 ┌──────────────┐   read / act    ┌───────────────────────┐         │ envelopes

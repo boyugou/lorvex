@@ -336,5 +336,18 @@
       "undo_ai_change",
       "get_ai_changelog"
     ]
+  },
+  {
+    "request": "I deleted the task about renewing my passport by mistake yesterday. Can you get it back?",
+    "accepted": [
+      "list_daily_backups",
+      "compare_with_daily_backup"
+    ]
+  },
+  {
+    "request": "Which backups of my Lorvex data does this Mac have?",
+    "accepted": [
+      "list_daily_backups"
+    ]
   }
 ]

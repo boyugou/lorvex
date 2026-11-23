@@ -50,6 +50,8 @@ EXPECTED_MCP_TOOLS = {
     "reorder_habits",
     "export_calendar_ics",
     "export_data",
+    "list_daily_backups",
+    "compare_with_daily_backup",
     "get_ai_changelog",
     "get_all_preferences",
     "get_calendar_timeline",

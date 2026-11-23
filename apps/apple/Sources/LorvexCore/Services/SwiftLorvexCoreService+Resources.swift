@@ -43,8 +43,8 @@ extension SwiftLorvexCoreService {
 
   /// Factory-reset cutover for the Lorvex-managed database: under the
   /// exclusive cross-process storage flock, bump the durable storage
-  /// generation, then delete the database, its `-wal`/`-shm` sidecars, and the
-  /// generation-bound Focus-filter sidecar (see
+  /// generation, then delete the database, its `-wal`/`-shm` sidecars, the
+  /// generation-bound Focus-filter sidecar, and the daily backups folder (see
   /// `ManagedStorageGeneration.resetDatabase`). Callers must close/evict this
   /// process's open services first; other processes detect the bumped
   /// generation at their next operation and reopen the recreated store.
@@ -54,7 +54,10 @@ extension SwiftLorvexCoreService {
   public static func resetManagedStorage(at url: URL) throws -> Int {
     try ManagedStorageGeneration.resetDatabase(
       atPath: url.path,
-      relatedSidecarPaths: [url.path + LorvexProductMetadata.focusFilterStateFileSuffix])
+      relatedSidecarPaths: [
+        url.path + LorvexProductMetadata.focusFilterStateFileSuffix,
+        LorvexDailyBackups.directory(forDatabasePath: url.path).path,
+      ])
   }
 
   /// Current durable generation of a managed database, used by derived-file

@@ -9,6 +9,7 @@ final class PreferenceKeysTests: XCTestCase {
     XCTAssertTrue(PreferenceKeys.isLocalOnlyPreference(PreferenceKeys.prefLanguage))
     XCTAssertTrue(PreferenceKeys.isLocalOnlyPreference(PreferenceKeys.prefTheme))
     XCTAssertTrue(PreferenceKeys.isLocalOnlyPreference(PreferenceKeys.prefNotificationShowTaskNotes))
+    XCTAssertTrue(PreferenceKeys.isLocalOnlyPreference(PreferenceKeys.prefDailyBackups))
   }
 
   func testOrdinaryPreferencesAreSyncable() {
@@ -106,7 +107,7 @@ final class PreferenceKeysTests: XCTestCase {
   func testUserOnlyPreferencesAreKnownKeysAnAssistantDoesNotWrite() {
     XCTAssertEqual(
       Set(PreferenceKeys.userOnlyPreferenceKeys),
-      ["ai_changelog_retention_policy", "notification_show_task_notes"])
+      ["ai_changelog_retention_policy", "notification_show_task_notes", "daily_backups"])
     for key in PreferenceKeys.userOnlyPreferenceKeys {
       XCTAssertTrue(PreferenceKeys.isKnownPreferenceKey(key), key)
       XCTAssertTrue(PreferenceKeys.isUserOnlyPreference(key), key)

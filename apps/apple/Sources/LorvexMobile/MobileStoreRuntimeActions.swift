@@ -45,6 +45,7 @@ extension MobileStore {
     // outbox depth. Read it before the network so Settings reflects the queue as
     // it stands, rather than only after a cycle gets to run.
     await refreshSyncStatus()
+    startDailyBackupIfDue()
 
     // Now the network. A confirmed import's own refresh stays local; the
     // import finishes with one explicit pass.

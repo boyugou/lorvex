@@ -558,6 +558,9 @@ struct MCPResponseFencingSweepTests {
   private func readCalls(_ data: Dataset) -> [(tool: String, arguments: [String: Value])] {
     let range: [String: Value] = ["from": "2026-05-01", "to": "2026-06-30"]
     var calls: [(String, [String: Value])] = [
+      // An in-memory store keeps no daily backups; MCPDailyBackupToolsTests
+      // covers this tool's fencing against an on-disk store.
+      ("compare_with_daily_backup", ["day": "2026-05-30"]),
       ("export_calendar_ics", range),
       ("export_data", ["entities": ["all"]]),
       ("export_data", ["entities": ["all"], "format": "csv"]),
@@ -598,6 +601,7 @@ struct MCPResponseFencingSweepTests {
       ("get_upcoming_tasks", ["days": 3650, "shape": "full"]),
       ("get_weekly_brief", [:]),
       ("list_all_tags", [:]),
+      ("list_daily_backups", [:]),
       ("list_tasks", [:]),
       ("list_tasks", ["shape": "full"]),
       ("list_tasks", ["delegation": "any"]),

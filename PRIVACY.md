@@ -92,7 +92,9 @@ Code, or Codex) to your Lorvex data. This connection:
 - Gives the client you configured the ability to read and modify your Lorvex
   data (tasks, calendar events, habits, memory notes, and related content),
   because that is the feature's purpose: letting your AI assistant manage
-  your planner on your behalf.
+  your planner on your behalf. This includes the Mac's daily backups, so
+  the assistant can also read an item you deleted while a backup still
+  holds it; that is how it can bring the item back when you ask.
 
 Any data your connected assistant sends elsewhere is governed by that
 assistant's own privacy practices and your configuration of it — Lorvex has
@@ -134,6 +136,15 @@ not use a push-notification service to deliver reminder content.
 
 ## Your control over your data
 
+- Lorvex keeps a daily backup of your data on each device, in the app's own
+  storage on that device: the copies from the last 7 days the app ran and
+  one from each of the 4 weeks before. Older copies are removed when a new
+  one is saved. The backups are never synced and are left out of iCloud
+  Backup and Time Machine. One leaves the device only when you share it, or
+  when an assistant you connected on the Mac reads it at your request (see
+  [The MCP server](#the-mcp-server-optional-local-user-directed)). Turning off **Keep Daily Backups**
+  in Settings deletes them on that device, and resetting or erasing the
+  device deletes them with everything else.
 - **On Mac**, you can reset or delete this Mac's local Lorvex data at any time
   from within the app (Settings → Data → "Reset This Device"). This
   is local to that Mac; a copy already synced to iCloud is not affected.

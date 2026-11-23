@@ -95,6 +95,7 @@ extension CoreBridgeClient {
           "Change status with complete_task / cancel_task / reopen_task / defer_task; mark active work with start_task and clear it with pause_task.",
           "Surface load with get_upcoming_tasks, get_deferred_tasks, and search_tasks.",
           "To take back an update you made, find it in get_ai_changelog (undoable) and call undo_ai_change; a field the user edited since stays.",
+          "For something deleted or overwritten that undo cannot reach, see the data_and_export guide.",
         ])
     case "planning":
       let day =
@@ -145,7 +146,7 @@ extension CoreBridgeClient {
         ])
     case "preferences":
       return (
-        "\(configuredPreferenceCount) preference key(s) configured. Preferences cover working_hours, timezone, and default_list_id; the user's privacy settings (ai_changelog_retention_policy, notification_show_task_notes) are read-only here.",
+        "\(configuredPreferenceCount) preference key(s) configured. Preferences cover working_hours, timezone, and default_list_id; the user's privacy settings (ai_changelog_retention_policy, notification_show_task_notes, daily_backups) are read-only here.",
         [
           "Read with get_all_preferences or get_preference.",
           "Change with set_preference (values are JSON-encoded strings).",
@@ -153,9 +154,10 @@ extension CoreBridgeClient {
         ])
     case "data_and_export":
       return (
-        "Export the workspace as JSON or CSV, or the calendar as ICS. The export is a portable copy, not a full backup; Settings → Data → Export makes one.",
+        "Export the workspace as JSON or CSV, or the calendar as ICS. The export is a portable copy, not a full backup; Settings → Data → Export makes one. Unless the user turned them off, this Mac also keeps daily backups (7 days plus one a week for 4 weeks) to find what was deleted or overwritten.",
         [
           "Export entities with export_data (json or csv; scope with the entities list).",
+          "When the user wants something back, list the backups with list_daily_backups and call compare_with_daily_backup for a day before the loss; create the removed items again (they get new ids), or update the changed fields, with the usual tools.",
           "Export the calendar with export_calendar_ics.",
           "Check sync health with get_sync_status.",
         ])

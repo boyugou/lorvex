@@ -10,6 +10,15 @@ extension SettingsView {
     Group {
       dataExportSection
       dataImportSection
+      LorvexDailyBackupsSection(
+        core: store.core,
+        isDisabled: resetInProgress || store.isDataImportRunning
+          || store.isLocalFactoryResetRunning,
+        idPrefix: "settings.dailyBackups",
+        backUpNow: { await store.runDailyBackupIfDue() },
+        describeError: {
+          await store.userFacingBannerMessage(for: $0, source: "macos.ui.daily_backups_failed")
+        })
       cloudDataDeleteSection
       dataResetSection
     }

@@ -42,6 +42,13 @@ public enum PreferenceKeys {
   /// string `"true"` means hidden — the default is to withhold notes, showing
   /// only non-sensitive fallback copy instead.
   public static let prefNotificationShowTaskNotes = "notification_show_task_notes"
+  /// Whether this device keeps a daily backup of the data (the app's
+  /// `DailyBackups` folder beside the database). Local-only: each device keeps
+  /// its own backups, so each decides for itself. A JSON boolean; absent means
+  /// on, and only the literal `false` turns backups off. User-only: an
+  /// assistant reads it but cannot turn off the copies that let a person undo
+  /// what an assistant did.
+  public static let prefDailyBackups = "daily_backups"
   public static let prefSetupCompleted = "setup_completed"
   public static let prefSetupSummary = "setup_summary"
   public static let prefSetupState = "setup_state"
@@ -60,12 +67,14 @@ public enum PreferenceKeys {
   /// These must never cross the sync boundary in either direction: `language` and
   /// `theme` are UI settings each device picks for itself (a user may want dark
   /// mode or a different language on one device, and shouldn't have it follow them
-  /// across devices), and `notification_show_task_notes` is a per-device
-  /// lock-screen exposure choice.
+  /// across devices), `notification_show_task_notes` is a per-device
+  /// lock-screen exposure choice, and `daily_backups` governs the backups kept
+  /// on this device only.
   public static let localOnlyPreferenceKeys: [String] = [
     prefLanguage,
     prefTheme,
     prefNotificationShowTaskNotes,
+    prefDailyBackups,
   ]
 
   /// Returns `true` if `key` is device-local and must NOT be enqueued to the
@@ -82,12 +91,14 @@ public enum PreferenceKeys {
 
   /// Preferences only the user changes, in the app's Settings. An assistant reads them but
   /// does not write them over MCP: it must not be able to turn off the log of what it did
-  /// (`ai_changelog_retention_policy`), or to put a task's notes on the lock screen
-  /// (`notification_show_task_notes`). The calendar visibility mode is outside the MCP
+  /// (`ai_changelog_retention_policy`), to put a task's notes on the lock screen
+  /// (`notification_show_task_notes`), or to stop the daily backups that let a person
+  /// undo its work (`daily_backups`). The calendar visibility mode is outside the MCP
   /// allowlist altogether, for the same reason.
   public static let userOnlyPreferenceKeys: [String] = [
     prefAiChangelogRetentionPolicy,
     prefNotificationShowTaskNotes,
+    prefDailyBackups,
   ]
 
   /// Returns `true` if only the user changes `key`: an assistant's `set_preference` for it is
@@ -121,6 +132,7 @@ public enum PreferenceKeys {
     prefSetupState,
     prefRecordRawInput,
     prefNotificationShowTaskNotes,
+    prefDailyBackups,
   ]
 
   /// Returns `true` if `key` is in the canonical allowlist and may be written

@@ -14,7 +14,7 @@ struct ToolListingTests {
     let definitionNames = definitions.map { $0.tool.name }
     let listedNames = ToolRegistry.listTools().map(\.name)
 
-    #expect(definitions.count == 120)
+    #expect(definitions.count == 122)
     #expect(definitionNames == listedNames)
     #expect(Set(definitionNames).count == definitions.count)
     #expect(ToolDefinitionRegistry.byName.count == definitions.count)
@@ -26,8 +26,14 @@ struct ToolListingTests {
       #expect(definition.isWrite == definition.participatesInIdempotency)
       #expect(advertisesIdempotency == definition.participatesInIdempotency)
       #expect(definition.responseFencing.fenceTextContent)
-      #expect(
-        definition.responseFencing.stringFields == SecurityFencing.userContentKeys)
+      // compare_with_daily_backup returns whole export records, whose tag
+      // display names and memory keys are user text under keys no other
+      // response fences.
+      let expectedStringFields =
+        definition.tool.name == "compare_with_daily_backup"
+        ? SecurityFencing.userContentKeys.union(DailyBackupComparison.extraUserContentKeys)
+        : SecurityFencing.userContentKeys
+      #expect(definition.responseFencing.stringFields == expectedStringFields)
       #expect(
         definition.responseFencing.stringArrayFields
           == SecurityFencing.userContentArrayKeys)

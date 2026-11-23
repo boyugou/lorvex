@@ -8,10 +8,16 @@ import SwiftUI
 /// hollow dashed outline) instead of an event's solid fill and rail — so a
 /// hold on the calendar and an intention for the day never read alike. The
 /// block opens its task, where the time is changed or cleared. A compact
-/// block (``LorvexDesign/CalendarMetrics/compactLaneWidth``) drops the ring,
-/// which would leave no room for the title and is too small to aim at; its
-/// context menu still completes the task.
+/// block drops the ring, which would leave no room for the title and is too
+/// small to aim at; its context menu still completes the task. A task block
+/// goes compact one ring wider than an event block does
+/// (``LorvexDesign/CalendarMetrics/compactLaneWidth`` plus
+/// ``taskRingAllowance``), so the title beside the ring keeps the width an
+/// event's title has at the threshold instead of breaking inside a word.
 extension MobileCalendarDayColumn {
+  /// The ring's width and the gap after it.
+  static var taskRingAllowance: CGFloat { 22 }
+
   func taskBlock(
     _ block: CalendarGridTaskBlock, day: CalendarGridDay, columnWidth: CGFloat
   ) -> some View {
@@ -23,7 +29,8 @@ extension MobileCalendarDayColumn {
     // The drawn end carries the model's minimum height; see `eventBlock`.
     let height = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
     let isTight = height < LorvexDesign.CalendarMetrics.tightBlockHeight
-    let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
+    let isCompact =
+      laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth + Self.taskRingAllowance
     let isRunning = isRunningNow(block, day) && !block.isDone
     let toggleLabel = MobileTaskActionCopy.completionToggle(isDone: block.isDone)
     return Group {

@@ -405,6 +405,13 @@ public struct MobileCalendarDayView: View {
     #if os(iOS)
       .tabViewStyle(.page(indexDisplayMode: .never))
     #endif
+    // A paged tab view stops at the bottom safe area, which cuts the time
+    // axis off above the tab bar and leaves a blank band where there is no
+    // bar (iPhone Duo's outer display has its tab bar at the side). Reaching
+    // the screen edge lets the hours pass beneath the bar; each column's
+    // scroll view still insets its content by the safe area, so the last hour
+    // comes to rest above it.
+    .ignoresSafeArea(.container, edges: .bottom)
     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pagerWidth = $0 }
   }
 

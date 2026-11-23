@@ -99,6 +99,11 @@ struct MobileCalendarWeekStripPager: View {
     // A horizontal scroll view takes every point of height it is offered; the
     // strip keeps its own.
     .fixedSize(horizontal: false, vertical: true)
+    // A scroll view draws its content out to the screen edge on its scroll
+    // axis, past a leading or trailing safe area. A week fills the width
+    // inside the safe area, so without the clip the next week shows beside
+    // the vertical bars on iPhone Duo's outer display.
+    .clipped()
     .scrollPosition(id: $scrolledWeek)
     .onAppear { scrolledWeek = visibleWeek }
     .onChange(of: visibleWeek) { _, week in

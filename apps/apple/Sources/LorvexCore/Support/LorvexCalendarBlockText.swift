@@ -18,9 +18,10 @@ import SwiftUI
 /// The first three arrangements keep `verticalPadding` above and below the
 /// text; the last two give the block every point it has, at the cost of the
 /// breathing room. A time shows the range ("1:00 – 1:30 PM") where it fits
-/// the width, otherwise the single time ("1:00 PM"). An arrangement that
-/// leaves the time out relies on the block's accessibility label, which the
-/// caller sets, to name it.
+/// the width, otherwise the single time ("1:00 PM"), and where that does not
+/// fit either the time line is left empty rather than cut short. An
+/// arrangement that leaves the time out relies on the block's accessibility
+/// label, which the caller sets, to name it.
 ///
 /// `accessory` leads every arrangement, aligned to the title's first baseline
 /// (a task block's completion circle); an event block passes none. A done
@@ -130,6 +131,9 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
       ViewThatFits(in: .horizontal) {
         if let range { timeText(range) }
         timeText(time)
+        // A lane narrower than the single time: "11:00 A" tells less than no
+        // time does.
+        Color.clear.frame(width: 0, height: 0)
       }
     }
   }

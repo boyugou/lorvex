@@ -14,8 +14,7 @@ struct TodayEventArrowKeyTests {
     let core = try makeInMemoryCore()
     let today = LorvexDateFormatters.ymd.string(from: Date())
     let dueToday = try #require(LorvexDateFormatters.ymdUTC.date(from: today))
-    // An all-day event sits above the schedule's "earlier" fold at any hour,
-    // so the expected order does not depend on the clock.
+    // An all-day event sits above the schedule's "earlier" fold at any hour.
     let event = try await core.createCalendarEvent(
       title: "Offsite", startDate: today, endDate: nil, startTime: nil, endTime: nil,
       allDay: true, location: nil, notes: nil)
@@ -33,7 +32,11 @@ struct TodayEventArrowKeyTests {
   @Test("The stops list the event with the tasks in the column's order")
   func stopsFollowTheColumn() async throws {
     let (store, ids) = try await makeStore()
-    let stops = store.todayArrowKeyStops()
+    // Read at noon. From 23:00 the timed task is the one under way, which the
+    // column features above the schedule.
+    let noon = try #require(
+      Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: Date()))
+    let stops = store.todayArrowKeyStops(at: noon)
     #expect(stops.ids == [ids["event"]!, ids["timed"]!, ids["untimed"]!])
     #expect(stops.eventIDs == [ids["event"]!])
     // Select All and batch actions keep reading tasks only.

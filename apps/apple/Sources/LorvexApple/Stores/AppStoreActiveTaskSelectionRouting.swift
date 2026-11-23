@@ -116,8 +116,10 @@ extension AppStore {
   /// lists while it is open. An event's stop is its calendar id, which never
   /// equals a task id. With the schedule beside the column the stops are the
   /// column's task rows alone; the rail's blocks take focus on their own.
-  func todayArrowKeyStops() -> (ids: [String], eventIDs: Set<String>) {
-    let content = todayColumnContent
+  /// `tick` is the moment the column is read at; it decides which task is
+  /// featured and which events the schedule folds away.
+  func todayArrowKeyStops(at tick: Date = Date()) -> (ids: [String], eventIDs: Set<String>) {
+    let content = todayColumnContent(at: tick)
     let fold = LorvexTodayTimeline.earlierFold(content.schedule)
     var eventIDs = Set<String>()
     var ids = content.featured.map { [$0.id] } ?? []

@@ -314,6 +314,21 @@ Each is traced to the code; none is reproduced on devices.
     while the other changes the later task's schedule outside the series.
     Both end with the earlier occurrence naming a next one that does not
     link back; they agree with each other, and export stops as above.
+  - Turning the repeat off on an occurrence withdraws every later one,
+    finished ones included: a completed occurrence becomes cancelled and
+    loses its completion time. Reproduced by a test run on 2026-11-22: a
+    daily task was completed twice and the repeat turned off on the first
+    occurrence, which left the second (completed) and the third (open) both
+    cancelled. Builds before 174 do the same. Reopening an occurrence
+    refuses when the next one is finished; turning the repeat off has no
+    such check, and neither does the cancel a receiving device works out.
+    The test called the service method behind `remove_task_recurrence` and
+    the Shortcuts action that removes a repeat; neither checks the task's
+    status first. Whether the app's own screens offer the repeat on a
+    completed task is not checked. To weigh: keep a finished
+    later occurrence as it is and withdraw only the open one, with the
+    status stamp described above so the kept status holds on the other
+    devices.
 - The iPhone database and suspension. The store refuses work while the app
   is in the background so the system never suspends the process holding a
   file lock (crash `0xdead10cc`). One such crash was recorded on the owner's

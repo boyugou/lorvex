@@ -1,11 +1,14 @@
 name: Apple CI
 
-# Automatic push/pull_request triggers are intentionally disabled: hosted macOS
-# minutes are paused at the account level, so every auto-run only fails at the
-# queue with a billing error. Local `apps/apple/script/verify_all.sh` runs the
-# identical gate and is the validation of record while CI is paused. Re-enable
-# the push/pull_request blocks (restoring the same `paths` filters) once hosted
-# Actions billing is restored. Until then the job is manual-dispatch only.
+# Dispatched by hand, on the commit a release is cut from
+# (`gh workflow run apple-ci.yml --ref <branch>`). A run takes about 80 minutes
+# on the hosted three-core runner (79 min 42 s measured on 2026-11-23: 57 min
+# for the verification gate, 22 min for the iOS Release link), so running it on
+# every push would report on commits the work has already moved past. The gates
+# a contributor runs before each push are local: `script/verify_swift.sh` and
+# `script/verify_static_gates.sh` in `apps/apple`. What this run adds is a
+# clean checkout on a machine whose clock is UTC, which is how tests that
+# passed only in the developer's own time zone were found.
 on:
   workflow_dispatch:
 
@@ -28,8 +31,8 @@ jobs:
     # + a from-scratch xcodebuild. LORVEX_VERIFY_SKIP_PACKAGING=1 skips only the
     # GUI smoke launch and the real signing/notarize path, whose identities live
     # only on the owner's machine, so distribution is finalized locally, not in
-    # CI. Budget generously.
-    timeout-minutes: 90
+    # CI. The limit leaves room over the 80 minutes one run measured.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:

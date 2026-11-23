@@ -12,14 +12,31 @@ corresponding workflow file lands in `.github/workflows`.
 | `Apple CI` | `workflow_dispatch` only (manual) | Swift package build/tests, Apple static verifiers, schema/migration integrity, MCP stdio smoke | No |
 
 Current CI is verification-only and manual: `Apple CI`
-(`.github/workflows/apple-ci.yml`) fires solely on `workflow_dispatch`.
-Automatic `push` and `pull_request` triggers are intentionally disabled because
-hosted macOS minutes are paused at the account level, so an auto-run would only
-fail at the queue with a billing error; the local
-`apps/apple/script/verify_all.sh` gate is the validation of record while CI is
-paused. A dispatched run must not package, sign, notarize, upload, or publish
-artifacts. The `push` / `pull_request` blocks (restoring their Apple `paths`
-filters) are re-enabled once hosted Actions billing is restored.
+(`.github/workflows/apple-ci.yml`) fires solely on `workflow_dispatch`, and it
+is dispatched on the commit a release is cut from:
+
+```bash
+gh workflow run apple-ci.yml --ref <branch>
+```
+
+It has no `push` or `pull_request` trigger because of how long it takes. One
+run on the hosted `xcode-27` runner (three cores) was measured on 2026-11-23:
+79 min 42 s in all, 57 min for the verification gate and 22 min for the iOS
+Release link, from a cold checkout with no dependency cache. A result that
+arrives 80 minutes after a push describes a commit the work has usually moved
+past, so the gates before each push are the local ones
+(`script/verify_swift.sh` and `script/verify_static_gates.sh` in
+`apps/apple`), which take minutes.
+
+The hosted run checks what a developer's Mac cannot: a clean checkout, and a
+machine whose clock is UTC. The first passing run needed about fifty tests
+fixed that had passed only in the developer's own time zone. Between 00:00 and
+08:00 UTC the runner's calendar day is one ahead of the day in
+America/Los_Angeles, the time zone many fixtures set; the measured run started
+at 10:12 UTC, so those hours are not yet covered by a hosted run.
+
+A dispatched run must not package, sign, notarize, upload, or publish
+artifacts.
 
 ## Implemented Checks
 

@@ -254,11 +254,15 @@ noticed.
   launch of 3.3 s against 0.7 to 1.2 s. The causes are not established; the
   rewrite-whole sync caches under "CloudKit traffic and scale" below are the
   first suspects. First step: attribute the writes on a day of normal use.
-- Hosted CI. `Apple CI` runs only when dispatched, because macOS minutes
-  were paused while the repository was private, and it has no recorded run.
-  The repository is public now. First step: dispatch one run and see whether
-  the hosted image has a new enough Xcode; if it passes, restore the push
-  trigger.
+- Hosted CI. `Apple CI` passes on the hosted `xcode-27` runner (first passing
+  run 2026-11-23, 79 min 42 s) and is dispatched by hand on each release
+  commit, because a run that long says little about a push made 80 minutes
+  earlier. Two things are open. No run has started between 00:00 and 08:00
+  UTC, when the runner's day is one ahead of the day in America/Los_Angeles
+  that many fixtures set. And 57 of the 80 minutes are the verification gate
+  on three cores from a cold checkout: caching the SwiftPM build would make an
+  automatic trigger worth having again. First step: dispatch one run in that
+  window.
 
 ## Sync and data
 

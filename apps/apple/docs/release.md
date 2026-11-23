@@ -293,7 +293,10 @@ the password passed through an environment reference rather than command args.
    that disagrees. The marketing version stays unchanged between TestFlight
    builds. Run the AppMetadata tests, commit, and push the verified source to
    GitHub. Each authorized feature batch includes this delivery step; do not
-   finish with local-only changes.
+   finish with local-only changes. Then dispatch the hosted check on that
+   commit, `gh workflow run apple-ci.yml --ref <branch>`, and read its result
+   when it finishes, about 80 minutes later; the steps below do not wait for
+   it.
 4. `script/release_testflight.sh validate <log-dir>` archives and signs both
    channels and has App Store Connect validate each package, without
    uploading (about 15 minutes). The archives compile the working tree, so
@@ -508,6 +511,9 @@ Check these at the start of a maintenance session. Dates are absolute.
   database lock as the process was suspended; builds 129 and later refuse
   database work while the process is suspended
   (`docs/development/ENGINEERING_TRAPS.md`).
-- **Validation of record.** Hosted CI is paused (macOS minutes are not
-  available), so `script/verify_swift.sh`, `script/verify_static_gates.sh`, and
-  the release scripts are the gate before every push and release.
+- **Validation of record.** `script/verify_swift.sh`,
+  `script/verify_static_gates.sh`, and the release scripts are the gate before
+  every push and release. The hosted `Apple CI` run is dispatched on the
+  release commit as a second check from a clean checkout on a UTC machine; it
+  takes about 80 minutes and does not hold up the upload
+  (`docs/execution/CI_RELEASE_TRIGGER_POLICY.md`).

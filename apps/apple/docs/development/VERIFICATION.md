@@ -158,13 +158,17 @@ predict a phone's.
 To see what that main-thread work is, launch the installed app with a test's
 arguments through `xcrun simctl launch`, then record it with
 `xcrun xctrace record --device <udid> --attach Lorvex --instrument "Time Profiler"
---instrument "View Body (Legacy)" --time-limit 20s --output <file>.trace`.
-Attach by the display name `Lorvex`; the process id and the executable name
-are not found. Attached this way the stacks are symbolicated, and
-`xctrace export --xpath` with the `time-profile` and `swiftui-body-interval`
-schemas gives each main-thread sample and each view body with its time, so a
-window can be cut to one interaction. The SwiftUI template records nothing in
-the simulator, because its Hitches instrument is not supported there.
+--time-limit 20s --output <file>.trace`. Attach by the display name `Lorvex`;
+the process id and the executable name are not found. Attached this way the
+stacks are symbolicated, and `xctrace export --xpath` with the `time-profile`
+schema gives each main-thread sample with its time, so a window can be cut to
+one interaction. To count view bodies, record a separate launch with
+`--instrument "View Body (Legacy)"` and export `swiftui-body-interval`; keep
+it out of a recording that measures cost, because it makes SwiftUI describe
+every dynamic property it updates (`String(describing:)` under
+`instrumentsLinkValueDescription`), which took 71 of the 412 ms of row
+measurement in a scroll trace. The SwiftUI template records nothing in the
+simulator, because its Hitches instrument is not supported there.
 `sample <pid>` is not a substitute: in two of four runs it reported an idle
 process while the probe in the same launch measured the interaction.
 

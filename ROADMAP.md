@@ -124,7 +124,12 @@ person living with the app, and then a decision.
   Core Animation committing the swapped layers. The same scenario with and
   without the stress content measured the same (25 to 27 long stretches,
   worst 188 to 191 ms), so the cost does not grow with the data; it is the
-  fixed price of each tab's structure. Next: whether a lighter tab structure
+  fixed price of each tab's structure. Today's fling is the same story: the
+  list reuses its cells (59 rows built for the whole scroll), and of the
+  main thread's 1,314 ms of CPU, UIKit preparing each cell that scrolls in
+  takes 445 ms, of which SwiftUI measuring the row's height is 347 ms.
+  Samples with an app function on the stack are 11 %, and no single app
+  function passes 12 ms. Next: whether a lighter tab structure
   (fewer always-present views and text in each tab's chrome) lowers it,
   measured against a bare `TabView` baseline, and whether capture's
   keyboard can come up without holding the sheet's first frames.

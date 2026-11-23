@@ -138,7 +138,7 @@ enum ApplyLwwGate {
         candidate = wireValue
       }
       switch PreferenceValueContract.normalize(
-        key: PreferenceKeys.prefTimezone, value: candidate)
+        key: PreferenceKeys.prefTimezone, value: candidate, acceptingTimezoneAliases: false)
       {
       case .success(let normalized): fallbackValue = normalized
       case .failure:

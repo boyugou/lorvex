@@ -35,18 +35,21 @@ public enum WorkflowTimezone {
     }
   }
 
+  /// This device's time zone under the name the `timezone` preference stores
+  /// for it, or the system's own identifier when the zone has no such name (a
+  /// fixed offset). A device may report its zone under a name outside the
+  /// canonical list, such as `US/Pacific`.
+  public static var deviceTimezoneName: String {
+    let identifier = TimeZone.current.identifier
+    return Timezone.normalizeProductTimezoneName(identifier) ?? identifier
+  }
+
   /// Resolve the anchored timezone: prefer the DB preference, fall back to
   /// the system IANA timezone, error otherwise.
   public static func anchoredTimezoneName(_ db: Database) throws -> String {
     let active = try activeTimezoneName(db)
-    let systemLookup: Result<String, TimezoneResolutionError>
-    if let id = TimeZone.current.identifier as String? {
-      systemLookup = .success(id)
-    } else {
-      systemLookup = .failure(TimezoneResolutionError("system timezone unavailable"))
-    }
     switch Timezone.resolveAnchoredTimezoneName(
-      activeTimezone: active, systemTimezoneLookup: systemLookup)
+      activeTimezone: active, systemTimezoneLookup: .success(TimeZone.current.identifier))
     {
     case .success(let name): return name
     case .failure(let error): throw StoreError.validation(error.message)

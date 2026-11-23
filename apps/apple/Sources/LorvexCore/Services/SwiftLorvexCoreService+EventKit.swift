@@ -130,7 +130,7 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
         try fetchedWindow
         ?? PlannedDayBridge.instantRange(
           fromLogicalDay: windowStart, throughLogicalDay: windowEnd,
-          timezoneName: WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+          timezoneName: WorkflowTimezone.activeTimezoneName(db) ?? WorkflowTimezone.deviceTimezoneName
         )
         .map { DateInterval(start: $0.start, end: $0.endExclusive) }
       if let window {
@@ -205,7 +205,7 @@ extension SwiftLorvexCoreService: EventKitProviderServicing {
     return try CalendarTimelineQueries.oneOffProviderEventKeysShown(
       db, providerKind: ProviderKind.eventkit, providerScope: eventKitScope,
       from: from, to: to,
-      anchorTimezone: try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier,
+      anchorTimezone: try WorkflowTimezone.activeTimezoneName(db) ?? WorkflowTimezone.deviceTimezoneName,
       excludingPreciseOccurrences: true)
   }
 

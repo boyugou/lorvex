@@ -13,9 +13,16 @@ public enum PreferenceValueContract {
   /// Virtual control-plane values (currently AI-changelog retention) and
   /// device-state values (calendar AI access) have dedicated stores and must be
   /// handled before this ordinary-row contract.
+  ///
+  /// `acceptingTimezoneAliases` is true for a value given on this device,
+  /// where another name of a canonical zone is stored under a canonical
+  /// identifier. Sync apply passes false: a peer writes canonical identifiers
+  /// only, and rewriting its value here would leave two devices holding
+  /// different bytes under one version.
   public static func normalize(
     key: String,
-    value: JSONValue
+    value: JSONValue,
+    acceptingTimezoneAliases: Bool = true
   ) -> Result<JSONValue, ValidationError> {
     guard PreferenceKeys.isKnownPreferenceKey(key) else {
       return .failure(.message("unknown preference key '\(key)'"))
@@ -34,7 +41,9 @@ public enum PreferenceValueContract {
 
     case PreferenceKeys.prefTimezone:
       guard case .string(let raw) = value,
-        let timezone = Timezone.normalizeProductTimezoneName(raw)
+        let timezone = acceptingTimezoneAliases
+          ? Timezone.normalizeProductTimezoneName(raw)
+          : Timezone.canonicalProductTimezoneName(raw)
       else {
         return .failure(
           .message("timezone preference must be a canonical region timezone or UTC"))

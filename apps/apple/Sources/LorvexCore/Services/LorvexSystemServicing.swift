@@ -65,6 +65,9 @@ public protocol LorvexSystemServicing: Sendable {
 
   func getPreference(key: String) async throws -> String?
 
+  /// Stores `value` under `key` after validating and normalizing it, and
+  /// returns the value as stored: the string `getPreference(key:)` returns
+  /// afterwards, which differs from `value` when it was normalized.
   func setPreference(key: String, value: String) async throws -> String
 
   func deletePreference(key: String) async throws

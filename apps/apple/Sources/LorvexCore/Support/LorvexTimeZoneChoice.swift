@@ -1,4 +1,6 @@
 import Foundation
+import LorvexDomain
+import LorvexWorkflow
 
 /// One IANA time zone as the time zone pickers list it, named in the user's
 /// language: the city the zone is named for ("Los Angeles", "洛杉矶"), the
@@ -28,6 +30,18 @@ public struct LorvexTimeZoneChoice: Identifiable, Hashable, Sendable {
   public private(set) var searchAliases: [String] = []
 
   public var id: String { identifier }
+
+  /// This device's time zone under the identifier the `timezone` preference
+  /// stores for it. The system may report the zone under another of its names
+  /// ("US/Pacific" for "America/Los_Angeles"); comparing that name with the
+  /// stored identifier would call one zone two.
+  public static var deviceIdentifier: String { WorkflowTimezone.deviceTimezoneName }
+
+  /// The identifier the `timezone` preference stores when asked for
+  /// `identifier`, or `identifier` itself when the preference would refuse it.
+  public static func storedIdentifier(for identifier: String) -> String {
+    Timezone.normalizeProductTimezoneName(identifier) ?? identifier
+  }
 
   /// The choice for `identifier`, or nil when it is not a time zone this
   /// system knows.

@@ -4,9 +4,11 @@ import Foundation
 /// "today" / "today + N days" `YYYY-MM-DD` helpers used for day-boundary logic.
 ///
 /// Generic event/reminder fields accept any identifier Foundation resolves.
-/// The synced product-timezone preference is stricter: it uses Apple's canonical
-/// region list (plus canonical `UTC`) so aliases and fixed-offset spellings do
-/// not create distinct synced bytes for the same calendar-day authority.
+/// The synced product-timezone preference is stricter: the value a device
+/// writes is an identifier from Apple's canonical list on that device, or
+/// `UTC`. Another name of a canonical zone is accepted as local input and
+/// stored under a canonical identifier; a value arriving by sync must be
+/// canonical already.
 /// A failure resolving the anchored timezone, carrying the human-readable
 /// message used by the anchored-timezone resolver.
 public struct TimezoneResolutionError: Error, Equatable, CustomStringConvertible {
@@ -31,17 +33,30 @@ public enum Timezone {
     return parseTimezoneName(trimmed) != nil ? trimmed : nil
   }
 
-  /// Normalize the synced product-day authority to one stable identifier.
-  /// Abbreviations (`PST`), fixed offsets (`GMT+5`), and alias spellings absent
-  /// from Apple's canonical identifier list are rejected. `GMT` and `UTC` both
-  /// normalize to the single product spelling `UTC`.
-  public static func normalizeProductTimezoneName(_ value: String?) -> String? {
+  /// `value` as a product time zone when it is canonical as written: an
+  /// identifier from Apple's canonical list on this system, or `UTC` (which
+  /// `GMT` becomes). Every other name is rejected. This is the rule for a
+  /// value arriving by sync, where a peer must already have written a
+  /// canonical identifier and the stored bytes must stay the peer's.
+  public static func canonicalProductTimezoneName(_ value: String?) -> String? {
     guard let value else { return nil }
     let trimmed = ValidationFormat.trimWhitespace(value)
     guard !trimmed.isEmpty else { return nil }
     if trimmed == "UTC" || trimmed == "GMT" { return "UTC" }
-    guard TimeZone.knownTimeZoneIdentifiers.contains(trimmed) else { return nil }
-    return trimmed
+    return TimezoneAliases.canonicalIdentifiers.contains(trimmed) ? trimmed : nil
+  }
+
+  /// Normalize a product time zone given on this device (its own zone, a
+  /// setting, an assistant's argument) to a canonical identifier. A canonical
+  /// name is kept (``canonicalProductTimezoneName(_:)``). Another name of a
+  /// canonical zone, such as the `Asia/Kolkata` or `US/Pacific` a device may
+  /// report for itself, becomes a canonical identifier of that zone
+  /// (``TimezoneAliases``). Abbreviations (`PST`), fixed offsets (`GMT+5`), and
+  /// unknown names are rejected.
+  public static func normalizeProductTimezoneName(_ value: String?) -> String? {
+    if let canonical = canonicalProductTimezoneName(value) { return canonical }
+    guard let value else { return nil }
+    return TimezoneAliases.canonicalName(for: ValidationFormat.trimWhitespace(value))
   }
 
   /// Parse a canonical JSON string preference containing a canonical product timezone.

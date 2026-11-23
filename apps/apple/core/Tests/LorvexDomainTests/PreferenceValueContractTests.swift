@@ -16,11 +16,21 @@ final class PreferenceValueContractTests: XCTestCase {
         value: .string("GMT")
       ).get(),
       .string("UTC"))
-    for alias in ["PST", "GMT+5", "Etc/UTC", "US/Pacific"] {
+    // Another name of a canonical zone is stored under a canonical identifier.
+    let canonicalNames = Set(TimeZone.knownTimeZoneIdentifiers).union(["UTC"])
+    for alias in ["US/Pacific", "Asia/Kolkata", "Etc/UTC"] {
+      guard
+        case .string(let stored) = try PreferenceValueContract.normalize(
+          key: PreferenceKeys.prefTimezone, value: .string(alias)
+        ).get()
+      else { return XCTFail("\(alias) did not normalize to a string") }
+      XCTAssertTrue(canonicalNames.contains(stored), "\(alias) -> \(stored)")
+    }
+    for refused in ["PST", "GMT+5", "Etc/GMT+5", "EET"] {
       XCTAssertThrowsError(
         try PreferenceValueContract.normalize(
           key: PreferenceKeys.prefTimezone,
-          value: .string(alias)
+          value: .string(refused)
         ).get())
     }
     XCTAssertThrowsError(

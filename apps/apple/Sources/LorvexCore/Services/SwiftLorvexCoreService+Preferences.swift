@@ -32,7 +32,9 @@ extension SwiftLorvexCoreService {
   /// the `+WriteSurface` adapter (one HLC version, immediate transaction,
   /// `local_change_seq` bump). The `value` is stored as canonical JSON
   /// (`stored(value:)`) so reads via `getPreference` / `preferenceString`
-  /// round-trip; the returned string is the caller's original plain `value`.
+  /// round-trip. Returns the value as stored, the string `getPreference` now
+  /// returns for the key: the canonical identifier for a time zone given under
+  /// another name, the normalized object for working hours.
   public func setPreference(key: String, value: String) async throws -> String {
     try withWrite { db, hlc, deviceId in
       if PreferenceKeys.isControlPlanePreference(key) {
@@ -43,7 +45,7 @@ extension SwiftLorvexCoreService {
         try Self.writeAuditRetentionPreference(
           db, service: self, deviceId: deviceId, policy: policy,
           operation: SyncNaming.opUpsert, summary: "Set preference '\(key)'")
-        return value
+        return policy.wireValue
       }
       if key == PreferenceKeys.devCalendarAiAccessMode {
         guard let mode = CalendarAiAccessMode.parseStrict(value) else {
@@ -56,7 +58,7 @@ extension SwiftLorvexCoreService {
         // remains stable if the product default ever changes in a later build.
         let storedPrevious = try DeviceStateRepo.readCalendarAiAccessModeIfSet(db)
         guard storedPrevious != mode else {
-          return value
+          return mode.asString
         }
         // The purge decision uses the EFFECTIVE previous tier (domain default
         // when unset): moving from a richer effective tier to a reduced one
@@ -73,7 +75,7 @@ extension SwiftLorvexCoreService {
             operation: SyncNaming.opUpsert, entityType: EntityName.deviceState, entityId: key,
             summary: "Set device state '\(key)'"),
           deviceId: deviceId)
-        return value
+        return mode.asString
       }
       guard PreferenceKeys.isKnownPreferenceKey(key) else {
         throw StoreError.validation("unknown preference key '\(key)'")
@@ -94,13 +96,13 @@ extension SwiftLorvexCoreService {
       }
       try Self.writePreference(
         db, service: self, deviceId: deviceId, hlc: hlc, key: key, value: value)
+      let raw = try String.fetchOne(
+        db, sql: "SELECT value FROM preferences WHERE key = ?", arguments: [key])
       if key == PreferenceKeys.prefTimezone {
         // A timezone change re-anchors every active task reminder so its stored
         // wall-clock intent ("9 AM") survives the switch, per the schema
         // `original_local_time`/`original_tz` contract. The preference row was
-        // just written, so read back the canonical name it resolved to.
-        let raw = try String.fetchOne(
-          db, sql: "SELECT value FROM preferences WHERE key = ?", arguments: [key])
+        // just written, so `raw` holds the canonical name it resolved to.
         if let newTzName = Timezone.parseJsonTimezonePreference(raw),
           let newTz = Timezone.parseTimezoneName(newTzName)
         {
@@ -109,7 +111,7 @@ extension SwiftLorvexCoreService {
             newTzName: newTzName, newTz: newTz)
         }
       }
-      return value
+      return raw ?? value
     }
   }
 

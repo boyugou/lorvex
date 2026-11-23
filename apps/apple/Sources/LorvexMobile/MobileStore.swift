@@ -440,7 +440,7 @@ public final class MobileStore {
 
   /// IANA zone that owns ``logicalTodayString``.
   public var logicalTimezoneName: String {
-    snapshot.today.timezone ?? TimeZone.current.identifier
+    snapshot.today.timezone ?? LorvexTimeZoneChoice.deviceIdentifier
   }
 
   /// Product timezone for wall-clock UI. The device zone is used only before

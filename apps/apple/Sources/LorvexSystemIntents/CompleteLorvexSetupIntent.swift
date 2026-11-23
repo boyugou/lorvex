@@ -1,5 +1,6 @@
 import AppIntents
 import Foundation
+import LorvexCore
 
 struct CompleteLorvexSetupIntent: LorvexAuthenticatedIntent {
   static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
@@ -73,6 +74,6 @@ struct LorvexTimeZoneOptionsProvider: DynamicOptionsProvider {
   }
 
   func defaultResult() async -> String? {
-    TimeZone.current.identifier
+    LorvexTimeZoneChoice.deviceIdentifier
   }
 }

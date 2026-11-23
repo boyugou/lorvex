@@ -36,7 +36,7 @@ final class TimeTests: XCTestCase {
     XCTAssertEqual(Timezone.normalizeProductTimezoneName("UTC"), "UTC")
     XCTAssertNil(Timezone.normalizeProductTimezoneName("PST"))
     XCTAssertNil(Timezone.normalizeProductTimezoneName("GMT+5"))
-    XCTAssertNil(Timezone.normalizeProductTimezoneName("Etc/UTC"))
+    XCTAssertEqual(Timezone.normalizeProductTimezoneName("Etc/UTC"), "UTC")
   }
 
   func testParseJsonTimezonePreferenceAcceptsCanonical() {

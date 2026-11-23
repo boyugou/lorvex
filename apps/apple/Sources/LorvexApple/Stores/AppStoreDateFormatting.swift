@@ -13,7 +13,7 @@ extension AppStore {
   /// Today timeline use this product zone rather than whichever zone this Mac
   /// happens to be in.
   var logicalTimezoneName: String {
-    today.timezone ?? TimeZone.current.identifier
+    today.timezone ?? LorvexTimeZoneChoice.deviceIdentifier
   }
 
   /// Resolved timezone for wall-clock UI such as task-reminder composition.

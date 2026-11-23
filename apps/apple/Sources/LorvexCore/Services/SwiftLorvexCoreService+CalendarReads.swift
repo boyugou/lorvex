@@ -11,7 +11,7 @@ extension SwiftLorvexCoreService {
     -> CalendarTimelineSnapshot
   {
     try read { db in
-      let timezone = try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+      let timezone = try WorkflowTimezone.activeTimezoneName(db) ?? WorkflowTimezone.deviceTimezoneName
       return CalendarTimelineSnapshot(
         from: from,
         to: to,
@@ -28,7 +28,7 @@ extension SwiftLorvexCoreService {
     _ db: Database, from: String, to: String, anchorTimezone: String? = nil
   ) throws -> [CalendarTimelineEvent] {
     let anchorTimezone =
-      try anchorTimezone ?? WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+      try anchorTimezone ?? WorkflowTimezone.activeTimezoneName(db) ?? WorkflowTimezone.deviceTimezoneName
     // Honor the effective calendar AI-access tier so a busy/off read redacts
     // provider detail even if a full-detail row somehow survives at rest —
     // defense in depth behind ingest-time redaction + downgrade purge. Read

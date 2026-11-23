@@ -34,7 +34,7 @@ struct MobileSettingsTimeZoneRow: View {
       }
     #endif
 
-    if let device = LorvexTimeZoneChoice(identifier: TimeZone.current.identifier),
+    if let device = LorvexTimeZoneChoice(identifier: LorvexTimeZoneChoice.deviceIdentifier),
       device.identifier != store.logicalTimezoneName
     {
       Button {

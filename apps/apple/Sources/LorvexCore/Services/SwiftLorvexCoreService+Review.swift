@@ -129,7 +129,7 @@ extension SwiftLorvexCoreService {
     learnings: String?, linkedTaskIDs: [String]?, linkedListIDs: [String]?
   ) throws -> DailyReviewEntry {
     let timezone =
-      try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+      try WorkflowTimezone.activeTimezoneName(db) ?? WorkflowTimezone.deviceTimezoneName
     let params = UpsertDailyReviewParams(
       date: date, summary: summary, mood: mood.map(Int64.init),
       energyLevel: energyLevel.map(Int64.init), wins: wins, blockers: blockers,
@@ -221,7 +221,7 @@ extension SwiftLorvexCoreService {
       linkedListIDs ?? [], kind: .list, field: "daily review linkedListIDs")
     let resolvedTimezone = try timezone?.nilIfReviewBlank
       ?? WorkflowTimezone.activeTimezoneName(db)
-      ?? TimeZone.current.identifier
+      ?? WorkflowTimezone.deviceTimezoneName
     let now = try Self.canonicalImportTimestamp(
       updatedAt, field: "daily review updatedAt", fallback: SyncTimestampFormat.syncTimestampNow())
     // Import is local authoring: it rides syncUpsertDailyReview only for its
@@ -259,7 +259,7 @@ extension SwiftLorvexCoreService {
         throw LorvexCoreError.unsupportedOperation("No daily review exists for '\(date)' to amend.")
       }
       let timezone =
-        try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+        try WorkflowTimezone.activeTimezoneName(db) ?? WorkflowTimezone.deviceTimezoneName
       let params = AmendDailyReviewParams(
         date: date, summary: patch.summary, mood: patch.mood.map(Int64.init),
         energyLevel: patch.energyLevel.map(Int64.init), wins: patch.wins,

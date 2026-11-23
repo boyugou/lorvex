@@ -38,7 +38,7 @@ extension SwiftLorvexCoreService {
     let now = wallClock()
     return try read { db in
       let anchorTimezone =
-        try WorkflowTimezone.activeTimezoneName(db) ?? TimeZone.current.identifier
+        try WorkflowTimezone.activeTimezoneName(db) ?? WorkflowTimezone.deviceTimezoneName
       // The stored calendar access tier bounds what a suggestion says about
       // device calendar events, in the app and to the assistant alike. A
       // malformed tier fails the read instead of sharing more than it allows.

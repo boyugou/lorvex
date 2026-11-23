@@ -144,7 +144,9 @@ enum ApplyKVAggregate {
     // working-hours object, or boolean must be dropped as a poison envelope,
     // never stored where it can brick every later workflow read.
     let normalizedValue: JSONValue
-    switch PreferenceValueContract.normalize(key: entityId, value: valueNode) {
+    switch PreferenceValueContract.normalize(
+      key: entityId, value: valueNode, acceptingTimezoneAliases: false)
+    {
     case .success(let value): normalizedValue = value
     case .failure(let error):
       throw ApplyError.invalidPayload("preference payload: \(error.description)")

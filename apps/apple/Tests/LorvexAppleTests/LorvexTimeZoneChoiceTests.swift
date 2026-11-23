@@ -158,6 +158,36 @@ struct LorvexTimeZoneChoiceTests {
     #expect(store.logicalTimezoneName == target)
   }
 
+  /// A device may report its zone under a name outside Apple's canonical
+  /// list. Choosing that name succeeds and stores the zone's canonical
+  /// identifier, which is also how the device's own zone is offered.
+  @MainActor
+  @Test func settingTheTimeZoneByAnotherNameStoresTheCanonicalIdentifier() async throws {
+    let suiteName = "settingTheTimeZoneByAlias.\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suiteName)!
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    let store = AppStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
+    await store.refresh()
+
+    // Which canonical identifier a name becomes depends on this system's
+    // list, so the expectations go through `storedIdentifier(for:)`.
+    let canonical = Set(TimeZone.knownTimeZoneIdentifiers)
+    for name in ["Asia/Kolkata", "US/Pacific"] {
+      let stored = LorvexTimeZoneChoice.storedIdentifier(for: name)
+      #expect(canonical.contains(stored))
+      #expect(
+        TimeZone(identifier: stored)?.secondsFromGMT(for: winter)
+          == TimeZone(identifier: name)?.secondsFromGMT(for: winter))
+      #expect(await store.setLogicalTimeZone(name))
+      #expect(store.logicalTimezoneName == stored)
+    }
+
+    #expect(LorvexTimeZoneChoice.storedIdentifier(for: "GMT+5") == "GMT+5")
+    #expect(
+      LorvexTimeZoneChoice.storedIdentifier(for: LorvexTimeZoneChoice.deviceIdentifier)
+        == LorvexTimeZoneChoice.deviceIdentifier)
+  }
+
   @Test func returnInTheSearchPicksOnlyAZoneTheQueryNamesAlone() {
     let all = LorvexTimeZoneChoice.all(now: winter, locale: Locale(identifier: "en_US"))
 

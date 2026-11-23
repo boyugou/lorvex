@@ -90,7 +90,7 @@ struct SettingsTimeZoneRow: View {
   }
 
   private var device: LorvexTimeZoneChoice? {
-    LorvexTimeZoneChoice(identifier: TimeZone.current.identifier)
+    LorvexTimeZoneChoice(identifier: LorvexTimeZoneChoice.deviceIdentifier)
   }
 
   fileprivate enum Copy {

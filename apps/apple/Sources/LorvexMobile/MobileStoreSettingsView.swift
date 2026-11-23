@@ -41,6 +41,12 @@ public struct MobileStoreSettingsView: View {
         MobileStoreDiagnosticsSection(store: store)
         MobileStoreLocalDataResetSection(store: store)
         MobileSettingsAboutSection()
+        #if DEBUG
+          Color.clear
+            .frame(height: 1)
+            .listRowBackground(Color.clear)
+            .id(Self.debugEndAnchor)
+        #endif
       }
       .navigationTitle(
         String(
@@ -66,6 +72,7 @@ public struct MobileStoreSettingsView: View {
   #if DEBUG
     private static let debugDiagnosticsAnchor = "mobileSettings.diagnostics.anchor"
     private static let debugDataExportAnchor = "mobileSettings.dataExport.anchor"
+    private static let debugEndAnchor = "mobileSettings.end.anchor"
 
     /// Dev/QA only: when launched with `-lorvexScrollSettingsToDiagnostics`,
     /// reload diagnostics (so freshly-seeded rows are present) and bring the
@@ -78,8 +85,18 @@ public struct MobileStoreSettingsView: View {
     /// feed is long enough that a bottom anchor scrolls both of them away.
     ///
     /// `-lorvexScrollSettingsToDataExport` brings the Data Export section's top
-    /// up the same way instead.
+    /// up the same way instead, and `-lorvexScrollSettingsToEnd` the end of
+    /// the list: the last rows of the failure feed with their Share button,
+    /// Reset and About.
     private func revealDiagnosticsForScreenshotIfNeeded(_ proxy: ScrollViewProxy) async {
+      if MobileStore.debugScrollSettingsToEnd {
+        await store.loadRuntimeDiagnostics()
+        for _ in 0..<4 {
+          try? await Task.sleep(for: .milliseconds(400))
+          lorvexAnimated { proxy.scrollTo(Self.debugEndAnchor, anchor: .bottom) }
+        }
+        return
+      }
       if MobileStore.debugScrollSettingsToDataExport {
         for _ in 0..<4 {
           try? await Task.sleep(for: .milliseconds(400))

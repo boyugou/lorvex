@@ -224,9 +224,45 @@ to ensure its end picker and clear button both fit. These are visual-only.
 Environment: `LORVEX_SIM_UDID` and `LORVEX_SIM_DEVICE` pick the device (pass
 the UDID when two simulators share a name), `LORVEX_SIM_EXTRA_ARGS` carries
 launch arguments, `LORVEX_SIM_SETTLE` sets the wait before a capture (raise it
-for the stress seed or scrolling), `LORVEX_SIM_FRESH=1` erases first, and
-`LORVEX_SIM_INCREASE_CONTRAST=enabled` turns on Increase Contrast, which is
-device state that survives shutdown.
+for the stress seed or scrolling), `LORVEX_SIM_FRESH=1` erases first,
+`LORVEX_SIM_DISPLAY` names the display to capture on a device with more than
+one, and `LORVEX_SIM_INCREASE_CONTRAST=enabled` turns on Increase Contrast,
+which is device state that survives shutdown.
+
+#### iPhone Duo
+
+The Duo simulator (`LORVEX_SIM_DEVICE="iPhone Duo"`, iOS 27.1 or later) has
+two built-in displays. `simctl io` names the outer one `primary` (466 × 678
+points) and the inner one `primary-1` (669 × 951 points). The device boots
+folded, with the outer display live and the inner one black. A plain
+`simctl io screenshot` fails on it, so the capture script names `primary`
+there unless `LORVEX_SIM_DISPLAY` says otherwise.
+
+What can be driven headlessly, and what cannot (Xcode 27.2):
+
+- Folding and unfolding cannot. Nothing in `simctl`, `devicectl` or XCTest
+  sets the hinge; the only control is the hinge slider in Xcode's Device Hub.
+  Turning a display off with `simctl io … screenConfig` does not move the
+  app to the other one. The inner display, the half-open posture and its
+  reserved regions are therefore checked by hand.
+- Rotation can: `xcrun devicectl device orientation set --device <udid>
+  landscapeLeft`, or the app's own `-lorvexPreviewOrientation landscape`.
+- Window size can: `xcrun devicectl device appResize start --device <udid>
+  --preferred-size <width>x<height>` moves the frontmost app to a resizable
+  display until interrupted, `appResize set` changes the size without a
+  relaunch, and `simctl io <udid> screenshot --display=resizable` captures
+  it.
+
+On the outer display the system draws the status items, the toolbar items
+and the tab bar in one column on the trailing edge (the leading edge in
+landscape), and the safe area excludes that column. A horizontal scroll view
+still draws its content beneath the column, so a paged strip needs a clip.
+
+After each boot the simulator's wallpaper processes and the host's Spotlight
+indexing load the machine for a minute or two. A capture taken then can show
+the screen before the sample data or the deep link applied (an empty Today,
+or Today where another tab was asked for). Use `LORVEX_SIM_SETTLE=9` or more
+on this device and look at each capture before trusting it.
 
 DEBUG launch arguments: `-lorvexSeedSampleData` (seeds only an empty store),
 `-lorvexSeedStressData`, `-lorvexPreviewNow 11:20`, `-lorvexOpenURL <url>`,

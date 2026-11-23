@@ -415,6 +415,13 @@
       CommandLine.arguments.contains("-lorvexScrollSettingsToDataExport")
     }
 
+    /// Dev/QA only: when `-lorvexScrollSettingsToEnd` is passed, the Settings
+    /// screen scrolls to the end of its list so a screenshot shows the last
+    /// diagnostics rows with their Share button, Reset and About.
+    public static var debugScrollSettingsToEnd: Bool {
+      CommandLine.arguments.contains("-lorvexScrollSettingsToEnd")
+    }
+
     /// Dev/QA only: when `-lorvexScrollHabitDetailToEnd` is passed, a habit's
     /// detail page opens at its end, where its reminders and the Archive and
     /// Delete buttons sit, so they can be screenshotted without a manual swipe.

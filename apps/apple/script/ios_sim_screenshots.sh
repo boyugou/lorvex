@@ -28,7 +28,8 @@
 # Routes: today today-suggestion tasks calendar calendar-week calendar-month
 #         habits review
 #         review-week setup-welcome setup-cloudSync setup-notifications setup-done
-#         settings settings-bottom settings-export memory lists task-detail habit-detail
+#         settings settings-bottom settings-export settings-end memory lists task-detail
+#         habit-detail
 #         habit-detail-middle habit-detail-end habit-editor review-end review-week-end
 #         memory-detail task-detail-checklist task-detail-reminder capture
 #         capture-filled capture-repeat
@@ -107,7 +108,9 @@
 #         (the DEBUG -lorvexScrollSettingsToDiagnostics hook), which puts the
 #         summary card and the newest failure rows on screen together;
 #         settings-export opens it scrolled to Data Export
-#         (-lorvexScrollSettingsToDataExport); the
+#         (-lorvexScrollSettingsToDataExport), and settings-end at the end
+#         of the list (-lorvexScrollSettingsToEnd): the last diagnostics
+#         rows and their Share button, Reset and About; the
 #         *-search-empty routes
 #         pre-fill a query that matches nothing so the no-results row renders.
 # Env:    LORVEX_SIM_DEVICE  device name (default: iPhone 17 Pro; e.g.
@@ -119,6 +122,14 @@
 #         LORVEX_SIM_INCREASE_CONTRAST  "enabled" to capture with the Increase
 #                            Contrast accessibility setting on; any other
 #                            value (the default) pins it off
+#         LORVEX_SIM_DISPLAY the display to screenshot, as `simctl io` names it
+#                            (`simctl io <udid> enumerate` lists them). A
+#                            device with one built-in display needs none. An
+#                            iPhone Duo has two, and `simctl` then refuses a
+#                            screenshot that names neither: the default there
+#                            is `primary`, the outer display, which is the one
+#                            a Duo simulator boots on; `primary-1` is the inner
+#                            display, black until the device is unfolded
 # Requires script/ios_sim_build.sh to have produced the .app.
 set -u
 OUT="${1:?usage: ios_sim_screenshots.sh <outdir> <light|dark> <route ...>}"
@@ -149,7 +160,7 @@ url_for() {
     review-week|review-week-end) echo "lorvex://tab/review/week" ;;
     review-end) echo "lorvex://tab/review" ;;
     settings|memory|lists) echo "lorvex://dest/$1" ;;
-    settings-bottom|settings-export) echo "lorvex://dest/settings" ;;
+    settings-bottom|settings-export|settings-end) echo "lorvex://dest/settings" ;;
     today-suggestion) echo "lorvex://tab/today" ;;
     tasks-search-empty) echo "lorvex://tab/tasks/search/quokka" ;;
     habits-search-empty) echo "lorvex://tab/habits/search/quokka" ;;
@@ -191,6 +202,7 @@ extra_args_for() {
   case "$1" in
     settings-bottom) echo "-lorvexScrollSettingsToDiagnostics" ;;
     settings-export) echo "-lorvexScrollSettingsToDataExport" ;;
+    settings-end) echo "-lorvexScrollSettingsToEnd" ;;
     habit-detail-end) echo "-lorvexScrollHabitDetailToEnd" ;;
     habit-detail-middle) echo "-lorvexScrollHabitDetailToMiddle" ;;
     habit-editor) echo "-lorvexOpenHabitEditor" ;;
@@ -208,6 +220,15 @@ mkdir -p "$OUT"
 xcrun simctl boot "$UDID" >/dev/null 2>&1 || true
 xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1 || sleep 8
 xcrun simctl install "$UDID" "$APP" || { echo "install failed on $UDID" >&2; exit 1; }
+# `simctl io screenshot` picks the display itself when the device has one
+# built-in display and fails when it has two, so name one there.
+DISPLAY_ARG=""
+if [[ -n "${LORVEX_SIM_DISPLAY:-}" ]]; then
+  DISPLAY_ARG="--display=$LORVEX_SIM_DISPLAY"
+elif [[ "$(xcrun simctl io "$UDID" enumerate 2>/dev/null | grep -c 'Display class: 0')" -gt 1 ]]; then
+  DISPLAY_ARG="--display=primary"
+  echo "two built-in displays: capturing the outer one (set LORVEX_SIM_DISPLAY to choose)" >&2
+fi
 # Delete the seeded store before launching. `-lorvexSeedSampleData` only seeds a
 # store with no tasks in it, and the store lives in the shared App Group
 # container, which survives both a reinstall and `simctl uninstall` — so without
@@ -259,7 +280,12 @@ for ROUTE in "${ROUTES[@]}"; do
   sleep "${LORVEX_SIM_SETTLE:-4.5}"
   # The scroll hooks settle over a few runloop turns after the data loads.
   [[ -n "$EXTRA_ARGS" ]] && sleep 3
-  xcrun simctl io "$UDID" screenshot "$OUT/$NAME-$APPEARANCE.png" >/dev/null 2>&1 && echo "captured $NAME $APPEARANCE"
+  # shellcheck disable=SC2086  # DISPLAY_ARG is empty or one argument without spaces.
+  if xcrun simctl io "$UDID" screenshot $DISPLAY_ARG "$OUT/$NAME-$APPEARANCE.png" >/dev/null 2>&1; then
+    echo "captured $NAME $APPEARANCE"
+  else
+    echo "capture failed: $NAME $APPEARANCE" >&2
+  fi
 done
 xcrun simctl ui "$UDID" appearance light >/dev/null 2>&1
 xcrun simctl ui "$UDID" increase_contrast disabled >/dev/null 2>&1

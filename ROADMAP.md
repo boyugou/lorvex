@@ -43,6 +43,16 @@ person living with the app, and then a decision.
   "every month on the 31st", whether the days Lorvex lands on are the days
   Siri announced. Lorvex takes the week start from the rule Siri sends and
   skips a month without the day.
+- Siri hearing the app's name ([build 174](docs/releases/1.0.0-174.md)).
+  "Lorvex" is a coined word and Siri has heard it as "Lorax". The app now
+  declares an alternative name with a pronunciation hint
+  (`INAlternativeAppNames`, "Lore Vex") and a spoken name
+  (`CFBundleSpokenName`). Apple documents both for this purpose; developer
+  reports say the hint does not always help, and nothing here can measure
+  it. Say "Add a task in Lorvex" ten times before and after the build and
+  count how often Siri picks Lorvex. If it does not improve, the next step
+  is a phrase that does not need the name, which only the Siri AI schemas
+  allow.
 
 ## Product work
 
@@ -83,24 +93,34 @@ person living with the app, and then a decision.
      both displays with toolbars and tab bars on the vertical axis, so every
      current build does. Done so far: Today's columns
      ([build 153](docs/releases/1.0.0-153.md)), the mobile Week agenda
-     ([build 154](docs/releases/1.0.0-154.md)), and journal search on the Duo
-     simulator's outer display ([build 170](docs/releases/1.0.0-170.md)).
-     Remaining: validate continuity across displays, folding, rotation, Split
-     View, the vertical bars, and reserved regions. Keep the current
-     navigation, selection, scroll position, and unsaved draft through layout
-     changes. Cover Today, calendar grids, task details, Review, capture, and
-     settings, with large text and light/dark appearances, and record
-     simulator evidence. The 27.1 APIs for this are unused so far:
-     `GeometryProxy.reservedRegions` for the hinge and camera,
-     `onHingeChange`, and `toolbarVerticalBehavior` with a toolbar item's
-     `axisBehavior`.
+     ([build 154](docs/releases/1.0.0-154.md)), journal search on the outer
+     display ([build 170](docs/releases/1.0.0-170.md)), and a pass over
+     sixteen screens on the outer display
+     ([build 174](docs/releases/1.0.0-174.md)): Today, Tasks, the three
+     calendar grids, Habits, both reviews, a task's detail and editor,
+     capture, Settings, Lists, Memory and an event's detail, in light, with
+     the calendar and Review also in dark and in landscape. Remaining:
+     - The largest text sizes on the outer display. One round was taken while
+       the simulator was still loading and is not evidence.
+     - Resizing and Split View, which `devicectl device appResize` drives
+       without a person: that navigation, selection, scroll position and an
+       unsaved draft survive a size change.
+     - By hand, because nothing but Device Hub's hinge control folds the
+       simulator (`apps/apple/docs/development/VERIFICATION.md`, "iPhone
+       Duo"): the inner display, the half-open posture with its reserved
+       regions, and the same continuity when the device is opened and closed.
+     - `GeometryProxy.reservedRegions`, `onHingeChange`,
+       `toolbarVerticalBehavior` and a toolbar item's `axisBehavior` are in
+       the 27.2 SDK and not adopted. Nothing seen on the outer display needs
+       them; the inner display and the half-open posture decide.
+     - On a lane too narrow for a second title line beside a time, an event
+       block shows a cut title over its time ("Custom…", "11:00 AM"). The
+       block's place on the grid already gives the time, so the whole title
+       on two lines may serve better there.
   3. Small adoptions: `TabsPickerStyle` on the segmented pickers that switch
      a page's content, which VoiceOver then reads as tabs; toolbar
      `visibilityPriority` and `ToolbarOverflowMenu`, so a narrow window and
      Duo's vertical bar drop the less important items first.
-
-  Also run the scene's database-resume callback on its initial active value,
-  instead of requiring a later foreground transition.
 - Hand a task to the assistant (released in build 141). Not covered yet: the
   Mac's table mode, the menu bar panel and the Watch show no marker; the
   request can be set only through the assistant, since the apps have no field
@@ -177,6 +197,62 @@ person living with the app, and then a decision.
   German at the largest accessibility text size on iPhone the Habits large
   title truncates ("Gewohnheit…").
 
+## Areas not yet examined
+
+Whole dimensions of the product that no audit, test or capture round has
+looked at, listed on 2026-11-22 after two defects reached the owner before
+they reached this list. Each names what is known and the first step. Take
+them by effect on a person's day, and add to the list whenever a new one is
+noticed.
+
+- Signals from real use. The app keeps a diagnostics log on each device
+  (sync refusals, failed actions, MetricKit crashes and metrics), and
+  `get_recent_logs` reads it on the Mac. An iPhone's log reached a developer
+  only as screenshots until build 174 added Share to the list. TestFlight's
+  crash submissions were read for the first time on 2026-11-22
+  (`apps/apple/script/testflight_crashes.py`): five, the newest from
+  2026-10-18 on build 135, and none for a build since. Not read so far:
+  TestFlight's screenshot feedback, and which builds run side by side on one
+  person's devices (on 2026-11-22 the owner's Mac ran 171 beside a phone on
+  173). First steps: read App Store Connect's crash and feedback records in
+  each release cycle, and read the Mac's log at the start of a work session.
+- The assistant's experience. The main interface is an assistant working
+  through MCP. Its quality has been checked through schemas, fuzzing and
+  tests of each tool, and never by watching an assistant do a person's
+  requests: plan the day, clear the inbox, move a week around. Unknown: how
+  many calls a request takes, where an assistant picks the wrong tool or
+  misreads a result, and what the responses cost in tokens. First step: a
+  set of realistic requests run by an assistant against a seeded store, the
+  transcripts reviewed as critically as captures are.
+- Connecting an assistant. Setup is a path into the app bundle, typed into a
+  client's configuration. When the helper moved into `LorvexMCPHost.app`, an
+  entry with the earlier path stopped working with no message from either
+  side (seen on the owner's Mac, 2026-11-22). The Claude Code plugin finds
+  the helper itself; other clients do not. To weigh: a bundle a desktop
+  client installs in one step, and a line in Settings saying when an
+  assistant last connected, so a broken entry shows.
+- An automated accessibility audit. XCTest's `performAccessibilityAudit`
+  checks contrast, hit regions, missing labels, clipped text and traits. It
+  has never been run; the iOS UI test target exists. First step: one audit
+  per main screen on the simulator, then decide which findings are real.
+- A safety net for a person's data. Export is by hand (Settings, a Shortcuts
+  action, an MCP tool); nothing keeps a dated copy. An assistant can cancel
+  a whole list in one call, undo covers one assistant update at a time, and
+  a sync defect can leave devices disagreeing for weeks (build 174). A local
+  snapshot kept for some days and restorable from Settings would bound the
+  loss from any of these.
+- Disk writes and launch time on a real store. MetricKit on the owner's Mac,
+  whose database is 2.5 MB, reported 28.5 MB written on 2026-11-22 and
+  10.2 MB on 2026-11-14, against 1.2 to 4.1 MB on three other days, and one
+  launch of 3.3 s against 0.7 to 1.2 s. The causes are not established; the
+  rewrite-whole sync caches under "CloudKit traffic and scale" below are the
+  first suspects. First step: attribute the writes on a day of normal use.
+- Hosted CI. `Apple CI` runs only when dispatched, because macOS minutes
+  were paused while the repository was private, and it has no recorded run.
+  The repository is public now. First step: dispatch one run and see whether
+  the hosted image has a new enough Xcode; if it passes, restore the push
+  trigger.
+
 ## Sync and data
 
 Found by read-only audits (2026-11-09) and by the convergence simulation.
@@ -188,6 +264,69 @@ Each is traced to the code; none is reproduced on devices.
   zone (`docs/decisions/cksyncengine-transport.md`). Still owed: two-device
   proof on TestFlight builds, including the iOS sync pass that runs inside a
   background task before the database suspends, and silent-push wakes.
+- A record a device refuses as invalid is dropped, with a diagnostics entry
+  and nothing else. The device that sent it shows it as synced, the others
+  keep their older state, and no surface tells the person their devices
+  disagree. A record held back for a record that was dropped stays held back
+  until the dropped one is sent again. Build 174 fixed two causes in
+  repeating tasks and repairs the rows one of them left
+  ([release record](docs/releases/1.0.0-174.md)); the general gap stands. To
+  weigh: check a task payload against the inbound rules where it is queued,
+  so the writing device learns at once, and a sync status line that counts
+  refused and held-back records.
+- A generated occurrence's link to the occurrence before it
+  (`spawned_from`). The link is valid only while the earlier occurrence
+  records the task as its next one in the same series. Build 174 holds that
+  rule when a task is cancelled with its series, when a repeat is turned off
+  after a completion was undone, and on the receiving device. Open, each
+  reproduced by a test run on 2026-11-22 or traced to the code:
+  - A cancelled occurrence can stay linked to an earlier occurrence that no
+    longer records it, and every export then stops with "Task sync is still
+    reconciling related records". One path is left: undo a completion, change
+    the repeat so it ends on or before that day, and complete again. Rows
+    written by builds before 174 in the undo-then-turn-off-repeat order have
+    the same shape. Sync accepts the shape, so it cannot be repaired the way
+    the refused rows are: a device shows it briefly between two records of
+    one change, and a repair there would overwrite the record still on its
+    way. To weigh: drop the link where the task is written, or have the
+    export leave out a link the earlier occurrence does not record.
+  - A task that kept its link, lost its series and later got a repeat of its
+    own (a link beside another series, no occurrence key) is refused by
+    other devices and not repaired. The owner's Mac held none on 2026-11-22.
+    Repairing it ends the earlier occurrence's record, which a device on a
+    build before 174 answers by cancelling the task when that record arrives
+    first.
+  - Devices on builds before 174 still cancel a generated occurrence whose
+    repeat was turned off when the earlier occurrence's record arrives
+    first. It ends when every device runs 174 or later.
+  - Build 174 itself still cancels it, on every device, in two cases. One:
+    the earlier occurrence's record says more than that it stopped recording
+    the later task, and arrives first. That happens when the earlier
+    occurrence's own repeat was turned off as well, or it was reopened,
+    before the device synced. Two: the receiving device had not yet applied
+    the completion that generated the later task. A device keeps the later
+    task only when the record it applies changes nothing about the earlier
+    occurrence except ending that record. To weigh: have the device that
+    takes a task out of its series stamp the task's status in the same
+    write, so the task's own record outlasts a cancel another device works
+    out.
+  - Two devices editing at once: one completes the earlier occurrence again
+    while the other changes the later task's schedule outside the series.
+    Both end with the earlier occurrence naming a next one that does not
+    link back; they agree with each other, and export stops as above.
+- The iPhone database and suspension. The store refuses work while the app
+  is in the background so the system never suspends the process holding a
+  file lock (crash `0xdead10cc`). One such crash was recorded on the owner's
+  phone in the week of 2026-11-15; which path held the lock is not known,
+  and the entry's detail (process, build, call stacks) settles it. Open
+  paths, each traced to the code and none reproduced: opening the store
+  (schema check, migrations, `PRAGMA optimize`) runs before the suspension
+  check and outside the count of work in flight; suspending is decided by
+  `UIApplication.applicationState` and resuming by the scene phase, two
+  signals that could disagree; work that takes longer than one second to
+  unwind outlives the wait; and the widget and Focus filter extensions
+  write with no protection. No test covers the scene-phase resume, the
+  suspend at launch, or the open path.
 - CloudKit traffic and scale (reviewed against Apple's CKSyncEngine guidance;
   none loses data): every local write and every push runs a full
   fetch-then-send pass (`runCloudSyncCycle`), where Apple's pattern is to

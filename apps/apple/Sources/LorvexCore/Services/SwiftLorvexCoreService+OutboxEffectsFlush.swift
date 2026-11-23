@@ -23,17 +23,16 @@ extension SwiftLorvexCoreService {
   ) throws {
     let rerooted = Set(effects.rerootedSuccessorIds)
     let cancelled = Set(effects.cancelledSuccessorIds)
+    let severed = Set(effects.severedPredecessorIds)
     for taskID in Set(effects.taskUpsertIds).sorted() {
-      let intent: TaskRegisterIntent
-      if rerooted.contains(taskID) {
-        intent = .schedule
-      } else if cancelled.contains(taskID) {
-        intent = .lifecycle
-      } else {
-        // The remaining task effect is the predecessor whose rollover
-        // authorization was severed.
-        intent = .lifecycle
-      }
+      // A task released from its parent changed its schedule register, where
+      // the link lives; a cancelled successor changed its lifecycle register
+      // as well; a predecessor that stopped recording its next occurrence
+      // changed its lifecycle register. One task can be several of these.
+      var intent: TaskRegisterIntent = []
+      if rerooted.contains(taskID) { intent.insert(.schedule) }
+      if cancelled.contains(taskID) { intent.formUnion([.lifecycle, .schedule]) }
+      if severed.contains(taskID) || intent.isEmpty { intent.insert(.lifecycle) }
       try enqueueUpsert(
         db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: taskID,
         registerIntent: .task(intent))
@@ -101,10 +100,13 @@ extension SwiftLorvexCoreService {
 
     // 4. Primary task upserts plus recurrence-neighbor task effects. The
     // primary map is derived from before/after snapshots. Recurrence disable
-    // classifies rerooted successors as schedule writes and cancelled
-    // successors / severed predecessors as lifecycle writes; do not rely on
-    // final-row inference for those side effects because an unrelated register
-    // may already own the row's transport `version`.
+    // classifies rerooted successors as schedule writes and severed
+    // predecessors as lifecycle writes. A successor cancelled by a reopen is
+    // a lifecycle and schedule write, because the cancel stamps both
+    // registers; one cancelled by a recurrence disable is not in
+    // `taskUpsertIds` and is queued in step 6. Do not rely on final-row
+    // inference for these side effects, because an unrelated register may
+    // already own the row's transport `version`.
     let rerootedSuccessorIds = Set(effects.rerootedSuccessorIds)
     let cancelledSuccessorIds = Set(effects.cancelledSuccessors.map(\.successorId))
     let spawnedSuccessorIds = Set(effects.spawnedSuccessors.map(\.successorId))
@@ -121,7 +123,7 @@ extension SwiftLorvexCoreService {
       } else if cancelledSuccessorIds.contains(taskID) {
         try enqueueUpsert(
           db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: taskID,
-          registerIntent: .task(.lifecycle))
+          registerIntent: .task([.lifecycle, .schedule]))
       } else if spawnedSuccessorIds.contains(taskID) {
         // A newly inserted or revived successor owns a wider snapshot than a
         // recurrence-disable neighbor. Its workflow stamps the canonical
@@ -154,12 +156,14 @@ extension SwiftLorvexCoreService {
       db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
       entityIds: effects.spawnedSuccessorReminderIds)
 
-    // 6. Cancelled successors (the row was updated to cancelled).
+    // 6. Cancelled successors (the row was updated to cancelled). Both causes,
+    // a reopen and a recurrence disable, stamp the lifecycle and the schedule
+    // register; the disable also drops the row's link to its parent there.
     for successor in effects.cancelledSuccessors {
       try enqueueUpsert(
         db, hlc: hlc, deviceId: deviceId, kind: .task,
         entityId: successor.successorId,
-        registerIntent: .task(.lifecycle))
+        registerIntent: .task([.lifecycle, .schedule]))
     }
   }
 

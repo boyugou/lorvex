@@ -141,9 +141,13 @@ public enum LifecycleTransitions {
   ///   the next occurrence (skip-this-one).
   /// - `cancelSeries == true`: cancel this task; if recurring, clear all
   ///   recurrence fields (rule, group id, canonical_occurrence_date,
-  ///   exception list, instance key) and do NOT spawn. Requires a
-  ///   caller-supplied `seriesClearVersion` so the recurrence-clear UPDATE
-  ///   ships its own LWW stamp distinct from the cancel write.
+  ///   exception list, instance key) and do NOT spawn. The task also leaves
+  ///   the series it was generated in: its link to its predecessor is cleared,
+  ///   the predecessor's authorization of it ends, and its own successors are
+  ///   settled as a recurrence disable settles them; the result's
+  ///   `seriesEndEffects` lists those rows. Requires a caller-supplied
+  ///   `seriesClearVersion` so the recurrence-clear UPDATE ships its own LWW
+  ///   stamp distinct from the cancel write.
   /// - For non-recurring tasks, `cancelSeries` is ignored.
   public static func applyCancelTransition(
     _ db: Database,
@@ -182,6 +186,7 @@ public enum LifecycleTransitions {
     var spawnedTagEdges: [CopiedTagEdge] = []
     var spawnedChecklistItemIds: [String] = []
     var spawnedReminderIds: [String] = []
+    var seriesEndEffects = RecurrenceDisableEffects()
 
     if let snap = snapshot, let rule = snap.recurrence, !rule.isEmpty {
       if cancelSeries {
@@ -190,11 +195,29 @@ public enum LifecycleTransitions {
             "apply_cancel_transition: cancel_series recurrence clear "
               + "requires a caller-supplied HLC version")
         }
+        // Ending the series here is a recurrence disable: the task leaves its
+        // predecessor's series, so the predecessor stops recording it as the
+        // next occurrence and the task's own successors are settled. A parent
+        // link kept on a row without a series is a payload every peer rejects.
+        let lineage = try Row.fetchOne(
+          db,
+          sql: "SELECT spawned_from, recurrence_group_id FROM tasks WHERE id = ?1",
+          arguments: [taskId.asString])
+        let predecessorId: String? = lineage?[0]
+        let recurrenceGroupId: String? = lineage?[1]
+        // The cancel above has already cleared the task's own record of a
+        // successor, so that comes from the snapshot taken before it.
+        seriesEndEffects = try RecurrenceDisableReconciliation.apply(
+          db, taskId: taskId.asString,
+          spawnedFrom: predecessorId, recurrenceGroupId: recurrenceGroupId,
+          recordedSuccessorId: snap.recurrenceSuccessorId,
+          decisionVersion: seriesClearVersion, now: now)
         try db.execute(
           sql:
             "UPDATE tasks SET recurrence = NULL, recurrence_group_id = NULL, "
             + "canonical_occurrence_date = NULL, "
             + "recurrence_instance_key = NULL, "
+            + "spawned_from = NULL, spawned_from_version = NULL, "
             + "recurrence_rollover_state = 'ended', recurrence_successor_id = NULL, "
             + "schedule_version = ?3, lifecycle_version = ?3, "
             + "version = ?3, updated_at = ?2 "
@@ -237,7 +260,8 @@ public enum LifecycleTransitions {
       spawnedSuccessorId: spawnedSuccessorId,
       spawnedSuccessorTagEdges: spawnedTagEdges,
       spawnedSuccessorChecklistItemIds: spawnedChecklistItemIds,
-      spawnedSuccessorReminderIds: spawnedReminderIds)
+      spawnedSuccessorReminderIds: spawnedReminderIds,
+      seriesEndEffects: seriesEndEffects)
   }
 
   // MARK: - Dedicated reopen surface

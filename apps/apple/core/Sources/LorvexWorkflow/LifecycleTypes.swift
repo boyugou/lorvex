@@ -205,6 +205,10 @@ public struct CancelLifecycleTransitionResult: Sendable, Equatable {
   public let spawnedSuccessorTagEdges: [CopiedTagEdge]
   public let spawnedSuccessorChecklistItemIds: [String]
   public let spawnedSuccessorReminderIds: [String]
+  /// Other rows changed when `cancel_series=true` ended the series: the
+  /// predecessor that had authorized this task, and this task's own
+  /// successors. The caller enqueues them with the cancelled task.
+  public let seriesEndEffects: RecurrenceDisableEffects
 
   public init(
     updated: Bool,
@@ -214,7 +218,8 @@ public struct CancelLifecycleTransitionResult: Sendable, Equatable {
     spawnedSuccessorId: String?,
     spawnedSuccessorTagEdges: [CopiedTagEdge],
     spawnedSuccessorChecklistItemIds: [String],
-    spawnedSuccessorReminderIds: [String]
+    spawnedSuccessorReminderIds: [String],
+    seriesEndEffects: RecurrenceDisableEffects = RecurrenceDisableEffects()
   ) {
     self.updated = updated
     self.cancelledReminderIds = cancelledReminderIds
@@ -224,5 +229,6 @@ public struct CancelLifecycleTransitionResult: Sendable, Equatable {
     self.spawnedSuccessorTagEdges = spawnedSuccessorTagEdges
     self.spawnedSuccessorChecklistItemIds = spawnedSuccessorChecklistItemIds
     self.spawnedSuccessorReminderIds = spawnedSuccessorReminderIds
+    self.seriesEndEffects = seriesEndEffects
   }
 }

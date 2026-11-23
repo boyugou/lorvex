@@ -525,6 +525,8 @@ extension SwiftLorvexCoreService {
           }
           guard result.updated else { return .rollback }
           try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
+          try self.flushRecurrenceDisableEffects(
+            db, hlc: hlc, deviceId: deviceId, effects: result.seriesEndEffects)
           cancelled = result
           return .commit
         }

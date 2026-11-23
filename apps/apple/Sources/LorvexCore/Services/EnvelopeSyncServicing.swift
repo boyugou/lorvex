@@ -78,6 +78,15 @@ public protocol EnvelopeSyncServicing: AnyObject, Sendable {
   /// in every mode, but shedding active rows is not safe while a live full-resync
   /// backfill may be waiting for transport to resume. A no-op for backends
   /// without an outbox (the default).
+  ///
+  /// The pass ends by restoring one rule peers enforce on a task payload: a
+  /// task that names a predecessor without belonging to a series loses the
+  /// link, becomes an ordinary one-off and is queued again, with the
+  /// predecessor that still recorded it as its next occurrence. It writes only
+  /// when such a task exists. A task it cannot repair is logged as
+  /// `sync.lineage_repair_failed` and skipped until the app starts again; a
+  /// repair that fails as a whole is logged under the same source once per
+  /// launch and thrown.
   func runLocalRetentionMaintenance(includeActiveOutboxCap: Bool) throws
 
   /// Durably park records whose `entity_type` is a future/unknown kind this

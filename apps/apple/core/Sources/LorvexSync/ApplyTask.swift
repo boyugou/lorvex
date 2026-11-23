@@ -129,7 +129,9 @@ enum ApplyTask {
       } catch { throw ApplyError.lift(error) }
     }
     var targets = try TaskRolloverReconciliation.reconcileDescendants(
-      db, parentId: entityId, applyTs: applyTs)
+      db, parentId: entityId, applyTs: applyTs,
+      releasedSuccessorId: TaskRolloverReconciliation.releasedSuccessorId(
+        before: local, after: joined))
     if taskUpsertLanded {
       targets += try TaskGraphReconciliation.repairTargetsAfterTaskWrite(
         db, taskId: entityId, applyTs: applyTs)

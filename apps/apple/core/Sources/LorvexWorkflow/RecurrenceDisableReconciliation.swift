@@ -3,11 +3,16 @@ import GRDB
 import LorvexDomain
 import LorvexStore
 
-/// Cross-row effects produced when recurrence is disabled. All listed rows are
-/// mutated inside the same transaction as the task's recurrence skeleton.
+/// Cross-row effects of taking a task out of its series: turning its repeat
+/// off, cancelling its series, or repairing a link it kept without a series.
+/// All listed rows are mutated in the same transaction as that task.
 public struct RecurrenceDisableEffects: Sendable, Equatable {
   public var taskUpsertIds: [String] = []
+  /// Predecessors whose record of their next occurrence was ended.
+  public var severedPredecessorIds: [String] = []
+  /// Successors cancelled and released from their parent.
   public var cancelledSuccessorIds: [String] = []
+  /// Tasks released from their parent and otherwise kept as they were.
   public var rerootedSuccessorIds: [String] = []
   public var reminderUpsertIds: [String] = []
   public var affectedDependentIds: [String] = []
@@ -17,6 +22,7 @@ public struct RecurrenceDisableEffects: Sendable, Equatable {
 
   mutating func normalize() {
     taskUpsertIds = Array(Set(taskUpsertIds)).sorted()
+    severedPredecessorIds = Array(Set(severedPredecessorIds)).sorted()
     cancelledSuccessorIds = Array(Set(cancelledSuccessorIds)).sorted()
     rerootedSuccessorIds = Array(Set(rerootedSuccessorIds)).sorted()
     reminderUpsertIds = Array(Set(reminderUpsertIds)).sorted()
@@ -56,6 +62,7 @@ enum RecurrenceDisableReconciliation {
         version: decisionVersion, now: now)
       {
         effects.taskUpsertIds.append(predecessorId)
+        effects.severedPredecessorIds.append(predecessorId)
       }
     }
 
@@ -75,7 +82,12 @@ enum RecurrenceDisableReconciliation {
     return effects
   }
 
-  private static func severPredecessor(
+  /// End `predecessorId`'s record of `successorId` as its next occurrence:
+  /// an authorized record becomes `ended`, a revoked one `none`. Returns
+  /// `false`, writing nothing, when the predecessor is missing or records
+  /// another task or none. Throws `StoreError.staleVersion` when `version`
+  /// does not follow the predecessor's lifecycle stamp.
+  static func severPredecessor(
     _ db: Database,
     predecessorId: String,
     successorId: String,
@@ -164,11 +176,16 @@ enum RecurrenceDisableReconciliation {
 
     case .cancelStableSuccessor:
       let descendantId: String? = row[7]
+      // The parent stops recording this row in this transaction, so the row
+      // drops its link with the cancel: a link is valid only while the parent
+      // records it.
       try db.execute(
         sql:
           "UPDATE tasks SET status = 'cancelled', completed_at = NULL, "
           + "recurrence_rollover_state = 'ended', recurrence_successor_id = NULL, "
-          + "lifecycle_version = ?1, version = MAX(version, ?1), updated_at = ?2 "
+          + "spawned_from = NULL, spawned_from_version = NULL, "
+          + "lifecycle_version = ?1, schedule_version = ?1, "
+          + "version = MAX(version, ?1), updated_at = ?2 "
           + "WHERE id = ?3",
         arguments: [decisionVersion, now, successorId])
       effects.taskUpsertIds.append(successorId)

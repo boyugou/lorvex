@@ -26,8 +26,10 @@ import LorvexStore
 /// roll back together.
 ///
 /// Sync effects: flattened ``BatchCancelSyncEffects`` envelope — a
-/// subset of the batch-create surface (no tag adds, no successor
-/// cancels, no per-rewire audit rows).
+/// subset of the batch-create surface (no tag adds, no per-rewire audit
+/// rows). With `cancelSeries`, each task that leaves its series adds the
+/// rows that leaving changed: the predecessor that recorded it and its own
+/// successors.
 public enum TaskBatchCancel {
   /// Hard cap on candidate set size.
   public static let maxInListCancel: Int = 500
@@ -96,6 +98,9 @@ public enum TaskBatchCancel {
         handler: recurrenceHandler)
 
       syncEffects.cancelledReminderIds.append(contentsOf: result.cancelledReminderIds)
+      if result.seriesEndEffects != RecurrenceDisableEffects() {
+        syncEffects.seriesEndEffects.append(result.seriesEndEffects)
+      }
       syncEffects.deletedDependencyEdges.append(
         contentsOf: result.deletedDependencyEdges)
       for depId in result.affectedDependentIds where !idsSet.contains(depId) {
@@ -310,6 +315,9 @@ public struct BatchCancelSyncEffects: Sendable {
   public var spawnedSuccessorTagEdges: [CopiedTagEdge] = []
   public var spawnedSuccessorChecklistItemIds: [String] = []
   public var spawnedSuccessorReminderIds: [String] = []
+  /// One entry per cancelled task whose series ended (`cancel_series`): the
+  /// predecessor and successor rows that changed with it.
+  public var seriesEndEffects: [RecurrenceDisableEffects] = []
   public init() {}
 }
 

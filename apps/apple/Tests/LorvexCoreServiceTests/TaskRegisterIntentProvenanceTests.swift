@@ -3,6 +3,7 @@ import GRDB
 import LorvexDomain
 import LorvexStore
 import LorvexSync
+import LorvexWorkflow
 import XCTest
 
 @testable import LorvexCore
@@ -280,12 +281,17 @@ final class TaskRegisterIntentProvenanceTests: XCTestCase {
       XCTAssertEqual(
         parentIntent,
         TaskRegisterIntent.schedule.rawValue | TaskRegisterIntent.lifecycle.rawValue)
+      // The cancelled successor also drops its link to the parent, which is
+      // in its schedule register.
+      XCTAssertNil(
+        try String.fetchOne(
+          db, sql: "SELECT spawned_from FROM tasks WHERE id = ?", arguments: [successorID]))
       XCTAssertEqual(
         try Int64.fetchOne(
           db,
           sql: "SELECT register_intent FROM sync_outbox WHERE entity_type = 'task' AND entity_id = ?",
           arguments: [successorID]),
-        TaskRegisterIntent.lifecycle.rawValue)
+        TaskRegisterIntent.schedule.rawValue | TaskRegisterIntent.lifecycle.rawValue)
       XCTAssertNil(
         try Int64.fetchOne(
           db,
@@ -305,6 +311,47 @@ final class TaskRegisterIntentProvenanceTests: XCTestCase {
           arguments: ["\(dependent.id):\(successorID)"]),
         1)
     }
+  }
+
+  /// A repeat cleared as part of a task update queues its cancelled successor
+  /// through the task-update flush, which has to name both registers the
+  /// cancel wrote: the status and the dropped link to the parent.
+  func testRecurrenceClearedInATaskUpdateQueuesTheCancelledSuccessorWithBothRegisters()
+    async throws
+  {
+    let service = try makeService()
+    let created = try await service.createTask(title: "Recurring parent", notes: "")
+    let parent = try await service.setTaskRecurrence(
+      taskID: created.id,
+      rule: TaskRecurrenceRule(freq: .daily, interval: 1))
+    _ = try await service.completeTaskReturningTask(id: parent.id)
+    let successorID = try service.read { db in
+      try XCTUnwrap(
+        String.fetchOne(
+          db, sql: "SELECT recurrence_successor_id FROM tasks WHERE id = ?",
+          arguments: [parent.id]))
+    }
+    try service.write { db in
+      try db.execute(sql: "DELETE FROM sync_outbox")
+    }
+
+    _ = try service.withWrite { db, hlc, deviceId in
+      try service.performTaskUpdate(
+        db, hlc: hlc, deviceId: deviceId,
+        input: TaskUpdateInput(id: parent.id, recurrence: .clear))
+    }
+
+    try service.read { db in
+      let successor = try XCTUnwrap(
+        Row.fetchOne(
+          db, sql: "SELECT status, spawned_from FROM tasks WHERE id = ?",
+          arguments: [successorID]))
+      XCTAssertEqual(successor["status"] as String, "cancelled")
+      XCTAssertNil(successor["spawned_from"] as String?)
+    }
+    XCTAssertEqual(
+      try pendingTaskIntent(service, taskID: successorID),
+      TaskRegisterIntent.schedule.rawValue | TaskRegisterIntent.lifecycle.rawValue)
   }
 
   func testMarkSomedayRewindsAuthorizedRecurringSuccessorAndFlushesGraph() async throws {

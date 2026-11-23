@@ -34,13 +34,14 @@ extension SwiftLorvexCoreService {
   }
 
   /// Translate the flattened `BatchCancelSyncEffects` from
-  /// `batch_cancel_tasks_in_list` into outbox enqueues. A batch cancel only
+  /// `batch_cancel_tasks_in_list` into outbox enqueues. A batch cancel
   /// flips each task's status to `cancelled` — the rows survive — so this
   /// upserts the cancelled tasks (Swift's changelog write does not enqueue),
   /// fans out the reminder/dependency-edge side effects, and re-emits any
-  /// spawned recurrence successors and their copied children. It must never
-  /// DELETE-cascade the cancelled tasks' children, which still belong to the
-  /// living rows.
+  /// spawned recurrence successors and their copied children. A cancel that
+  /// also ends the series changes the task's neighbors in that series, and
+  /// those rows are queued with it. It must never DELETE-cascade the
+  /// cancelled tasks' children, which still belong to the living rows.
   func flushBatchCancelEffects(
     _ db: Database, hlc: HlcSession, deviceId: String, effects: BatchCancelSyncEffects
   ) throws {
@@ -49,6 +50,10 @@ extension SwiftLorvexCoreService {
     try flushStatusSideEffects(
       db, hlc: hlc, deviceId: deviceId,
       status: TaskBatchCancel.statusSideEffectPlan(effects))
+    for seriesEnd in effects.seriesEndEffects {
+      try flushRecurrenceDisableEffects(
+        db, hlc: hlc, deviceId: deviceId, effects: seriesEnd)
+    }
 
     for successor in effects.spawnedSuccessors {
       try enqueueUpsert(

@@ -95,6 +95,105 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
         }
       }
     }
+    // After retention has committed, so a failure here leaves the caps
+    // enforced.
+    try repairTaskLineage()
+  }
+
+  /// Re-send, as ordinary one-offs, the tasks that name a predecessor without
+  /// a series (``TaskLineageRepair``), together with the predecessors that
+  /// stopped recording them. A read decides whether anything matches, so the
+  /// ordinary pass opens no write transaction.
+  ///
+  /// A task the pass cannot repair is logged under
+  /// `sync.lineage_repair_failed` and left out for the rest of this process's
+  /// life, so the other tasks are still repaired. That includes a task whose
+  /// stored stamp is ahead of this device's clock in a way a replay cannot
+  /// overtake: it fails that pass as a whole, and the next pass repairs the
+  /// others without it.
+  ///
+  /// Any other pass that fails as a whole changes nothing, is logged the
+  /// first time it happens in this process, and is tried again on the next
+  /// maintenance pass, because its cause can be temporary (a database that is
+  /// busy or suspended).
+  private func repairTaskLineage() throws {
+    let known = lineageRepairMemory.failedTasks
+    guard
+      try read({ db in
+        try TaskLineageRepair.hasSeriesLessPredecessorLink(db, excluding: known)
+      })
+    else { return }
+    // The task whose clock loss ended the latest attempt of the write below.
+    var clockLossTaskId: String?
+    let failures: [TaskLineageRepair.Failure]
+    do {
+      failures = try withWrite { db, hlc, deviceId in
+        clockLossTaskId = nil
+        let outcome = try TaskLineageRepair.clearSeriesLessPredecessorLinks(
+          db, hlc: hlc, now: SyncTimestampFormat.syncTimestampNow(), excluding: known
+        ) { db, effects in
+          try self.flushRecurrenceDisableEffects(
+            db, hlc: hlc, deviceId: deviceId, effects: effects)
+        }
+        // A loss to a row stamped ahead of this device's clock is not yet a
+        // failed task: thrown from here, it makes the write surface replay
+        // the pass on a later stamp.
+        if let loss = outcome.failures.first(where: { Self.isClockLoss($0.error) }) {
+          clockLossTaskId = loss.taskId
+          throw loss.error
+        }
+        for failure in outcome.failures {
+          ErrorLog.appendBestEffort(
+            db, source: "sync.lineage_repair_failed",
+            message: "could not clear the predecessor link of task \(failure.taskId)",
+            details: String(describing: failure.error), level: "error")
+        }
+        return outcome.failures
+      }
+    } catch {
+      let details = String(describing: error)
+      if let taskId = clockLossTaskId {
+        // The replay could not overtake this task's stamp. Leaving it out
+        // lets the next pass repair the others.
+        if logLineageRepairFailure(
+          "could not clear the predecessor link of task \(taskId)", details: details)
+        {
+          lineageRepairMemory.recordFailedTasks([taskId])
+        }
+      } else if !lineageRepairMemory.hasLoggedPassFailure,
+        logLineageRepairFailure(
+          "the predecessor-link repair pass failed and changed nothing", details: details)
+      {
+        lineageRepairMemory.recordPassFailureLogged()
+      }
+      throw error
+    }
+    lineageRepairMemory.recordFailedTasks(failures.map(\.taskId))
+  }
+
+  /// Write one `sync.lineage_repair_failed` entry in a transaction of its
+  /// own, for a failure whose transaction was rolled back. Returns whether
+  /// that transaction committed, so a caller records a failure as reported
+  /// only when the entry can be read.
+  private func logLineageRepairFailure(_ message: String, details: String) -> Bool {
+    let committed: Void? = try? write { db in
+      ErrorLog.appendBestEffort(
+        db, source: "sync.lineage_repair_failed", message: message, details: details,
+        level: "error")
+    }
+    return committed != nil
+  }
+
+  /// Whether `error` is a local write losing to a row stamped ahead of this
+  /// device's clock, which the write surface answers with a replay.
+  private static func isClockLoss(_ error: Error) -> Bool {
+    switch error {
+    case StoreError.staleVersion, StoreError.versionSuperseded,
+      EnqueueError.versionSuperseded:
+      return true
+    default:
+      return false
+    }
   }
 
   @discardableResult

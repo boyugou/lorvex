@@ -301,6 +301,10 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
   let writeStateLock = NSLock()
   var cachedWriteState: (epoch: Int, deviceId: String, clock: HlcClock)?
 
+  /// The tasks the lineage repair could not repair in this process, and
+  /// whether it has reported a failed pass.
+  let lineageRepairMemory = TaskLineageRepairMemory()
+
   /// The per-process HLC suffix this service's clock mints under. Each writer
   /// surface uses its own tag so separate processes writing the same database
   /// never share a monotonic counter's suffix.

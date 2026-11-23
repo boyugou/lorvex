@@ -62,16 +62,44 @@ enum TaskRolloverReconciliation {
       try survivor.reRootSuccessor(at: tombstone.version)
       return (survivor, try survivor.changedRegisters(comparedTo: row))
     }
-    let reconciled = try reconcile(child: row, parent: parent)
+    let reconciled = try reconcile(child: row, parent: parent, releasedSuccessorId: nil)
     return (reconciled, try reconciled.changedRegisters(comparedTo: row))
+  }
+
+  /// The successor a parent stopped recording in the write that turned
+  /// `before` into `after`, when that is all the write did to the parent: it
+  /// was finished and authorized the successor before, and is finished the
+  /// same way after, recording no successor, with its schedule register
+  /// untouched.
+  ///
+  /// Only a device that holds the successor writes this, in the transaction
+  /// that takes the successor out of the series (its repeat turned off, or
+  /// its series cancelled), so the successor's own record carries what became
+  /// of it. Any other end of an authorization returns `nil`: the parent
+  /// reopened, completed again, or taken out of the series itself, each of
+  /// which changes its status, its completion time or its schedule register.
+  static func releasedSuccessorId(before: TaskSyncRow?, after: TaskSyncRow) -> String? {
+    guard let before, before.recurrenceRolloverState == "authorized",
+      let successorId = before.recurrenceSuccessorId,
+      after.recurrenceRolloverState == "ended", after.recurrenceSuccessorId == nil,
+      after.status == before.status, after.completedAt == before.completedAt,
+      after.scheduleVersion == before.scheduleVersion
+    else { return nil }
+    return successorId
   }
 
   /// After a parent decision lands, normalize every already-materialized direct
   /// successor and its independently-synced dependent graph. The caller returns
   /// typed repair targets so the host re-emits every normalized record before
   /// acknowledging CloudKit.
+  ///
+  /// `releasedSuccessorId` names the successor this apply released
+  /// (``releasedSuccessorId(before:after:)``). It is not cancelled here: its
+  /// own record decides, and a cancel worked out from the parent's record
+  /// would outlast that record whenever the parent's is applied first,
+  /// cancelling on every device a task whose repeat was only turned off.
   static func reconcileDescendants(
-    _ db: Database, parentId: String, applyTs: String
+    _ db: Database, parentId: String, applyTs: String, releasedSuccessorId: String?
   ) throws -> [TaskGraphRepairTarget] {
     guard var parent = try TaskSyncRow.load(db, id: parentId) else { return [] }
     var changed: [TaskGraphRepairTarget] = []
@@ -113,7 +141,8 @@ enum TaskRolloverReconciliation {
     }
     for id in ids.sorted() {
       guard let child = try TaskSyncRow.load(db, id: id) else { continue }
-      let reconciled = try reconcile(child: child, parent: parent)
+      let reconciled = try reconcile(
+        child: child, parent: parent, releasedSuccessorId: releasedSuccessorId)
       if reconciled != child {
         try ApplyTask.writeReconciledTask(db, row: reconciled)
         changed.append(
@@ -128,7 +157,7 @@ enum TaskRolloverReconciliation {
   }
 
   private static func reconcile(
-    child: TaskSyncRow, parent: TaskSyncRow
+    child: TaskSyncRow, parent: TaskSyncRow, releasedSuccessorId: String?
   ) throws -> TaskSyncRow {
     if child.spawnedFrom == parent.id {
       guard let groupId = child.recurrenceGroupId,
@@ -164,6 +193,15 @@ enum TaskRolloverReconciliation {
       && parent.recurrenceSuccessorId == child.id
     var result = child
     if authorized {
+      // An independent row outside the parent's series does not take the
+      // link here: a link is valid only inside the parent's series, and a
+      // row linked outside it fails inbound validation. The row rejoins when
+      // a record carrying both the series and the link wins its schedule
+      // register; until then the parent names a successor that does not link
+      // back.
+      if child.spawnedFrom == nil, child.recurrenceGroupId != parent.recurrenceGroupId {
+        return child
+      }
       try result.acceptAuthorization(
         parentId: parent.id, parentVersion: parent.lifecycleVersion,
         reviveIfDominated: true)
@@ -188,6 +226,9 @@ enum TaskRolloverReconciliation {
     case .rerootAdvancedSuccessor:
       try result.reRootSuccessor(at: parent.lifecycleVersion)
     case .cancelStableSuccessor:
+      // The parent's author took this row out of the series in the same
+      // write, so the row's own record decides what became of it.
+      if child.id == releasedSuccessorId { return child }
       try result.cancelRevokedSuccessor(at: parent.lifecycleVersion)
     }
     return result

@@ -198,7 +198,10 @@ device.
     GitHub, releasing the new iOS and macOS TestFlight builds, and confirming
     processing and tester availability. Local code and passing tests alone do
     not finish a batch. Follow `docs/release.md`; retain the signed source
-    commit, validation evidence and test notes. A narrower instruction from the
+    commit, validation evidence and test notes. A batch is a set of changes a
+    tester would notice: gather small fixes into the next batch rather than
+    cutting a build for each one, so a new build number means something
+    changed for the person installing it. A narrower instruction from the
     controlling session takes precedence.
 15. **The main app is the sole CloudSync owner on each device.** Only the
     macOS or iOS/iPadOS main app may construct or run
@@ -274,25 +277,29 @@ implementation or fetching another file.
 
 ## Development Workflow
 
-**止于至善 — Pursue perfection ceaselessly.**
-
 ### Principles
 
-1. **Be fully autonomous.** Analyze, decide, execute. Only pause for truly
-   irreversible high-risk decisions.
-2. **Think deeply before building.** Trace through every use case before
-   deciding.
-3. **Quality over velocity.** Getting the foundation right matters more than
-   shipping fast.
-4. **Never take shortcuts.** Always pursue the most comprehensive, thorough,
-   optimal solution. When fixing a bug, also clean up related dead code. When
-   refactoring, go all the way.
-5. **Self-review every implementation.** Two passes before finishing: (1)
-   bugs/typos/correctness, (2) dead code/stale comments/unused imports.
-6. **Search docs before implementing unfamiliar APIs.** Use `context7` MCP
-   tool. Apple docs for SwiftUI/AppKit, swift-sdk docs for MCP.
-7. **Eliminate redundancy.** Remove duplicate code paths, stale abstractions,
-   dead code.
+1. **Be autonomous.** Analyze, decide, execute. Pause only for a decision that
+   is hard to undo or that changes scope or direction.
+2. **Think before building.** Settle the design and its hard cases in writing
+   first, so reasoning decides the contract rather than trial and patch.
+3. **Effort in proportion.** Spend verification, review, and documentation
+   where they change an outcome. A change is done when it is correct, verified
+   once as a whole, and its docs match the code.
+4. **Finish what you touch.** A fix removes the dead code and stale comments it
+   leaves behind, and a refactor does not stop half-way. Unrelated cleanup is
+   its own change.
+5. **Self-review once before finishing:** correctness first, then leftovers
+   (dead code, stale comments, unused imports).
+6. **Read the documentation before using an unfamiliar API:** Apple's for
+   SwiftUI and AppKit, the swift-sdk's for MCP.
+7. **Prefer a behavior test to a source pin.** `verify_source_hygiene.py`
+   holds literal lines of source that must or must not appear in a file. Add
+   one only for a rule about the source itself (a banned API, a required
+   modifier). Behavior belongs in a test that runs the code and survives a
+   refactor; a pinned line breaks on every reword. When a refactor meets a pin
+   that only restates the implementation, delete the pin instead of rewording
+   it.
 
 ### Before Starting Work
 
@@ -434,11 +441,12 @@ and every headless capture option.
   Default local builds use a no-op publisher to avoid repeated permission
   prompts.
 
-### Continuous Review Loop
+### When the listed work is done
 
-When all tasks seem done, cycle through: code reading, UX simplification,
-dead code scan, type consistency, MCP tool completeness, accessibility,
-documentation freshness, feature ideation.
+Look at the product, not the code. Capture the surfaces (rule 12), find the
+one that serves a person's day worst, and make the change with the largest
+effect there. Do not cycle through audit passes to fill time: a pass that
+finds nothing worth a tester's notice is a reason to stop.
 
 ---
 

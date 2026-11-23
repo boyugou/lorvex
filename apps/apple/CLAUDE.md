@@ -21,13 +21,13 @@ feel native to their platforms.
 - **Language/UI:** Swift 6, SwiftUI, AppKit (macOS)
 - **Build system:** SwiftPM (Package.swift, no Xcode project required for core
   dev; XcodeGen generates the Xcode project for simulator/device builds)
-- **Toolchain:** release builds use Xcode 27.x (Swift 6.4). The Mac release
-  staging in `script/build_and_run.sh` passes `-const-gather-protocols-list`,
-  which earlier compilers reject, and Xcode 26.3's App Intents metadata
-  processor rejects the `bundle:` argument of an `AppShortcut`'s `shortTitle`,
-  so 26.x cannot archive or package. Development builds and the whole test
-  suite also run on Xcode 26.x; 26.3 (Swift 6.2.4) is the oldest verified
-  compiler, so source must still compile there. Pick a toolchain for a shell
+- **Toolchain:** Xcode 27.x (Swift 6.4) builds, tests, and releases the app.
+  Xcode 26.x compiles none of it: the Siri reminder actions use types the
+  version 27 SDKs declare, the Mac release staging in
+  `script/build_and_run.sh` passes `-const-gather-protocols-list`, which
+  earlier compilers reject, and Xcode 26.3's App Intents metadata processor
+  rejects the `bundle:` argument of an `AppShortcut`'s `shortTitle`. The
+  deployment floor stays at the 26 systems. Pick a toolchain for a shell
   with `DEVELOPER_DIR=<Xcode>/Contents/Developer` instead of changing the
   system selection; `script/doctor.sh` checks the selection and the rest of the
   machine
@@ -333,10 +333,10 @@ stale is mistaken for current behavior.
    a new static gate added there is picked up by both scripts.
 2. Run `script/verify_swift.sh` from `apps/apple` once per batch: it builds
    every target and test target (all must build cleanly), compiles the string
-   catalogs, and runs the full suite. The compile step matters: the native
-   SwiftPM build system, Xcode 26.x's default, copies the catalogs raw, and a
-   plain `swift build && swift test` there fails about thirty localization
-   tests. While iterating on one area use
+   catalogs, and runs the full suite. The compile step matters under the
+   native SwiftPM build system (`--build-system native`), which copies the
+   catalogs raw: about thirty localization tests then fail. Swift Build, the
+   default in Xcode 27, compiles them itself. While iterating on one area use
    `script/verify_swift.sh --filter <SuiteName>`. Add `--core` for the
    `apps/apple/core` suite when `core/` changed. Tests use explicit injected
    fakes or temporary stores; product runtime environment variables must not

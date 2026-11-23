@@ -8,11 +8,11 @@
 #   script/verify_swift.sh --filter MobileHabit  extra arguments go to `swift test`
 #   script/verify_swift.sh --core                also run the core package's own suite
 #
-# Why not `swift build && swift test`: the native SwiftPM build system, the default of
-# Xcode 26.x, copies the string catalogs without compiling them, so about thirty
-# localization tests fail on a plain run. Swift Build, the default from Xcode 27,
-# compiles them itself. The compile step is idempotent, so this script is correct
-# under either system. A `--filter` run skips the source-pin tests; run the whole
+# Why not `swift build && swift test`: the native SwiftPM build system
+# (`--build-system native`) copies the string catalogs without compiling them, so
+# about thirty localization tests fail on a plain run. Swift Build, the default in
+# Xcode 27, compiles them itself. The compile step is idempotent, so this script is
+# correct under either system. A `--filter` run skips the source-pin tests; run the whole
 # suite before committing.
 #
 # It starts no app and reads or writes no Lorvex data. The exit status is the first

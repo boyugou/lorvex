@@ -115,7 +115,7 @@ the test suite run the same service over an in-memory GRDB store.
 
 ## Quick start
 
-**Prerequisites:** macOS 26 or newer, Xcode 26 or newer (Swift 6 toolchain).
+**Prerequisites:** Xcode 27 or newer (Swift 6.4) on a Mac that runs it.
 
 ```bash
 # Build and test everything

@@ -92,20 +92,20 @@ architecture change and requires an explicit ownership design first.
 
 ### Prerequisites
 
-- Xcode 26.3 or later builds the tree and runs the tests (it provides the Swift
-  6 toolchain and the 26 SDKs). Release builds need Xcode 27.x, whose Swift 6.4
-  compiler the macOS release staging requires. Pick a toolchain for a shell
-  with `DEVELOPER_DIR=<Xcode>/Contents/Developer` rather than changing the
-  system selection
+- Xcode 27.x (Swift 6.4 and the version 27 SDKs) builds the tree, runs the
+  tests, and makes release builds. Xcode 26.x does not compile the source: the
+  Siri reminder actions use types the version 27 SDKs declare. Pick a
+  toolchain for a shell with `DEVELOPER_DIR=<Xcode>/Contents/Developer` rather
+  than changing the system selection
 - Python 3 (for verification scripts)
 - XcodeGen (for iOS/watchOS/Widget Xcode projects): `brew install xcodegen`
 
 ### Build and test
 
 ```bash
-# Build every target, compile the string catalogs, and run every test. A plain
-# `swift test` skips the catalog step and fails the localization tests on
-# Xcode 26.x, whose SwiftPM build system copies catalogs without compiling them.
+# Build every target, compile the string catalogs, and run every test. The
+# localization tests need the compiled catalogs, which a plain `swift test`
+# does not guarantee.
 ./script/verify_swift.sh
 
 # Check that this Mac is ready to build, test, and release (read-only)
@@ -427,8 +427,8 @@ than relying on output values alone.
 ```
 
 All tests must pass before committing. Use `verify_swift.sh` rather than a plain
-`swift test`: it compiles the string catalogs first, and without that step about
-thirty localization tests fail on Xcode 26.x.
+`swift test`: it compiles the string catalogs first, and about thirty
+localization tests fail when that step is missing.
 
 ---
 

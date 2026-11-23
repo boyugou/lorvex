@@ -21,8 +21,8 @@ capture, and release command in `apps/apple/CLAUDE.md` works.
 
 ## Tools
 
-- Xcode 27.x for release builds (Swift 6.4; Xcode 26.3 or later is enough to
-  build and test), with the macOS, iOS, and watchOS platforms installed (a slim
+- Xcode 27.x (Swift 6.4) to build, test, and release; Xcode 26.x does not
+  compile the source. Install the macOS, iOS, and watchOS platforms (a slim
   Xcode download needs `xcodebuild -downloadPlatform iOS` and `watchOS`) and the
   iPhone, iPad, and Apple Watch simulators the capture scripts name. Choose the
   toolchain for a shell with `DEVELOPER_DIR=<Xcode>/Contents/Developer` rather

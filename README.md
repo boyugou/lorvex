@@ -110,8 +110,8 @@ is always on the same releases page.
 
 ### Apple app (macOS)
 
-Use Xcode 26.3 or newer for development and Xcode 27.x for release archives.
-The app targets macOS 26, iOS 26, and watchOS 26.
+Use Xcode 27.x; Xcode 26.x does not compile the source. The app targets
+macOS 26, iOS 26, and watchOS 26.
 
 ```bash
 cd apps/apple

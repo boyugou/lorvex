@@ -264,10 +264,9 @@ One iOS upload carries the iPhone, iPad, and embedded watch apps; the Mac App
 Store package is the second channel. `script/release_testflight.sh` runs both
 in parallel and reads every credential and signing identity from
 `secrets/apple-developer.env` (see `docs/development/NEW_MACHINE.md` at the
-repository root). Release with Xcode 27.x: the Mac staging passes a Swift 6.4
-flag, and Xcode 26.3's App Intents metadata processor rejects the `bundle:`
-argument of an `AppShortcut`'s `shortTitle`. `script/doctor.sh --release`
-checks the toolchain and the credentials before anything builds.
+repository root). Release with Xcode 27.x, the toolchain that also builds and
+tests the source. `script/doctor.sh --release` checks the toolchain and the
+credentials before anything builds.
 
 API authentication uses `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_PATH` from
 the ignored environment file for validation, upload, and processing status as

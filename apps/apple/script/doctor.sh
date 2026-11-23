@@ -38,8 +38,8 @@ section "Toolchain"
 sdk="$(xcrun --sdk iphoneos --show-sdk-version 2>/dev/null || true)"
 if [[ -z "$sdk" ]]; then
   bad "no iOS SDK is selected" "install Xcode 27.x, then export DEVELOPER_DIR=<Xcode.app>/Contents/Developer"
-elif (( ${sdk%%.*} < 26 )); then
-  bad "the selected Xcode ships iOS SDK $sdk, below the App Store floor (26)" "export DEVELOPER_DIR=<an Xcode 27.x>/Contents/Developer"
+elif (( ${sdk%%.*} < 27 )); then
+  bad "the selected Xcode ships iOS SDK $sdk; the source needs the version 27 SDKs" "export DEVELOPER_DIR=<an Xcode 27.x>/Contents/Developer"
 else
   ok "selected Xcode: $(xcodebuild -version 2>/dev/null | head -1), iOS SDK $sdk, $(swift --version 2>&1 | sed -n 's/.*Swift version \([0-9.]*\).*/Swift \1/p' | head -1)"
 fi
@@ -72,7 +72,10 @@ else
   bad "git user.email is not a GitHub noreply address" \
     "git config --local user.email '<id>+<user>@users.noreply.github.com'"
 fi
-if have gh && gh auth status 2>&1 | grep -q 'Active account: true'; then
+# Read the whole report before testing it: a `grep -q` on the pipe exits at the
+# first match and fails the pipeline when `gh` has more accounts to print.
+gh_status="$(gh auth status 2>&1 || true)"
+if [[ "$gh_status" == *"Active account: true"* ]]; then
   ok "gh is signed in"
 else
   warn "gh is not signed in" "gh auth login"

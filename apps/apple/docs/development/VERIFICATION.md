@@ -20,10 +20,10 @@ directory outside the repository.
 - `script/verify_swift.sh` is the one command for the whole Swift tree: it runs
   `swift build -j 4 --build-tests`, `script/compile_xcstrings.sh`, and
   `swift test --skip-build -j 4`, passes its arguments to `swift test`, and
-  `--core` adds the core package's suite. The native SwiftPM build system,
-  Xcode 26.x's default, copies the string catalogs without compiling them, so a
-  plain `swift build && swift test` there fails about thirty localization tests
-  ("1 tasks", a missing `zh-Hans.lproj`). Swift Build, the default from
+  `--core` adds the core package's suite. The native SwiftPM build system
+  (`--build-system native`) copies the string catalogs without compiling them,
+  so a plain `swift build && swift test` there fails about thirty localization
+  tests ("1 tasks", a missing `zh-Hans.lproj`). Swift Build, the default in
   Xcode 27, compiles them itself. A failing run of that shape means the compile
   step was skipped, not that the code is wrong.
 - `swift build` does not compile test targets, so `swift test --skip-build`

@@ -156,11 +156,17 @@ Mac's processor, so its numbers rank screens against each other rather than
 predict a phone's.
 
 To see what that main-thread work is, launch the installed app with a test's
-arguments through `xcrun simctl launch` (it prints the process id), run
-`sample <pid> 14 1 -file <out>` from three seconds after launch, and read the
-main thread's call graph. Check that it contains the interaction (a sheet
-transition, a tab change) before reading anything from it: a run where the
-interaction did not happen shows an idle main thread.
+arguments through `xcrun simctl launch`, then record it with
+`xcrun xctrace record --device <udid> --attach Lorvex --instrument "Time Profiler"
+--instrument "View Body (Legacy)" --time-limit 20s --output <file>.trace`.
+Attach by the display name `Lorvex`; the process id and the executable name
+are not found. Attached this way the stacks are symbolicated, and
+`xctrace export --xpath` with the `time-profile` and `swiftui-body-interval`
+schemas gives each main-thread sample and each view body with its time, so a
+window can be cut to one interaction. The SwiftUI template records nothing in
+the simulator, because its Hitches instrument is not supported there.
+`sample <pid>` is not a substitute: in two of four runs it reported an idle
+process while the probe in the same launch measured the interaction.
 
 ## Oracles and committed checks
 

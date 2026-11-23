@@ -110,10 +110,24 @@ person living with the app, and then a decision.
   the changed layers, and for capture also the sheet transition, the
   keyboard coming up for the focused field, and a framework loaded on first
   use. So the cost follows how many views a change touches, not slow app
-  code. Next: find which views make a tab switch and a task push touch that
-  much (Instruments' SwiftUI template, which `xctrace` can record headlessly),
-  and whether capture's keyboard can come up without holding the sheet's
-  first frames.
+  code.
+
+  Tab switching was traced further (Instruments' View Body and Time
+  Profiler instruments, recorded with `xctrace` against the simulator; the
+  SwiftUI template fails there because its Hitches instrument is not
+  supported). The first visit to Calendar, Tasks and Review evaluates 959
+  to 1,808 view bodies (11 to 19 ms of body time) and about 180 ms of
+  main-thread work; every later switch evaluates under 100 bodies (about
+  1 ms) yet still costs 80 to 100 ms of main-thread CPU. That is UIKit
+  moving the tab's hosting view out of and into the window, SwiftUI
+  re-checking the environment and re-resolving text across the tab, and
+  Core Animation committing the swapped layers. The same scenario with and
+  without the stress content measured the same (25 to 27 long stretches,
+  worst 188 to 191 ms), so the cost does not grow with the data; it is the
+  fixed price of each tab's structure. Next: whether a lighter tab structure
+  (fewer always-present views and text in each tab's chrome) lowers it,
+  measured against a bare `TabView` baseline, and whether capture's
+  keyboard can come up without holding the sheet's first frames.
 - Platform adaptation sprint (owner, 2026-11-16): iPhone Duo and useful
   capabilities in macOS 27 and iOS 27. The deployment floor stays at 26, so
   every 27 API sits behind an availability check. The system integration

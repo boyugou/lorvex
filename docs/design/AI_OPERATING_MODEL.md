@@ -519,6 +519,15 @@ description should state:
 - When to use it, and when not to.
 - What the return value contains.
 
+A tool takes a value the way the user said it and returns it the way the
+assistant will repeat it. A reminder time is written as the date and time on
+the user's clock (`2026-05-23T10:00`), read in the time zone
+`get_session_context` reports, and a reminder row carries `local_time` and
+`timezone` beside the UTC `reminder_at` once the user's time zone is set.
+Converting between a zone and
+UTC is the server's work: an assistant that does it by hand is an hour off
+around a clock change.
+
 An example of a good description:
 
 ```

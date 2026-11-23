@@ -63,17 +63,23 @@ extension CoreBridgeClient {
     outputOptions: CalendarEventValueOptions = .full
   ) async throws -> Value {
     // Fetch one extra row so the envelope reports a real `truncated`/`next_offset`
-    // without a separate COUNT — the merged canonical+provider result has no
-    // cheap total, so `total_matching` stays null.
+    // without a separate COUNT. The merged canonical+provider result has no
+    // cheap total. `offset + returned` is the exact total on a last page that
+    // starts at or before the end of the matches and that the per-source scan
+    // cap did not cut; anywhere else the total is unknown, so `total_matching`
+    // is null.
     let rows = try await service.searchCalendarEvents(
       query: query, from: from, to: to, limit: limit + 1, offset: offset)
     let truncated = rows.count > limit
     let page = Array(rows.prefix(limit))
+    let totalIsKnown =
+      !truncated && (offset == 0 || !page.isEmpty)
+      && offset + limit + 1 <= LorvexPageBounds.calendarSearchSourceCap
     return MCPPagination.object(
       domain: [
         "events": .array(page.map { Self.calendarEventValue(from: $0, options: outputOptions) })
       ],
-      totalMatching: nil, returned: page.count, limit: limit,
+      totalMatching: totalIsKnown ? offset + page.count : nil, returned: page.count, limit: limit,
       offset: offset, nextOffset: truncated ? offset + limit : nil, truncated: truncated)
   }
 

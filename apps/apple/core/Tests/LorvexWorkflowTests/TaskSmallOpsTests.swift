@@ -182,6 +182,59 @@ final class TaskSmallOpsTests: XCTestCase {
     }
   }
 
+  func testSetTaskRecurrenceOnATaskWithNoDueDateStartsOnItsPlannedDay() throws {
+    let store = try freshStore()
+    let id = try seedTaskWithLowWatermark(store, id: "task-rec-planned")
+    try store.writer.write { db in
+      try db.execute(
+        sql: "UPDATE tasks SET due_date = NULL, planned_date = '2099-05-14' WHERE id = ?",
+        arguments: [id.rawValue])
+    }
+    let session = makeSession()
+    _ = try store.writer.write { db in
+      try TaskRecurrence.setTaskRecurrence(
+        db, hlc: session,
+        input: TaskRecurrence.SetTaskRecurrenceInput(
+          taskId: id, rule: TaskRecurrence.RuleInput(freq: "daily", interval: 3)))
+    }
+    try store.writer.read { db in
+      let row = try Row.fetchOne(
+        db,
+        sql: "SELECT due_date, canonical_occurrence_date, planned_date FROM tasks WHERE id = ?",
+        arguments: [id.rawValue])
+      XCTAssertEqual(row?["due_date"] as String?, "2099-05-14")
+      XCTAssertEqual(row?["canonical_occurrence_date"] as String?, "2099-05-14")
+      XCTAssertEqual(row?["planned_date"] as String?, "2099-05-14")
+    }
+  }
+
+  func testSetTaskRecurrenceMovesAPlanThatHasPassedToTheDayTheSeriesStarts() throws {
+    let store = try freshStore()
+    let id = try seedTaskWithLowWatermark(store, id: "task-rec-stale-plan")
+    try store.writer.write { db in
+      try db.execute(
+        sql: "UPDATE tasks SET due_date = NULL, planned_date = '2001-05-14' WHERE id = ?",
+        arguments: [id.rawValue])
+    }
+    let session = makeSession()
+    _ = try store.writer.write { db in
+      try TaskRecurrence.setTaskRecurrence(
+        db, hlc: session,
+        input: TaskRecurrence.SetTaskRecurrenceInput(
+          taskId: id, rule: TaskRecurrence.RuleInput(freq: "daily")))
+    }
+    try store.writer.read { db in
+      let today = try WorkflowTimezone.todayYmdForConn(db)
+      let row = try Row.fetchOne(
+        db,
+        sql: "SELECT due_date, canonical_occurrence_date, planned_date FROM tasks WHERE id = ?",
+        arguments: [id.rawValue])
+      XCTAssertEqual(row?["due_date"] as String?, today)
+      XCTAssertEqual(row?["canonical_occurrence_date"] as String?, today)
+      XCTAssertEqual(row?["planned_date"] as String?, today)
+    }
+  }
+
   func testSetTaskRecurrenceRejectsInvalidFreq() throws {
     let store = try freshStore()
     let id = try seedTask(store, id: "task-rec-2")

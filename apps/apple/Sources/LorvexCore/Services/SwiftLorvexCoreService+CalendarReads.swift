@@ -54,7 +54,7 @@ extension SwiftLorvexCoreService {
       // the global top-(offset+pageSize) rows are contained in each source's own
       // top-(offset+pageSize), so a per-source cap of that bound is safe. Capped
       // to keep a large offset from asking the store for an unbounded scan.
-      let cap = UInt32(min(startAt + pageSize, 5000))
+      let cap = UInt32(min(startAt + pageSize, LorvexPageBounds.calendarSearchSourceCap))
       let predicate = CalendarSearchPredicate(query: query, from: from, to: to)
 
       let canonicalRows = try CalendarTimelineQueries.searchCalendarEvents(

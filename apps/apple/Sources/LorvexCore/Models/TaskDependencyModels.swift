@@ -92,6 +92,8 @@ public struct TaskReminderWithTask: Identifiable, Equatable, Sendable {
   public let taskDueDate: String?
   public let taskPlannedDate: String?
   public let taskPriority: Int?
+  /// The zone the reminder's wall time was recorded in, when one was.
+  public let originalTz: String?
 
   public init(
     id: String,
@@ -104,7 +106,8 @@ public struct TaskReminderWithTask: Identifiable, Equatable, Sendable {
     taskStatus: String,
     taskDueDate: String?,
     taskPlannedDate: String? = nil,
-    taskPriority: Int?
+    taskPriority: Int?,
+    originalTz: String? = nil
   ) {
     self.id = id
     self.taskID = taskID
@@ -117,5 +120,6 @@ public struct TaskReminderWithTask: Identifiable, Equatable, Sendable {
     self.taskDueDate = taskDueDate
     self.taskPlannedDate = taskPlannedDate
     self.taskPriority = taskPriority
+    self.originalTz = originalTz
   }
 }

@@ -63,9 +63,13 @@ struct DayTimesProposalStartTests {
     #expect(today.placements.map(\.task.id) == [task.id])
     #expect(today.placements.first?.time == 780..<810)
 
-    // The task is still open tomorrow, so tomorrow's suggestion carries it.
+    // Tomorrow's suggestion holds tomorrow's own work, not what is still open today.
+    let later = try await service.createTask(title: "Send the brief", notes: "")
+    try await Self.plan(service, taskID: later.id, date: "2026-03-05", minutes: 30)
     let tomorrow = try await service.proposeDayTimes(date: "2026-03-05")
+    #expect(tomorrow.placements.map(\.task.id) == [later.id])
     #expect(tomorrow.placements.first?.time == 480..<510)
+    #expect(tomorrow.unscheduled.isEmpty)
   }
 
   @Test("a suggestion for today keeps the time under way and places the rest after it")

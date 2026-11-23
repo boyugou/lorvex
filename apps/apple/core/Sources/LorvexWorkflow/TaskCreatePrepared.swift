@@ -194,7 +194,8 @@ public enum TaskCreatePrepared {
       recurrence: nil,
       recurrenceGroupId: nil,
       canonicalOccurrenceDate: nil,
-      dueDate: dueDate)
+      dueDate: dueDate,
+      plannedDate: plannedDate)
     let today = try WorkflowTimezone.todayYmdForConn(db)
     let (_, recActions) = RecurrenceConfig.planRecurrenceTransition(
       old: oldState, newRecurrence: recurrence, today: today)
@@ -224,7 +225,7 @@ public enum TaskCreatePrepared {
       recurrence: recurrence,
       recurrenceGroupId: recurrenceGroupId,
       canonicalOccurrenceDate: canonicalOccurrenceDate,
-      plannedDate: plannedDate,
+      plannedDate: recActions.setPlannedDate ?? plannedDate,
       plannedTime: plannedTime,
       availableFrom: availableFrom,
       version: version,

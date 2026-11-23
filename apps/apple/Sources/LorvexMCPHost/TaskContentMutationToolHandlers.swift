@@ -32,7 +32,7 @@ extension ToolRegistry {
       guard let reminder = value.stringValue, !reminder.isEmpty else {
         return Self.errorResult(
           code: "validation",
-          message: "Each reminders entry must be a non-empty RFC 3339 UTC timestamp string.",
+          message: "Each reminders entry must be a non-empty time string.",
           toolName: "set_task_reminders")
       }
       reminders.append(reminder)

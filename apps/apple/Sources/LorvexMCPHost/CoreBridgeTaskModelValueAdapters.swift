@@ -308,13 +308,37 @@ extension CoreBridgeClient {
   }
 
   private static func reminderValue(from reminder: TaskReminder) -> Value {
-    .object([
+    var fields: [String: Value] = [
       "id": .string(reminder.id),
       "reminder_at": .string(reminder.reminderAt),
       // Named to match the DB column and the standalone reminder-query tools;
       // `status` on a reminder would collide with a task's `status`.
       "delivery_state": reminder.status.map(Value.string) ?? .null,
-    ])
+    ]
+    fields.merge(
+      reminderClockFields(reminderAt: reminder.reminderAt, zoneName: reminder.originalTz)
+    ) { _, clock in clock }
+    return .object(fields)
+  }
+
+  /// A reminder's time on the user's clock, as the fields a reminder row adds
+  /// beside the UTC `reminder_at`: `local_time` (`YYYY-MM-DDTHH:MM`, with
+  /// `:SS` when the reminder is not on a whole minute; the form the reminder
+  /// tools accept) and `timezone`, the zone it is read in. Empty for a
+  /// reminder with no recorded zone.
+  static func reminderClockFields(reminderAt: String, zoneName: String?) -> [String: Value] {
+    guard let zoneName, let zone = Timezone.parseTimezoneName(zoneName),
+      let instant = SyncTimestamp.parse(reminderAt)?.date
+    else { return [:] }
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = zone
+    let parts = calendar.dateComponents(
+      [.year, .month, .day, .hour, .minute, .second], from: instant)
+    var local = String(
+      format: "%04d-%02d-%02dT%02d:%02d",
+      parts.year ?? 0, parts.month ?? 0, parts.day ?? 0, parts.hour ?? 0, parts.minute ?? 0)
+    if let second = parts.second, second != 0 { local += String(format: ":%02d", second) }
+    return ["local_time": .string(local), "timezone": .string(zoneName)]
   }
 
   private static func value(fromJSONCompatible raw: Any) -> Value? {

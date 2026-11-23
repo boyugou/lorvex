@@ -141,7 +141,7 @@ extension CoreBridgeClient {
   /// reuses the same summary parser it uses for overview/dependency/weekly reads.
   /// The reminder model carries no list id, so the summary's `list_id` is null.
   private static func reminderWithTaskValue(from row: TaskReminderWithTask) -> Value {
-    .object([
+    var fields: [String: Value] = [
       "id": .string(row.id),
       "task_id": .string(row.taskID),
       "reminder_at": .string(row.reminderAt),
@@ -152,6 +152,10 @@ extension CoreBridgeClient {
         id: row.taskID, title: row.taskTitle, status: row.taskStatus,
         listID: nil, priority: row.taskPriority, dueDate: row.taskDueDate,
         plannedDate: row.taskPlannedDate),
-    ])
+    ]
+    fields.merge(
+      reminderClockFields(reminderAt: row.reminderAt, zoneName: row.originalTz)
+    ) { _, clock in clock }
+    return .object(fields)
   }
 }

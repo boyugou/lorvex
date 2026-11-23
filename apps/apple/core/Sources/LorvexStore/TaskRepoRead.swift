@@ -160,6 +160,31 @@ extension TaskRepo {
       return try rows.map(TaskRepo.rowToTaskRow)
     }
 
+    /// The open tasks whose day (`planned_date`, else `due_date`) is exactly
+    /// `day`, in canonical ``TaskRepo/taskOrderBy`` order: the work that
+    /// belongs to a day other than today. Unlike
+    /// ``getTodayPoolTasks(_:today:)`` it carries nothing over from earlier
+    /// days and holds no started task, whatever day that task is planned for,
+    /// because unfinished and started work is on today's list until the user
+    /// moves it. A task hidden until after `day` is left out, as on the day
+    /// surface.
+    public static func getTasksOnDay(_ db: Database, day: String) throws -> [TaskRow] {
+      let visible = TaskReadBuckets.availableVisibilityPredicate(
+        taskAlias: "tasks", datePlaceholder: ":day")
+      let rows = try Row.fetchAll(
+        db,
+        sql: """
+          SELECT \(TaskRepo.taskColumns) FROM tasks \
+          WHERE status IN (\(StatusName.actionableStatusSqlList)) AND tasks.archived_at IS NULL \
+          AND tasks.status <> '\(StatusName.inProgress)' \
+          AND COALESCE(tasks.planned_date, tasks.due_date) = :day \
+          AND \(visible) \
+          ORDER BY \(TaskRepo.taskOrderBy)
+          """,
+        arguments: ["day": day])
+      return try rows.map(TaskRepo.rowToTaskRow)
+    }
+
     /// Count of actionable, non-archived tasks across the whole workspace.
     ///
     /// The single number behind a day surface's headline ("N open tasks"), read on

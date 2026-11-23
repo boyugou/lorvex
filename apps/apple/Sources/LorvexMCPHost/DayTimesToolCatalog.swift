@@ -5,8 +5,12 @@ extension DayPlanningToolCatalog {
     name: "propose_daily_schedule",
     title: "Propose Daily Schedule",
     description:
-      "Suggest times for a day's tasks without saving anything. Each task on the day's Today "
-      + "list, in its order (started tasks first, then by priority and due date), takes the "
+      "Suggest times for a day's tasks without saving anything. For today the tasks are the "
+      + "Today list; for another day they are the open tasks planned for that day or, with no "
+      + "planned date, due on it (a started task is on Today only), so move work to a day "
+      + "before asking for that day's suggestion. Each task, in order (started tasks first, "
+      + "then by priority and due date), "
+      + "takes the "
       + "earliest free working time around calendar events that holds it, so a short task can "
       + "fill a gap a longer one did not fit; a task without an estimate takes 30 minutes. A "
       + "ten-minute break follows each task when it fits. For today the suggestion "

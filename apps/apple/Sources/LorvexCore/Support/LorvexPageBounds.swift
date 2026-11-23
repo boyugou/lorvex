@@ -5,6 +5,11 @@ public enum LorvexPageBounds {
   /// page, and adding a page size to an offset can never overflow.
   public static let maximumOffset = 1_000_000
 
+  /// The most rows a calendar search reads from each of its two sources (the
+  /// synced events and the device calendar mirror) before merging them. A page
+  /// that needs more than this many rows cannot tell how many matches exist.
+  public static let calendarSearchSourceCap = 5000
+
   /// `offset` limited to `0...maximumOffset`.
   public static func clampedOffset(_ offset: Int) -> Int {
     min(max(offset, 0), maximumOffset)

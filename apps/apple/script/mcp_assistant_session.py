@@ -353,9 +353,11 @@ def seed(store: Store, host: Path) -> int:
                 "that are free on my calendar.",
             },
         )
+        # Deferred twice and then planned for today, so it reads as work that keeps slipping.
         hiring_plan = ids["Draft 2027 hiring plan"]
-        call("defer_task", {"id": hiring_plan, "until_date": day(-1), "structured_reason": "low_energy"})
-        call("defer_task", {"id": hiring_plan, "until_date": day(0), "structured_reason": "not_today"})
+        call("defer_task", {"id": hiring_plan, "until_date": day(1), "structured_reason": "low_energy"})
+        call("defer_task", {"id": hiring_plan, "until_date": day(2), "structured_reason": "not_today"})
+        call("update_task", {"id": hiring_plan, "planned_date": day(0)})
         call(
             "set_task_recurrence",
             {"task_id": ids["Take out recycling"], "recurrence": {"freq": "WEEKLY", "byday": ["TU"]}},

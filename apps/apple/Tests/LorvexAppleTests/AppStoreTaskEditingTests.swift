@@ -422,8 +422,8 @@ func appStoreRepeatRowNamesTheWeekdayAPlainWeeklyRepeatFallsOn() async throws {
 
   let selected = try #require(store.selectedTask)
   #expect(selected.recurrence?.byDay?.isEmpty ?? true)
-  // Starting the repeat anchors it on the deadline, giving a task without one
-  // today as both.
+  // Starting the repeat anchors it on the deadline. This task has neither a
+  // deadline nor a planned day, so it gets today as both.
   let anchor = try #require(selected.canonicalOccurrenceDate)
   #expect(selected.dueDate == anchor)
   #expect(store.taskDetailRecurrenceAnchorDay == anchor)

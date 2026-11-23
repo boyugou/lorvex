@@ -152,6 +152,13 @@ task is always on its day's list, and the day's other unfinished tasks lose
 their times but stay on the day. "Clear Times" removes the day's times and
 keeps every task on the day; on iPhone it asks for confirmation first.
 
+The apps suggest times for today only. An assistant or a shortcut can ask for
+another day, and that suggestion holds the tasks planned for the day or, with
+no planned date, due on it. It carries nothing from today: unfinished and
+started work stays on today's list until someone moves it, so a suggestion
+for Wednesday made on Monday is Wednesday's own work. To see a later day with
+today's leftovers on it, move them to that day first.
+
 ## 6. Glances
 
 Every glance leads with the same task, and only when the day says it is the

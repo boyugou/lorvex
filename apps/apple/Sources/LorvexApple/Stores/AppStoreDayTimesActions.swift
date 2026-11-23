@@ -11,6 +11,10 @@ extension AppStore {
   /// user accepts or dismisses them. Nothing is stored.
   func suggestDayTimes() async {
     await perform {
+      // The core suggests the Today list only for the day it calls today, so
+      // the day comes from a snapshot read now, not one loaded before the
+      // product day changed.
+      today = try await core.loadToday()
       let date = logicalTodayDateString
       let timed = try await core.unfinishedTaskTimes(on: date)
       let proposal = try await core.proposeDayTimes(date: date)

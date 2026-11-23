@@ -543,7 +543,7 @@ final class TaskCreateTests: XCTestCase {
       guard case StoreError.validation(let m) = e else {
         XCTFail("expected validation, got \(e)"); return
       }
-      XCTAssertTrue(m.contains("Invalid reminder timestamp"))
+      XCTAssertTrue(m.contains("Invalid reminder time"))
     }
   }
 

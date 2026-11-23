@@ -7,8 +7,10 @@ import LorvexStore
 /// edges, tag edges. Each helper accumulates into the orchestrator's
 /// ``CreateTaskSyncEffects``.
 public enum TaskCreateChildInserts {
-  /// Insert task-reminder rows. Returns the IDs of the inserted reminders
-  /// in input order.
+  /// Insert task-reminder rows. Each entry of `reminders` is a time in one of
+  /// the forms ``ReminderTimeInput`` accepts: an instant, or a wall time on
+  /// the user's clock. Returns the IDs of the inserted reminders in input
+  /// order.
   public static func insertTaskReminders(
     _ db: Database, hlc: HlcSession, taskId: String, reminders: [String]?
   ) throws -> [String] {
@@ -30,12 +32,7 @@ public enum TaskCreateChildInserts {
     var timestamps: [String] = []
     timestamps.reserveCapacity(reminders.count)
     for raw in reminders {
-      guard let canon = SyncTimestampFormat.canonicalizeRfc3339Instant(raw) else {
-        throw StoreError.validation(
-          "Invalid reminder timestamp '\(raw)'. Must be a valid RFC 3339 datetime "
-            + "(e.g. 2025-12-01T09:00:00Z).")
-      }
-      timestamps.append(canon)
+      timestamps.append(try ReminderTimeInput.canonicalInstant(db, raw: raw))
     }
     let now = SyncTimestampFormat.syncTimestampNow()
     var createdIds: [String] = []

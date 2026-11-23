@@ -268,7 +268,7 @@ struct CalendarLinksExtendedTests {
     #expect(firstObject["returned"]?.intValue == 1)
     #expect(firstObject["truncated"]?.boolValue == true)
     #expect(firstObject["next_offset"]?.intValue == 1)
-    // A merged canonical+provider search has no cheap total.
+    // A merged canonical+provider search has no cheap total before its last page.
     #expect(firstObject["total_matching"] == .null)
 
     let secondPage = try await xcall(
@@ -278,6 +278,18 @@ struct CalendarLinksExtendedTests {
     #expect(secondObject["events"]?.arrayValue?.count == 1)
     #expect(secondObject["truncated"]?.boolValue == false)
     #expect(secondObject["next_offset"] == .null)
+    #expect(secondObject["total_matching"]?.intValue == 2, "the last page knows the total")
+
+    let none = try await xcall(
+      registry, tool: "search_calendar_events", arguments: ["query": .string("zzqqxx")])
+    #expect(none.structuredContent?.objectValue?["total_matching"]?.intValue == 0)
+
+    let pastTheEnd = try await xcall(
+      registry, tool: "search_calendar_events",
+      arguments: ["query": .string(token), "limit": .int(1), "offset": .int(5)])
+    let pastObject = try #require(pastTheEnd.structuredContent?.objectValue)
+    #expect(pastObject["events"]?.arrayValue?.isEmpty == true)
+    #expect(pastObject["total_matching"] == .null, "an empty page past the end knows no total")
   }
 
   @Test("create_calendar_event appears in the timeline and can be deleted")

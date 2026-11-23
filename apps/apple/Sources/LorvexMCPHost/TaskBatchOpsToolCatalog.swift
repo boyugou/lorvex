@@ -129,7 +129,7 @@ enum TaskBatchOpsToolCatalog {
   static let setRemindersTool = Tool(
     name: "set_task_reminders",
     title: "Set Task Reminders",
-    description: "Replace all pending reminders for a task in one call (atomic: removes existing reminders, adds the new set). Pass an empty array to clear all reminders. Use instead of calling add_task_reminder + remove_task_reminder when setting multiple reminders at once. Returns the full updated task.",
+    description: "Replace all pending reminders for a task in one call (atomic: removes existing reminders, adds the new set). Pass an empty array to clear all reminders. Each entry is a time in the forms add_task_reminder accepts: the date and time on the user's clock, YYYY-MM-DDTHH:MM, or an RFC 3339 timestamp with Z or an offset. Use instead of calling add_task_reminder + remove_task_reminder when setting multiple reminders at once. Returns the full updated task.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -140,7 +140,7 @@ enum TaskBatchOpsToolCatalog {
         ]),
         "reminders": .object([
           "type": .string("array"),
-          "description": .string("RFC 3339 UTC timestamps for each reminder, e.g. 2026-05-23T17:00:00Z."),
+          "description": .string("One time per reminder: local date and time, YYYY-MM-DDTHH:MM (2026-05-23T10:00), or an RFC 3339 timestamp with Z or an offset."),
           "items": .object(["type": .string("string")]),
         ]),
       ]),

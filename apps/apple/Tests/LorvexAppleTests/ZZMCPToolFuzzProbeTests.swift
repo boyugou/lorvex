@@ -379,6 +379,7 @@ private struct Generator {
     if n == "idempotency_key" { return idempotencyKey() }
     if let kind = idKind(name: n, tool: tool) { return id(refinedKind(kind, name: n, tool: tool)) }
     if n == "original_id" { return chance(80) ? UUID().uuidString.lowercased() : id(.task) }
+    if description.contains("YYYY-MM-DDTHH:MM") { return timestamp() }
     if description.contains("YYYY-MM-DD") || n.hasSuffix("date") || ["from", "to", "until"].contains(n) {
       return date()
     }

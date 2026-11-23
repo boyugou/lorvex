@@ -28,6 +28,8 @@ extension TaskRepo {
       public let taskDueDate: LorvexDate?
       public let taskPlannedDate: LorvexDate?
       public let taskPriority: Int64?
+      /// The zone the reminder's wall time was recorded in, when one was.
+      public let originalTz: String?
     }
 
     /// Result envelope for reminder queries, including pagination metadata.
@@ -78,7 +80,8 @@ extension TaskRepo {
         taskStatus: row[8],
         taskDueDate: dueDate,
         taskPlannedDate: plannedDate,
-        taskPriority: row[11])
+        taskPriority: row[11],
+        originalTz: row[12])
     }
 
     /// Reminders currently due (`reminder_at <= now`) for open, non-archived
@@ -93,7 +96,7 @@ extension TaskRepo {
           SELECT tr.id, tr.task_id, tr.reminder_at, tr.dismissed_at, tr.cancelled_at, \
                  tr.created_at, \
                  COALESCE(ds.delivery_state, 'pending') AS delivery_state, \
-                 t.title, t.status, t.due_date, t.planned_date, t.priority \
+                 t.title, t.status, t.due_date, t.planned_date, t.priority, tr.original_tz \
           FROM task_reminders tr \
           JOIN tasks t ON tr.task_id = t.id \
           LEFT JOIN task_reminder_delivery_state ds ON ds.reminder_id = tr.id \
@@ -219,7 +222,7 @@ extension TaskRepo {
           SELECT tr.id, tr.task_id, tr.reminder_at, tr.dismissed_at, tr.cancelled_at, \
                  tr.created_at, \
                  COALESCE(ds.delivery_state, 'pending') AS delivery_state, \
-                 t.title, t.status, t.due_date, t.planned_date, t.priority \
+                 t.title, t.status, t.due_date, t.planned_date, t.priority, tr.original_tz \
           FROM task_reminders tr \
           JOIN tasks t ON tr.task_id = t.id \
           LEFT JOIN task_reminder_delivery_state ds ON ds.reminder_id = tr.id \

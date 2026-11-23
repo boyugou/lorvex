@@ -192,6 +192,60 @@ struct MCPDependencyUpcomingExtendedToolsTests {
     #expect(ids(overview, "today").isEmpty)
   }
 
+  /// The ids of every task a schedule suggestion placed or left unscheduled.
+  private func suggestedIDs(_ result: CallTool.Result) -> Set<String> {
+    let object = result.structuredContent?.objectValue
+    let placed = (object?["placements"]?.arrayValue ?? [])
+      .compactMap { $0.objectValue?["task"]?.objectValue?["id"]?.stringValue }
+    return Set(placed + ids(result, "unscheduled"))
+  }
+
+  @Test("a schedule suggestion for a later day holds that day's tasks, not today's")
+  func scheduleForALaterDayHoldsThatDaysTasks() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let late = try await mcpRegistryCall(
+      registry, tool: "create_task",
+      arguments: [
+        "title": .string("Reply to legal"), "due_date": .string(try await day(-3, in: registry)),
+      ])
+    let lateID = try #require(late.structuredContent?.objectValue?["id"]?.stringValue)
+    let later = try await day(2, in: registry)
+    let planned = try await mcpRegistryCall(
+      registry, tool: "create_task",
+      arguments: ["title": .string("Prepare slides"), "planned_date": .string(later)])
+    let plannedID = try #require(planned.structuredContent?.objectValue?["id"]?.stringValue)
+
+    let laterDay = try await mcpRegistryCall(
+      registry, tool: "propose_daily_schedule", arguments: ["date": .string(later)])
+    #expect(suggestedIDs(laterDay) == [plannedID])
+    let today = try await mcpRegistryCall(registry, tool: "propose_daily_schedule")
+    #expect(suggestedIDs(today) == [lateID])
+  }
+
+  @Test("a task with no due date starts repeating on the day it is planned for")
+  func recurrenceStartsOnThePlannedDay() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let rule: Value = .object(["freq": .string("DAILY"), "interval": .int(3)])
+    let later = try await day(3, in: registry)
+    // A plan that has passed is not a start day: the series starts today and
+    // the plan moves to today with it.
+    for (plannedDate, firstOccurrence) in [
+      (later, later), (try await day(-2, in: registry), try await day(0, in: registry)),
+    ] {
+      let created = try await mcpRegistryCall(
+        registry, tool: "create_task",
+        arguments: ["title": .string("Water the plants"), "planned_date": .string(plannedDate)])
+      let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+      let repeating = try await mcpRegistryCall(
+        registry, tool: "set_task_recurrence",
+        arguments: ["task_id": .string(taskID), "recurrence": rule])
+      #expect(repeating.isError != true)
+      let task = try #require(repeating.structuredContent?.objectValue)
+      #expect(task["due_date"]?.stringValue == firstOccurrence)
+      #expect(task["planned_date"]?.stringValue == firstOccurrence)
+    }
+  }
+
   @Test("defer_task and batch_defer_tasks refuse a day that is not after today")
   func deferRefusesTodayAndEarlier() async throws {
     let registry = try mcpInMemoryRegistry()
@@ -444,5 +498,84 @@ struct MCPDependencyUpcomingExtendedToolsTests {
     )
     #expect(removed.isError != true)
     #expect(removed.structuredContent?.objectValue?["reminders"]?.arrayValue?.isEmpty == true)
+  }
+
+  /// The pending reminders of a task result, as `[reminder_at, local_time, timezone]`.
+  private func reminderClocks(_ result: CallTool.Result) -> [[String?]] {
+    (result.structuredContent?.objectValue?["reminders"]?.arrayValue ?? []).compactMap {
+      guard let row = $0.objectValue else { return nil }
+      return [
+        row["reminder_at"]?.stringValue, row["local_time"]?.stringValue,
+        row["timezone"]?.stringValue,
+      ]
+    }
+  }
+
+  @Test("a reminder time without an offset is read on the user's clock and reported there")
+  func reminderTimeOnTheUsersClock() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let zone = "America/Los_Angeles"
+    _ = try await mcpRegistryCall(
+      registry, tool: "complete_setup", arguments: ["timezone": .string(zone)])
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_task", arguments: ["title": .string("Call the landlord")])
+    let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+
+    // Standard time in December: 10:00 in Los Angeles is 18:00 UTC.
+    let added = try await mcpRegistryCall(
+      registry, tool: "add_task_reminder",
+      arguments: ["task_id": .string(taskID), "reminder_at": .string("2031-12-01T10:00")])
+    #expect(added.isError != true)
+    #expect(reminderClocks(added) == [["2031-12-01T18:00:00.000Z", "2031-12-01T10:00", zone]])
+
+    // A local time and an instant in one call; daylight time in June.
+    let replaced = try await mcpRegistryCall(
+      registry, tool: "set_task_reminders",
+      arguments: [
+        "task_id": .string(taskID),
+        "reminders": .array([
+          .string("2031-06-02T09:30"), .string("2031-06-03T16:30:00Z"),
+          .string("2031-06-04T09:30:15"),
+        ]),
+      ])
+    #expect(replaced.isError != true)
+    #expect(
+      reminderClocks(replaced) == [
+        ["2031-06-02T16:30:00.000Z", "2031-06-02T09:30", zone],
+        ["2031-06-03T16:30:00.000Z", "2031-06-03T09:30", zone],
+        ["2031-06-04T16:30:15.000Z", "2031-06-04T09:30:15", zone],
+      ])
+
+    // The clocks in Los Angeles skip 02:00 to 03:00 on 2031-03-09.
+    let skipped = try await mcpRegistryCall(
+      registry, tool: "add_task_reminder",
+      arguments: ["task_id": .string(taskID), "reminder_at": .string("2031-03-09T02:30")])
+    #expect(skipped.isError == true)
+    #expect(skipped.structuredContent?.objectValue?["code"]?.stringValue == "validation")
+    let unchanged = try await mcpRegistryCall(
+      registry, tool: "get_task", arguments: ["id": .string(taskID)])
+    #expect(reminderClocks(unchanged).count == 3)
+  }
+
+  @Test("reminder queries report each reminder's time on the user's clock")
+  func reminderQueriesReportTheUsersClock() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let zone = "America/Los_Angeles"
+    _ = try await mcpRegistryCall(
+      registry, tool: "complete_setup", arguments: ["timezone": .string(zone)])
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_task", arguments: ["title": .string("File the report")])
+    let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+    // A reminder in the past is due now.
+    _ = try await mcpRegistryCall(
+      registry, tool: "add_task_reminder",
+      arguments: ["task_id": .string(taskID), "reminder_at": .string("2026-01-05T08:15")])
+
+    let due = try await mcpRegistryCall(registry, tool: "get_due_task_reminders")
+    let row = try #require(
+      due.structuredContent?.objectValue?["reminders"]?.arrayValue?.first?.objectValue)
+    #expect(row["reminder_at"]?.stringValue == "2026-01-05T16:15:00.000Z")
+    #expect(row["local_time"]?.stringValue == "2026-01-05T08:15")
+    #expect(row["timezone"]?.stringValue == zone)
   }
 }

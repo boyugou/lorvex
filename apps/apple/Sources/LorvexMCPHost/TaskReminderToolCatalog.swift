@@ -4,7 +4,7 @@ enum TaskReminderToolCatalog {
   static let addReminderTool = Tool(
     name: "add_task_reminder",
     title: "Add Task Reminder",
-    description: "Add a reminder notification to a task at a specific time. Supply reminder_at as a full RFC 3339 UTC timestamp (e.g. 2026-05-23T17:00:00Z). The system will schedule a local notification at that time. A task can have multiple reminders. Returns the full updated task with all reminders.",
+    description: "Add a reminder notification to a task at a specific time. Give reminder_at as the date and time on the user's clock, YYYY-MM-DDTHH:MM (e.g. 2026-05-23T10:00 for 10 in the morning); it is read in the time zone get_session_context reports, so there is no offset to work out. An RFC 3339 timestamp with Z or an offset is accepted too. A local time the clocks skip that day is rejected. The app schedules a notification at that time. A task can have several reminders. Returns the full updated task; each of its reminders carries reminder_at (UTC) and, once the user's time zone is set, local_time and timezone.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -12,7 +12,7 @@ enum TaskReminderToolCatalog {
         "task_id": .object(["type": .string("string")]),
         "reminder_at": .object([
           "type": .string("string"),
-          "description": .string("RFC 3339 datetime, for example 2026-05-23T17:00:00Z"),
+          "description": .string("Local date and time, YYYY-MM-DDTHH:MM (2026-05-23T10:00), or an RFC 3339 timestamp with Z or an offset."),
         ]),
       ]),
       "required": .array([.string("task_id"), .string("reminder_at")]),

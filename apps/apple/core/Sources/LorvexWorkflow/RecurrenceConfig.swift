@@ -41,6 +41,11 @@ public enum RecurrenceConfig {
     public var setRecurrenceGroupId: String?
     public var setCanonicalOccurrenceDate: Patch<String>
     public var setDueDate: String?
+    /// The planned day a task takes when its series starts today because the
+    /// day it was planned for has passed. A successor keeps its parent's
+    /// distance between planned day and occurrence, so a plan left in the past
+    /// would put every later occurrence on a day before it is due.
+    public var setPlannedDate: String?
     public var clearRecurrenceGroupId: Bool
     public var clearCanonicalOccurrenceDate: Bool
     /// Clears the generated occurrence's instance key, which cannot outlive the
@@ -52,6 +57,7 @@ public enum RecurrenceConfig {
       setRecurrenceGroupId: String? = nil,
       setCanonicalOccurrenceDate: Patch<String> = .unset,
       setDueDate: String? = nil,
+      setPlannedDate: String? = nil,
       clearRecurrenceGroupId: Bool = false,
       clearCanonicalOccurrenceDate: Bool = false,
       clearRecurrenceInstanceKey: Bool = false,
@@ -60,6 +66,7 @@ public enum RecurrenceConfig {
       self.setRecurrenceGroupId = setRecurrenceGroupId
       self.setCanonicalOccurrenceDate = setCanonicalOccurrenceDate
       self.setDueDate = setDueDate
+      self.setPlannedDate = setPlannedDate
       self.clearRecurrenceGroupId = clearRecurrenceGroupId
       self.clearCanonicalOccurrenceDate = clearCanonicalOccurrenceDate
       self.clearRecurrenceInstanceKey = clearRecurrenceInstanceKey
@@ -75,24 +82,43 @@ public enum RecurrenceConfig {
     /// Set on a generated occurrence, nil on a task the user made recurring.
     public var recurrenceInstanceKey: String?
     public var dueDate: String?
+    /// The day the task is planned for, which a task with no due date starts
+    /// its series on (``firstOccurrenceDate(dueDate:plannedDate:today:)``).
+    public var plannedDate: String?
 
     public init(
       recurrence: String? = nil, recurrenceGroupId: String? = nil,
       canonicalOccurrenceDate: String? = nil, recurrenceInstanceKey: String? = nil,
-      dueDate: String? = nil
+      dueDate: String? = nil, plannedDate: String? = nil
     ) {
       self.recurrence = recurrence
       self.recurrenceGroupId = recurrenceGroupId
       self.canonicalOccurrenceDate = canonicalOccurrenceDate
       self.recurrenceInstanceKey = recurrenceInstanceKey
       self.dueDate = dueDate
+      self.plannedDate = plannedDate
     }
   }
 
+  /// The date a task's series starts on when the task becomes recurring: its
+  /// due date; with none, the day it is planned for when that is today or
+  /// later; otherwise today. A plan for a day that has passed is not a start
+  /// date: the task is on today, so its series starts today and the plan moves
+  /// to today with it (``ColumnActions/setPlannedDate``).
+  public static func firstOccurrenceDate(
+    dueDate: String?, plannedDate: String?, today: String
+  ) -> String {
+    if let dueDate { return dueDate }
+    if let plannedDate, plannedDate >= today { return plannedDate }
+    return today
+  }
+
   /// Plan the recurrence-config transition given old state and the new
-  /// recurrence value. `newRecurrence == nil` (or empty) clears recurrence;
-  /// `today` is the timezone-aware today string used as the anchor fallback
-  /// when due_date is missing on Enable.
+  /// recurrence value. `newRecurrence == nil` (or empty) clears recurrence.
+  /// On Enable the series starts on
+  /// ``firstOccurrenceDate(dueDate:plannedDate:today:)``, which also becomes
+  /// the due date of a task that has none; `today` is the timezone-aware today
+  /// string.
   public static func planRecurrenceTransition(
     old: State, newRecurrence: String?, today: String
   ) -> (Transition, ColumnActions) {
@@ -100,11 +126,14 @@ public enum RecurrenceConfig {
     let newHasRecurrence = !(newRecurrence ?? "").isEmpty
 
     if !oldHasRecurrence && newHasRecurrence {
-      let anchor = old.dueDate ?? today
+      let anchor = firstOccurrenceDate(
+        dueDate: old.dueDate, plannedDate: old.plannedDate, today: today)
+      let planHasPassed = old.dueDate == nil && (old.plannedDate.map { $0 < today } ?? false)
       let actions = ColumnActions(
         setRecurrenceGroupId: EntityID.newEntityIDString(),
         setCanonicalOccurrenceDate: .set(anchor),
-        setDueDate: old.dueDate == nil ? anchor : nil)
+        setDueDate: old.dueDate == nil ? anchor : nil,
+        setPlannedDate: planHasPassed ? anchor : nil)
       return (.enable, actions)
     } else if oldHasRecurrence && newHasRecurrence {
       // UpdateRule: change rule, keep series identity and anchor; clear

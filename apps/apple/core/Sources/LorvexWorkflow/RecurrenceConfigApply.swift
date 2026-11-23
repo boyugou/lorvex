@@ -252,6 +252,10 @@ extension RecurrenceConfig {
       setClauses.append("due_date = ?")
       args.append(due)
     }
+    if let planned = actions.setPlannedDate {
+      setClauses.append("planned_date = ?")
+      args.append(planned)
+    }
     // If the planner didn't override due_date but the caller patched it,
     // include the caller's patch here.
     if actions.setDueDate == nil {
@@ -367,7 +371,7 @@ extension RecurrenceConfig {
         db,
         sql:
           "SELECT recurrence, recurrence_group_id, canonical_occurrence_date, "
-          + "recurrence_instance_key, due_date FROM tasks WHERE id = ?1",
+          + "recurrence_instance_key, due_date, planned_date FROM tasks WHERE id = ?1",
         arguments: [taskId.asString])
     else {
       throw StoreError.notFound(entity: EntityKind.task.rawValue, id: taskId.asString)
@@ -377,7 +381,8 @@ extension RecurrenceConfig {
       recurrenceGroupId: row[1],
       canonicalOccurrenceDate: row[2],
       recurrenceInstanceKey: row[3],
-      dueDate: row[4])
+      dueDate: row[4],
+      plannedDate: row[5])
   }
 
   private struct LoadedRolloverState {

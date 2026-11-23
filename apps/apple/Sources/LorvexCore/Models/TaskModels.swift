@@ -1,5 +1,6 @@
 import Foundation
 import LorvexDomain
+import LorvexWorkflow
 
 public struct LorvexTask: Identifiable, Equatable, Sendable {
   public enum Priority: String, CaseIterable, Sendable, Comparable {
@@ -271,12 +272,18 @@ extension LorvexTask {
 
   /// The stored day a schedule-anchored repeat of this task counts from:
   /// ``canonicalOccurrenceDate`` while the task repeats, else the day turning
-  /// repeating on would anchor it to, which is the deadline, or `logicalDay`
-  /// (the product's today, `yyyy-MM-dd`) when there is none. A weekly repeat
-  /// without chosen weekdays falls on this day's weekday.
+  /// repeating on would start the series on. That is the deadline; with none,
+  /// the planned day when it is `logicalDay` (the product's today,
+  /// `yyyy-MM-dd`) or later; otherwise `logicalDay`. The core decides it with
+  /// the same function when the repeat is saved. A weekly repeat without chosen
+  /// weekdays falls on this day's weekday.
   public func recurrenceAnchorDay(logicalDay: String) -> Date? {
     if recurrence != nil, let canonicalOccurrenceDate { return canonicalOccurrenceDate }
-    return dueDate ?? LorvexDateFormatters.ymdUTC.date(from: logicalDay)
+    if let dueDate { return dueDate }
+    let days = LorvexDateFormatters.ymdUTC
+    return days.date(
+      from: RecurrenceConfig.firstOccurrenceDate(
+        dueDate: nil, plannedDate: plannedDate.map(days.string(from:)), today: logicalDay))
   }
 }
 

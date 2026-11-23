@@ -91,11 +91,13 @@ final class DayScheduleProposalTests: XCTestCase {
     }
   }
 
+  /// A suggestion for `date` on a day whose today is ``day``.
   private func propose(
-    _ db: Database, accessMode: CalendarAiAccessMode = .fullDetails, notBefore: String? = nil
+    _ db: Database, date: String = day, accessMode: CalendarAiAccessMode = .fullDetails,
+    notBefore: String? = nil
   ) throws -> DayScheduleProposal.Proposal {
     try DayScheduleProposal.propose(
-      db, date: Self.day, anchorTimezone: "UTC", accessMode: accessMode,
+      db, date: date, today: Self.day, anchorTimezone: "UTC", accessMode: accessMode,
       notBefore: try notBefore.map { try TimeOfDay.parse($0).get() })
   }
 
@@ -116,7 +118,7 @@ final class DayScheduleProposalTests: XCTestCase {
     try store.writer.write { db in
       XCTAssertThrowsError(
         try DayScheduleProposal.propose(
-          db, date: "not-a-date", anchorTimezone: "UTC", accessMode: .busyOnly)
+          db, date: "not-a-date", today: Self.day, anchorTimezone: "UTC", accessMode: .busyOnly)
       ) { error in
         guard case let StoreError.validation(message) = error else {
           return XCTFail("expected validation error, got \(error)")
@@ -398,6 +400,50 @@ final class DayScheduleProposalTests: XCTestCase {
 
     XCTAssertEqual(starts(proposal), ["13:00"], "yesterday's 12:30 is not under way today")
     XCTAssertEqual(ends(proposal), ["13:30"])
+  }
+
+  // MARK: - A day other than today
+
+  private func seedTasksAcrossDays(_ db: Database) throws {
+    try seedTask(db, "t-started", "Started", status: "in_progress", plannedDate: Self.day)
+    try seedTask(db, "t-today", "Planned for today")
+    try seedTask(db, "t-overdue", "Due yesterday", plannedDate: nil)
+    try db.execute(sql: "UPDATE tasks SET due_date = '2026-03-28' WHERE id = 't-overdue'")
+    try seedTask(db, "t-later-planned", "Planned for the later day", plannedDate: "2026-03-31")
+    try seedTask(
+      db, "t-later-started", "Started, planned for the later day", status: "in_progress",
+      plannedDate: "2026-03-31")
+    try seedTask(db, "t-later-due", "Due on the later day", plannedDate: nil)
+    try db.execute(sql: "UPDATE tasks SET due_date = '2026-03-31' WHERE id = 't-later-due'")
+    try seedTask(db, "t-later-moved", "Due that day, planned after it", plannedDate: "2026-04-02")
+    try db.execute(sql: "UPDATE tasks SET due_date = '2026-03-31' WHERE id = 't-later-moved'")
+  }
+
+  private func ids(_ proposal: DayScheduleProposal.Proposal) -> Set<String> {
+    Set((proposal.slots.map(\.task) + proposal.unscheduled).map(\.id))
+  }
+
+  func testALaterDayHoldsItsOwnTasksAndNothingCarriedFromToday() throws {
+    let store = try TestSupport.freshStore()
+    let proposal = try store.writer.write { db in
+      try self.seedTasksAcrossDays(db)
+      return try self.propose(db, date: "2026-03-31")
+    }
+
+    XCTAssertEqual(ids(proposal), ["t-later-planned", "t-later-due"])
+  }
+
+  func testTodayHoldsTheTodayListWithWorkCarriedFromEarlierDays() throws {
+    let store = try TestSupport.freshStore()
+    let proposal = try store.writer.write { db in
+      try self.seedTasksAcrossDays(db)
+      return try self.propose(db)
+    }
+
+    XCTAssertEqual(ids(proposal), ["t-started", "t-later-started", "t-today", "t-overdue"])
+    XCTAssertEqual(
+      Set(proposal.slots.prefix(2).map(\.task.id)), ["t-started", "t-later-started"],
+      "started tasks lead, whatever day they are planned for")
   }
 
   // MARK: - Calendar events

@@ -43,8 +43,10 @@ extension SwiftLorvexCoreService {
       // device calendar events, in the app and to the assistant alike. A
       // malformed tier fails the read instead of sharing more than it allows.
       let accessMode = try DeviceStateRepo.readCalendarAiAccessMode(db)
+      let today = Timezone.todayYmdForTimezoneName(
+        now: now, timezoneName: anchorTimezone, systemFallback: TimeZone.current)
       let proposal = try DayScheduleProposal.propose(
-        db, date: day, anchorTimezone: anchorTimezone, accessMode: accessMode,
+        db, date: day, today: today, anchorTimezone: anchorTimezone, accessMode: accessMode,
         workingHoursStart: workingHoursStart, workingHoursEnd: workingHoursEnd,
         includeCalendarEvents: includeCalendarEvents ?? true,
         notBefore: Self.proposalStartFloor(date: day, timezoneName: anchorTimezone, now: now))

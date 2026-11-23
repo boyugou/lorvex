@@ -379,8 +379,9 @@ struct MCPOnDiskCoreBridgeTests {
     #expect(searchObject["count"] == nil)
     #expect(searchObject["returned"] != nil)
     #expect(searchObject["next_cursor"] == .null)
-    #expect(searchObject["total_matching"] == .null)
     let searchedEvents = try #require(searchObject["events"]?.arrayValue)
+    #expect(searchObject["truncated"]?.boolValue == false)
+    #expect(searchObject["total_matching"]?.intValue == searchedEvents.count)
     let searchedEvent = try #require(
       searchedEvents.first { $0.objectValue?["id"]?.stringValue == eventID }?.objectValue)
     let searchedAttendees = try #require(searchedEvent["attendees"]?.arrayValue)

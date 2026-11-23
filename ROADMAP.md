@@ -137,6 +137,16 @@ person living with the app, and then a decision.
   bookkeeping is not a field restore), and habits and lists. A record whose
   snapshot exceeds the 4000-byte log cap (long notes) cannot be undone from
   the log alone.
+- Day rules, small edges left open. A started task with a hide-until day
+  still ahead is on Today, shows "hidden until" on its row, and is also
+  listed under Scheduled: the hide-until rule knows nothing of started work
+  (`TaskReadBuckets.availableVisibilityPredicate` and its Swift mirror
+  `LorvexTask.isHiddenUntilFuture`). Making a started task never hidden
+  changes about a dozen reads and the `availability` filter at once. A
+  shortcut that asks for suggested times on a picked date names the day in
+  the device's time zone, which is another day when the product time zone
+  differs. A suggestion and a save of times are accepted for a day that has
+  passed.
 - Quick add, each gap confirmed by a probe or a test:
   - Lines typed in decomposed Unicode are misread in about fifteen languages
     (`ZZCaptureParserFuzzProbeTests`, `FUZZ_NFD`). Low priority in practice:
@@ -218,20 +228,58 @@ noticed.
   173). First steps: read App Store Connect's crash and feedback records in
   each release cycle, and read the Mac's log at the start of a work session.
 - The assistant's experience. The main interface is an assistant working
-  through MCP. Its quality has been checked through schemas, fuzzing and
-  tests of each tool, and never by watching an assistant do a person's
-  requests: plan the day, clear the inbox, move a week around. Unknown: how
-  many calls a request takes, where an assistant picks the wrong tool or
-  misreads a result, and what the responses cost in tokens. First step: a
-  set of realistic requests run by an assistant against a seeded store, the
-  transcripts reviewed as critically as captures are. Two facts from the
-  first look (2026-11-23). Clients hand the model different parts of a
-  result: a headless Claude Code 2.1.330 run gave its model the serialized
-  `structuredContent` and none of the text blocks, and several other clients
-  are reported to forward text only, so every result now carries its data in
-  both. The tool list is 120 tools and 165,697 bytes of JSON; Claude Code
-  loads it on demand, and a client that loads all of it pays that size in
-  every conversation. Whether to offer a smaller default set is open.
+  through MCP, and its quality is checked by watching one work.
+  `apps/apple/script/mcp_assistant_session.py` seeds a store with one
+  person's week, and an assistant with no other access carries out seven
+  whole requests against copies of it: plan the day, sort the inbox, out
+  sick tomorrow, how the week looks, add three things, do what was handed
+  over, record what got done. Each reply is read against the store's final
+  state and the call log. Two runs on 2026-11-23, one Claude Sonnet
+  assistant per request, before and after the changes the first run
+  prompted: every request was carried out in both. The first took 69 calls
+  and 241,014 bytes of tool results, the second 89 calls and 199,861 bytes,
+  with one failed call. Each total is a single sample and the assistants
+  chose different steps, so only the size of the same call compares
+  directly: `get_overview` with `shape` `full` went from 17,725 to 9,376
+  bytes, `get_upcoming_tasks` for seven days from 10,416 to 5,603, and
+  `get_session_context` from 241 to 154. Run the set again after a change to
+  the tools an assistant reads first. What the runs left open:
+  - Identifier arguments are `id` on 30 tools and `task_id` on 17. The one
+    failed call was `get_task` given `task_id`.
+  - Bulk writes have gaps. `batch_update_tasks` sets neither a list nor a
+    status, so sorting an inbox into two lists took four write calls. No
+    call sets a checklist on an existing task: five
+    `add_task_checklist_item` calls returned 7,031 bytes. `create_task`
+    takes neither reminders nor a repeat, so each costs a second call.
+  - A write returns every changed task in full: 3,298 bytes for one field
+    changed on four tasks.
+  - Calendar reads. A `get_calendar_timeline` row keeps `time_context` and
+    its recurrence identifiers under a narrow `fields` list (2,999 bytes
+    for six days of titles and times). No call answers when a person is
+    free between two dates; three assistants worked the gaps out from the
+    events.
+  - Days off. A day off is an all-day calendar event and a line in the
+    routines memory. No read marks a day as one and the defer tools accept
+    it, so an assistant finds it only by reading the calendar of each day
+    it plans.
+  - `propose_daily_schedule` reads the calendar and the working hours, not
+    the routines kept in memory: it placed a task across the person's
+    lunch and put the preparation for a meeting after the meeting.
+  - Task rows name their list by id, so reading them takes a `get_lists`
+    call (1,761 bytes).
+  - Handed-over tasks. Two assistants did the handed-over task while
+    answering another request and one left it and asked. The server
+    instructions do not say when to pick one up.
+  - Server-written text inside the user-data markers: error messages and
+    memory keys come back wrapped in `⟦user⟧…⟦/user⟧`.
+  - The tool list is 120 tools and 165,697 bytes of JSON. Claude Code loads
+    it on demand, and a client that loads all of it pays that size in every
+    conversation. Whether to offer a smaller default set is open.
+
+  Clients hand the model different parts of a result: a headless Claude
+  Code 2.1.330 run gave its model the serialized `structuredContent` and
+  none of the text blocks, and several other clients are reported to forward
+  text only, so every result carries its data in both.
 - Connecting an assistant. Setup is a path into the app bundle, typed into a
   client's configuration. When the helper moved into `LorvexMCPHost.app`, an
   entry with the earlier path stopped working with no message from either

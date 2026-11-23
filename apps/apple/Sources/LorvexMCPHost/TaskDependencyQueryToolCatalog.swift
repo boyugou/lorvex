@@ -7,7 +7,7 @@ extension TaskToolCatalog {
     name: "get_dependency_graph",
     title: "Get Dependency Graph",
     description:
-      "Return the task dependency graph showing blocking relationships. By default only includes active tasks (open/someday). Use task_id to center on a specific task's neighbourhood, list_id to keep the links that touch a list (a task from another list appears when it is linked to one in this list). Returns nodes, edges, roots (no deps), blocked (unmet deps), and leaf_blockers (block others but are not themselves blocked — actionable first).",
+      "Return the task dependency graph showing blocking relationships. By default only includes active tasks (open/someday). Use task_id to center on a specific task's neighbourhood, list_id to keep the links that touch a list (a task from another list appears when it is linked to one in this list). Returns nodes, edges ({from, to}: the task from waits for the task to, which must be finished first), roots (no deps), blocked (unmet deps), and leaf_blockers (block others but are not themselves blocked — actionable first).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

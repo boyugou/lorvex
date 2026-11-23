@@ -185,7 +185,7 @@ final class TaskAvailableFromFilterTests: XCTestCase {
     try seedFixture(store)
     let proposal = try store.writer.read { db in
       try DayScheduleProposal.propose(
-        db, date: self.today, anchorTimezone: "UTC", accessMode: .off)
+        db, date: self.today, today: self.today, anchorTimezone: "UTC", accessMode: .off)
     }
     let got = Set((proposal.slots.map(\.task) + proposal.unscheduled).map(\.id))
     XCTAssertEqual(

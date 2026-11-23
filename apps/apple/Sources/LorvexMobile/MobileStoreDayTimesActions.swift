@@ -13,6 +13,10 @@ extension MobileStore {
     isSuggestingDayTimes = true
     defer { isSuggestingDayTimes = false }
     do {
+      // The core suggests the Today list only for the day it calls today, so
+      // the day comes from a snapshot read now, not one loaded before the
+      // product day changed.
+      snapshot.today = try await core.loadToday()
       let date = logicalTodayString
       let timed = try await core.unfinishedTaskTimes(on: date)
       proposedDayTimes = try await core.proposeDayTimes(date: date)

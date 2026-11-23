@@ -3484,6 +3484,11 @@ repeats) — matching the macOS detail editor.
 Advanced recurrence fields such as end-by date or occurrence count remain
 available through MCP recurrence tools.
 
+A repeat starts on the task's due date. A task without one starts on the day
+it is planned for, or today when it has no planned day or that day has passed,
+and that day becomes its due date. A weekly repeat with no weekday chosen falls
+on the start day's weekday.
+
 Turning the repeat off on the occurrence you have not done yet keeps that task
 as a one-off. Turning it off on an occurrence you already completed or
 cancelled ends the series from there: every later occurrence that is not completed is

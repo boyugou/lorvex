@@ -117,9 +117,15 @@ public enum DayScheduleProposal {
 
   // MARK: - Orchestrator
 
-  /// The candidates are the day's tasks exactly as
-  /// ``TaskRepo/Read/getTodayPoolTasks(_:today:)`` returns them for `date`:
-  /// started tasks first, then canonical order. In that order, each task takes
+  /// The candidates are the day's tasks. When `date` is `today` they are the
+  /// Today list exactly as ``TaskRepo/Read/getTodayPoolTasks(_:today:)``
+  /// returns it, which carries unfinished work from earlier days. For any other
+  /// day they are the open tasks planned for or (with no planned date) due on
+  /// that day (``TaskRepo/Read/getTasksOnDay(_:day:)``), so a suggestion for a
+  /// later day is not filled with today's work. `today` is the product's
+  /// current day as `YYYY-MM-DD`, read in `anchorTimezone` from the clock the
+  /// caller takes `notBefore` from. Today's list comes started tasks first,
+  /// then canonical order. In that order, each task takes
   /// the start of the earliest free time long enough to hold it, so a short
   /// task can use a gap before an event that a longer task ahead of it did not
   /// fit, while a task earlier in the order always chooses first. A task takes
@@ -144,6 +150,7 @@ public enum DayScheduleProposal {
   public static func propose(
     _ db: Database,
     date: String,
+    today: String,
     anchorTimezone: String,
     accessMode: CalendarAiAccessMode,
     workingHoursStart: String? = nil,
@@ -187,8 +194,12 @@ public enum DayScheduleProposal {
 
     // A day with nothing to place still returns its events and working
     // window, so a caller sees the calendar it would plan around.
-    let tasks = try TaskRepo.Read.getTodayPoolTasks(db, today: parsedDate.asString)
-      .map(Task.init(row:))
+    let day = parsedDate.asString
+    let rows =
+      day == today
+      ? try TaskRepo.Read.getTodayPoolTasks(db, today: day)
+      : try TaskRepo.Read.getTasksOnDay(db, day: day)
+    let tasks = rows.map(Task.init(row:))
 
     let blocking =
       includeCalendarEvents

@@ -30,7 +30,8 @@ extension SwiftLorvexCoreService {
       taskStatus: row.taskStatus,
       taskDueDate: row.taskDueDate?.asString,
       taskPlannedDate: row.taskPlannedDate?.asString,
-      taskPriority: row.taskPriority.map(Int.init))
+      taskPriority: row.taskPriority.map(Int.init),
+      originalTz: row.originalTz)
   }
 
   static func pageResult(

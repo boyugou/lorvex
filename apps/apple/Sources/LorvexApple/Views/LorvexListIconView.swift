@@ -78,16 +78,21 @@ struct LorvexListIconView: View {
 
 /// A list as a menu item: its symbol beside its name, or its emoji before the
 /// name, since a menu item draws only an image as its icon.
+///
+/// The symbol asks to stay visible. macOS 27 hides the symbol of a menu item
+/// unless its label is styled `.titleAndIcon`, which is right for an action
+/// and wrong for an item that names an object: without the style a list with
+/// a symbol would lose its icon beside a list whose emoji stays.
 struct LorvexListMenuLabel: View {
   let list: LorvexList
 
   var body: some View {
     if let symbol = LorvexListIconView.symbolName(for: list.icon) {
-      Label(list.displayName, systemImage: symbol)
+      Label(list.displayName, systemImage: symbol).labelStyle(.titleAndIcon)
     } else if let emoji = list.icon, !emoji.isEmpty {
       Text(verbatim: "\(emoji) \(list.displayName)")
     } else {
-      Label(list.displayName, systemImage: "folder")
+      Label(list.displayName, systemImage: "folder").labelStyle(.titleAndIcon)
     }
   }
 }

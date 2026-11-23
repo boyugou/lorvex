@@ -166,34 +166,26 @@ extension ToolRegistry {
 
   private static let log = Logger(subsystem: "com.lorvex.apple", category: "mcp")
 
-  /// `result` with a closing text note naming the arguments the call sent that its
-  /// tool's schema does not declare. A handler ignores such an argument, so
+  /// A note naming the arguments the call sent that its tool's schema does not
+  /// declare, or nil when it sent none. A handler ignores such an argument, so
   /// without the note a caller that believes one took effect (a `list_id` passed
   /// to `update_task`, which cannot move a task) is never told. Errors carry the
   /// note too: a "required argument missing" refusal is often the same misspelled
-  /// name. The structured payload is left as it is, and the whole sentence is
-  /// fenced because it echoes caller-chosen names.
-  static func noting(undeclaredArgumentsOf params: CallTool.Parameters, in result: CallTool.Result)
-    -> CallTool.Result
-  {
+  /// name. The whole sentence is fenced because it echoes caller-chosen names.
+  static func undeclaredArgumentsNote(for params: CallTool.Parameters) -> String? {
     guard let definition = ToolDefinitionRegistry.byName[params.name],
       let arguments = params.arguments
-    else { return result }
+    else { return nil }
     let names = ToolArgumentNormalization.undeclaredArgumentNames(
       arguments, schema: definition.tool.inputSchema)
-    guard !names.isEmpty else { return result }
+    guard !names.isEmpty else { return nil }
     let shown = names.prefix(Self.maxNamedUndeclaredArguments).joined(separator: ", ")
     let more =
       names.count > Self.maxNamedUndeclaredArguments
       ? " and \(names.count - Self.maxNamedUndeclaredArguments) more" : ""
-    let note = SecurityFencing.fence(
+    return SecurityFencing.fence(
       "Ignored argument(s) that \(params.name) does not accept: \(shown)\(more). "
         + "Check the tool's input schema for the parameters it takes.")
-    return CallTool.Result(
-      content: result.content + [.text(text: note, annotations: nil, _meta: nil)],
-      structuredContent: result.structuredContent,
-      isError: result.isError,
-      _meta: result._meta)
   }
 
   private static let maxNamedUndeclaredArguments = 8

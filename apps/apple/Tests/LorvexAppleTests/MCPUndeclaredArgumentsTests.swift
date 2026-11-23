@@ -6,21 +6,16 @@ import Testing
 
 /// A handler ignores an argument its tool's schema does not declare. Without a
 /// note, a caller that believes a `list_id` moved a task through `update_task`
-/// is never told it did not. The answer ends with a fenced note that names each
-/// ignored argument, on successes and on errors alike.
+/// is never told it did not. The structured answer carries a fenced note that
+/// names each ignored argument under `warnings`, on successes and on errors
+/// alike, so a client that hands the model only the structured answer shows it.
 @Suite("MCP undeclared arguments")
 struct MCPUndeclaredArgumentsTests {
   private let noteMarker = "Ignored argument(s)"
 
-  private func texts(_ result: CallTool.Result) -> [String] {
-    result.content.compactMap {
-      if case .text(let text, _, _) = $0 { return text }
-      return nil
-    }
-  }
-
   private func note(_ result: CallTool.Result) -> String? {
-    texts(result).first { $0.contains(noteMarker) }
+    let warnings = result.structuredContent?.objectValue?["warnings"]?.arrayValue ?? []
+    return warnings.compactMap(\.stringValue).first { $0.contains(noteMarker) }
   }
 
   private func createTask(_ registry: ToolRegistry) async throws -> String {
@@ -45,8 +40,9 @@ struct MCPUndeclaredArgumentsTests {
     let text = try #require(note(result))
     #expect(text.contains("update_task") && text.contains("list_id"))
     #expect(text.hasPrefix("\u{27E6}user\u{27E7}") && text.hasSuffix("\u{27E6}/user\u{27E7}"))
-    // The structured answer is untouched: the note rides only in the text.
+    // The answer itself is still there, and the text holds the same payload.
     #expect(result.structuredContent?.objectValue?["title"] != nil)
+    #expect(mcpTextContent(result).contains(noteMarker))
   }
 
   @Test("an error names the misspelled argument that probably caused it")
@@ -146,7 +142,7 @@ struct MCPUndeclaredArgumentsTests {
     let second = try await mcpRegistryCall(registry, tool: "create_task", arguments: arguments)
 
     #expect(first.isError != true)
-    #expect(texts(first) == texts(second))
+    #expect(mcpTextBlocks(first) == mcpTextBlocks(second))
     #expect(note(second) != nil)
   }
 }

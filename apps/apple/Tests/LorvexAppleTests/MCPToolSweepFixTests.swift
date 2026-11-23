@@ -301,7 +301,7 @@ struct MCPToolSweepFixTests {
       arguments: ["task_id": .string(id), "notes": .string(oversized)])
 
     #expect(result.isError == true)
-    #expect(mcpTextContent(result).contains("ai_notes"))
+    #expect(mcpSummaryText(result).contains("ai_notes"))
   }
 
   @Test("batch_defer_tasks reason does not append to ai_notes")

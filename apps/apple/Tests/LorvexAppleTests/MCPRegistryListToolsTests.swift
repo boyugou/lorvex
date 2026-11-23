@@ -221,7 +221,7 @@ struct ListToolTests {
       registry, tool: "delete_list", arguments: ["id": .string(listID)])
     #expect(result.isError == true)
     #expect(
-      mcpTextContent(result)
+      mcpSummaryText(result)
         == SecurityFencing.fence("Cannot delete list while 1 task(s) are assigned."))
   }
 
@@ -234,7 +234,7 @@ struct ListToolTests {
     )
     #expect(result.isError == true)
     #expect(
-      mcpTextContent(result)
+      mcpSummaryText(result)
         == SecurityFencing.fence(
           "Cannot delete the inbox list: it is the canonical fallback for tasks and must always exist."))
   }
@@ -248,7 +248,7 @@ struct ListToolTests {
     )
     #expect(result.isError == true)
     #expect(
-      mcpTextContent(result)
+      mcpSummaryText(result)
         == SecurityFencing.fence(
           "Cannot archive the inbox list: it is the canonical fallback for tasks and must stay active."))
   }

@@ -57,7 +57,7 @@ extension ToolRegistry {
             message: Self.errorMessage(for: error),
             toolName: params.name)
         }
-        return Self.noting(undeclaredArgumentsOf: params, in: result)
+        return Self.delivering(result, for: params)
       }
     }
   }

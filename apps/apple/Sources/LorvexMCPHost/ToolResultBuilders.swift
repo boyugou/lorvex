@@ -4,7 +4,8 @@ extension ToolRegistry {
   /// Success envelope for a tool: a one-line human summary plus the complete
   /// structured payload. The current ``ToolDefinition`` applies its response
   /// fencing policy centrally on the way out, so the builder wraps `value`
-  /// as-is.
+  /// as-is, and ``delivering(_:for:)`` adds the payload to `content` as JSON
+  /// for a client that reads only the text.
   ///
   /// ``successResult(text:value:)`` names a mutation echo (the updated object);
   /// ``fencedReadResult(text:value:)`` names a read/query payload. The two share

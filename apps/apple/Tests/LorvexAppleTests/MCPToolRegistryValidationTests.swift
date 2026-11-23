@@ -93,7 +93,7 @@ struct WriteReadConsistencyTests {
     #expect(result.isError != true)
     let expectedText: String = SecurityFencing.fence("Created task: \(uniqueTitle)")
     let expectedTitle: String = SecurityFencing.fence(uniqueTitle)
-    #expect(mcpTextContent(result) == expectedText)
+    #expect(mcpTextBlocks(result).first == expectedText)
     #expect(
       result.structuredContent?.objectValue?["title"]?.stringValue
         == expectedTitle)

@@ -14,7 +14,7 @@ struct SystemToolTests {
     let registry = try mcpInMemoryRegistry()
     let result = try await mcpRegistryCall(registry, tool: "get_session_context")
     #expect(result.isError != true)
-    #expect(!mcpTextContent(result).isEmpty)
+    #expect(!mcpSummaryText(result).isEmpty)
     // Flat envelope matching the on-disk core adapter.
     let object = try #require(result.structuredContent?.objectValue)
     #expect(object["date"]?.stringValue != nil)

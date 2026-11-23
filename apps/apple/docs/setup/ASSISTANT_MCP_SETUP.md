@@ -152,6 +152,19 @@ Prefer canonical JSON types:
 - Dates as ISO strings: `due_date: "2026-03-15"` (also accepts `today` / `tomorrow`)
 - Boolean fields must be JSON booleans, numeric fields must be JSON numbers
 
+## Tool Result Shape
+
+Clients differ in which part of a tool result they hand to the model: some pass only `structuredContent`, some only the text in `content`. A Lorvex result that has a result object therefore carries it in both:
+
+- `structuredContent` is the result object.
+- `content` starts with a one-line summary and ends with a text block holding the same result object as JSON.
+
+The export tools also attach the exported file as a resource block for the user.
+
+An error has the same shape with `isError: true`; its object is `{code, message, tool}`.
+
+A call that sends an argument the tool's input schema does not declare still runs. The argument is ignored, and the result object gains a `warnings` array with one entry naming the ignored arguments, so the caller learns that a parameter it relied on had no effect.
+
 ## MCP & AI Integration
 
 ### Write Retry and Idempotency

@@ -39,11 +39,30 @@ func mcpRegistryCall(
   try await registry.call(CallTool.Parameters(name: name, arguments: arguments))
 }
 
-func mcpTextContent(_ result: CallTool.Result) -> String {
+/// The text blocks of `result`, in order: the handler's summary first, the
+/// structured payload as JSON last.
+func mcpTextBlocks(_ result: CallTool.Result) -> [String] {
   result.content.compactMap {
     if case .text(let text, _, _) = $0 { return text }
     return nil
-  }.joined()
+  }
+}
+
+/// The handler's summary line: the first text block, or an empty string when
+/// the result has no text.
+func mcpSummaryText(_ result: CallTool.Result) -> String {
+  mcpTextBlocks(result).first ?? ""
+}
+
+func mcpTextContent(_ result: CallTool.Result) -> String {
+  mcpTextBlocks(result).joined()
+}
+
+/// The structured payload a client reading only the text would get: the last
+/// text block, decoded.
+func mcpPayloadInText(_ result: CallTool.Result) throws -> Value {
+  let json = try #require(mcpTextBlocks(result).last)
+  return try JSONDecoder().decode(Value.self, from: Data(json.utf8))
 }
 
 /// The `mcp_tool` of every `ai_changelog` row recorded for `entityID`, newest first.

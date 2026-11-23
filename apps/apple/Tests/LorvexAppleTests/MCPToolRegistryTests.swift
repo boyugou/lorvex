@@ -82,9 +82,8 @@ struct ToolListingTests {
     let tools = ToolRegistry.listTools()
     for tool in tools {
       let result = try await mcpRegistryCall(registry, tool: tool.name)
-      let text = mcpTextContent(result)
       #expect(
-        !(text.hasPrefix("Unknown tool:")),
+        result.structuredContent?.objectValue?["code"]?.stringValue != "unknown_tool",
         "Listed tool '\(tool.name)' is not dispatched"
       )
     }
@@ -262,7 +261,7 @@ struct TaskToolTests {
     let registry = try mcpInMemoryRegistry()
     let result = try await mcpRegistryCall(registry, tool: "set_task_someday", arguments: [:])
     #expect(result.isError == true)
-    #expect(mcpTextContent(result).contains("id"))
+    #expect(mcpSummaryText(result).contains("id"))
   }
 }
 

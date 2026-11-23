@@ -454,6 +454,27 @@ def require(condition: bool, message: str) -> None:
         raise McpSmokeFailure(message)
 
 
+def require_text_carries_payload(result: dict[str, Any], label: str) -> None:
+    """Require the result's last text block to be its structured payload as JSON.
+
+    A client that forwards only text blocks to its model reads the data there.
+    """
+    texts = [
+        block.get("text", "")
+        for block in result.get("content", [])
+        if block.get("type") == "text"
+    ]
+    require(bool(texts), f"{label} returned no text block")
+    try:
+        carried = json.loads(texts[-1])
+    except json.JSONDecodeError as error:
+        raise McpSmokeFailure(f"{label}: the last text block is not JSON: {error}") from error
+    require(
+        carried == result.get("structuredContent"),
+        f"{label}: the last text block differs from structuredContent",
+    )
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -618,6 +639,7 @@ def run_smoke(
         )
         created = read_response(process, 3)
         created_content = created["result"]["structuredContent"]
+        require_text_carries_payload(created["result"], "create_task")
         require(
             created_content["title"] == fenced_created_title,
             f"create_task returned wrong title: {created_content.get('title')!r}",
@@ -686,6 +708,7 @@ def run_smoke(
             "get_task with no id did not set isError on the result",
         )
         error_envelope = error_result["structuredContent"]
+        require_text_carries_payload(error_result, "get_task invalid-arg")
         missing_error_keys = sorted({"code", "message", "tool"} - error_envelope.keys())
         require(
             not missing_error_keys,

@@ -622,9 +622,13 @@ struct MCPSecurityFencingTests {
       ])
 
     #expect(result.isError == true)
-    try expectFencedUserString(mcpTextContent(result))
+    // The summary block is fenced as a whole; the JSON block after it carries
+    // the structured payload, whose message is fenced as its own value.
+    let blocks = mcpTextBlocks(result)
+    try expectFencedUserString(blocks.first)
     let message = result.structuredContent?.objectValue?["message"]?.stringValue
     try expectFencedUserString(message)
+    #expect(try mcpPayloadInText(result) == result.structuredContent)
   }
 
   @Test("IdempotencyCache rejects checksum mismatch")

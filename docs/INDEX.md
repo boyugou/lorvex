@@ -9,6 +9,7 @@ app.
 - [`../CLAUDE.md`](../CLAUDE.md) — operating manual for agents.
 - [`../ROADMAP.md`](../ROADMAP.md) — open work, grouped by what moves it forward.
 - [`development/NEW_MACHINE.md`](development/NEW_MACHINE.md) — setting up a development machine, the local files a clone lacks, privacy rules, and releasing.
+- [Build 175 release record](releases/1.0.0-175.md) — Today follows one rule for a task's day; a repeat starts on the planned day; reminder times on the user's clock.
 - [Build 174 release record](releases/1.0.0-174.md) — ending a repeating task's series reaches every device; share the diagnostics list.
 - [Build 173 release record](releases/1.0.0-173.md) — Siri reminder actions for tasks and lists; every action declares its lock-screen policy.
 - [Build 172 release record](releases/1.0.0-172.md) — the day on a time grid beside Mac Today's task list.

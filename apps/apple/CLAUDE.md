@@ -304,7 +304,7 @@ implementation or fetching another file.
 ### Before Starting Work
 
 1. Read recent git log: `git log --oneline -20`
-2. Check the root `ROADMAP.md` for lane status and open items
+2. Check the root `ROADMAP.md` for open work
 3. Do not run the test suite to establish a baseline; every commit on `main`
    was verified before it landed.
 4. On a Mac you have not built on before, run `script/doctor.sh` (add

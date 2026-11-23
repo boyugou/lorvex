@@ -47,11 +47,19 @@ enum MobileEditorSheetDetents {
   }
 }
 
-/// Detents, drag indicator and margins shared by every editor sheet. A sheet
-/// inherits the readable-width content margin of the screen that presents it,
-/// which is sized from that screen's width rather than the sheet's, so the
-/// sheet's lists and forms go back to the system margins
+/// Detents, drag indicator, margins and background shared by every editor
+/// sheet. A sheet inherits the readable-width content margin of the screen
+/// that presents it, which is sized from that screen's width rather than the
+/// sheet's, so the sheet's lists and forms go back to the system margins
 /// (``mobileSystemContentMargins``).
+///
+/// A sheet with the compact presentation takes a thick material as its
+/// background. The system's default below full height is clear glass, and a
+/// form or list draws no background of its own on it, so the presenting
+/// screen's rows would show through behind the sheet's fields and placeholder
+/// text. The sheet keeps the material at accessibility text sizes, where it
+/// opens at large only, so its background does not change with the text
+/// size. A sheet with the full presentation keeps the system background.
 private struct MobileEditorSheetPresentation: ViewModifier {
   let opensFullHeight: Bool
   let cardHeight: CGFloat?
@@ -59,7 +67,7 @@ private struct MobileEditorSheetPresentation: ViewModifier {
   @ScaledMetric(relativeTo: .body) private var textScale: CGFloat = 1
 
   func body(content: Content) -> some View {
-    content
+    let sheet = content
       .mobileSystemContentMargins()
       .presentationDetents(
         MobileEditorSheetDetents.detents(
@@ -67,5 +75,10 @@ private struct MobileEditorSheetPresentation: ViewModifier {
           cardHeight: cardHeight, textScale: textScale)
       )
       .presentationDragIndicator(.visible)
+    if opensFullHeight {
+      sheet
+    } else {
+      sheet.presentationBackground(.thickMaterial)
+    }
   }
 }

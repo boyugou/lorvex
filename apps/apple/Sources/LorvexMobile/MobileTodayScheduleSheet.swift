@@ -198,10 +198,6 @@ struct MobileTodayScheduleSheet: View {
       }
     }
     .mobileCompactEditorSheetPresentation()
-    // The list draws no background of its own (it is also the iPad's
-    // transparent schedule pane), so at the medium detent the default glass
-    // let Today's rows show through behind the schedule's text.
-    .presentationBackground(.thickMaterial)
     .onDisappear { store.dismissSuggestedDayTimes() }
   }
 }

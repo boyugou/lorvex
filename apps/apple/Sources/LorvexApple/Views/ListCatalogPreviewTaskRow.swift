@@ -2,8 +2,9 @@ import LorvexCore
 import SwiftUI
 
 /// One open task previewed on a Lists catalog card: a small ring, the title on
-/// one line, and the work day or deadline when present, in red once a deadline has
-/// passed. Clicking it opens the task; the pointer draws a faint fill.
+/// one line, and under it the work day and the deadline when present, the
+/// deadline in red once it has passed. Clicking it opens the task; the pointer
+/// draws a faint fill.
 struct ListCatalogPreviewTaskRow: View {
   let task: LorvexTask
   let open: () -> Void
@@ -26,15 +27,16 @@ struct ListCatalogPreviewTaskRow: View {
             .lineLimit(1)
           if let plan = LorvexTaskRowPlan(task, timeZone: productTimeZone) {
             LorvexTaskRowPlanLine(plan)
+          } else if let due = dueLabel {
+            // A task with a deadline and no work day: the deadline takes the
+            // plan line's place, so every date on the card reads in one column.
+            Text(LorvexTaskRowPlan.dueLabel(due.text))
+              .font(LorvexDesign.Typography.secondaryText)
+              .foregroundStyle(due.tint)
+              .lineLimit(1)
           }
         }
-        Spacer(minLength: LorvexDesign.Spacing.s)
-        if task.plannedDate == nil, let due = dueLabel {
-          Text(LorvexTaskRowPlan.dueLabel(due.text))
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(due.tint)
-            .lineLimit(1)
-        }
+        Spacer(minLength: 0)
       }
       .padding(.vertical, 3)
       .padding(.horizontal, LorvexDesign.Spacing.s)

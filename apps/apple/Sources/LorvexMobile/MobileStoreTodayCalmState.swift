@@ -35,7 +35,7 @@ extension MobileStore {
       events: todayScheduleEvents,
       tasks: tasks,
       times: tasks.times(on: logicalTodayString),
-      nowMinutes: todayMinutes(at: tick), now: tick)
+      nowMinutes: todayMinutes(at: tick), now: todayInstant(at: tick))
   }
 
   /// Minutes since midnight in the product day's own timezone, or `nil` when the
@@ -47,6 +47,14 @@ extension MobileStore {
 
   func todayMinutes(at tick: Date) -> Int? {
     LorvexProductDayClock.nowMinutes(on: logicalTodayString, in: logicalTimeZone, at: tick)
+  }
+
+  /// The instant Today compares events with: `tick`, or `tick`'s day at the
+  /// pinned minute when a preview run pins the clock
+  /// (``LorvexPreviewClock``), so it names the same moment as
+  /// ``todayMinutes(at:)`` and the now row sits where the pinned time falls.
+  func todayInstant(at tick: Date) -> Date {
+    LorvexPreviewClock.now(in: LorvexDateFormatters.gregorianCalendar(timeZone: logicalTimeZone), tick: tick)
   }
 
   /// The working window in minutes since midnight, or nil until the
@@ -73,14 +81,14 @@ extension MobileStore {
       doneToday: doneTodayCount,
       nowMinutes: todayMinutes(at: tick),
       logicalDay: logicalTodayString,
-      workingHours: workdayWindow, now: tick)
+      workingHours: workdayWindow, now: todayInstant(at: tick))
   }
 
   func todayWorkCue(for page: LorvexCalmToday, at tick: Date) -> TodayWorkCue? {
     guard let agenda = todayAgenda, !agenda.truncated else { return nil }
     return TodayWorkCue.resolve(lead: page.lead, blocked: snapshot.blockedTaskIDs,
       events: agenda.eventsOccurring(on: logicalTodayString), day: logicalTodayString,
-      nowMinutes: todayMinutes(at: tick), now: tick)
+      nowMinutes: todayMinutes(at: tick), now: todayInstant(at: tick))
   }
 
   func openTodayWork(_ cue: TodayWorkCue) async {

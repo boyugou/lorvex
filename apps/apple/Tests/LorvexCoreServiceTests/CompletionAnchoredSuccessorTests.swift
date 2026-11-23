@@ -79,8 +79,9 @@ final class RepeatRescheduleTests: XCTestCase {
   private func nextDue(rule: TaskRecurrenceRule, from: String, to: String) async throws -> String {
     let service = try SwiftLorvexCoreService.inMemory()
     let task = try await service.createTask(title: "Pinned", notes: "")
+    // A due date is the UTC midnight of its day, never the device's midnight.
     func date(_ key: String) throws -> Date {
-      try XCTUnwrap(LorvexDateFormatters.ymd.date(from: key))
+      try XCTUnwrap(LorvexDateFormatters.ymdUTC.date(from: key))
     }
     func setDue(_ key: String) async throws {
       _ = try await service.updateTask(

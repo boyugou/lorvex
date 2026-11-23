@@ -108,15 +108,13 @@ func getHiddenScheduledTasksExcludesOverdueTasksOverdueWins() async throws {
   let core = try await makeSeededInMemoryCore()
   // available_from is in the future, but the deadline has already passed —
   // overdue-wins keeps the task in the day surfaces, never in the hidden lane.
-  let overdueYesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
-  let futureAvailable = Calendar.current.date(byAdding: .day, value: 10, to: Date()) ?? Date()
   let task = try await core.createTask(title: "Overdue but hidden", notes: "")
   _ = try await core.updateTask(
     id: task.id, title: task.title, notes: task.notes, priority: task.priority,
     estimatedMinutes: nil,
-    dueDate: PlannedDayBridge.storageDate(forLocalInstant: overdueYesterday),
+    dueDate: PlannedDayBridge.storageDate(forLogicalDay: seedToday(addingDays: -1)),
     plannedDate: nil,
-    availableFrom: PlannedDayBridge.storageDate(forLocalInstant: futureAvailable),
+    availableFrom: PlannedDayBridge.storageDate(forLogicalDay: seedToday(addingDays: 10)),
     tags: [], dependsOn: [])
 
   let page = try await core.getHiddenScheduledTasks(limit: 100, offset: 0)

@@ -198,8 +198,9 @@ final class UndoAIChangeTests: XCTestCase {
   /// edited since keeps the day with it, and a day cleared since leaves the whole slot alone
   /// (restoring only the time would be refused for want of a day).
   func testThePlannedDayAndItsTimesGoBackOrStayTogether() async throws {
+    // A planned day is the UTC midnight of its day, never a device-local time.
     let day = { (number: Int) in
-      Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: number, hour: 12))!
+      LorvexDateFormatters.ymdUTC.date(from: String(format: "2026-11-%02d", number))!
     }
     let service = try SwiftLorvexCoreService.inMemory()
     let task = try await service.createTask(title: "Plan trip", notes: "")
@@ -227,8 +228,9 @@ final class UndoAIChangeTests: XCTestCase {
   }
 
   func testAnUntouchedPlannedSlotGoesBackWhole() async throws {
+    // A planned day is the UTC midnight of its day, never a device-local time.
     let day = { (number: Int) in
-      Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: number, hour: 12))!
+      LorvexDateFormatters.ymdUTC.date(from: String(format: "2026-11-%02d", number))!
     }
     let service = try SwiftLorvexCoreService.inMemory()
     let task = try await service.createTask(title: "Plan trip", notes: "")

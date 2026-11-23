@@ -289,23 +289,15 @@ func appStoreCreatesPreviewCalendarEvent() async throws {
   let store = AppStore(
     core: try await makeSeededInMemoryCore(),
     eventKitCoordinator: makeCoordinator(access: access))
-  var components = DateComponents()
-  components.calendar = Calendar(identifier: .gregorian)
-  components.timeZone = .current
-  components.year = 2026
-  components.month = 5
-  components.day = 22
-  components.hour = 10
-  components.minute = 0
-  let startDate = try #require(components.date)
-  components.hour = 10
-  components.minute = 30
-  let endDate = try #require(components.date)
-
   await store.refresh()
-  try await store.refreshCalendarTimeline(anchorDate: startDate, dayCount: 1)
+  try await store.refreshCalendarTimeline(
+    anchorDate: try gridDate(on: "2026-05-22", hour: 10), dayCount: 1)
   store.draftCalendarTitle = "Native planning block"
-  store.draftCalendarTiming = CalendarEventTiming(start: startDate, end: endDate, allDay: false)
+  // The form's controls hand back instants read in the draft's zone.
+  store.draftCalendarTiming = CalendarEventTiming(
+    start: try seedInstant(on: "2026-05-22", hour: 10),
+    end: try seedInstant(on: "2026-05-22", hour: 10, minute: 30),
+    allDay: false, calendar: store.draftCalendarTiming.calendar)
   store.draftCalendarLocation = "Studio"
   store.draftCalendarNotes = "Created from the Apple app."
   await store.createDraftCalendarEvent()
@@ -489,8 +481,7 @@ func appStoreCalendarScheduledTasksUseFullTaskCorpus() async throws {
   let store = AppStore(core: core, eventKitCoordinator: makeCoordinator())
 
   await store.refresh()
-  let scheduledDate = try #require(
-    Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 6, day: 19)))
+  let scheduledDate = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-06-19"))
   let task = try await core.importRemoteTask(
     id: UUID().uuidString.lowercased(),
     title: "Prepare flight day plan",
@@ -506,7 +497,7 @@ func appStoreCalendarScheduledTasksUseFullTaskCorpus() async throws {
 
   #expect(store.today.tasks.contains { $0.id == task.id } == false)
 
-  try await store.refreshCalendarTimeline(anchorDate: scheduledDate)
+  try await store.refreshCalendarTimeline(anchorDate: try gridDate(on: "2026-06-19", hour: 0))
 
   #expect(store.calendarScheduledTasks?.contains { $0.id == task.id } == true)
   #expect(store.scheduledTasks.contains { $0.id == task.id })

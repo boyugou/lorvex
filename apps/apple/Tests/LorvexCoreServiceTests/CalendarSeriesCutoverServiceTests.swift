@@ -28,7 +28,10 @@ final class CalendarSeriesCutoverServiceTests: XCTestCase {
   private func makeDailySeries(
     _ service: SwiftLorvexCoreService
   ) async throws -> CalendarTimelineEvent {
-    try await service.createCalendarEvent(
+    // The store shows the series in the zone it repeats in, so each occurrence
+    // falls on its own day whatever zone the machine running the test is in.
+    _ = try await service.setPreference(key: "timezone", value: "America/Los_Angeles")
+    return try await service.createCalendarEvent(
       title: "Daily series", startDate: "2026-06-01", endDate: nil,
       startTime: "09:00", endTime: "09:30", allDay: false,
       location: nil, notes: nil,

@@ -9,7 +9,10 @@ private func task(due: Date?, status: LorvexTask.Status = .open) -> LorvexTask {
   )
 }
 
-private let cal = Calendar(identifier: .gregorian)
+/// These tests name a due day by an instant near `now`. A due date is read as
+/// the UTC day of its instant, so "today" is read in UTC as well: in the
+/// device's zone the same instants fall on other days east of UTC.
+private let zone = TimeZone.gmt
 
 /// A due date earlier today is still "not overdue" — overdue is day-granular,
 /// so a task due at 9am is not past due at 5pm the same day.
@@ -20,10 +23,10 @@ func dueIsOverdueIsDayGranular() {
   let yesterday = now.addingTimeInterval(-26 * 3600)
   let tomorrow = now.addingTimeInterval(26 * 3600)
 
-  #expect(task(due: earlierToday).isOverdue(now: now, timeZone: cal.timeZone) == false)
-  #expect(task(due: yesterday).isOverdue(now: now, timeZone: cal.timeZone) == true)
-  #expect(task(due: tomorrow).isOverdue(now: now, timeZone: cal.timeZone) == false)
-  #expect(task(due: nil).isOverdue(now: now, timeZone: cal.timeZone) == false)
+  #expect(task(due: earlierToday).isOverdue(now: now, timeZone: zone) == false)
+  #expect(task(due: yesterday).isOverdue(now: now, timeZone: zone) == true)
+  #expect(task(due: tomorrow).isOverdue(now: now, timeZone: zone) == false)
+  #expect(task(due: nil).isOverdue(now: now, timeZone: zone) == false)
 }
 
 /// Only unresolved work is overdue: a finished or cancelled task keeps its past
@@ -34,18 +37,18 @@ func resolvedTasksAreNeverOverdue() {
   let now = Date(timeIntervalSince1970: 1_780_000_000)
   let yesterday = now.addingTimeInterval(-26 * 3600)
 
-  #expect(task(due: yesterday, status: .completed).isOverdue(now: now, timeZone: cal.timeZone) == false)
-  #expect(task(due: yesterday, status: .cancelled).isOverdue(now: now, timeZone: cal.timeZone) == false)
-  #expect(task(due: yesterday, status: .inProgress).isOverdue(now: now, timeZone: cal.timeZone) == true)
-  #expect(task(due: yesterday, status: .someday).isOverdue(now: now, timeZone: cal.timeZone) == true)
+  #expect(task(due: yesterday, status: .completed).isOverdue(now: now, timeZone: zone) == false)
+  #expect(task(due: yesterday, status: .cancelled).isOverdue(now: now, timeZone: zone) == false)
+  #expect(task(due: yesterday, status: .inProgress).isOverdue(now: now, timeZone: zone) == true)
+  #expect(task(due: yesterday, status: .someday).isOverdue(now: now, timeZone: zone) == true)
 }
 
 /// The relative label is present exactly when the task has a due date.
 @Test
 func dueRelativeLabelPresenceFollowsDueDate() {
   let now = Date(timeIntervalSince1970: 1_780_000_000)
-  #expect(task(due: nil).cachedDueRelativeLabel(now: now, timeZone: cal.timeZone) == nil)
-  #expect(task(due: now).cachedDueRelativeLabel(now: now, timeZone: cal.timeZone) != nil)
+  #expect(task(due: nil).cachedDueRelativeLabel(now: now, timeZone: zone) == nil)
+  #expect(task(due: now).cachedDueRelativeLabel(now: now, timeZone: zone) != nil)
 }
 
 /// Due today reads "today", never "now", and the neighbours read by the day:
@@ -57,11 +60,11 @@ func dueRelativeLabelCountsWholeDays() {
   formatter.dateTimeStyle = .named
   formatter.unitsStyle = .abbreviated
   func day(_ offset: Int) -> String { formatter.localizedString(from: DateComponents(day: offset)) }
-  #expect(task(due: now).cachedDueRelativeLabel(now: now, timeZone: cal.timeZone) == day(0))
-  #expect(task(due: now.addingTimeInterval(-3 * 3600)).cachedDueRelativeLabel(now: now, timeZone: cal.timeZone) == day(0))
-  #expect(task(due: now.addingTimeInterval(26 * 3600)).cachedDueRelativeLabel(now: now, timeZone: cal.timeZone) == day(1))
-  #expect(task(due: now.addingTimeInterval(-26 * 3600)).cachedDueRelativeLabel(now: now, timeZone: cal.timeZone) == day(-1))
-  #expect(task(due: now).cachedDueRelativeLabel(now: now, timeZone: cal.timeZone) != formatter.localizedString(for: now, relativeTo: now))
+  #expect(task(due: now).cachedDueRelativeLabel(now: now, timeZone: zone) == day(0))
+  #expect(task(due: now.addingTimeInterval(-3 * 3600)).cachedDueRelativeLabel(now: now, timeZone: zone) == day(0))
+  #expect(task(due: now.addingTimeInterval(26 * 3600)).cachedDueRelativeLabel(now: now, timeZone: zone) == day(1))
+  #expect(task(due: now.addingTimeInterval(-26 * 3600)).cachedDueRelativeLabel(now: now, timeZone: zone) == day(-1))
+  #expect(task(due: now).cachedDueRelativeLabel(now: now, timeZone: zone) != formatter.localizedString(for: now, relativeTo: now))
 }
 
 /// Production planned dates materialize the stored day string at UTC midnight

@@ -438,11 +438,20 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   control hands back with `seedInstant(on:hour:minute:)` or the draft's own
   calendar, and what a grid drop hands back with `gridDate(on:hour:minute:)`.
   An empty store (`SwiftLorvexCoreService.inMemory()`) counts days in the
-  device's zone, so the device's today is right there. Check a new test under
-  other zones: `TZ=Pacific/Kiritimati script/verify_swift.sh --filter <Suite>`
-  puts the device a day ahead of the seed for most of the day, and
-  `TZ=Pacific/Pago_Pago` a day behind in the first hours after midnight in
-  Los Angeles.
+  device's zone, so the device's today is right there; an event given an
+  explicit zone still shows on that store's own days, so set the store's
+  `timezone` preference when a test counts occurrences by day.
+- **A task's day field takes the UTC midnight of its day.** `dueDate`,
+  `plannedDate`, and `availableFrom` are `Date` values that name a calendar
+  day: build them with `LorvexDateFormatters.ymdUTC` or
+  `PlannedDayBridge.storageDate(forLogicalDay:)`. A midnight or noon built in
+  the device's calendar names the day before on every machine east of UTC,
+  and reads correctly on one west of it, where this repository is developed.
+- **Check date code under other zones.** `TZ=<zone> script/verify_swift.sh`
+  runs the suite as a machine in that zone. `Asia/Shanghai` covers east of
+  UTC, `Pacific/Kiritimati` puts the device a day ahead of the seeded store
+  for most of the day, and `Pacific/Honolulu` a day behind in the first two
+  hours after midnight in Los Angeles.
 - A time-zone picker closes only after the saved zone reaches the Today
   snapshot. The Mac's ordinary `refresh()` returns early when coalesced;
   `setLogicalTimeZone` uses `refreshAndWaitForLatest()` so the picker cannot

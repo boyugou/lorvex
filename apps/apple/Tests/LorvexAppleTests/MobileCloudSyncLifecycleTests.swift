@@ -321,9 +321,10 @@ func mobileCycleCoalescesOverlappingTriggersAndRetainsProgress() async throws {
 /// while the gate holds it), which the time limit turns into a failure. The
 /// limit is well above the length of a full suite run, because the suite's
 /// main-actor tests queue for one actor and each test's clock includes its
-/// wait: this test reads about a minute in a run that finishes in 75 seconds.
+/// wait: this test reads about as long as the run itself, which is under two
+/// minutes on a developer Mac and about ten on a three-core hosted runner.
 @MainActor
-@Test(.timeLimit(.minutes(5)))
+@Test(.timeLimit(.minutes(30)))
 func mobileTaskActionDoesNotWaitForItsSyncPass() async throws {
   let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let (store, sync) = makeLiveStore(core: core)

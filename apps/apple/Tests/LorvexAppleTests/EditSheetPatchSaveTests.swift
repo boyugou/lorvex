@@ -144,7 +144,7 @@ func editSheetMacEventSaveKeepsAnotherWritersTimesAndNotes() async throws {
   let core = try await makeSeededInMemoryCore()
   // The store's calendar window spans around today, so the event starts today.
   let seeded = try await core.createCalendarEvent(
-    title: "Window review", startDate: LorvexDateFormatters.ymd.string(from: Date()),
+    title: "Window review", startDate: seedToday(),
     endDate: nil, startTime: "15:00", endTime: "15:45", allDay: false,
     location: "Conference Room B", notes: "Original agenda")
   let access = FakeEventKitAccess()

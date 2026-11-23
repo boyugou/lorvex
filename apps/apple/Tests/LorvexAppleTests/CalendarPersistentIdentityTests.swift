@@ -56,7 +56,7 @@ func stableCalendarRepresentativesCollapseOccurrencesAndPreferNaturalSlot() {
 @Test
 func calendarEventEntityRoutesWholeSeriesMutationsThroughStableID() async throws {
   let core = try await makeSeededInMemoryCore()
-  let today = LorvexDateFormatters.ymd.string(from: Date())
+  let today = seedToday()
   let series = try await core.createCalendarEvent(
     title: "Shortcut recurring identity",
     startDate: today,

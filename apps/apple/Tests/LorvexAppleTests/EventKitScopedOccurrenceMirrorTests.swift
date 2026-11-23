@@ -328,7 +328,8 @@ func appStoreFollowingEditUsesOneAtomicFutureSeriesReplacement() async throws {
 
   let calls = await access.recordedFutureSeriesReplacements()
   let call = try #require(calls.first)
-  let expectedOccurrenceDate = try scopedMirrorDate(2026, 7, 2, 10)
+  // The series has no zone of its own, so its clock reads in the store's zone.
+  let expectedOccurrenceDate = try seedInstant(on: "2026-07-02", hour: 10)
   #expect(calls.count == 1)
   #expect(call.originalLorvexEventID == master.eventID)
   #expect(call.occurrenceDate == expectedOccurrenceDate)
@@ -376,7 +377,7 @@ func appStoreNestedFollowingEditTargetsTheAddressedSegmentMirror() async throws 
 
   let calls = await access.recordedFutureSeriesReplacements()
   let call = try #require(calls.first)
-  let expectedOccurrenceDate = try scopedMirrorDate(2026, 8, 4, 10)
+  let expectedOccurrenceDate = try seedInstant(on: "2026-08-04", hour: 10)
   #expect(calls.count == 1)
   #expect(call.originalLorvexEventID == firstTail.eventID)
   #expect(call.replacementLorvexEventID != firstTail.eventID)
@@ -476,7 +477,7 @@ func appStoreFollowingDeleteUsesOneNativeFutureSeriesRemoval() async throws {
   await store.deleteScopedCalendarEvent(occurrence, scope: .thisAndFollowing)
 
   let removals = await access.recordedFutureSeriesRemovals()
-  let expectedOccurrenceDate = try scopedMirrorDate(2026, 7, 3, 10)
+  let expectedOccurrenceDate = try seedInstant(on: "2026-07-03", hour: 10)
   #expect(removals.count == 1)
   #expect(removals.first?.lorvexID == master.eventID)
   #expect(removals.first?.occurrenceDate == expectedOccurrenceDate)
@@ -512,7 +513,7 @@ func appStoreNestedFollowingDeleteTargetsTheAddressedSegmentMirror() async throw
   await store.deleteScopedCalendarEvent(nestedOccurrence, scope: .thisAndFollowing)
 
   let removals = await access.recordedFutureSeriesRemovals()
-  let expectedOccurrenceDate = try scopedMirrorDate(2026, 9, 4, 10)
+  let expectedOccurrenceDate = try seedInstant(on: "2026-09-04", hour: 10)
   #expect(removals.count == 1)
   #expect(removals.first?.lorvexID == firstTail.eventID)
   #expect(removals.first?.occurrenceDate == expectedOccurrenceDate)

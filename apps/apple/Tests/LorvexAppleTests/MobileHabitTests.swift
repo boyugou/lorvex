@@ -149,9 +149,9 @@ func mobileStoreLoadsHabitDetailForDisplayedHeatmapWindow() async throws {
 func mobileStoreRefreshesLoadedHabitDetailAfterCompletion() async throws {
   let core = try await makeSeededInMemoryCore()
   let habit = try await core.createHabit(name: "Plan", cue: nil, targetCount: 1)
-  // The habit-stats "today" is the store's real clock day, so the store must
-  // write the completion on the same day the stats read uses.
-  let todayYMD = LorvexDateFormatters.ymd.string(from: Date())
+  // The habit-stats "today" is the real clock's day in the store's zone, so the
+  // store must write the completion on the same day the stats read uses.
+  let todayYMD = seedToday()
   let store = MobileStore(core: core, todayString: { todayYMD })
 
   await store.refresh()

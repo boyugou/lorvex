@@ -41,17 +41,15 @@ func mobileStoreCreatesCalendarEventThroughCore() async throws {
 @MainActor
 @Test
 func mobileStoreCreatesAnOvernightCalendarEvent() async throws {
-  let calendar = CalendarEventTiming.deviceCalendar
-  let now = try #require(calendar.date(
-    from: DateComponents(year: 2026, month: 5, day: 23, hour: 21, minute: 10)))
+  // The store's clock and the form's controls both read in the store's zone.
+  let now = try seedInstant(on: "2026-05-23", hour: 21, minute: 10)
   let core = try await makeSeededInMemoryCore()
   let store = MobileStore(core: core, todayString: { "2026-05-23" }, now: { now })
   await store.refresh()
 
   store.beginCreateCalendarDraft()
   store.calendarDraft.title = "Night flight"
-  store.calendarDraft.timing.setEndTime(try #require(calendar.date(
-    from: DateComponents(year: 2026, month: 5, day: 23, hour: 1, minute: 0))))
+  store.calendarDraft.timing.setEndTime(try seedInstant(on: "2026-05-23", hour: 1))
   #expect(store.calendarDraft.canSubmit)
 
   let created = await store.createDraftCalendarEvent()
@@ -79,8 +77,7 @@ func mobileStoreShortensAMultiDayEventToOneDay() async throws {
     startTime: nil, endTime: nil, allDay: true, location: nil, notes: nil)
   await store.refresh()
   store.prepareCalendarDraft(for: event)
-  store.calendarDraft.timing.setEndDay(
-    try #require(LorvexDateFormatters.ymd.date(from: "2026-06-01")))
+  store.calendarDraft.timing.setEndDay(try seedInstant(on: "2026-06-01"))
 
   let updated = await store.updateCalendarEvent(event)
 

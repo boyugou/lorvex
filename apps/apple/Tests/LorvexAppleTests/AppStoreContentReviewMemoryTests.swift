@@ -50,7 +50,7 @@ func appStoreLoadsAndSavesPreviewDailyReview() async throws {
 @Test
 func appStoreDailyReviewScalarEditPreservesLoadedLinks() async throws {
   let core = try await makeSeededInMemoryCore()
-  let today = AppStore.todayDateString()
+  let today = seedToday()
   _ = try await core.upsertDailyReview(
     date: today,
     summary: "Linked review",
@@ -152,11 +152,11 @@ func appStoreSelectReviewDayLoadsDayEvidence() async throws {
 
   // Today's evidence is loaded on refresh.
   #expect(store.dayReviewEvidence != nil)
-  #expect(store.selectedReviewDate == AppStore.todayDateString())
+  #expect(store.selectedReviewDate == seedToday())
   #expect(store.selectedReviewDayIsEditable)
 
   // Selecting today's date keeps the editor editable and reloads evidence.
-  let today = AppStore.todayDateString()
+  let today = seedToday()
   await store.selectReviewDay(today)
   #expect(store.selectedReviewDate == today)
   #expect(store.selectedReviewDayIsEditable)
@@ -171,7 +171,7 @@ func appStoreSelectingOldDayIsReadOnly() async throws {
 
   // A day well outside the 7-day write window is read-only: the editing anchor
   // stays nil while the selected date points at the old day.
-  let old = LorvexDateFormatters.ymdUTCAddingDays(AppStore.todayDateString(), days: -30)!
+  let old = LorvexDateFormatters.ymdUTCAddingDays(seedToday(), days: -30)!
   await store.selectReviewDay(old)
 
   #expect(store.selectedReviewDate == old)
@@ -191,7 +191,7 @@ func appStoreLoadWeekReviewDigestWindowsToTheWeek() async throws {
   await store.loadWeekReviewDigest(weekOf: nil)
   #expect(
     store.weekReviewDigest.allSatisfy {
-      $0.date >= LorvexDateFormatters.ymdUTCAddingDays(AppStore.todayDateString(), days: -6)!
+      $0.date >= LorvexDateFormatters.ymdUTCAddingDays(seedToday(), days: -6)!
     })
 
   // Anchoring the week on the seeded review's date includes it in the digest.

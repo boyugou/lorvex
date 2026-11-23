@@ -192,8 +192,7 @@ func mobileStoreCalendarCreateSetsAndClearsMutatingFlag() async throws {
   await store.refresh()
 
   store.calendarDraft.title = "Audit Flag Test"
-  store.calendarDraft.timing.setStartDay(
-    try #require(LorvexDateFormatters.ymd.date(from: "2026-06-01")))
+  store.calendarDraft.timing.setStartDay(try seedInstant(on: "2026-06-01"))
   let created = await store.createDraftCalendarEvent()
 
   #expect(created)
@@ -249,8 +248,7 @@ func mobileStoreCalendarDateEditShiftsStoredEndDate() async throws {
   #expect(event.endDate == "2026-06-03")
   await store.refresh()
   store.prepareCalendarDraft(for: event)
-  store.calendarDraft.timing.setStartDay(
-    try #require(LorvexDateFormatters.ymd.date(from: "2026-06-05")))
+  store.calendarDraft.timing.setStartDay(try seedInstant(on: "2026-06-05"))
 
   let updated = await store.updateCalendarEvent(event)
   #expect(store.errorMessage == nil)

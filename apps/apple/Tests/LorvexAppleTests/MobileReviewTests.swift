@@ -5,7 +5,9 @@ import Testing
 
 /// The store's injected clock must agree with the live write window the
 /// daily-review guard validates against, so the tests pin "today" to the
-/// real today rather than a fixed demo date.
+/// real today rather than a fixed demo date. This is today in the device's
+/// zone, the zone an empty store counts days in; a test over the seeded
+/// store reads ``seedToday(addingDays:)`` instead.
 private let mobileReviewToday: String = {
   let formatter = DateFormatter()
   formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -54,7 +56,7 @@ func mobileDailyReviewDraftDefaultsRatingsToUnset() {
 @MainActor
 @Test
 func mobileStoreDailyReviewDraftStartsInLoadingStateUntilLoaded() async throws {
-  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { mobileReviewToday })
+  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { seedToday() })
 
   #expect(store.isLoadingDailyReviewDraft)
 
@@ -68,9 +70,9 @@ func mobileStoreDailyReviewDraftStartsInLoadingStateUntilLoaded() async throws {
 @Test
 func mobileStoreRefreshLoadsReviewEvidenceAndWeekDigest() async throws {
   let core = try await makeSeededInMemoryCore()
-  let yesterday = mobileReviewYmdAddingDays(mobileReviewToday, -1)
+  let yesterday = mobileReviewYmdAddingDays(seedToday(), -1)
   _ = try await core.importDailyReview(
-    date: mobileReviewToday,
+    date: seedToday(),
     summary: "Today had enough signal",
     mood: 4,
     energyLevel: 3,
@@ -87,13 +89,13 @@ func mobileStoreRefreshLoadsReviewEvidenceAndWeekDigest() async throws {
     blockers: nil,
     learnings: nil
   )
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
 
   await store.refresh()
 
-  #expect(store.dailyReview?.date == mobileReviewToday)
-  #expect(store.dayReviewEvidence?.date == mobileReviewToday)
-  #expect(store.weekReviewDigest.map(\.date).contains(mobileReviewToday))
+  #expect(store.dailyReview?.date == seedToday())
+  #expect(store.dayReviewEvidence?.date == seedToday())
+  #expect(store.weekReviewDigest.map(\.date).contains(seedToday()))
   #expect(store.weekReviewDigest.map(\.date).contains(yesterday))
   #expect(store.snapshot.weeklyReview != nil)
   #expect(store.errorMessage == nil)
@@ -103,7 +105,7 @@ func mobileStoreRefreshLoadsReviewEvidenceAndWeekDigest() async throws {
 @Test
 func mobileStoreSelectReviewDayLoadsReadOnlyReviewAndEvidence() async throws {
   let core = try await makeSeededInMemoryCore()
-  let olderDay = mobileReviewYmdAddingDays(mobileReviewToday, -2)
+  let olderDay = mobileReviewYmdAddingDays(seedToday(), -2)
   _ = try await core.importDailyReview(
     date: olderDay,
     summary: "Past day review",
@@ -113,7 +115,7 @@ func mobileStoreSelectReviewDayLoadsReadOnlyReviewAndEvidence() async throws {
     blockers: nil,
     learnings: nil
   )
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
 
   await store.selectReviewDay(olderDay)
   store.dailyReviewDraft.summary = "Attempted mobile edit"
@@ -130,7 +132,7 @@ func mobileStoreSelectReviewDayLoadsReadOnlyReviewAndEvidence() async throws {
 @Test
 func mobileStoreSavesDailyReviewThroughCore() async throws {
   let core = try await makeSeededInMemoryCore()
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
 
   await store.refresh()
   await store.loadDailyReviewDraft()
@@ -147,7 +149,7 @@ func mobileStoreSavesDailyReviewThroughCore() async throws {
   let review = try #require(store.dailyReview)
 
   #expect(saved)
-  #expect(review.date == mobileReviewToday)
+  #expect(review.date == seedToday())
   #expect(review.summary == "Shipped mobile review editing")
   #expect(review.wins == "Native daily form")
   #expect(review.blockers == nil)
@@ -163,7 +165,7 @@ func mobileStoreSavesDailyReviewThroughCore() async throws {
 func mobileStoreDailyReviewScalarEditPreservesLoadedLinks() async throws {
   let core = try await makeSeededInMemoryCore()
   _ = try await core.upsertDailyReview(
-    date: mobileReviewToday,
+    date: seedToday(),
     summary: "Linked mobile review",
     mood: 3,
     energyLevel: 4,
@@ -172,13 +174,13 @@ func mobileStoreDailyReviewScalarEditPreservesLoadedLinks() async throws {
     learnings: nil,
     linkedTaskIDs: [LorvexPreviewSeedID.agendaTask],
     linkedListIDs: [LorvexPreviewSeedID.appleNativeList])
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
   await store.loadDailyReviewDraft()
 
   // A non-UI writer may change links while this scalar-only draft is open.
   // Saving the stale draft must preserve the transaction-current link sets.
   _ = try await core.amendDailyReview(
-    date: mobileReviewToday,
+    date: seedToday(),
     patch: DailyReviewPatch(
       linkedTaskIDs: [LorvexPreviewSeedID.statusUpdateTask],
       linkedListIDs: [LorvexPreviewSeedID.inboxList]))
@@ -186,7 +188,7 @@ func mobileStoreDailyReviewScalarEditPreservesLoadedLinks() async throws {
   store.dailyReviewDraft.summary = "Edited in the iPhone review surface"
   let didSave = await store.saveDailyReviewDraft()
 
-  let saved = try #require(try await core.loadDailyReview(date: mobileReviewToday))
+  let saved = try #require(try await core.loadDailyReview(date: seedToday()))
   #expect(didSave)
   #expect(saved.linkedTaskIDs == [LorvexPreviewSeedID.statusUpdateTask])
   #expect(saved.linkedListIDs == [LorvexPreviewSeedID.inboxList])
@@ -196,13 +198,13 @@ func mobileStoreDailyReviewScalarEditPreservesLoadedLinks() async throws {
 @Test
 func mobileStoreSavesSummaryOnlyDailyReviewWithNilRatings() async throws {
   let core = try await makeSeededInMemoryCore()
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
 
   await store.loadDailyReviewDraft()
   store.dailyReviewDraft = MobileDailyReviewDraft(summary: "Summary only review")
 
   let saved = await store.saveDailyReviewDraft()
-  let review = try #require(try await core.loadDailyReview(date: mobileReviewToday))
+  let review = try #require(try await core.loadDailyReview(date: seedToday()))
 
   #expect(saved)
   #expect(review.summary == "Summary only review")
@@ -216,7 +218,7 @@ func mobileStoreSavesSummaryOnlyDailyReviewWithNilRatings() async throws {
 @Test
 func mobileStoreSelectReviewDayFlushesUnsavedDailyReviewDraft() async throws {
   let core = try await makeSeededInMemoryCore()
-  let olderDay = mobileReviewYmdAddingDays(mobileReviewToday, -2)
+  let olderDay = mobileReviewYmdAddingDays(seedToday(), -2)
   _ = try await core.importDailyReview(
     date: olderDay,
     summary: "Older day",
@@ -226,7 +228,7 @@ func mobileStoreSelectReviewDayFlushesUnsavedDailyReviewDraft() async throws {
     blockers: nil,
     learnings: nil
   )
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
 
   await store.loadDailyReviewDraft()
   store.dailyReviewDraft = MobileDailyReviewDraft(
@@ -236,7 +238,7 @@ func mobileStoreSelectReviewDayFlushesUnsavedDailyReviewDraft() async throws {
     energy: nil
   )
   await store.selectReviewDay(olderDay)
-  let todayReview = try #require(try await core.loadDailyReview(date: mobileReviewToday))
+  let todayReview = try #require(try await core.loadDailyReview(date: seedToday()))
 
   #expect(todayReview.summary == "Unsaved today")
   #expect(todayReview.wins == "Preserved before switching")
@@ -253,7 +255,7 @@ func mobileStoreSelectReviewDayFlushesUnsavedDailyReviewDraft() async throws {
 @Test
 func mobileStoreFlushesTheUnsavedDailyReviewDraftBeforeSuspension() async throws {
   let core = try await makeSeededInMemoryCore()
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
   await store.loadDailyReviewDraft()
   store.dailyReviewDraft = MobileDailyReviewDraft(
     summary: "Typed before leaving the app",
@@ -264,7 +266,7 @@ func mobileStoreFlushesTheUnsavedDailyReviewDraftBeforeSuspension() async throws
 
   await store.flushAutosaveDraftsBeforeSuspension()
 
-  let saved = try #require(try await core.loadDailyReview(date: mobileReviewToday))
+  let saved = try #require(try await core.loadDailyReview(date: seedToday()))
   #expect(saved.summary == "Typed before leaving the app")
   #expect(saved.wins == "Still in the last field")
   #expect(store.dailyReviewDraftMatchesLoaded)
@@ -274,13 +276,13 @@ func mobileStoreFlushesTheUnsavedDailyReviewDraftBeforeSuspension() async throws
 @Test
 func mobileStoreSuspensionFlushWritesNothingWhenTheDailyReviewIsUnedited() async throws {
   let core = try await makeSeededInMemoryCore()
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
   await store.loadDailyReviewDraft()
-  let before = try await core.loadDailyReview(date: mobileReviewToday)
+  let before = try await core.loadDailyReview(date: seedToday())
 
   await store.flushAutosaveDraftsBeforeSuspension()
 
-  #expect(try await core.loadDailyReview(date: mobileReviewToday) == before)
+  #expect(try await core.loadDailyReview(date: seedToday()) == before)
 }
 
 @Test
@@ -343,7 +345,7 @@ func everyMobileShareLinkCarriesTheSystemShareGlyph() throws {
 @Test
 func mobileStoreSelectReviewDayFlushesBodyOnlyDailyReviewDraft() async throws {
   let core = try await makeSeededInMemoryCore()
-  let olderDay = mobileReviewYmdAddingDays(mobileReviewToday, -2)
+  let olderDay = mobileReviewYmdAddingDays(seedToday(), -2)
   _ = try await core.importDailyReview(
     date: olderDay,
     summary: "Older day",
@@ -353,14 +355,14 @@ func mobileStoreSelectReviewDayFlushesBodyOnlyDailyReviewDraft() async throws {
     blockers: nil,
     learnings: nil
   )
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
 
   await store.loadDailyReviewDraft()
   store.dailyReviewDraft = MobileDailyReviewDraft(summary: "", mood: 4, energy: 2)
   #expect(!store.dailyReviewDraft.canSave)
 
   await store.selectReviewDay(olderDay)
-  let todayReview = try #require(try await core.loadDailyReview(date: mobileReviewToday))
+  let todayReview = try #require(try await core.loadDailyReview(date: seedToday()))
 
   #expect(todayReview.mood == 4)
   #expect(todayReview.energyLevel == 2)
@@ -371,7 +373,7 @@ func mobileStoreSelectReviewDayFlushesBodyOnlyDailyReviewDraft() async throws {
 @MainActor
 @Test
 func mobileStoreDoesNotSaveDailyReviewBeforeDraftLoadFinishes() async throws {
-  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { mobileReviewToday })
+  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { seedToday() })
   store.dailyReviewDraft = MobileDailyReviewDraft(summary: "Should wait for the loaded draft")
 
   let saved = await store.saveDailyReviewDraft()
@@ -385,7 +387,7 @@ func mobileStoreDoesNotSaveDailyReviewBeforeDraftLoadFinishes() async throws {
 @Test
 func mobileStoreDailyReviewSaveSurfacesWeeklyReviewReloadFailure() async throws {
   let core = StubCoreService(preview: try await makeSeededInMemoryCore())
-  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  let store = MobileStore(core: core, todayString: { seedToday() })
 
   await store.refresh()
   await store.loadDailyReviewDraft()
@@ -402,7 +404,7 @@ func mobileStoreDailyReviewSaveSurfacesWeeklyReviewReloadFailure() async throws 
 @MainActor
 @Test
 func mobileStoreRejectsBlankDailyReviewSummary() async throws {
-  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { mobileReviewToday })
+  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { seedToday() })
 
   store.dailyReviewDraft = MobileDailyReviewDraft(summary: "   ")
 

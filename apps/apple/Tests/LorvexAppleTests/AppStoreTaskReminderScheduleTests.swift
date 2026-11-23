@@ -79,7 +79,7 @@ func appStoreBadgeCountsTasksOutsideStaleTodaySnapshot() async throws {
     notes: created.notes,
     priority: created.priority,
     estimatedMinutes: created.estimatedMinutes,
-    plannedDate: PlannedDayBridge.storageDate(forLocalInstant: Date()),
+    plannedDate: PlannedDayBridge.storageDate(forLogicalDay: seedToday()),
     tags: created.tags,
     dependsOn: created.dependsOn)
   #expect(store.today.tasks.contains { $0.id == created.id } == false)
@@ -88,10 +88,10 @@ func appStoreBadgeCountsTasksOutsideStaleTodaySnapshot() async throws {
 
   #expect(await recorder.lastCount() == BadgeCoordinator.badgeCount(
     tasks: try await core.loadWidgetStatsSource().actionableTasks,
-    today: AppStore.todayDateString()))
+    today: seedToday()))
   #expect((await recorder.lastCount() ?? 0) > BadgeCoordinator.badgeCount(
     tasks: store.today.tasks,
-    today: AppStore.todayDateString()))
+    today: seedToday()))
 }
 
 // After an inbound CloudKit cycle applies remote changes, the reminder/badge

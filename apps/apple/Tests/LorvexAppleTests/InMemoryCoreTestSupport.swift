@@ -59,6 +59,19 @@ func seedInstant(on day: String, hour: Int = 0, minute: Int = 0) throws -> Date 
   return instant
 }
 
+/// The date a calendar grid hands a drop at `hour:minute` on the `yyyy-MM-dd`
+/// day `day`. A grid labels its coordinates in the device's calendar, and the
+/// stores read that label in the product zone
+/// (`CalendarEventTiming.interpretingWallClock(in:preserving:)`).
+func gridDate(on day: String, hour: Int, minute: Int = 0) throws -> Date {
+  let calendar = CalendarEventTiming.deviceCalendar
+  guard
+    let start = PlannedDayBridge.displayDate(forLogicalDay: day, timeZone: calendar.timeZone),
+    let date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: start)
+  else { throw CocoaError(.formatting) }
+  return date
+}
+
 /// A wall clock fixed at 08:00 today in the seed's timezone.
 func seedMorningWallClock() -> @Sendable () -> Date {
   morningWallClock(in: seedTimeZone)

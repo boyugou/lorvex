@@ -81,7 +81,8 @@ struct LorvexPreviewCoreFactoryTests {
   @Test("seeded habits reproduce the fixture's completion stats")
   func seededHabits() async throws {
     let core = try await LorvexPreviewCoreFactory.makeSeeded()
-    let habits = try await core.loadHabits(date: LorvexDateFormatters.ymd.string(from: Date()))
+    let today = try #require(try await core.loadToday().logicalDay)
+    let habits = try await core.loadHabits(date: today)
     let review = try #require(habits.habits.first { $0.id == LorvexPreviewSeedID.dailyReviewHabit })
     #expect(review.completionsToday == 1)
     #expect(review.totalCompletions == 12)

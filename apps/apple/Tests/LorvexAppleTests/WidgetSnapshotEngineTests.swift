@@ -494,20 +494,21 @@ struct WidgetSnapshotEngineTests {
     // The old projection loads revision 0 (no Focus filter), then pauses inside
     // projection. While paused, the system Focus transition atomically mints
     // revision 1 and a second publisher commits that state for the same
-    // database revision. Both gates wait up to five minutes: in a full run the
-    // test's tasks queue behind thousands of others, and a gate that expired
-    // early would let the old projection finish unpaused and hide the race.
+    // database revision. Both gates wait up to thirty minutes: in a full run
+    // the test's tasks queue behind thousands of others (about ten minutes on a
+    // three-core hosted runner), and a gate that expired early would let the
+    // old projection finish unpaused and hide the race.
     let oldProjectionPaused = EngineGate()
     let releaseOldProjection = EngineGate()
     let oldPublisher = WidgetSnapshotPublisher(
       destination: .init(snapshotURL: url, focusFilterStore: store, reload: {}),
       projector: WidgetSnapshotProjector(now: {
         oldProjectionPaused.signal()
-        _ = releaseOldProjection.wait(timeout: 300)
+        _ = releaseOldProjection.wait(timeout: 1800)
         return Date(timeIntervalSince1970: 1_779_465_600)
       }))
     let oldTask = Task { try await oldPublisher.publish(source: source) }
-    #expect(oldProjectionPaused.wait(timeout: 300))
+    #expect(oldProjectionPaused.wait(timeout: 1800))
 
     let active = try await store.save(FocusFilterConfiguration(listIDs: ["list-work"]))
     #expect(active.revision == 1)

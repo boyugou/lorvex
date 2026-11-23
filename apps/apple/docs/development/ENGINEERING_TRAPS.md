@@ -430,6 +430,19 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   initial scroll. Include the clock value in cached mobile page inputs so a
   zone change with unchanged events still redraws. Minute ticks stay inside
   the line/dot overlays and must not move a user's scroll position.
+- **A test over the seeded store never takes the day or the clock from the
+  device.** `makeSeededInMemoryCore()` keeps `America/Los_Angeles` as its
+  time zone, and the machine running the suite may be in any other zone and
+  on another date; hosted CI runs in UTC. Take today from
+  `seedToday(addingDays:)` or the core's `logicalDay`. Build what a form's
+  control hands back with `seedInstant(on:hour:minute:)` or the draft's own
+  calendar, and what a grid drop hands back with `gridDate(on:hour:minute:)`.
+  An empty store (`SwiftLorvexCoreService.inMemory()`) counts days in the
+  device's zone, so the device's today is right there. Check a new test under
+  other zones: `TZ=Pacific/Kiritimati script/verify_swift.sh --filter <Suite>`
+  puts the device a day ahead of the seed for most of the day, and
+  `TZ=Pacific/Pago_Pago` a day behind in the first hours after midnight in
+  Los Angeles.
 - A time-zone picker closes only after the saved zone reaches the Today
   snapshot. The Mac's ordinary `refresh()` returns early when coalesced;
   `setLogicalTimeZone` uses `refreshAndWaitForLatest()` so the picker cannot

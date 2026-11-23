@@ -187,7 +187,7 @@ func appStoreEditsRecentDailyReviewWithinWindow() async throws {
   defer { defaults.removePersistentDomain(forName: suiteName) }
   let core = try await makeSeededInMemoryCore()
   let yesterday = try #require(
-    LorvexDateFormatters.ymdUTCAddingDays(AppStore.todayDateString(), days: -1))
+    LorvexDateFormatters.ymdUTCAddingDays(seedToday(), days: -1))
   _ = try await core.importDailyReview(
     date: yesterday, summary: "Yesterday's reflection", mood: 2, energyLevel: 2,
     wins: nil, blockers: nil, learnings: nil)

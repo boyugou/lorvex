@@ -13,7 +13,7 @@ private func seedTimelineEvent(
   startTime: String = "15:00", endTime: String = "15:45"
 ) async throws -> CalendarTimelineEvent {
   try await core.createCalendarEvent(
-    title: title, startDate: LorvexDateFormatters.ymd.string(from: Date()), endDate: nil,
+    title: title, startDate: seedToday(), endDate: nil,
     startTime: startTime, endTime: endTime, allDay: false, location: "Conference Room B",
     notes: nil)
 }
@@ -328,29 +328,25 @@ func appStoreUpdatesEditableCalendarEventThroughCore() async throws {
   let core = try await makeSeededInMemoryCore()
   let seeded = try await seedTimelineEvent(core)
   let store = AppStore(core: core, eventKitCoordinator: makeCoordinator())
-  var components = Calendar(identifier: .gregorian).dateComponents(
-    [.year, .month, .day], from: Date())
-  components.calendar = Calendar(identifier: .gregorian)
-  components.timeZone = .current
-  components.hour = 9
-  components.minute = 15
-  let startDate = try #require(components.date)
-  components.hour = 10
-  components.minute = 0
-  let endDate = try #require(components.date)
-
   await store.refresh()
   let event = try #require(store.calendarTimeline?.events.first { $0.id == seeded.id })
   store.prepareCalendarDraft(for: event)
   store.draftCalendarTitle = "  Native calendar review  "
-  store.draftCalendarTiming = CalendarEventTiming(start: startDate, end: endDate, allDay: false)
+  // The form's controls are bound to the draft's zone and hand back instants
+  // read in it.
+  let calendar = store.draftCalendarTiming.calendar
+  let day = calendar.startOfDay(for: store.draftCalendarTiming.start)
+  store.draftCalendarTiming = CalendarEventTiming(
+    start: try #require(calendar.date(bySettingHour: 9, minute: 15, second: 0, of: day)),
+    end: try #require(calendar.date(bySettingHour: 10, minute: 0, second: 0, of: day)),
+    allDay: false, calendar: calendar)
   store.draftCalendarLocation = "  Design Studio  "
 
   await store.updateCalendarEvent(event)
 
   let updated = try #require(store.calendarTimeline?.events.first { $0.id == event.id })
   #expect(updated.title == "Native calendar review")
-  #expect(updated.startDate == LorvexDateFormatters.ymd.string(from: Date()))
+  #expect(updated.startDate == seedToday())
   #expect(updated.startTime == "09:15")
   #expect(updated.endTime == "10:00")
   #expect(updated.location == "Design Studio")
@@ -373,7 +369,6 @@ func appStoreSavesAnEditThatRunsAnEventOvernight() async throws {
   store.prepareCalendarDraft(for: event)
   let calendar = store.draftCalendarTiming.calendar
   let today = calendar.startOfDay(for: Date())
-  let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
   store.draftCalendarTiming.setStartTime(
     try #require(calendar.date(bySettingHour: 22, minute: 0, second: 0, of: today)))
   store.draftCalendarTiming.setEndTime(
@@ -384,9 +379,9 @@ func appStoreSavesAnEditThatRunsAnEventOvernight() async throws {
 
   #expect(store.errorMessage == nil)
   let updated = try #require(store.calendarTimeline?.events.first { $0.id == event.id })
-  #expect(updated.startDate == LorvexDateFormatters.ymd.string(from: today))
+  #expect(updated.startDate == seedToday())
   #expect(updated.startTime == "22:00")
-  #expect(updated.endDate == LorvexDateFormatters.ymd.string(from: tomorrow))
+  #expect(updated.endDate == seedToday(addingDays: 1))
   #expect(updated.endTime == "01:00")
 }
 
@@ -395,7 +390,7 @@ func appStoreSavesAnEditThatRunsAnEventOvernight() async throws {
 func appStoreFullCalendarEditorCanClearOptionalFields() async throws {
   let core = try await makeSeededInMemoryCore()
   let seeded = try await core.createCalendarEvent(
-    title: "Fields to clear", startDate: LorvexDateFormatters.ymd.string(from: Date()),
+    title: "Fields to clear", startDate: seedToday(),
     endDate: nil, startTime: "09:00", endTime: "09:30", allDay: false,
     location: "Room 4", notes: "Bring the draft", recurrence: nil,
     timezone: nil, url: nil, color: "#336699", eventType: nil,
@@ -851,19 +846,13 @@ func rescheduleCalendarEventShiftsStartAndEndTimes() async throws {
   let original = try #require(
     store.calendarTimeline?.events.first { $0.id == seeded.id })
 
-  var comps = Calendar(identifier: .gregorian).dateComponents(
-    [.year, .month, .day], from: Date())
-  comps.calendar = Calendar(identifier: .gregorian)
-  comps.timeZone = .current
-  comps.hour = 11; comps.minute = 30
-  let newStart = try #require(comps.date)
-  comps.hour = 13; comps.minute = 0
-  let newEnd = try #require(comps.date)
+  let newStart = try gridDate(on: seedToday(), hour: 11, minute: 30)
+  let newEnd = try gridDate(on: seedToday(), hour: 13)
 
   await store.rescheduleCalendarEvent(original, newStart: newStart, newEnd: newEnd)
 
   let updated = try #require(store.calendarTimeline?.events.first { $0.id == original.id })
-  #expect(updated.startDate == LorvexDateFormatters.ymd.string(from: Date()))
+  #expect(updated.startDate == seedToday())
   #expect(updated.startTime == "11:30")
   #expect(updated.endTime == "13:00")
   #expect(updated.title == original.title)
@@ -928,39 +917,37 @@ func rescheduleCalendarEventSkipsMultiDayEvents() async throws {
 @Test
 func rescheduleCalendarEventMovesAnEventThatEndsAtMidnight() async throws {
   let core = try await makeSeededInMemoryCore()
-  let calendar = CalendarEventTiming.deviceCalendar
-  let today = calendar.startOfDay(for: Date())
-  let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
-  let dayAfter = try #require(calendar.date(byAdding: .day, value: 2, to: today))
-  let key = { (day: Date) in LorvexDateFormatters.ymd.string(from: day) }
+  let today = seedToday()
+  let tomorrow = seedToday(addingDays: 1)
+  let dayAfter = seedToday(addingDays: 2)
   let seeded = try await core.createCalendarEvent(
-    title: "Late session", startDate: key(today), endDate: key(tomorrow), startTime: "21:00",
+    title: "Late session", startDate: today, endDate: tomorrow, startTime: "21:00",
     endTime: "00:00", allDay: false, location: nil, notes: nil)
   let store = AppStore(core: core, eventKitCoordinator: makeCoordinator())
   await store.refresh()
   let event = try #require(store.calendarTimeline?.events.first { $0.id == seeded.id })
   #expect(!event.isMultiDay)
-  let earlierStart = try #require(calendar.date(bySettingHour: 20, minute: 0, second: 0, of: today))
-  let earlierEnd = try #require(calendar.date(bySettingHour: 23, minute: 0, second: 0, of: today))
+  let earlierStart = try gridDate(on: today, hour: 20)
+  let earlierEnd = try gridDate(on: today, hour: 23)
 
   await store.rescheduleCalendarEvent(event, newStart: earlierStart, newEnd: earlierEnd)
 
   #expect(store.errorMessage == nil)
   let movedUp = try #require(await core.getCalendarEvent(id: event.id))
-  #expect(movedUp.startDate == key(today))
+  #expect(movedUp.startDate == today)
   #expect(movedUp.endDate == nil)
   #expect(movedUp.startTime == "20:00")
   #expect(movedUp.endTime == "23:00")
 
-  let nextEvening = try #require(
-    calendar.date(bySettingHour: 21, minute: 0, second: 0, of: tomorrow))
-  await store.rescheduleCalendarEvent(movedUp, newStart: nextEvening, newEnd: dayAfter)
+  await store.rescheduleCalendarEvent(
+    movedUp, newStart: try gridDate(on: tomorrow, hour: 21),
+    newEnd: try gridDate(on: dayAfter, hour: 0))
 
   #expect(store.errorMessage == nil)
   let movedOn = try #require(await core.getCalendarEvent(id: event.id))
-  #expect(movedOn.startDate == key(tomorrow))
+  #expect(movedOn.startDate == tomorrow)
   #expect(movedOn.startTime == "21:00")
-  #expect(movedOn.endDate == key(dayAfter))
+  #expect(movedOn.endDate == dayAfter)
   #expect(movedOn.endTime == "00:00")
 }
 

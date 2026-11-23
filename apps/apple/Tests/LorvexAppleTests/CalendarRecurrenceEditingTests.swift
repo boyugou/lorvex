@@ -62,7 +62,7 @@ func calendarUpdateWritesTypedRecurrenceThroughCore() async throws {
   // The store's calendar window spans around today; the fixed 2026-05-22 seed
   // event sits outside it, so the edit targets a fresh in-window event.
   let seeded = try await core.createCalendarEvent(
-    title: "Window review", startDate: LorvexDateFormatters.ymd.string(from: Date()),
+    title: "Window review", startDate: seedToday(),
     endDate: nil, startTime: "15:00", endTime: "15:45", allDay: false,
     location: nil, notes: nil)
   let store = AppStore(core: core, eventKitCoordinator: makeRecurrenceCoordinator())
@@ -88,7 +88,7 @@ func calendarUpdateCanExplicitlyClearRecurrence() async throws {
   let core = try await makeSeededInMemoryCore()
   let seeded = try await core.createCalendarEvent(
     title: "Recurring window review",
-    startDate: LorvexDateFormatters.ymd.string(from: Date()),
+    startDate: seedToday(),
     endDate: nil, startTime: "15:00", endTime: "15:45", allDay: false,
     location: nil, notes: nil,
     recurrence: TaskRecurrenceRule(freq: .daily, interval: 2),
@@ -118,7 +118,7 @@ func unchangedCalendarRecurrenceProducesUnsetPatch() async throws {
   let core = try await makeSeededInMemoryCore()
   let seeded = try await core.createCalendarEvent(
     title: "Recurring window review",
-    startDate: LorvexDateFormatters.ymd.string(from: Date()),
+    startDate: seedToday(),
     endDate: nil, startTime: "15:00", endTime: "15:45", allDay: false,
     location: nil, notes: nil,
     recurrence: TaskRecurrenceRule(freq: .daily, interval: 1),
@@ -202,7 +202,7 @@ func calendarRepeatFrequencyChangeClearsIncompatibleAdvancedFields() {
 func calendarPrepareDraftSeedsRecurrenceFromEvent() async throws {
   let core = try await makeSeededInMemoryCore()
   let seeded = try await core.createCalendarEvent(
-    title: "Window review", startDate: LorvexDateFormatters.ymd.string(from: Date()),
+    title: "Window review", startDate: seedToday(),
     endDate: nil, startTime: "15:00", endTime: "15:45", allDay: false,
     location: nil, notes: nil)
   let store = AppStore(core: core, eventKitCoordinator: makeRecurrenceCoordinator())

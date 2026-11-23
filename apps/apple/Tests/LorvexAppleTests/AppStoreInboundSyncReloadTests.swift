@@ -223,12 +223,13 @@ func appStoreLocalRefreshDoesNotWaitOnInFlightCycle() async throws {
 // A task action must not wait on CloudKit: its feedback and its undo step
 // follow the local write, while the sync pass the write starts may still be
 // waiting on the network. A regression is a hang, which the time limit turns
-// into a failure; the limit is well above a full suite run because every
-// main-actor test's clock includes its wait for the main actor.
+// into a failure; the limit is well above a full suite run (about ten minutes
+// on a three-core hosted runner) because every main-actor test's clock
+// includes its wait for the main actor.
 @MainActor
 @Test(
   "completing a task registers its undo step while its sync pass waits on the network",
-  .timeLimit(.minutes(5)))
+  .timeLimit(.minutes(30)))
 func appStoreTaskActionDoesNotWaitOnItsSyncPass() async throws {
   let preview = try await makeSeededInMemoryCore()
   let core = StubCoreService(preview: preview)

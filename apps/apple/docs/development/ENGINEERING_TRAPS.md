@@ -10,7 +10,7 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
 [Layout](#layout) · [Lists, sheets, and dialogs](#lists-sheets-and-dialogs) ·
 [Gestures and hit targets](#gestures-and-hit-targets) ·
 [Text, type, and locale](#text-type-and-locale) · [Widgets](#widgets) ·
-[App Intents](#app-intents) ·
+[App Intents](#app-intents) · [MCP host](#mcp-host) ·
 [Data and time](#data-and-time) · [Data-flow facts](#data-flow-facts)
 
 ## Crashes and isolation
@@ -403,6 +403,29 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
   confirmation wording the system shows are in the toolchain's
   `usr/lib/AppIntentSchemas.framework/Resources/AppIntentSchemas.sqlite`;
   copy the file before opening it, since SQLite cannot open it in place.
+
+## MCP host
+
+- **The host's transport removes a client's experimental capabilities from
+  `initialize`, because the Swift MCP SDK cannot decode them.** The MCP schema
+  lets each entry of `initialize.params.capabilities.experimental` be any JSON
+  object, and Codex Desktop sends `"codex/auth-change": {}`. The SDK's
+  `Client.Capabilities.experimental` is `[String: String]?` (in 0.12.1, the
+  latest release, and on its main branch as of 2026-11-23), so such a client
+  got error -32603 and no tools. Lorvex reads no client experimental
+  capability, so `ClientCapabilityTolerantTransport` drops the field from the
+  `initialize` request and passes every other message through byte for byte.
+  `MCPInitializeCapabilityTests` runs the handshake end to end and holds a
+  canary that fails once the SDK decodes the field itself, which is when the
+  filter can go; `script/mcp_stdio_smoke.py` declares the same capabilities to
+  the built helper. When upgrading the SDK, reread its `Transport` protocol:
+  a new requirement with a default implementation would compile against the
+  wrapper and silently use that default instead of the stdio transport's.
+- **A client's connection check is not proof that its chats can connect.**
+  Codex's tool catalog listed Lorvex's tools while its chats failed this
+  handshake, so the check evidently did not declare what a chat declares. The
+  setup prompt (`MCPClientSetup`) ends by calling `get_overview` from inside
+  the chat for this reason.
 
 ## Data and time
 

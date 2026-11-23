@@ -18,7 +18,10 @@ It never moves, backs up, or restores the App Group directory.
 
 Flow:
   build LorvexMCPHost -> resolve bin path -> isolate the store -> launch ->
-  initialize -> notifications/initialized -> tools/list (assert > 0 tools) ->
+  initialize, declaring object-valued experimental capabilities as Codex
+  Desktop does (assert no error) -> notifications/initialized -> tools/list
+  (assert > 0 tools, get_overview among them) -> get_overview (assert a
+  result, not an error) ->
   create_task (assert the ⟦user⟧ fence on the echoed title) ->
   list_tasks (assert the created task is present AND the full 7-key pagination
   envelope) -> get_task with a missing id (assert the {code, message, tool}
@@ -574,7 +577,18 @@ def run_smoke(
                 "method": "initialize",
                 "params": {
                     "protocolVersion": PROTOCOL_VERSION,
-                    "capabilities": {},
+                    # Codex Desktop declares this experimental capability; the
+                    # MCP schema allows any object here, and a second,
+                    # unfamiliar one nests objects and arrays.
+                    "capabilities": {
+                        "experimental": {
+                            "codex/auth-change": {},
+                            "example.org/nested": {
+                                "version": 2,
+                                "options": {"mode": "full", "flags": ["a", "b"]},
+                            },
+                        },
+                    },
                     "clientInfo": {
                         "name": "lorvex-smoke",
                         "version": marketing_version,
@@ -582,6 +596,9 @@ def run_smoke(
                 },
             },
         )
+        # `read_response` raises on an error response, so reaching the next
+        # line means the initialize with object-valued experimental
+        # capabilities succeeded.
         initialize = read_response(process, 1)
         require(
             initialize["result"]["capabilities"].get("tools") is not None,
@@ -601,6 +618,27 @@ def run_smoke(
         # The Swift host advertises the full catalog; accept >0 so the
         # smoke stays robust if the catalog grows, while logging the exact count.
         print(f"PASS: tools/list returned {len(tools)} tools")
+        require(
+            any(tool.get("name") == "get_overview" for tool in tools),
+            "tools/list does not include get_overview",
+        )
+
+        send(
+            process,
+            {
+                "jsonrpc": "2.0",
+                "id": 5,
+                "method": "tools/call",
+                "params": {"name": "get_overview", "arguments": {}},
+            },
+        )
+        overview = read_response(process, 5)
+        require(
+            overview["result"].get("isError") is not True
+            and isinstance(overview["result"].get("structuredContent"), dict),
+            f"get_overview returned no overview: {overview['result']}",
+        )
+        print("PASS: get_overview returned an overview")
 
         send(
             process,

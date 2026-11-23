@@ -16,31 +16,16 @@ struct LorvexMCPHost {
       return
     }
     let registry = try ToolRegistry.production(environment: environment)
-
-    let server = Server(
-      name: LorvexProductMetadata.mcpServerName,
-      version: LorvexProductMetadata.marketingVersion,
-      title: LorvexProductMetadata.appDisplayName,
-      instructions: MCPHostInstructions.text,
-      capabilities: .init(tools: .init(listChanged: false))
-    )
-
-    await server.withMethodHandler(ListTools.self) { _ in
-      ListTools.Result(tools: ToolRegistry.listTools())
-    }
-
     let activity = AssistantActivityRecorder(service: registry.coreBridge.service)
-    await server.withMethodHandler(CallTool.self) { params in
-      Task { await activity.toolWasCalled() }
-      return try await registry.call(params)
-    }
+    let server = await makeServer(registry: registry, activity: activity)
 
     // Sweep expired idempotency rows on boot. Runs once per MCP child process.
     if let idempotency = registry.coreBridge.mcpIdempotency {
       try? await idempotency.sweepMcpIdempotency()
     }
 
-    let transport = StdioTransport()
+    let stdio = StdioTransport()
+    let transport = ClientCapabilityTolerantTransport(wrapping: stdio, logger: stdio.logger)
     try await server.start(transport: transport) { client, _ in
       Task {
         await activity.clientDidInitialize(
@@ -53,6 +38,29 @@ struct LorvexMCPHost {
     // so the host exits cleanly and releases its DB connection rather than
     // lingering as a zombie until SIGKILL.
     await server.waitUntilCompleted()
+  }
+
+  /// The MCP server the host runs: Lorvex's name, version and instructions,
+  /// the tool list, and each tool call dispatched to `registry` and noted by
+  /// `activity`. Not started; the caller picks the transport.
+  static func makeServer(
+    registry: ToolRegistry, activity: AssistantActivityRecorder
+  ) async -> Server {
+    let server = Server(
+      name: LorvexProductMetadata.mcpServerName,
+      version: LorvexProductMetadata.marketingVersion,
+      title: LorvexProductMetadata.appDisplayName,
+      instructions: MCPHostInstructions.text,
+      capabilities: .init(tools: .init(listChanged: false))
+    )
+    await server.withMethodHandler(ListTools.self) { _ in
+      ListTools.Result(tools: ToolRegistry.listTools())
+    }
+    await server.withMethodHandler(CallTool.self) { params in
+      Task { await activity.toolWasCalled() }
+      return try await registry.call(params)
+    }
+    return server
   }
 
   /// The `LORVEX_MCP_PROBE=1` self-check the app's MCP settings panel runs

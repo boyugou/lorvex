@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct DeleteLorvexHabitIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.delete.title", defaultValue: "Delete Lorvex Habit", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.habit.delete.description", defaultValue: "Delete a Lorvex habit from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ReadLorvexDependencyGraphIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.dependency.read.title", defaultValue: "Read Lorvex Task Dependencies", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.dependency.read.description", defaultValue: "Read the unfinished tasks a Lorvex task waits on, or, without a task, every task still waiting on another.", table: "Localizable", bundle: SystemL10n.bundle))
 

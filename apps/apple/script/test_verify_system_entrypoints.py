@@ -4,6 +4,7 @@ from __future__ import annotations
 import unittest
 
 from verify_system_entrypoints import (
+    intent_security_failures,
     quick_action_contract_failures,
     script_user_activity_types,
     shortcut_contract_failures,
@@ -208,6 +209,164 @@ class VerifySystemEntrypointsTests(unittest.TestCase):
                 "['com.lorvex.apple.openTask', 'com.lorvex.apple.openDestination', "
                 "'com.lorvex.apple.openList']"
             ],
+        )
+
+    def test_intent_declaring_its_tier_policy_in_its_body_passes(self) -> None:
+        sources = {
+            "Read.swift": """
+struct ReadIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
+  func perform() async throws -> some IntentResult { .result() }
+}
+""",
+            "Delete.swift": """
+@AppIntent(schema: .reminders.deleteReminders)
+struct DeleteIntent2: DeleteIntent,
+  LorvexAuthenticatedIntent
+{
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+}
+""",
+            "Open.swift": """
+public struct OpenIntent2: AppIntent, ControlConfigurationIntent {
+  public static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+}
+""",
+            "Widget.swift": """
+public struct TapIntent: LorvexWidgetActionIntent {
+  public static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+  public static let isDiscoverable: Bool = false
+}
+""",
+            # Not intents: an entity, a view, and the tier protocol itself.
+            "Other.swift": """
+struct TaskEntity: AppEntity, Identifiable {
+}
+struct Row: View {
+}
+protocol LorvexAuthenticatedIntent: LorvexSecuredIntent {}
+""",
+        }
+        self.assertEqual(intent_security_failures(sources), [])
+
+    def test_intent_relying_on_a_protocol_extension_for_its_policy_fails(self) -> None:
+        sources = {
+            "Export.swift": """
+struct ExportIntent: LorvexLocalAuthIntent {
+  static let title: LocalizedStringResource = "Export"
+}
+""",
+        }
+        failures = intent_security_failures(sources)
+        self.assertEqual(len(failures), 1)
+        self.assertIn("Export.swift: ExportIntent must declare", failures[0])
+
+    def test_intent_declaring_another_tiers_policy_fails(self) -> None:
+        sources = {
+            "Update.swift": """
+struct UpdateIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+}
+""",
+        }
+        self.assertEqual(
+            intent_security_failures(sources),
+            [
+                "Update.swift: UpdateIntent names LorvexAuthenticatedIntent but declares "
+                ".alwaysAllowed; the tier's policy is .requiresAuthentication"
+            ],
+        )
+
+    def test_computed_policy_and_discoverable_widget_intent_fail(self) -> None:
+        sources = {
+            "Computed.swift": """
+struct ComputedIntent: AppIntent {
+  static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
+}
+""",
+            "Widget.swift": """
+public struct TapIntent: LorvexWidgetActionIntent {
+  public static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+}
+""",
+        }
+        failures = intent_security_failures(sources)
+        self.assertEqual(len(failures), 2)
+        self.assertIn("ComputedIntent must declare", failures[0])
+        self.assertIn("TapIntent is a widget-tap intent", failures[1])
+
+    def test_intent_declarations_in_other_forms_are_checked(self) -> None:
+        sources = {
+            # An attribute on the declaration's own line.
+            "Attribute.swift": """
+@available(macOS 27.0, *) struct AttributeIntent: LorvexAuthenticatedIntent {
+  static let title: LocalizedStringResource = "A"
+}
+""",
+            # A type inside another, a generic type, and an actor.
+            "Nested.swift": """
+enum Namespace {
+  struct NestedIntent: AppIntent {
+    static let title: LocalizedStringResource = "N"
+  }
+
+  struct DeclaredIntent: AppIntent {
+    static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+  }
+}
+final public class GenericIntent<Value>: AppIntent where Value: Sendable {
+}
+actor ActorIntent: AppIntent & Sendable {
+}
+""",
+            # The macro alone, with no inheritance clause.
+            "Macro.swift": """
+@available(macOS 27.0, iOS 27.0, *)
+@AppIntent(schema: .reminders.createList)
+struct MacroOnly {
+}
+""",
+        }
+        failures = intent_security_failures(sources)
+        self.assertEqual(
+            [failure.split(" must declare")[0] for failure in failures],
+            [
+                "Attribute.swift: AttributeIntent",
+                "Macro.swift: MacroOnly",
+                "Nested.swift: NestedIntent",
+                "Nested.swift: GenericIntent",
+                "Nested.swift: ActorIntent",
+            ],
+        )
+
+    def test_forms_that_would_hide_an_intent_fail(self) -> None:
+        sources = {
+            "Extension.swift": """
+struct Plain {
+}
+extension Plain: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+}
+""",
+            "Protocol.swift": """
+protocol Secured: AppIntent {}
+struct Hidden: Secured {
+}
+""",
+            "TwoTiers.swift": """
+struct TwoTierIntent: LorvexAuthenticatedIntent, LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+}
+""",
+        }
+        failures = intent_security_failures(sources)
+        self.assertEqual(len(failures), 3)
+        self.assertIn("an extension gives Plain an App Intent conformance", failures[0])
+        self.assertIn("protocol Secured refines an App Intent protocol", failures[1])
+        self.assertIn(
+            "TwoTierIntent names more than one security tier: "
+            "LorvexAuthenticatedIntent, LorvexLocalAuthIntent",
+            failures[2],
         )
 
 

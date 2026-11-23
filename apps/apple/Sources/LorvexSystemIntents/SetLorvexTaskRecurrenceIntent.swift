@@ -1,6 +1,7 @@
 import AppIntents
 
 struct SetLorvexTaskRecurrenceIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.recurrence.set.title", defaultValue: "Set Lorvex Task Recurrence", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.recurrence.set.description", defaultValue: "Set a Lorvex task recurrence rule.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -1,6 +1,7 @@
 import AppIntents
 
 struct OpenLorvexIntent: LorvexUnauthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
   static let title = LocalizedStringResource("system.open.title", defaultValue: "Open Lorvex", table: "Localizable", bundle: SystemL10n.bundle)
 
   static let description = IntentDescription(LocalizedStringResource("system.open.description", defaultValue: "Open Lorvex to a planning area.", table: "Localizable", bundle: SystemL10n.bundle))

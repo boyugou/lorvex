@@ -1,6 +1,7 @@
 import AppIntents
 
 struct ListLorvexTagsIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.tag.list.title", defaultValue: "List Lorvex Tags", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.tag.list.description", defaultValue: "List all Lorvex task tags from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ResetLorvexHabitIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.reset.title", defaultValue: "Reset Lorvex Habit", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.habit.reset.description", defaultValue: "Reset today’s completion for a Lorvex habit.", table: "Localizable", bundle: SystemL10n.bundle))
 

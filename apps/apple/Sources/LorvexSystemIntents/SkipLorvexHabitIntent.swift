@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct SkipLorvexHabitIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.skip.title", defaultValue: "Skip Lorvex Habit", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.habit.skip.description", defaultValue: "Skip a Lorvex habit for a day from Shortcuts or Siri. A skipped day counts as neither done nor missed.", table: "Localizable", bundle: SystemL10n.bundle))
 

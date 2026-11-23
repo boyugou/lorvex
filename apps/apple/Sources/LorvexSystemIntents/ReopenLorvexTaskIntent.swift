@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ReopenLorvexTaskIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.reopen.title", defaultValue: "Reopen Lorvex Task", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.reopen.description", defaultValue: "Reopen a completed, cancelled, or deferred Lorvex task.", table: "Localizable", bundle: SystemL10n.bundle))
 

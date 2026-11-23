@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct DeleteLorvexListIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.list.delete.title", defaultValue: "Delete Lorvex List", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.list.delete.description", defaultValue: "Delete an empty Lorvex list from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

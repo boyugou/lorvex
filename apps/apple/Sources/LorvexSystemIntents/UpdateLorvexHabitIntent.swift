@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct UpdateLorvexHabitIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.update.title", defaultValue: "Update Lorvex Habit", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.habit.update.description", defaultValue: "Rename or update a Lorvex habit from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct SaveLorvexDailyReviewIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.review.daily.save.title", defaultValue: "Save Lorvex Daily Review", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.review.daily.save.description", defaultValue: "Save a daily review in Lorvex from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct DeleteLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.calendar.delete.title", defaultValue: "Delete Lorvex Calendar Event", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.calendar.delete.description", defaultValue: "Delete a Lorvex calendar event from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

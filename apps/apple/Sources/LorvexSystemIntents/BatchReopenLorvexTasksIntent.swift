@@ -1,6 +1,7 @@
 import AppIntents
 
 struct BatchReopenLorvexTasksIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.batch.reopen.title", defaultValue: "Batch Reopen Lorvex Tasks", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.batch.reopen.description", defaultValue: "Reopen multiple Lorvex tasks by ID.", table: "Localizable", bundle: SystemL10n.bundle))
 

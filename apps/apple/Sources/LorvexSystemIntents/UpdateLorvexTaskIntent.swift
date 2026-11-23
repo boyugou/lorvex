@@ -1,6 +1,7 @@
 import AppIntents
 
 struct UpdateLorvexTaskIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.update.title", defaultValue: "Update Lorvex Task", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.update.description", defaultValue: "Update Lorvex task details from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ExportLorvexDataIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.export.data.title", defaultValue: "Export Lorvex Data", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.export.data.description", defaultValue: "Prepare a Lorvex JSON or CSV data export from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

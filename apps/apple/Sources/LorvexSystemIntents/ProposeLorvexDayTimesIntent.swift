@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ProposeLorvexDayTimesIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.day_times.propose.title", defaultValue: "Suggest Lorvex Times", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.day_times.propose.description", defaultValue: "Suggest times for today’s Lorvex tasks, or a specific date’s, around your calendar. Nothing is saved.", table: "Localizable", bundle: SystemL10n.bundle))
 

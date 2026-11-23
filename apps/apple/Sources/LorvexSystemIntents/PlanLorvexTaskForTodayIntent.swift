@@ -1,6 +1,7 @@
 import AppIntents
 
 struct PlanLorvexTaskForTodayIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.plan_today.title", defaultValue: "Plan Lorvex Task for Today", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.plan_today.description", defaultValue: "Plan a Lorvex task for today so it appears on Today.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -1,6 +1,7 @@
 import AppIntents
 
 struct ReadLorvexDeferredTasksIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.deferred.read.title", defaultValue: "Read Lorvex Deferred Tasks", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.deferred.read.description", defaultValue: "Read Lorvex tasks that have been deferred.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ExportLorvexCalendarICSIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.calendar.ics.export.title", defaultValue: "Export Lorvex Calendar ICS", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.calendar.ics.export.description", defaultValue: "Prepare Lorvex calendar events as ICS from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

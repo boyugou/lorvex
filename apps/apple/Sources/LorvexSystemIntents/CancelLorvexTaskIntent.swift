@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct CancelLorvexTaskIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.cancel.title", defaultValue: "Cancel Lorvex Task Occurrence", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.cancel.description", defaultValue: "Cancel this Lorvex task occurrence from Shortcuts or Siri. Repeating tasks continue.", table: "Localizable", bundle: SystemL10n.bundle))
 

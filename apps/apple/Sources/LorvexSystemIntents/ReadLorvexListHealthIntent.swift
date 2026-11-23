@@ -3,6 +3,7 @@ import Foundation
 import LorvexCore
 
 struct ReadLorvexListHealthIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.list.health.read.title", defaultValue: "Find Lorvex Lists with Overdue Tasks", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.list.health.read.description", defaultValue: "Find the Lorvex lists that have overdue tasks, and how many each has.", table: "Localizable", bundle: SystemL10n.bundle))
 

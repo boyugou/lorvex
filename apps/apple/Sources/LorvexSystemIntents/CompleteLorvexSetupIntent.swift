@@ -2,6 +2,7 @@ import AppIntents
 import Foundation
 
 struct CompleteLorvexSetupIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.setup.complete.title", defaultValue: "Complete Lorvex Setup", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.setup.complete.description", defaultValue: "Mark Lorvex setup complete with optional defaults.", table: "Localizable", bundle: SystemL10n.bundle))
 

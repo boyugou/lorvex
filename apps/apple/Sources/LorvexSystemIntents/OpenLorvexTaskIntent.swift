@@ -1,6 +1,7 @@
 import AppIntents
 
 struct OpenLorvexTaskIntent: LorvexUnauthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.open.title", defaultValue: "Open Lorvex Task", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.open.description", defaultValue: "Open Lorvex to a specific task.", table: "Localizable", bundle: SystemL10n.bundle))
   static let openAppWhenRun = true

@@ -1,6 +1,7 @@
 import AppIntents
 
 struct RemoveLorvexTaskReminderIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.reminder.remove.title", defaultValue: "Remove Lorvex Task Reminder", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.reminder.remove.description", defaultValue: "Remove one reminder from a Lorvex task.", table: "Localizable", bundle: SystemL10n.bundle))
 

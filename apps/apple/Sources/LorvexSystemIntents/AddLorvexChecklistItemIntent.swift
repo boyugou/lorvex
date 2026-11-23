@@ -1,6 +1,7 @@
 import AppIntents
 
 struct AddLorvexChecklistItemIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.checklist.add.title", defaultValue: "Add Lorvex Checklist Item", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.checklist.add.description", defaultValue: "Add a checklist item to a Lorvex task.", table: "Localizable", bundle: SystemL10n.bundle))
 

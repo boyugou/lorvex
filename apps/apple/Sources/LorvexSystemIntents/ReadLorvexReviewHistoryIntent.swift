@@ -1,6 +1,7 @@
 import AppIntents
 
 struct ReadLorvexReviewHistoryIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.review.history.read.title", defaultValue: "Read Lorvex Review History", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.review.history.read.description", defaultValue: "Read recent Lorvex daily reviews.", table: "Localizable", bundle: SystemL10n.bundle))
 

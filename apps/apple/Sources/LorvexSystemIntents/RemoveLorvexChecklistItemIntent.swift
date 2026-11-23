@@ -1,6 +1,7 @@
 import AppIntents
 
 struct RemoveLorvexChecklistItemIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.checklist.remove.title", defaultValue: "Remove Lorvex Checklist Item", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.checklist.remove.description", defaultValue: "Remove a checklist item from a Lorvex task.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -1,6 +1,7 @@
 import AppIntents
 
 struct SearchLorvexCalendarEventsIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.calendar.search.title", defaultValue: "Search Lorvex Calendar Events", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.calendar.search.description", defaultValue: "Search Lorvex calendar events from Shortcuts.", table: "Localizable", bundle: SystemL10n.bundle))
 

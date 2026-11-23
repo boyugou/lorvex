@@ -1,6 +1,7 @@
 import AppIntents
 
 struct BatchCreateLorvexTasksIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.batch.create.title", defaultValue: "Batch Create Lorvex Tasks", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.batch.create.description", defaultValue: "Create multiple Lorvex tasks from titles.", table: "Localizable", bundle: SystemL10n.bundle))
 

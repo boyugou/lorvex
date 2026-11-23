@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ReadLorvexMemoryIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.memory.read.title", defaultValue: "Read Lorvex Memory", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.memory.read.description", defaultValue: "Read a Lorvex memory entry by key from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

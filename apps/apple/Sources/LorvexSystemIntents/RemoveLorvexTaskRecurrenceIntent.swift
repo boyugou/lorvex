@@ -1,6 +1,7 @@
 import AppIntents
 
 struct RemoveLorvexTaskRecurrenceIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.recurrence.remove.title", defaultValue: "Remove Lorvex Task Recurrence", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.recurrence.remove.description", defaultValue: "Remove a Lorvex task recurrence rule.", table: "Localizable", bundle: SystemL10n.bundle))
 

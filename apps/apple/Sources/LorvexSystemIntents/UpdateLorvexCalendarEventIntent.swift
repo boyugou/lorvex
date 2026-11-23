@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct UpdateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.calendar.update.title", defaultValue: "Update Lorvex Calendar Event", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.calendar.update.description", defaultValue: "Update a Lorvex calendar event from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

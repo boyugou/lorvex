@@ -1,6 +1,7 @@
 import AppIntents
 
 struct SearchLorvexTasksIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.search.title", defaultValue: "Search Lorvex Tasks", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.search.description", defaultValue: "Search Lorvex tasks by text.", table: "Localizable", bundle: SystemL10n.bundle))
 

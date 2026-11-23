@@ -1,6 +1,7 @@
 import AppIntents
 
 struct PauseLorvexTaskIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.pause.title", defaultValue: "Pause Lorvex Task", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.pause.description", defaultValue: "Pause a started Lorvex task. It stays on its day.", table: "Localizable", bundle: SystemL10n.bundle))
 

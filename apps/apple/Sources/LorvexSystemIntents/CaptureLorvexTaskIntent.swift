@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct CaptureLorvexTaskIntent: LorvexUnauthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.capture.title", defaultValue: "Capture Lorvex Task", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.capture.description", defaultValue: "Create a Lorvex task from a system surface.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -1,6 +1,7 @@
 import AppIntents
 
 struct ReadLorvexLinkedTasksForEventIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.calendar.linked_tasks_for_event.read.title", defaultValue: "Read Lorvex Linked Tasks for Event", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.calendar.linked_tasks_for_event.read.description", defaultValue: "Read Lorvex tasks linked to a calendar event.", table: "Localizable", bundle: SystemL10n.bundle))
 

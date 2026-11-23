@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct AddLorvexHabitReminderIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.reminder.add.title", defaultValue: "Add Lorvex Habit Reminder", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.habit.reminder.add.description", defaultValue: "Add a reminder to a Lorvex habit.", table: "Localizable", bundle: SystemL10n.bundle))
 

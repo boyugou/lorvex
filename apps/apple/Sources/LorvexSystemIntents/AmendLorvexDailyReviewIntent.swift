@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct AmendLorvexDailyReviewIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.review.daily.amend.title", defaultValue: "Amend Lorvex Daily Review", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.review.daily.amend.description", defaultValue: "Update fields on an existing Lorvex daily review.", table: "Localizable", bundle: SystemL10n.bundle))
 

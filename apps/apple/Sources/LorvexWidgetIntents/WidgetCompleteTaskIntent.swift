@@ -9,6 +9,8 @@ import LorvexWidgetKitSupport
 /// process (`openAppWhenRun = false`). After `perform()` returns, WidgetKit
 /// reloads the timeline automatically via its post-intent refresh mechanism.
 public struct WidgetCompleteTaskIntent: LorvexWidgetActionIntent {
+  public static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+  public static let isDiscoverable: Bool = false
   public static let title = LocalizedStringResource(
     "widget.intent.complete.title", defaultValue: "Complete Task", table: "Localizable",
     bundle: WidgetSupportL10n.bundle)

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct DeleteLorvexMemoryIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.memory.delete.title", defaultValue: "Delete Lorvex Memory", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.memory.delete.description", defaultValue: "Delete an AI-writable Lorvex memory entry by key from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

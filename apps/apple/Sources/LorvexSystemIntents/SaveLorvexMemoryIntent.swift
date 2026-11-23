@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct SaveLorvexMemoryIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.memory.save.title", defaultValue: "Save Lorvex Memory", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.memory.save.description", defaultValue: "Save an AI-writable Lorvex memory entry from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

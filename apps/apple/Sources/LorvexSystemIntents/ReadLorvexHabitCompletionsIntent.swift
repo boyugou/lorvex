@@ -2,6 +2,7 @@ import AppIntents
 import Foundation
 
 struct ReadLorvexHabitCompletionsIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.completions.read.title", defaultValue: "Read Lorvex Habit Completions", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.habit.completions.read.description", defaultValue: "Read Lorvex habit completion history.", table: "Localizable", bundle: SystemL10n.bundle))
 

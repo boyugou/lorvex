@@ -1,6 +1,7 @@
 import AppIntents
 
 struct ReadLorvexListsIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.list.read.title", defaultValue: "Read Lorvex Lists", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.list.read.description", defaultValue: "Read Lorvex list catalog from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ReadLorvexOverviewIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.status.overview.read.title", defaultValue: "Read Lorvex Overview", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.status.overview.read.description", defaultValue: "Hear how many tasks are open and which come first.", table: "Localizable", bundle: SystemL10n.bundle))
 

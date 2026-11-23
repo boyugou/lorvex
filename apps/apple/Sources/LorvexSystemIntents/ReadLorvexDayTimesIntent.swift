@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ReadLorvexDayTimesIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.day_times.read.title", defaultValue: "Read Lorvex Schedule", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.day_times.read.description", defaultValue: "Read the Lorvex tasks with a time today or on a specific date.", table: "Localizable", bundle: SystemL10n.bundle))
 

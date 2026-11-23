@@ -1,6 +1,7 @@
 import AppIntents
 
 struct BatchDeferLorvexTasksIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.batch.defer.title", defaultValue: "Batch Defer Lorvex Tasks", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.batch.defer.description", defaultValue: "Defer multiple Lorvex tasks to a date.", table: "Localizable", bundle: SystemL10n.bundle))
 

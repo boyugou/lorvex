@@ -1,6 +1,7 @@
 import AppIntents
 
 struct AppendLorvexTaskBodyIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.body.append.title", defaultValue: "Append Lorvex Task Body", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.body.append.description", defaultValue: "Append notes to a Lorvex task from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

@@ -134,19 +134,33 @@ class MetadataModuleTests(unittest.TestCase):
             self.assertTrue((root / "keep.txt").is_file())
 
 
+DECLARED = {"authenticationPolicy": 1, "isAuthPolExplicit": True}
+
+
 class VerifyMetadataTests(unittest.TestCase):
     def test_actions_alone_cannot_satisfy_a_bundle_that_has_app_shortcuts(self) -> None:
         with self.assertRaisesRegex(SystemExit, "App Shortcuts provider or phrases"):
-            verify_metadata({"actions": {"Capture": {}}}, "App", ["Capture"], True)
+            verify_metadata({"actions": {"Capture": DECLARED}}, "App", ["Capture"], True)
 
     def test_complete_shortcuts_metadata_is_accepted(self) -> None:
-        verify_metadata({"actions": {"Capture": {}}, "autoShortcuts": [{}],
+        verify_metadata({"actions": {"Capture": DECLARED}, "autoShortcuts": [{}],
                          "autoShortcutProviderMangledName": "provider"}, "App", ["Capture"], True)
 
     def test_a_widget_requires_its_actions_but_not_an_app_shortcuts_provider(self) -> None:
-        verify_metadata({"actions": {"Complete": {}}}, "Widget", ["Complete"], False)
+        verify_metadata({"actions": {"Complete": DECLARED}}, "Widget", ["Complete"], False)
         with self.assertRaisesRegex(SystemExit, "lacks Missing"):
-            verify_metadata({"actions": {"Complete": {}}}, "Widget", ["Missing"], False)
+            verify_metadata({"actions": {"Complete": DECLARED}}, "Widget", ["Missing"], False)
+
+    def test_an_action_without_a_declared_authentication_policy_fails(self) -> None:
+        # The processor records an undeclared policy as 0 (always allowed) with
+        # `isAuthPolExplicit` false; an absent key is the same case.
+        actions = {
+            "Export": {"authenticationPolicy": 0, "isAuthPolExplicit": False},
+            "Capture": {"authenticationPolicy": 0, "isAuthPolExplicit": True},
+            "Read": {},
+        }
+        with self.assertRaisesRegex(SystemExit, "no declared authentication policy for Export, Read"):
+            verify_metadata({"actions": actions}, "App", [], False)
 
 
 class MetadataStringsTests(unittest.TestCase):

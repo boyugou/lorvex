@@ -11,6 +11,8 @@ import LorvexWidgetKitSupport
 /// the widget process (`openAppWhenRun = false`); WidgetKit reloads the timeline
 /// after `perform()` returns.
 public struct WidgetCompleteHabitIntent: LorvexWidgetActionIntent {
+  public static let authenticationPolicy: IntentAuthenticationPolicy = .alwaysAllowed
+  public static let isDiscoverable: Bool = false
   public static let title = LocalizedStringResource(
     "widget.intent.complete_habit.title", defaultValue: "Complete Habit", table: "Localizable",
     bundle: WidgetSupportL10n.bundle)

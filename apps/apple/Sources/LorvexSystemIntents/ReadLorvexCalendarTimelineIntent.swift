@@ -1,6 +1,7 @@
 import AppIntents
 
 struct ReadLorvexCalendarTimelineIntent: LorvexLocalAuthIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresLocalDeviceAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.calendar.timeline.read.title", defaultValue: "Read Lorvex Calendar Timeline", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.calendar.timeline.read.description", defaultValue: "Read Lorvex calendar events for a date range.", table: "Localizable", bundle: SystemL10n.bundle))
 

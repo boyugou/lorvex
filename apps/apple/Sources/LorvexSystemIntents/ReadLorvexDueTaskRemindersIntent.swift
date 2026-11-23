@@ -2,6 +2,7 @@ import AppIntents
 import LorvexCore
 
 struct ReadLorvexDueTaskRemindersIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.reminders.due.read.title", defaultValue: "Read Lorvex Due Task Reminders", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.reminders.due.read.description", defaultValue: "Read pending Lorvex task reminders that are due.", table: "Localizable", bundle: SystemL10n.bundle))
 

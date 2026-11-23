@@ -311,6 +311,118 @@ def user_activity_contract_failures(
     return failures
 
 
+# The policy each security tier protocol stands for. An intent that names a
+# tier declares that policy in its own body.
+INTENT_TIER_POLICIES = {
+    "LorvexUnauthenticatedIntent": ".alwaysAllowed",
+    "LorvexAuthenticatedIntent": ".requiresAuthentication",
+    "LorvexLocalAuthIntent": ".requiresLocalDeviceAuthentication",
+    "LorvexWidgetActionIntent": ".alwaysAllowed",
+}
+# A type, extension or protocol declaration with its inheritance clause. The
+# declaration may be indented, generic, and carry attributes on its own line
+# or on the lines before it.
+INTENT_DECLARATION = re.compile(
+    r"^(?P<indent>[ \t]*)(?P<attributes>(?:@\w+(?:\([^)\n]*\))?\s+)*)"
+    r"(?:(?:public|package|internal|fileprivate|private|open|final|nonisolated)\s+)*"
+    r"(?P<kind>struct|class|actor|enum|extension|protocol)\s+(?P<name>[\w.]+)\s*"
+    r"(?:<[^>{]*>)?\s*(?::(?P<inherits>[^{]*))?\{",
+    re.MULTILINE,
+)
+INTENT_POLICY = re.compile(
+    r"^\s*(?:public )?static let authenticationPolicy: IntentAuthenticationPolicy = (\.\w+)\s*$",
+    re.MULTILINE,
+)
+INTENT_UNDISCOVERABLE = re.compile(
+    r"^\s*(?:public )?static let isDiscoverable: Bool = false\s*$", re.MULTILINE
+)
+
+
+def inherited_names(inherits: str | None) -> list[str]:
+    """The names in a declaration's inheritance clause, without its `where` part."""
+    if not inherits:
+        return []
+    return re.findall(r"[A-Za-z_][\w.]*", re.split(r"\bwhere\b", inherits)[0])
+
+
+def intent_security_failures(sources: dict[str, str]) -> list[str]:
+    """The App Intent types in `sources` (path to Swift text) whose own body does
+    not declare the authentication policy the build can read.
+
+    The build's App Intents metadata step reads only what a type declares itself,
+    as a `static let` with a literal value. A policy supplied by a protocol
+    extension never reaches the metadata, which then records the intent as
+    allowed on a locked device. So every type that conforms to a protocol named
+    `...Intent`, or carries the `@AppIntent` macro, must declare
+    `authenticationPolicy` in its body; one that names a security tier must name
+    only one and declare that tier's policy; and a widget-tap intent must also
+    declare itself not discoverable.
+
+    Two forms would hide an intent from this check, so both fail: a conformance
+    added in an extension, and a protocol that refines an intent protocol under
+    a name that does not end in `Intent`. This is a check of source text: the
+    Mac build's metadata step, which fails when an action reaches the metadata
+    without a declared policy, covers a form this does not read.
+    """
+    failures: list[str] = []
+    for path, source in sorted(sources.items()):
+        for match in INTENT_DECLARATION.finditer(source):
+            inherits = inherited_names(match.group("inherits"))
+            names_intent = any(token.endswith("Intent") for token in inherits)
+            kind = match.group("kind")
+            name = match.group("name")
+            if kind == "protocol":
+                if names_intent and not name.endswith("Intent"):
+                    failures.append(
+                        f"{path}: protocol {name} refines an App Intent protocol; name it "
+                        "`...Intent` so the types that conform to it are checked"
+                    )
+                continue
+            if kind == "extension":
+                if names_intent:
+                    failures.append(
+                        f"{path}: an extension gives {name} an App Intent conformance; "
+                        "declare it on the type, where its authentication policy is checked"
+                    )
+                continue
+            if not names_intent and "@AppIntent(" not in match.group("attributes"):
+                continue
+            end = source.find(f"\n{match.group('indent')}}}", match.end())
+            body = source[match.end(): end if end != -1 else len(source)]
+            declared = INTENT_POLICY.findall(body)
+            if len(declared) != 1:
+                failures.append(
+                    f"{path}: {name} must declare `static let authenticationPolicy: "
+                    "IntentAuthenticationPolicy = ...` once in its own body"
+                )
+                continue
+            tiers = [token for token in inherits if token in INTENT_TIER_POLICIES]
+            if len(tiers) > 1:
+                failures.append(
+                    f"{path}: {name} names more than one security tier: {', '.join(tiers)}"
+                )
+                continue
+            tier = tiers[0] if tiers else None
+            if tier and declared[0] != INTENT_TIER_POLICIES[tier]:
+                failures.append(
+                    f"{path}: {name} names {tier} but declares {declared[0]}; "
+                    f"the tier's policy is {INTENT_TIER_POLICIES[tier]}"
+                )
+            if tier == "LorvexWidgetActionIntent" and not INTENT_UNDISCOVERABLE.search(body):
+                failures.append(
+                    f"{path}: {name} is a widget-tap intent and must declare "
+                    "`static let isDiscoverable: Bool = false` in its own body"
+                )
+    return failures
+
+
+def swift_sources(root: Path = ROOT / "Sources") -> dict[str, str]:
+    return {
+        str(path.relative_to(ROOT)): path.read_text(encoding="utf-8")
+        for path in sorted(root.rglob("*.swift"))
+    }
+
+
 def main() -> int:
     failures: list[str] = []
     if not QUICK_ACTION_SOURCE.is_file():
@@ -361,6 +473,8 @@ def main() -> int:
                 },
             )
         )
+
+    failures.extend(intent_security_failures(swift_sources()))
 
     if failures:
         print("System entrypoint verification failed:", file=sys.stderr)

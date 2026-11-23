@@ -8,12 +8,12 @@ import Testing
 @testable import LorvexSystemIntents
 @testable import LorvexWidgetIntents
 
-// Guards the App Intents security pass: every perform-style intent runs over the
-// real CloudKit-synced store, so its lock-screen posture (`authenticationPolicy`),
-// destructive-action confirmation, and execution mode are load-bearing. These
-// tests pin the central classification so a new intent added as a bare
-// `AppIntent` — or filed under the wrong tier — fails here instead of silently
-// shipping as `.alwaysAllowed`.
+// Every perform-style intent runs over the real CloudKit-synced store, so its
+// lock-screen posture (`authenticationPolicy`), destructive-action
+// confirmation, and execution mode are load-bearing. These tests assert the
+// run-time values for the intents they list, a sample of each tier. The check
+// that covers every intent, including one added later, is the static gate
+// `verify_system_entrypoints.py`.
 
 // MARK: - F17: authentication policy per capability
 
@@ -105,9 +105,10 @@ func destructiveAndMutatingIntentsRequireAuthentication() {
 
 @Test
 func classifiedIntentsRouteThroughCentralSecurityMarkers() {
-  // Typed as `any AppIntent.Type` so each `is` is a genuine runtime check:
-  // every classified intent conforms to the root marker and therefore cannot be
-  // a bare `AppIntent` that would silently inherit `.alwaysAllowed`.
+  // Typed as `any AppIntent.Type` so each `is` is a genuine runtime check
+  // that the intent conforms to the root marker, which gives it its background
+  // execution mode. The marker supplies no policy; each intent declares its
+  // own.
   let classified: [any AppIntent.Type] = [
     OpenLorvexIntent.self,
     CaptureLorvexTaskIntent.self,
@@ -121,7 +122,8 @@ func classifiedIntentsRouteThroughCentralSecurityMarkers() {
   for type in classified {
     #expect(type is any LorvexSecuredIntent.Type, "\(type)")
   }
-  // Tier separation, on existential metatypes so the checks are not folded away.
+  // An intent names one tier, on existential metatypes so the checks are not
+  // folded away.
   let overview: any AppIntent.Type = ReadLorvexOverviewIntent.self
   #expect(overview is any LorvexLocalAuthIntent.Type)
   #expect(!(overview is any LorvexUnauthenticatedIntent.Type))

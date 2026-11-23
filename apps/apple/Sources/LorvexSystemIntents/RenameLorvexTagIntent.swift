@@ -1,6 +1,7 @@
 import AppIntents
 
 struct RenameLorvexTagIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.tag.rename.title", defaultValue: "Rename Lorvex Tag", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.tag.rename.description", defaultValue: "Rename a Lorvex task tag from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 

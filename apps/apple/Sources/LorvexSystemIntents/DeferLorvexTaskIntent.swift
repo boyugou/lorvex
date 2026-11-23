@@ -1,6 +1,7 @@
 import AppIntents
 
 struct DeferLorvexTaskIntent: LorvexAuthenticatedIntent {
+  static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.defer.title", defaultValue: "Defer Lorvex Task", table: "Localizable", bundle: SystemL10n.bundle)
   static let description = IntentDescription(LocalizedStringResource("system.task.defer.description", defaultValue: "Defer a Lorvex task until tomorrow.", table: "Localizable", bundle: SystemL10n.bundle))
 

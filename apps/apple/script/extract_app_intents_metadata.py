@@ -27,9 +27,11 @@ For the executable target named by `--target` it:
 4. Compiles a linked target's `AppShortcuts.xcstrings` into the bundle's
    `.lproj` directories, where the system reads App Shortcut phrases.
 
-It fails when the metadata lacks an `--expect`ed type, when a linked target has
-no const values (the build ran without extraction), or when a metadata string
-is missing from every linked catalog or lacks a shipped language.
+It fails when the metadata lacks an `--expect`ed type, when an action in the
+metadata has no declared authentication policy (the processor then records it as
+allowed on a locked device), when a linked target has no const values (the build
+ran without extraction), or when a metadata string is missing from every linked
+catalog or lacks a shipped language.
 """
 
 from __future__ import annotations
@@ -141,6 +143,17 @@ def verify_metadata(metadata: dict, target: str, expected: list[str], has_shortc
         raise SystemExit(f"extract_app_intents_metadata: {target} metadata lacks {', '.join(missing)}")
     if has_shortcuts and not (metadata.get("autoShortcuts") and metadata.get("autoShortcutProviderMangledName")):
         raise SystemExit(f"extract_app_intents_metadata: {target} metadata lacks its App Shortcuts provider or phrases")
+    undeclared = sorted(
+        name for name, action in metadata.get("actions", {}).items()
+        if not action.get("isAuthPolExplicit")
+    )
+    if undeclared:
+        raise SystemExit(
+            f"extract_app_intents_metadata: {target} metadata records no declared authentication "
+            f"policy for {', '.join(undeclared)}. Declare `static let authenticationPolicy` in "
+            "each intent's own body; a value from a protocol extension does not reach the metadata, "
+            "which then lets the intent run on a locked device."
+        )
 
 
 def toolchain_dir() -> Path:

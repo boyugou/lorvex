@@ -357,6 +357,17 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$APP_DISPLAY_NAME</string>
+  <key>CFBundleSpokenName</key>
+  <string>Lore vex</string>
+  <key>INAlternativeAppNames</key>
+  <array>
+    <dict>
+      <key>INAlternativeAppName</key>
+      <string>Lore Vex</string>
+      <key>INAlternativeAppNamePronunciationHint</key>
+      <string>lore vex</string>
+    </dict>
+  </array>
   <key>CFBundleIconFile</key>
   <string>LorvexAppIcon</string>
   <key>CFBundleIconName</key>

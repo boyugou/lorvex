@@ -47,6 +47,17 @@
 	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundleSpokenName</key>
+	<string>Lore vex</string>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>Lore Vex</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>lore vex</string>
+		</dict>
+	</array>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

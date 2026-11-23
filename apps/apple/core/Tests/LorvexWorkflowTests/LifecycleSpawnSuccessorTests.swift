@@ -82,13 +82,22 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
     }
   }
 
+  /// A store whose product time zone is UTC, so the day a `now` instant falls
+  /// on does not depend on the machine's zone. A test of another zone sets it
+  /// with ``seedTimezonePreference(_:_:)``.
+  private func freshStore() throws -> LorvexStore {
+    let store = try WorkflowTestSupport.freshStore()
+    try seedTimezonePreference(store.writer, "UTC")
+    return store
+  }
+
   private func seedTimezonePreference(
     _ writer: any DatabaseWriter, _ ianaName: String
   ) throws {
     try writer.write { db in
       try db.execute(
         sql:
-          "INSERT INTO preferences (key, value, version, updated_at) "
+          "INSERT OR REPLACE INTO preferences (key, value, version, updated_at) "
           + "VALUES ('timezone', ?1, "
           + "        '0000000000000_0000_0000000000000000', '2026-01-01T00:00:00Z')",
         arguments: ["\"\(ianaName)\""])
@@ -131,7 +140,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   // MARK: - recurrence.rs ports
 
   func testCadenceUsesCanonicalOccurrenceDateNotDeferredDueDate() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -172,7 +181,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// is the synced canonical truth, so it must be the RFC-faithful, exportable
   /// form — never a clamped positive month-end day.
   func testScheduleAnchoredMonthEndInjectsNegativeBymonthday() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -206,7 +215,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// lands the next occurrence on 2026-04-01 (completion + 7 days), proving the
   /// cadence anchor is ignored.
   func testCompletionAnchoredSpawnsRelativeToCompletionDay() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -239,7 +248,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// A monthly completion-anchored rule advances by whole months from the
   /// completion day, clamping the day-of-month against shorter months.
   func testCompletionAnchoredMonthlyAdvancesByMonths() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -265,8 +274,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// Concurrent completion addresses the same deterministic successor row even
   /// when completion-anchored devices calculated different dates.
   func testCompletionAnchoredSpawnReusesDeterministicPeerSuccessor() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -317,7 +325,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// COUNT still decrements on completion-anchored rules and terminates the
   /// series when exhausted.
   func testCompletionAnchoredHonorsCount() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -361,7 +369,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testCompletionTransitionDoesNotSpawnWhenNoRecurrence() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(id: "non-recurring", title: "One-off", createdAt: "2026-03-10T00:00:00Z"))
@@ -374,7 +382,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSpawnSkipsExdateDates() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -403,7 +411,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// the spawned successor so a later generation still honours the skip.
   /// Regression for the successor losing all recurrence exceptions on spawn.
   func testSpawnCarriesRecurrenceExceptionsToSuccessor() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -447,7 +455,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// spring-forward (2026-03-08) — so the copy must land at 09:00 EDT (13:00Z),
   /// not the 14:00Z / "10:00" a fixed `days * 86400` UTC shift produces.
   func testSpawnCopiesReminderPreservingLocalWallClockAcrossSpringForward() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTimezonePreference(store.writer, "America/New_York")
     try seedTask(
       store.writer,
@@ -491,7 +499,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// after US fall-back (2026-11-01) — so the copy must stay at 09:00 EST
   /// (14:00Z), not the 13:00Z / "08:00" a fixed-seconds shift yields.
   func testSpawnCopiesReminderPreservingLocalWallClockAcrossFallBack() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTimezonePreference(store.writer, "America/New_York")
     try seedTask(
       store.writer,
@@ -530,7 +538,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSpawnWithCountDecrements() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -573,7 +581,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSpawnWithUncappedCountDecrements() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -597,7 +605,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSpawnPreservesCanonicalOccurrenceDateIndependence() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -625,7 +633,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSpawnWithUntilStopsAfterBound() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -666,7 +674,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSpawnPreservesPlannedDateOffset() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -694,7 +702,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSpawnWithoutPlannedDateLeavesNull() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -720,7 +728,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   // MARK: - reopen lineage tests
 
   func testReopenDoesNotCancelUnrelatedSameTitleRecurringTask() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedList(store.writer, id: "list-X")
     try seedTask(
       store.writer,
@@ -759,7 +767,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testReopenIgnoresSameGroupTaskWithoutSpawnedFrom() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedList(store.writer, id: "list-Y")
     try seedTask(
       store.writer,
@@ -805,8 +813,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   /// parent's own Mar 15. The cancel query must scope by `spawned_from` +
   /// `status`, not `due_date > parent`, or the successor is stranded open.
   func testReopenCancelsSuccessorDuedOnOrBeforeParentDueDate() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -847,8 +854,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testRecompleteRevivesSameSuccessorAndPreservesUserContent() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -933,8 +939,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testReopenRejectsAlreadyAdvancedSuccessorWithoutForking() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -981,8 +986,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testReopenRejectsASuccessorFromAnotherLifecycleGeneration() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1025,8 +1029,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testReopenRejectsASuccessorWhoseOwnSuccessorIsStillActive() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1071,8 +1074,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testRecompleteRejectsASuccessorThatAlreadyAdvanced() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1118,8 +1120,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testCancelRejectsASuccessorThatAlreadyAdvancedAsACancel() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1173,8 +1174,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testSomedaySuccessorIsRewindableAndCancelled() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1211,7 +1211,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   // MARK: - transitions.rs recurring cases
 
   func testApplyReopenTransitionCancelsSpawnedSuccessorAndCollectsSideEffects() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     let successorId = TaskRecurrenceSuccessorID.make(
       parentTaskId: "parent", recurrenceGroupId: "grp-parent")
     try seedTask(
@@ -1301,7 +1301,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testCompletionTransitionPropagatesSuccessorTagCopyFailures() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1328,7 +1328,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testReopenTransitionPropagatesSuccessorCancelFailures() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     let successorId = TaskRecurrenceSuccessorID.make(
       parentTaskId: "parent", recurrenceGroupId: "grp-parent")
     try seedTask(
@@ -1370,7 +1370,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testCompletionTransitionSurfacesTimezonePreferenceLookupFailures() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1394,7 +1394,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testCompletionTransitionRejectsMalformedTimezonePreference() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1404,13 +1404,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
         recurrence: #"{"FREQ":"DAILY"}"#,
         recurrenceGroupId: "grp-recurring",
         createdAt: "2026-03-10T00:00:00Z"))
-    try store.writer.write { db in
-      try db.execute(
-        sql:
-          "INSERT INTO preferences (key, value, version, updated_at) "
-          + "VALUES ('timezone', '\"definitely-not-a-timezone\"', "
-          + "        '0000000000000_0000_0000000000000001', '2026-03-10T00:00:00Z')")
-    }
+    try seedTimezonePreference(store.writer, "definitely-not-a-timezone")
     XCTAssertThrowsError(
       try runCompletion(
         store, taskId: "recurring",
@@ -1425,7 +1419,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testCompletionTransitionRejectsInvalidNowTimestamp() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedTask(
       store.writer,
       SeedTask(
@@ -1488,7 +1482,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testCompletionKeepsThePlannedTimeAndTheSuccessorStartsWithout() throws {
-    let store = try WorkflowTestSupport.freshStore()
+    let store = try freshStore()
     try seedDailyParent(
       store.writer, taskId: "daily-time-a", dueDate: "2026-04-04",
       createdAt: "2026-04-01T00:00:00Z")
@@ -1508,8 +1502,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
   }
 
   func testRevivedSuccessorLosesItsPlannedTime() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    try seedTimezonePreference(store.writer, "UTC")
+    let store = try freshStore()
     try seedDailyParent(
       store.writer, taskId: "daily-time-b", dueDate: "2026-04-01",
       createdAt: "2026-03-30T00:00:00Z")

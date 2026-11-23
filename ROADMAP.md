@@ -62,12 +62,16 @@ person living with the app, and then a decision.
   Watch. Measure before changing anything: launch time, the time from a
   tap to its result on screen for the common actions (complete, defer,
   open a task, switch a tab or workspace), the hitch rate while scrolling
-  long lists and the calendar, and each animation's duration and curve
-  (the design system has no shared motion values yet; `lorvexAnimated`
-  only turns animation off under Reduce Motion). MetricKit on the owner's Mac has
-  one data point already: a 3.3 s launch against 0.7 to 1.2 s on other days
-  (see "Disk writes and launch time" below). Then fix the slowest and the
-  most visible first, and keep the measurements as a repeatable script.
+  long lists and the calendar, and each animation's duration and curve.
+  MetricKit on the owner's Mac has one data point already: a 3.3 s launch
+  against 0.7 to 1.2 s on other days (see "Disk writes and launch time"
+  below). Then fix the slowest and the most visible first, and keep the
+  measurements as a repeatable script.
+
+  Animation timing is shared: every animation names one of the
+  `LorvexDesign.Motion` tokens, chosen by the table in
+  `apps/apple/docs/design/DESIGN_SYSTEM.md` section 9, and
+  `verify_design_tokens.py` rejects a literal curve.
 
   The data layer is measured (2026-11-23, this repository's Mac, debug
   build; `LORVEX_BENCH=1` runs `StoreLatencyBenchmarks` and the core
@@ -82,8 +86,34 @@ person living with the app, and then a decision.
   off the main actor on every refresh: the Spotlight content index (278
   ms), the widget snapshot (178 ms), the Spotlight task index (155 ms), and
   the badge (142 ms, the same stats read the widget makes). That is CPU and
-  battery, not a wait. Next: what the views cost to draw and scroll, and
-  launch, measured in the simulator.
+  battery, not a wait. The badge now takes its count from the widget
+  snapshot's read instead of making its own, and the Spotlight calendar
+  index reads its events in one transaction.
+
+  The views are measured in the iPhone simulator (2026-11-23, optimized
+  build, 60 Hz, the sample day with the stress content;
+  `script/ios_sim_responsiveness.sh --optimized`). Launch takes a median
+  1.84 s over five runs. Scrolling Calendar day, a habit's detail and the
+  weekly review drops no frame and never holds the main thread longer than
+  a frame; Today drops 15 frames in its scroll (worst 118 ms), Habits 11,
+  Tasks 9, Settings 9 and Calendar month 6. Screen changes are the slow
+  part, and there the main thread itself works through stretches longer
+  than a frame: opening capture five times drops 21 frames (worst 526 ms)
+  with 22 such stretches (worst 599 ms), opening a task 18 frames (worst
+  146 ms) with 29 (worst 353 ms), and switching tabs 26 frames (worst
+  299 ms) with 26 (worst 358 ms).
+
+  `sample` at 1 ms intervals during each of those three found the app's own
+  functions in 0.9 % (capture), 4.2 % (task) and 8.3 % (tabs) of the main
+  thread's busy samples. The rest is the system acting on the app's view
+  tree: SwiftUI updating its graph and laying out, Core Animation committing
+  the changed layers, and for capture also the sheet transition, the
+  keyboard coming up for the focused field, and a framework loaded on first
+  use. So the cost follows how many views a change touches, not slow app
+  code. Next: find which views make a tab switch and a task push touch that
+  much (Instruments' SwiftUI template, which `xctrace` can record headlessly),
+  and whether capture's keyboard can come up without holding the sheet's
+  first frames.
 - Platform adaptation sprint (owner, 2026-11-16): iPhone Duo and useful
   capabilities in macOS 27 and iOS 27. The deployment floor stays at 26, so
   every 27 API sits behind an availability check. The system integration

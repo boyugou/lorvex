@@ -33,7 +33,7 @@
 
     /// The on-screen vertical scroll view with the most content, ignoring
     /// small nested ones such as a horizontal row of chips.
-    private static func tallestVisibleScrollView() -> UIScrollView? {
+    static func tallestVisibleScrollView() -> UIScrollView? {
       var best: UIScrollView?
       func visit(_ view: UIView) {
         if let scrollView = view as? UIScrollView, !scrollView.isHidden, scrollView.window != nil,

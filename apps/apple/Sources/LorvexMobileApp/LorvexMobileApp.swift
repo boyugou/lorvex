@@ -116,6 +116,7 @@ struct LorvexMobileApp: App {
           store.debugApplyLaunchNavigationIfNeeded()
           #if os(iOS)
             await DebugListScroller.scrollIfRequested()
+            await DebugInteractionDriver.runIfRequested(store: store)
             await DebugAccessibilityDump.dumpIfRequested()
           #endif
         #endif

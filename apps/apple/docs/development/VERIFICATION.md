@@ -129,6 +129,38 @@ them on an otherwise idle Mac; the numbers are from a debug build.
 | `StoreLatencyBenchmarks` | the Mac `AppStore` and iOS `MobileStore` over an on-disk store of two sizes (about 130 tasks, and 4,400 tasks with a year of habit history and 1,000 events): first and warm refresh, a task completion, and the longest main-actor stall during each; `macRefreshSteps` times each step of the Mac refresh alone. Prints `[BENCH]` lines and asserts nothing | `LORVEX_BENCH=1 script/verify_swift.sh --filter StoreLatencyBenchmarks` |
 | `PerformanceBenchmarks.swift` | guardrails with a threshold each: `AppStore.refresh` over a seeded in-memory store, the widget projector, export, MCP dispatch, Spotlight documents | `LORVEX_BENCH=1 script/verify_swift.sh --filter benchmark` |
 | core `LorvexBenchmarks` | the core's reads, writes, search, and sync apply at 1,000 and 10,000 tasks | `cd core && LORVEX_BENCH=1 swift test -j 4 --filter LorvexBenchmarks` |
+| `ResponsivenessTests` (iOS UI tests) | in the simulator, over the sample day with the stress content: launch time to a responsive first frame (XCTest's launch metric), and the late frames and long stretches of main-thread work while flinging each main screen, switching tabs, opening a task, and opening capture | `script/ios_sim_responsiveness.sh --optimized <outdir> [test …]` |
+
+The app drives each interaction itself and measures it: with the DEBUG
+launch argument `-lorvexFrameProbe <scenario>:<label>`,
+`DebugInteractionDriver` waits three seconds after the launch route has drawn,
+then scrolls the tallest list, switches tabs, pushes a task, or presents
+capture, while `DebugFrameProbe` measures; the script collects each run's line
+into `frames.txt`. The UI tests only launch and wait, because an XCUITest
+element lookup snapshots the app's accessibility tree on its main thread,
+which the probe would count as the app's own stutter; XCTest's own scroll
+metric reports no hitch numbers in the simulator.
+
+The probe reports two measures. Late frames (`hitches`, `hitch_ms`,
+`worst_ms`) are the gaps between display-link callbacks beyond one refresh
+interval; a frame is late when the main thread or the render server was busy,
+and the simulator's render server draws on the Mac, so its share does not
+predict a phone's. Busy main thread (`busy_ms`, `long_busy`,
+`long_busy_over_ms`, `worst_busy_ms`) times each stretch of main-thread work
+between two waits for events; a stretch longer than one refresh interval held
+a frame back whatever the render server did, so it is the measure of the
+app's own code. `--optimized` builds with the Swift optimizer on, into its own
+derived data folder; without it the app is a debug build, whose views run
+several times slower than a tester's. The simulator runs at 60 Hz on the
+Mac's processor, so its numbers rank screens against each other rather than
+predict a phone's.
+
+To see what that main-thread work is, launch the installed app with a test's
+arguments through `xcrun simctl launch` (it prints the process id), run
+`sample <pid> 14 1 -file <out>` from three seconds after launch, and read the
+main thread's call graph. Check that it contains the interaction (a sheet
+transition, a tab change) before reading anything from it: a run where the
+interaction did not happen shows an idle main thread.
 
 ## Oracles and committed checks
 

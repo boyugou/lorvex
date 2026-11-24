@@ -296,21 +296,31 @@ def forbidden_rust_mcp_surface_names(names: set[str]) -> list[str]:
     return forbidden
 
 
-def forbidden_rust_mcp_source_paths() -> list[str]:
+def forbidden_rust_mcp_source_paths(
+    roots: list[Path] | None = None,
+    root: Path = ROOT,
+) -> list[str]:
+    """Source paths whose names suggest a second MCP server beside the Swift host.
+
+    Swift files inside the `LorvexMCPHost` target are the Swift-native host
+    itself, so their names may say what they are (`MCPServer.swift`).
+    """
     forbidden: list[str] = []
-    roots = [ROOT / "Sources"]
-    for root in roots:
-        if not root.exists():
+    for source_root in roots or [root / "Sources"]:
+        if not source_root.exists():
             continue
-        for path in root.rglob("*"):
+        for path in source_root.rglob("*"):
             if not path.is_dir() and path.suffix not in {".swift", ".rs"}:
                 continue
             name = path.stem if path.is_file() else path.name
             if name in ALLOWED_MCP_SERVER_NAMES:
                 continue
+            relative = path.relative_to(source_root)
+            if path.suffix == ".swift" and relative.parts[0] in ALLOWED_MCP_SERVER_NAMES:
+                continue
             normalized_name = normalized_identifier(name)
             if any(marker in normalized_name for marker in FORBIDDEN_RUST_MCP_NAME_MARKERS):
-                forbidden.append(str(path.relative_to(ROOT)))
+                forbidden.append(str(path.relative_to(root)))
     return sorted(forbidden)
 
 

@@ -292,10 +292,18 @@ the same semantic operations that maintain audit logs, outbox rows,
 
 ### MCP
 
-`LorvexMCPHost` is the shipped MCP stdio server: a Swift command-line executable
-built on the official Swift MCP SDK (`modelcontextprotocol/swift-sdk`). Real MCP
-clients — Claude, Codex, and other stdio clients — drive it as Lorvex's primary
-write interface.
+`LorvexMCPHost` is the shipped MCP stdio server: a Swift command-line
+executable. Real MCP clients — Claude, Codex, and other stdio clients — drive it
+as Lorvex's primary write interface.
+
+- The protocol layer is Lorvex's own: `MCPStdioChannel` reads and writes
+  newline-delimited JSON-RPC, `MCPWire` decodes messages without
+  reinterpreting strings, and `MCPServer` dispatches them. One process serves
+  both the `initialize` handshake protocol (2025-11-25 and earlier) and MCP
+  2026-07-28 (`server/discover` and per-request `_meta`), chosen per request.
+  The official Swift SDK (`modelcontextprotocol/swift-sdk`) supplies the
+  protocol's data types (`Tool`, `Value`, `CallTool`, `Initialize`). Why, and
+  the rules for each protocol: `../../../../docs/decisions/mcp-protocol-layer.md`.
 
 - It exposes 122 tools spanning tasks, day planning, lists, habits, calendar,
   reviews, memory, and system diagnostics. `script/expected_mcp_tools.py` is the

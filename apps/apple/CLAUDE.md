@@ -31,8 +31,11 @@ feel native to their platforms.
   with `DEVELOPER_DIR=<Xcode>/Contents/Developer` instead of changing the
   system selection; `script/doctor.sh` checks the selection and the rest of the
   machine
-- **MCP host:** `LorvexMCPHost` executable using the official Swift SDK
-  (`modelcontextprotocol/swift-sdk`)
+- **MCP host:** `LorvexMCPHost` executable. It serves MCP over stdio with
+  its own JSON-RPC layer (`MCPServer`), speaking both the `initialize`
+  handshake protocol and MCP 2026-07-28, and uses the official Swift SDK
+  (`modelcontextprotocol/swift-sdk`) for the protocol's data types
+  (`../../docs/decisions/mcp-protocol-layer.md`)
 - **Markdown:** `swiftlang/swift-markdown` — never hand-write a parser
 - **Core:** `LorvexAppleCore` SwiftPM package (`core/`) — pure-Swift domain,
   SQLite storage (GRDB), workflow, and sync (`LorvexDomain`, `LorvexStore`,
@@ -295,7 +298,7 @@ implementation or fetching another file.
 5. **Self-review once before finishing:** correctness first, then leftovers
    (dead code, stale comments, unused imports).
 6. **Read the documentation before using an unfamiliar API:** Apple's for
-   SwiftUI and AppKit, the swift-sdk's for MCP.
+   SwiftUI and AppKit, the MCP specification and the swift-sdk's for MCP.
 7. **Prefer a behavior test to a source pin.** `verify_source_hygiene.py`
    holds literal lines of source that must or must not appear in a file. Add
    one only for a rule about the source itself (a banned API, a required
@@ -463,6 +466,9 @@ finds nothing worth a tester's notice is a reason to stop.
 - **Shared contracts:** `../../schema/schema.sql`,
   `../../docs/design/SYNC_APPLY_SEMANTICS.md`, and current specs under
   `../../spec/`.
+- **MCP specification:** https://modelcontextprotocol.io/specification/2026-07-28
+  (the schema is `schema/2026-07-28/schema.ts` in
+  `github.com/modelcontextprotocol/modelcontextprotocol`)
 - **MCP Swift SDK:** https://github.com/modelcontextprotocol/swift-sdk
 - **swift-markdown:** https://github.com/swiftlang/swift-markdown
 - **Build/verify:** `script/verify_all.sh`, `script/build_and_run.sh`

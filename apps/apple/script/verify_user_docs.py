@@ -95,7 +95,7 @@ CHECKS = {
             "local builds fall back to preview data when no App Group",
         ],
         "required": [
-            "A Swift-native MCP host built on the official",
+            "A Swift-native MCP host that speaks both the `initialize` handshake",
             "App Intents / Shortcuts / Siri",
             "widget, and MCP surfaces all consume it",
         ],

@@ -33,13 +33,11 @@ let package = Package(
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"])
     ],
     dependencies: [
-        // Pinned to one release: Claude Code and Claude Desktop give the helper
-        // Unix sockets for stdin and stdout, Codex gives it pipes, and an SDK
-        // upgrade lands only after `script/mcp_stdio_smoke.py` passes over both.
+        // The MCP host serves the protocol itself (`MCPServer`) and uses the
+        // SDK for its data types, whose encoding is what clients receive. Pinned
+        // to one release so an upgrade that changes that encoding lands only
+        // after `script/mcp_stdio_smoke.py` and the host's protocol tests pass.
         .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", exact: "0.12.1"),
-        // The MCP SDK's logging package, already in the graph through swift-sdk;
-        // the host names its `Logger` type in the transport it wraps.
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
         .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.8.0"),
         // The pure-Swift core (LorvexDomain/Store/Workflow/Sync/Runtime). The app
         // talks to it through LorvexCoreServicing, implemented by
@@ -198,8 +196,7 @@ let package = Package(
             name: "LorvexMCPHost",
             dependencies: [
                 "LorvexCore",
-                .product(name: "MCP", package: "swift-sdk"),
-                .product(name: "Logging", package: "swift-log")
+                .product(name: "MCP", package: "swift-sdk")
             ]
         ),
         .executableTarget(

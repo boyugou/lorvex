@@ -10,6 +10,7 @@ from verify_apple_strategy import (
     forbidden_cloud_sync_source_paths,
     forbidden_cloud_sync_target_dependencies,
     forbidden_email_reference_paths,
+    forbidden_rust_mcp_source_paths,
     forbidden_swift_core_placeholder_sources,
     forbidden_theme_system_paths,
     forbidden_web_ui_source_paths,
@@ -244,6 +245,27 @@ class VerifyAppleStrategyTests(unittest.TestCase):
             self.assertEqual(
                 forbidden_web_ui_source_paths(roots=[root / "Sources"], root=root),
                 [],
+            )
+
+    def test_forbidden_rust_mcp_source_paths_allows_only_the_swift_host_target(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            host = root / "Sources" / "LorvexMCPHost"
+            host.mkdir(parents=True)
+            (host / "MCPServer.swift").write_text("final class MCPServer {}\n", encoding="utf-8")
+            app = root / "Sources" / "LorvexApple"
+            app.mkdir(parents=True)
+            (app / "RustMCPBridge.swift").write_text("enum RustMCPBridge {}\n", encoding="utf-8")
+            (app / "MCPServerFallback.swift").write_text("enum Fallback {}\n", encoding="utf-8")
+            (host / "mcp_server.rs").write_text("fn main() {}\n", encoding="utf-8")
+
+            self.assertEqual(
+                forbidden_rust_mcp_source_paths(roots=[root / "Sources"], root=root),
+                [
+                    "Sources/LorvexApple/MCPServerFallback.swift",
+                    "Sources/LorvexApple/RustMCPBridge.swift",
+                    "Sources/LorvexMCPHost/mcp_server.rs",
+                ],
             )
 
     def test_forbidden_theme_system_paths_rejects_theme_files_not_command_palette(self) -> None:

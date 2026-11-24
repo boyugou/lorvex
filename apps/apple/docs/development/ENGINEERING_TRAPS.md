@@ -421,21 +421,23 @@ Contents: [Crashes and isolation](#crashes-and-isolation) ·
 
 ## MCP host
 
-- **The host's transport removes a client's experimental capabilities from
-  `initialize`, because the Swift MCP SDK cannot decode them.** The MCP schema
-  lets each entry of `initialize.params.capabilities.experimental` be any JSON
-  object, and Codex Desktop sends `"codex/auth-change": {}`. The SDK's
-  `Client.Capabilities.experimental` is `[String: String]?` (in 0.12.1, the
-  latest release, and on its main branch as of 2026-11-23), so such a client
-  got error -32603 and no tools. Lorvex reads no client experimental
-  capability, so `ClientCapabilityTolerantTransport` drops the field from the
-  `initialize` request and passes every other message through byte for byte.
-  `MCPInitializeCapabilityTests` runs the handshake end to end and holds a
-  canary that fails once the SDK decodes the field itself, which is when the
-  filter can go; `script/mcp_stdio_smoke.py` declares the same capabilities to
-  the built helper. When upgrading the SDK, reread its `Transport` protocol:
-  a new requirement with a default implementation would compile against the
-  wrapper and silently use that default instead of the stdio transport's.
+- **Never decode JSON into `MCP.Value` with `JSONDecoder`; decode
+  `LiteralValue`.** `MCP.Value`'s decoder turns a string whose whole value is
+  a data URL (`data:,hello`) into `.data`, which encodes back as a base64 data
+  URL, so a task titled that way changes on its way through. `LiteralValue`
+  (in `MCPWire.swift`) decodes the same kinds in the same order and keeps
+  strings as written; the protocol layer, the idempotency replay and the
+  backup comparison use it. Building a `Value` in code is safe.
+- **Each client picks its own protocol.** Claude Code 2.1.331 probes with
+  `server/discover` and then speaks MCP 2026-07-28 to Lorvex for every
+  request; Codex 0.170.0 sends `initialize` (2025-06-18) with object-valued
+  experimental capabilities, which the SDK's `Client.Capabilities` cannot
+  decode, so `MCPServer` never decodes them. A change to `MCPServer` is
+  checked against both: `MCPServerProtocolTests`, and
+  `script/mcp_stdio_smoke.py`, which speaks 2026-07-28 over Unix sockets (as
+  Claude Code and Claude Desktop connect) and `initialize` over pipes (as
+  Codex connects). The record of the real clients' runs is in
+  `../../../../docs/decisions/mcp-protocol-layer.md`.
 - **A client's connection check is not proof that its chats can connect.**
   Codex's tool catalog listed Lorvex's tools while its chats failed this
   handshake, so the check evidently did not declare what a chat declares. The

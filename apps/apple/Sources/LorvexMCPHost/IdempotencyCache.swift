@@ -152,15 +152,18 @@ extension IdempotencyCache.CachedResult {
   /// content are encoded here — otherwise a cross-restart replay would return
   /// text only and drop the IDs/objects clients need (the schema promises the
   /// original response is replayed in full, not just its text).
+  /// `structured` decodes as `LiteralValue` so a string that looks like a
+  /// data URL replays as the same string.
   private struct DurableEnvelope: Codable {
     let text: String
-    let structured: Value?
+    let structured: LiteralValue?
   }
 
   /// Serialize for the durable idempotency record. Falls back to the bare text
   /// if encoding the structured content fails, so a record is always written.
   func durablePayload() -> String {
-    let envelope = DurableEnvelope(text: textContent, structured: structuredContent as? Value)
+    let envelope = DurableEnvelope(
+      text: textContent, structured: (structuredContent as? Value).map(LiteralValue.init))
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]
     if let data = try? encoder.encode(envelope), let json = String(data: data, encoding: .utf8) {
@@ -176,7 +179,7 @@ extension IdempotencyCache.CachedResult {
       let envelope = try? JSONDecoder().decode(DurableEnvelope.self, from: data)
     {
       return IdempotencyCache.CachedResult(
-        textContent: envelope.text, structuredContent: envelope.structured)
+        textContent: envelope.text, structuredContent: envelope.structured?.value)
     }
     return IdempotencyCache.CachedResult(textContent: payload, structuredContent: nil)
   }

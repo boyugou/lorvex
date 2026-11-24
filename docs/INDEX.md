@@ -75,6 +75,7 @@ Why the repository is shaped the way it is:
 
 - [`decisions/pure-swift-core-port.md`](decisions/pure-swift-core-port.md) — the Apple core's port to pure Swift and the monorepo structure.
 - [`decisions/today-one-list.md`](decisions/today-one-list.md) — Today as one list: the concepts that replace Focus, the page, glances, and the assistant's planning flow.
+- [`decisions/mcp-protocol-layer.md`](decisions/mcp-protocol-layer.md) — The MCP helper's own JSON-RPC layer: why it replaced the SDK's server and transport, and how one process serves both the `initialize` protocol and MCP 2026-07-28.
 - [`decisions/cksyncengine-transport.md`](decisions/cksyncengine-transport.md) — The CloudKit transport on `CKSyncEngine`: what stays (record format, apply layer, outbox), what goes with the custom zone-generation protocol, and the schema migration that retires its tables.
 
 ## App docs

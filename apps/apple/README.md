@@ -69,8 +69,10 @@ honest status of each surface.
   clear)
 
 **AI integration (via MCP)**
-- A Swift-native MCP host built on the official
-  [swift-sdk](https://github.com/modelcontextprotocol/swift-sdk)
+- A Swift-native MCP host that speaks both the `initialize` handshake
+  protocol and MCP 2026-07-28, using the official
+  [swift-sdk](https://github.com/modelcontextprotocol/swift-sdk) for the
+  protocol's data types
 - A broad tool catalog covering tasks, day planning, calendar, lists, tags, habits,
   reviews, memory, preferences, dependency graphs, and batch
   operations — every write returns the complete updated object

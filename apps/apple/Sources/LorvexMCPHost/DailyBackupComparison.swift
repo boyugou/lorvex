@@ -46,7 +46,7 @@ enum DailyBackupComparison {
     encoder.keyEncodingStrategy = .custom { path in
       SnakeCaseKey(stringValue: snakeCase(path.last?.stringValue ?? ""))
     }
-    let value = try JSONDecoder().decode(Value.self, from: encoder.encode(trimmed))
+    let value = try LiteralValue.decode(encoder.encode(trimmed))
     guard case .object(let object) = value else { return [:] }
     var result: [String: [Value]] = [:]
     for category in categories {

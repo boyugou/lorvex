@@ -47,11 +47,14 @@ In practice:
 
 ## Module Organization
 
-`Sources/LorvexMCPHost/LorvexMCPHost.swift` is a thin (~80-line) executable
-entry point. The MCP surface is split across per-domain `*ToolCatalog.swift`
-(schema) and `*ToolHandlers.swift` (implementation) files, with dispatch in
+`Sources/LorvexMCPHost/LorvexMCPHost.swift` is a thin executable entry point.
+The MCP surface is split across per-domain `*ToolCatalog.swift` (schema) and
+`*ToolHandlers.swift` (implementation) files, with dispatch in
 `ToolRegistry*.swift`. A new MCP domain adds its own catalog/handler pair rather
-than growing a single registry file.
+than growing a single registry file. The protocol layer under the registry is
+`MCPStdioChannel` (stdio framing), `MCPWire` (JSON-RPC messages) and
+`MCPServer` (dispatch for both protocol eras); see
+`../../../../docs/decisions/mcp-protocol-layer.md`.
 
 Task batch work follows this split: `BatchTaskToolCatalog` (schema) with
 `BatchTaskCreateToolHandlers` / `BatchTaskUpdateToolHandlers`, and the underlying

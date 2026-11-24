@@ -18,14 +18,15 @@ It never moves, backs up, or restores the App Group directory.
 
 Flow:
   build LorvexMCPHost -> resolve bin path -> isolate the store ->
-  over Unix socket pairs, as Claude Code and Claude Desktop connect:
-  initialize, tools/list and get_overview (read-only) -> over pipes, as
-  Codex connects: launch ->
+  over Unix socket pairs, as Claude Code and Claude Desktop connect, in MCP
+  2026-07-28: server/discover, tools/list and get_overview (read-only) ->
+  over pipes, as Codex connects, with the initialize handshake: launch ->
   initialize, declaring object-valued experimental capabilities as Codex
   Desktop does (assert no error) -> notifications/initialized -> tools/list
   (assert > 0 tools, get_overview among them) -> get_overview (assert a
   result, not an error) ->
-  create_task (assert the ⟦user⟧ fence on the echoed title) ->
+  create_task with a title that is a whole data URL (assert the ⟦user⟧ fence
+  on the echoed title, which comes back as written) ->
   list_tasks (assert the created task is present AND the full 7-key pagination
   envelope) -> get_task with a missing id (assert the {code, message, tool}
   error envelope with isError) -> create_habit and create_list (assert each
@@ -585,14 +586,31 @@ def initialize_request(marketing_version: str) -> dict[str, Any]:
     }
 
 
+MODERN_PROTOCOL_VERSION = "2026-07-28"
+
+
+def modern_meta(marketing_version: str) -> dict[str, Any]:
+    """The `_meta` every MCP 2026-07-28 request carries."""
+    return {
+        "io.modelcontextprotocol/protocolVersion": MODERN_PROTOCOL_VERSION,
+        "io.modelcontextprotocol/clientCapabilities": {},
+        "io.modelcontextprotocol/clientInfo": {
+            "name": "lorvex-smoke",
+            "version": marketing_version,
+        },
+    }
+
+
 def run_socket_handshake(
     bin_path: Path, marketing_version: str, env_overrides: dict[str, str]
 ) -> None:
-    """Connect to the helper over Unix socket pairs and read its overview.
+    """Speak MCP 2026-07-28 to the helper over Unix socket pairs.
 
     Claude Code and Claude Desktop give a stdio MCP server a Unix socket for
-    stdin and another for stdout; Codex and `run_smoke`'s main flow use pipes.
-    This check covers the socket form. It writes nothing, so the main flow
+    stdin and another for stdout, and Claude Code probes with
+    `server/discover` before choosing the 2026-07-28 protocol; Codex and
+    `run_smoke`'s main flow use pipes and `initialize`. This check covers the
+    socket form and the newer protocol. It writes nothing, so the main flow
     still starts from an empty store.
     """
     child_in, parent_in = socket.socketpair()
@@ -611,15 +629,29 @@ def run_socket_handshake(
         stdin=parent_in.makefile("w", encoding="utf-8"),
         stdout=parent_out.makefile("r", encoding="utf-8"),
     )
+    meta = modern_meta(marketing_version)
     try:
-        send(channel, initialize_request(marketing_version))
-        read_response(channel, 1)
-        send(channel, {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}})
-        send(channel, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
-        tools = read_response(channel, 2)["result"]["tools"]
+        send(
+            channel,
+            {"jsonrpc": "2.0", "id": 1, "method": "server/discover", "params": {"_meta": meta}},
+        )
+        discovered = read_response(channel, 1)["result"]
         require(
-            any(tool.get("name") == "get_overview" for tool in tools),
-            "tools/list over sockets does not include get_overview",
+            MODERN_PROTOCOL_VERSION in discovered.get("supportedVersions", [])
+            and discovered.get("resultType") == "complete"
+            and "tools" in discovered.get("capabilities", {}),
+            f"server/discover did not advertise {MODERN_PROTOCOL_VERSION} tools: {discovered}",
+        )
+        send(
+            channel,
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {"_meta": meta}},
+        )
+        listed = read_response(channel, 2)["result"]
+        require(
+            isinstance(listed.get("ttlMs"), int)
+            and listed.get("cacheScope") in ("public", "private")
+            and any(tool.get("name") == "get_overview" for tool in listed.get("tools", [])),
+            "tools/list over sockets lacks get_overview or the 2026-07-28 cache fields",
         )
         send(
             channel,
@@ -627,16 +659,20 @@ def run_socket_handshake(
                 "jsonrpc": "2.0",
                 "id": 3,
                 "method": "tools/call",
-                "params": {"name": "get_overview", "arguments": {}},
+                "params": {"_meta": meta, "name": "get_overview", "arguments": {}},
             },
         )
         overview = read_response(channel, 3)["result"]
         require(
-            overview.get("isError") is not True
+            overview.get("resultType") == "complete"
+            and overview.get("isError") is not True
             and isinstance(overview.get("structuredContent"), dict),
             f"get_overview over sockets returned no overview: {overview}",
         )
-        print("PASS: initialize, tools/list and get_overview over Unix socket pairs")
+        print(
+            f"PASS: server/discover, tools/list and get_overview over Unix socket pairs "
+            f"(MCP {MODERN_PROTOCOL_VERSION})"
+        )
     finally:
         process.terminate()
         try:
@@ -734,7 +770,8 @@ def run_smoke(
         )
         print("PASS: smoke database starts with no tasks")
 
-        created_title = "Smoke-test Swift MCP host"
+        # A whole-value data URL must reach the tool and come back as text.
+        created_title = "data:,Smoke-test Swift MCP host"
         fenced_created_title = f"⟦user⟧{created_title}⟦/user⟧"
         send(
             process,

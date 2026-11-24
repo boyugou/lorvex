@@ -17,50 +17,43 @@ struct LorvexMCPHost {
     }
     let registry = try ToolRegistry.production(environment: environment)
     let activity = AssistantActivityRecorder(service: registry.coreBridge.service)
-    let server = await makeServer(registry: registry, activity: activity)
+    let server = makeServer(registry: registry, activity: activity)
 
     // Sweep expired idempotency rows on boot. Runs once per MCP child process.
     if let idempotency = registry.coreBridge.mcpIdempotency {
       try? await idempotency.sweepMcpIdempotency()
     }
 
-    let stdio = StdioTransport()
-    let transport = ClientCapabilityTolerantTransport(wrapping: stdio, logger: stdio.logger)
-    try await server.start(transport: transport) { client, _ in
-      Task {
-        await activity.clientDidInitialize(
-          name: client.name, title: client.title, version: client.version)
-      }
-    }
-
-    // Await the server's receive loop instead of sleeping forever: the loop ends
-    // when the stdio transport reaches end-of-stream (the client closes stdin),
-    // so the host exits cleanly and releases its DB connection rather than
-    // lingering as a zombie until SIGKILL.
-    await server.waitUntilCompleted()
+    // A client that closes its end turns the next write into EPIPE instead of
+    // a signal that would end the process mid-request.
+    signal(SIGPIPE, SIG_IGN)
+    let channel = MCPStdioChannel()
+    // `serve` returns when the client closes stdin and the running requests
+    // have answered, so the host exits and releases its database connection
+    // instead of lingering until the client kills it.
+    await server.serve(channel.lines(), send: channel.send)
+    await channel.flush()
   }
 
   /// The MCP server the host runs: Lorvex's name, version and instructions,
   /// the tool list, and each tool call dispatched to `registry` and noted by
-  /// `activity`. Not started; the caller picks the transport.
-  static func makeServer(
-    registry: ToolRegistry, activity: AssistantActivityRecorder
-  ) async -> Server {
-    let server = Server(
-      name: LorvexProductMetadata.mcpServerName,
-      version: LorvexProductMetadata.marketingVersion,
-      title: LorvexProductMetadata.appDisplayName,
-      instructions: MCPHostInstructions.text,
-      capabilities: .init(tools: .init(listChanged: false))
-    )
-    await server.withMethodHandler(ListTools.self) { _ in
-      ListTools.Result(tools: ToolRegistry.listTools())
-    }
-    await server.withMethodHandler(CallTool.self) { params in
-      Task { await activity.toolWasCalled() }
-      return try await registry.call(params)
-    }
-    return server
+  /// `activity`. The caller supplies the channel.
+  static func makeServer(registry: ToolRegistry, activity: AssistantActivityRecorder) -> MCPServer {
+    MCPServer(
+      info: .init(
+        name: LorvexProductMetadata.mcpServerName,
+        title: LorvexProductMetadata.appDisplayName,
+        version: LorvexProductMetadata.marketingVersion,
+        instructions: MCPHostInstructions.text),
+      listTools: { ToolRegistry.listTools() },
+      callTool: { params in try await registry.call(params) },
+      clientIdentified: { client in
+        Task {
+          await activity.clientDidInitialize(
+            name: client.name, title: client.title, version: client.version)
+        }
+      },
+      toolCalled: { Task { await activity.toolWasCalled() } })
   }
 
   /// The `LORVEX_MCP_PROBE=1` self-check the app's MCP settings panel runs

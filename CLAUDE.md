@@ -15,7 +15,8 @@ plugins/lorvex/  Claude Code plugin: MCP launcher + skills. → plugins/lorvex/R
 ```
 
 The former cross-platform Tauri/React/Rust implementation was removed from this
-tree on 2026-09-17. Its last in-tree state is the git tag `tauri-snapshot-final`;
+tree on 2026-09-17. This repository's history keeps its last in-tree state at
+commit `00520f17` (`apps/tauri/`), the parent of the commit that removed it;
 its full history lives in `github.com/boyugou/ai-native-todo`. It is historical
 context only, never a dependency or a behavioral oracle.
 

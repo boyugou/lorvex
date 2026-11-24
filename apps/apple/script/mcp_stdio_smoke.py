@@ -17,7 +17,10 @@ under its production cutover lock, runs the round-trip, and resets it again.
 It never moves, backs up, or restores the App Group directory.
 
 Flow:
-  build LorvexMCPHost -> resolve bin path -> isolate the store -> launch ->
+  build LorvexMCPHost -> resolve bin path -> isolate the store ->
+  over Unix socket pairs, as Claude Code and Claude Desktop connect:
+  initialize, tools/list and get_overview (read-only) -> over pipes, as
+  Codex connects: launch ->
   initialize, declaring object-valued experimental capabilities as Codex
   Desktop does (assert no error) -> notifications/initialized -> tools/list
   (assert > 0 tools, get_overview among them) -> get_overview (assert a
@@ -50,13 +53,15 @@ import plistlib
 import select
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterator
+from types import SimpleNamespace
+from typing import Any, Iterator, Protocol
 
 from metadata_env import load_metadata
 
@@ -424,14 +429,21 @@ def run(command: list[str]) -> str:
     return result.stdout.strip()
 
 
-def send(process: subprocess.Popen[str], message: dict[str, Any]) -> None:
+class StdioChannel(Protocol):
+    """The helper's stdin and stdout as text streams: a `Popen` or a socket pair."""
+
+    stdin: Any
+    stdout: Any
+
+
+def send(process: StdioChannel, message: dict[str, Any]) -> None:
     assert process.stdin is not None
     process.stdin.write(json.dumps(message, separators=(",", ":")) + "\n")
     process.stdin.flush()
 
 
 def read_response(
-    process: subprocess.Popen[str], request_id: int, timeout: float = 10.0
+    process: StdioChannel, request_id: int, timeout: float = 10.0
 ) -> dict[str, Any]:
     assert process.stdout is not None
     deadline = time.monotonic() + timeout
@@ -548,12 +560,102 @@ def main(argv: list[str] | None = None) -> int:
         return run_smoke(bin_path, marketing_version, db_path, env_overrides)
 
 
+def initialize_request(marketing_version: str) -> dict[str, Any]:
+    """The `initialize` request both checks send, with id 1."""
+    return {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": PROTOCOL_VERSION,
+            # Codex Desktop declares this experimental capability; the MCP
+            # schema allows any object here, and a second, unfamiliar one
+            # nests objects and arrays.
+            "capabilities": {
+                "experimental": {
+                    "codex/auth-change": {},
+                    "example.org/nested": {
+                        "version": 2,
+                        "options": {"mode": "full", "flags": ["a", "b"]},
+                    },
+                },
+            },
+            "clientInfo": {"name": "lorvex-smoke", "version": marketing_version},
+        },
+    }
+
+
+def run_socket_handshake(
+    bin_path: Path, marketing_version: str, env_overrides: dict[str, str]
+) -> None:
+    """Connect to the helper over Unix socket pairs and read its overview.
+
+    Claude Code and Claude Desktop give a stdio MCP server a Unix socket for
+    stdin and another for stdout; Codex and `run_smoke`'s main flow use pipes.
+    This check covers the socket form. It writes nothing, so the main flow
+    still starts from an empty store.
+    """
+    child_in, parent_in = socket.socketpair()
+    child_out, parent_out = socket.socketpair()
+    process = subprocess.Popen(
+        [str(bin_path)],
+        cwd=ROOT,
+        stdin=child_in.fileno(),
+        stdout=child_out.fileno(),
+        stderr=subprocess.DEVNULL,
+        env={**os.environ, "NSUnbufferedIO": "YES", **env_overrides},
+    )
+    child_in.close()
+    child_out.close()
+    channel = SimpleNamespace(
+        stdin=parent_in.makefile("w", encoding="utf-8"),
+        stdout=parent_out.makefile("r", encoding="utf-8"),
+    )
+    try:
+        send(channel, initialize_request(marketing_version))
+        read_response(channel, 1)
+        send(channel, {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}})
+        send(channel, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
+        tools = read_response(channel, 2)["result"]["tools"]
+        require(
+            any(tool.get("name") == "get_overview" for tool in tools),
+            "tools/list over sockets does not include get_overview",
+        )
+        send(
+            channel,
+            {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/call",
+                "params": {"name": "get_overview", "arguments": {}},
+            },
+        )
+        overview = read_response(channel, 3)["result"]
+        require(
+            overview.get("isError") is not True
+            and isinstance(overview.get("structuredContent"), dict),
+            f"get_overview over sockets returned no overview: {overview}",
+        )
+        print("PASS: initialize, tools/list and get_overview over Unix socket pairs")
+    finally:
+        process.terminate()
+        try:
+            process.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=2)
+        for stream in (channel.stdin, channel.stdout, parent_in, parent_out):
+            with contextlib.suppress(OSError):
+                stream.close()
+
+
 def run_smoke(
     bin_path: Path,
     marketing_version: str,
     db_path: Path,
     env_overrides: dict[str, str],
 ) -> int:
+    run_socket_handshake(bin_path, marketing_version, env_overrides)
     process = subprocess.Popen(
         [str(bin_path)],
         cwd=ROOT,
@@ -569,33 +671,7 @@ def run_smoke(
     )
 
     try:
-        send(
-            process,
-            {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": PROTOCOL_VERSION,
-                    # Codex Desktop declares this experimental capability; the
-                    # MCP schema allows any object here, and a second,
-                    # unfamiliar one nests objects and arrays.
-                    "capabilities": {
-                        "experimental": {
-                            "codex/auth-change": {},
-                            "example.org/nested": {
-                                "version": 2,
-                                "options": {"mode": "full", "flags": ["a", "b"]},
-                            },
-                        },
-                    },
-                    "clientInfo": {
-                        "name": "lorvex-smoke",
-                        "version": marketing_version,
-                    },
-                },
-            },
-        )
+        send(process, initialize_request(marketing_version))
         # `read_response` raises on an error response, so reaching the next
         # line means the initialize with object-valued experimental
         # capabilities succeeded.

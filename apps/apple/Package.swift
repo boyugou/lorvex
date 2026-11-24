@@ -33,7 +33,10 @@ let package = Package(
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"])
     ],
     dependencies: [
-        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.12.1"),
+        // Pinned to one release: Claude Code and Claude Desktop give the helper
+        // Unix sockets for stdin and stdout, Codex gives it pipes, and an SDK
+        // upgrade lands only after `script/mcp_stdio_smoke.py` passes over both.
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", exact: "0.12.1"),
         // The MCP SDK's logging package, already in the graph through swift-sdk;
         // the host names its `Logger` type in the transport it wraps.
         .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),

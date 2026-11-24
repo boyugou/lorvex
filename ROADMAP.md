@@ -133,6 +133,42 @@ person living with the app, and then a decision.
   (fewer always-present views and text in each tab's chrome) lowers it,
   measured against a bare `TabView` baseline, and whether capture's
   keyboard can come up without holding the sheet's first frames.
+- The MCP helper's protocol layer (2026-11-23). The helper runs on the
+  official Swift MCP SDK, pinned to 0.12.1 in `apps/apple/Package.swift`.
+  The SDK costs Lorvex three things, measured on the release helper over a
+  temporary database:
+  - A string argument whose whole value is a data URL (`data:,hello`)
+    reaches the tool as binary data, so `create_task` rejects that title as
+    empty. The SDK guesses data URLs when it decodes JSON into `Value`
+    (upstream issue 277; fixes 278 and 295 are open, not merged).
+  - Each response is encoded, decoded into `Value` and encoded again, and
+    that decode rebuilds a regular expression for every string.
+    `tools/list` (122 tools, 165 KB) takes 80 ms each time; `initialize`
+    after launch takes 22 ms and `get_overview` 7 ms.
+  - It speaks only the protocol versions that open with `initialize`
+    (2025-11-25 and earlier). Specification 2026-07-28 removes that
+    handshake in favor of `server/discover` and per-request `_meta`. The
+    programs of Claude Code 2.1.331, Claude Desktop and Codex 0.170.0 on the
+    owner's Mac contain both versions, and Claude Code's contains its
+    fallback to `initialize`. The helper answers a `server/discover` probe
+    with "method not found" within 101 ms of launch, which the specification
+    tells such a client to treat as an older server. A client that drops
+    the older versions would fail.
+
+  The SDK's main branch also traps on connect when stdin and stdout are
+  Unix sockets (upstream issue 327), which is how Claude Code and Claude
+  Desktop launch the helper; Codex uses pipes. `mcp_stdio_smoke.py`
+  connects both ways, so an SDK upgrade with that trap fails the gate.
+
+  Next: replace the SDK's `Server` and `StdioTransport` with a Lorvex-owned
+  stdio JSON-RPC layer in Swift that serves both protocol eras (`initialize`
+  for older clients; `server/discover`, `_meta` and
+  `UnsupportedProtocolVersionError` for 2026-07-28), decodes arguments
+  without the data-URL guess, writes each frame whole, and encodes
+  `tools/list` once. The tool registry, handlers, fencing and idempotency
+  stay as they are, and the SDK's `Tool`, `CallTool.Result` and `Value`
+  types can stay until they are worth replacing. The Rust SDK was
+  considered and not taken; see "Decided, not open".
 - Platform adaptation sprint (owner, 2026-11-16): iPhone Duo and useful
   capabilities in macOS 27 and iOS 27. The deployment floor stays at 26, so
   every 27 API sits behind an availability check. The system integration
@@ -750,6 +786,23 @@ Recorded so they are not reopened without new information.
   are already in a `List`), the URL-based document protocols (no documents),
   `AsyncImage` caching (no remote images), and AppKit's pull-to-refresh
   controller (no manual refresh, rule 12 of `apps/apple/CLAUDE.md`).
+- The MCP helper stays in Swift; it does not move to the Rust SDK (`rmcp`),
+  although that SDK is ahead (tier 1 against Swift's tier 3 on
+  modelcontextprotocol.io, protocol 2026-07-28, 47 releases in a year
+  against 3). The SDK is the thin part of the helper: 1.5 MB of its 13.4 MB
+  of code, with the protocol wiring in two files of 199 lines, while the
+  122 tools and the core they call are Swift. A Rust helper therefore needs
+  either a C interface into the Swift core, which root `CLAUDE.md` hard
+  rule 1 forbids and which would put a second async runtime and a second
+  toolchain into every build, or a second implementation of the core, which
+  is what the project removed (the Rust tree held a 57,500-line MCP server
+  on `rmcp` and 335,429 lines of Rust in all; see
+  `docs/decisions/pure-swift-core-port.md`). What the Rust SDK would bring,
+  a newer protocol and no data-URL guessing, a Swift protocol layer of a few
+  hundred lines also brings (see "The MCP helper's protocol layer").
+  App Store review does not forbid a Rust helper. Reopen this only if
+  Lorvex needs something only that SDK provides, such as a remote HTTP
+  server with OAuth.
 - No capture button on the Home Screen widgets. Capture is already one tap
   away in Control Center, on the Lock Screen, on the Action button, and in
   the app icon's quick action; a ＋ on a glance would repeat it (rule 12 of
